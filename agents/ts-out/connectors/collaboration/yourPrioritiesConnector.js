@@ -4,9 +4,58 @@ import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaboratio
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import fs from "fs";
 import FormData from "form-data";
-const MAX_RETRIES = 7;
-const RETRY_DELAY = 1000; // 1 second
+const MAX_RETRIES = 6 * 30;
+const RETRY_DELAY = 10000;
 const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
+/** Simple helper for waiting */
+async function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+/**
+ * Retries the given request up to MAX_RETRIES times, when
+ * either connection is refused (ECONNREFUSED) or a 5xx
+ * HTTP error occurs.
+ */
+async function requestWithRetry(requestFn) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            return await requestFn();
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                // If the server is down or refused connection
+                if (error.code === "ECONNREFUSED" ||
+                    error.code === "ECONNRESET" ||
+                    error.code === "ECONNABORTED" ||
+                    error.code === "ETIMEDOUT" ||
+                    error.code === "EAI_AGAIN" ||
+                    error.code === "ENOTFOUND" ||
+                    error.code === "ENETUNREACH") {
+                    console.error(`${error.code}: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`);
+                    if (attempt < MAX_RETRIES) {
+                        await sleep(RETRY_DELAY);
+                        continue;
+                    }
+                }
+                // If it's a 5xx server error
+                if (error.response && error.response.status >= 500) {
+                    console.error(`5xx Server Error: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`);
+                    if (attempt < MAX_RETRIES) {
+                        await sleep(RETRY_DELAY);
+                        continue;
+                    }
+                }
+            }
+            else {
+                console.error("Not Axios error:", error);
+            }
+            // If we get here, it’s not ECONNREFUSED or 5xx => re-throw
+            throw error;
+        }
+    }
+    // Exhausted all retries
+    throw new Error(`Failed after ${MAX_RETRIES} retries.`);
+}
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";
     static YOUR_PRIORITIES_CONNECTOR_VERSION = 7;
@@ -113,9 +162,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                     identifier: this.userEmail,
                 };
                 try {
-                    const response = await axios.post(`${this.serverBaseUrl}/users/login`, loginData, {
+                    const response = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/users/login`, loginData, {
                         withCredentials: true,
-                    });
+                    }));
                     if (response) {
                         this.user = response.data;
                         const setCookieHeader = response.headers["set-cookie"];
@@ -167,9 +216,9 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                 url += `&agentFabricUserId=${this.agentFabricUserId}`;
             }
             try {
-                const response = await axios.get(url, {
+                const response = await requestWithRetry(() => axios.get(url, {
                     headers: this.getHeaders(),
-                });
+                }));
                 const data = response.data.posts;
                 posts = posts.concat(data);
                 if (data.length < limit) {
@@ -193,11 +242,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             value: value,
         };
         try {
-            const response = await axios.post(`${this.serverBaseUrl}/posts/${postId}/endorse${this.agentFabricUserId
+            const response = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/posts/${postId}/endorse${this.agentFabricUserId
                 ? `?agentFabricUserId=${this.agentFabricUserId}`
                 : ""}`, votingData, {
                 headers: this.getHeaders(),
-            });
+            }));
             if (!response) {
                 throw new Error("Voting Failed");
             }
@@ -226,14 +275,14 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             const imageForm = new FormData();
             imageForm.append("file", fs.createReadStream(imageLocalPath), "image.png");
             try {
-                const imageUploadResponse = await axios.post(`${this.serverBaseUrl}/images${this.agentFabricUserId
+                const imageUploadResponse = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/images${this.agentFabricUserId
                     ? `?agentFabricUserId=${this.agentFabricUserId}`
                     : ""}`, imageForm, {
                     headers: {
                         ...this.getHeaders(),
                         ...imageForm.getHeaders(),
                     },
-                });
+                }));
                 if (!imageUploadResponse.data || !imageUploadResponse.data.id) {
                     throw new Error("Image upload failed, no imageId received.");
                 }
@@ -247,7 +296,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             }
         }
         else {
-            // No local image provided, generate an AI image as before
+            // No local image provided, generate an AI image instead
             imageId = await this.generateImageWithAi(groupId, imagePrompt);
         }
         if (imageId) {
@@ -256,59 +305,40 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         else {
             console.warn("Skipping image setting, no imageId received.");
         }
-        for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
-            try {
-                console.log(`Attempt ${attempt}: Posting data:`, formData);
-                const postResponse = await axios.post(`${this.serverBaseUrl}/posts/${groupId}${this.agentFabricUserId
-                    ? `?agentFabricUserId=${this.agentFabricUserId}`
-                    : ""}`, qs.stringify(formData), {
-                    headers: {
-                        ...this.getHeaders(),
-                        "Content-Type": "application/x-www-form-urlencoded",
-                    },
-                });
-                return postResponse.data;
-            }
-            catch (error) {
-                console.error(`Attempt ${attempt} failed:`, error);
-                if (attempt === MAX_RETRIES) {
-                    console.error("Max retries reached. Throwing final error.");
-                    throw new Error("Failed to post data after multiple attempts.");
-                }
-                const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-                if (axios.isAxiosError(error)) {
-                    const axiosError = error;
-                    if (axiosError.response && axiosError.response.status >= 500) {
-                        console.log(`Server error (5xx). Retrying in ${RETRY_DELAY}ms...`);
-                        await sleep(RETRY_DELAY);
-                        continue;
-                    }
-                }
-                throw error; // Rethrow if it's not a 5xx error
-            }
+        try {
+            console.log(`Posting data to groupId ${groupId}:`, formData);
+            const postResponse = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/posts/${groupId}${this.agentFabricUserId
+                ? `?agentFabricUserId=${this.agentFabricUserId}`
+                : ""}`, qs.stringify(formData), {
+                headers: {
+                    ...this.getHeaders(),
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            }));
+            return postResponse.data;
         }
-        // Should never reach here
-        throw new Error("Unexpected end of post method");
+        catch (error) {
+            console.error("Error posting data:", error);
+            throw new Error("Failed to post data after multiple attempts.");
+        }
     }
     async generateImageWithAi(groupId, prompt) {
         await this.login();
         try {
             console.log("Generating AI image with prompt:", prompt);
-            const startResponse = await axios.post(`${this.serverBaseUrl}/groups/${groupId}/start_generating/ai_image`, {
+            const startResponse = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/groups/${groupId}/start_generating/ai_image`, {
                 imageType: "logo",
                 prompt: prompt,
             }, {
                 headers: this.getHeaders(),
-            });
+            }));
             const { jobId } = startResponse.data;
             let isGenerating = true;
             let pollResponse;
-            // NEW: Start timing for the 2-minute limit
+            // Start timing for the 2-minute limit
             const startTime = Date.now();
             while (isGenerating) {
-                pollResponse = await axios.get(`${this.serverBaseUrl}/groups/${groupId}/${jobId}/poll_for_generating_ai_image`, {
-                    headers: this.getHeaders(),
-                });
+                pollResponse = await requestWithRetry(() => axios.get(`${this.serverBaseUrl}/groups/${groupId}/${jobId}/poll_for_generating_ai_image`, { headers: this.getHeaders() }));
                 console.log("Poll response:", pollResponse.data);
                 if (pollResponse.data.data.imageId) {
                     isGenerating = false;
@@ -325,8 +355,11 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
                         console.log("AI image generation timed out after 2 minutes. Skipping image...");
                         return 0; // Will signal to skip the image
                     }
-                    await new Promise((resolve) => setTimeout(resolve, 2000));
+                    await sleep(2000);
                 }
+            }
+            if (!pollResponse?.data?.data?.imageId) {
+                throw new Error("Failed to generate AI image.");
             }
             return pollResponse.data.data.imageId;
         }

@@ -73,7 +73,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         }
         else {
             // Single-shot response
-            console.log("Calling Gemini...");
+            //console.log("Calling Gemini...");
             const result = await chat.sendMessage(finalPrompt);
             const content = result.response.text();
             //console.log(`RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
