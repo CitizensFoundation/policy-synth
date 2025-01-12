@@ -41,10 +41,7 @@ async function requestWithRetry<T>(requestFn: () => Promise<T>): Promise<T> {
             await sleep(RETRY_DELAY);
             continue;
           }
-        }
-
-        // If it's a 5xx server error
-        if (error.response && error.response.status >= 500) {
+        } else if (error.response && error.response.status >= 500) {
           console.error(
             `5xx Server Error: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`
           );
@@ -52,6 +49,8 @@ async function requestWithRetry<T>(requestFn: () => Promise<T>): Promise<T> {
             await sleep(RETRY_DELAY);
             continue;
           }
+        } else {
+          console.error("Other AXIOS error not retrying!:", error);
         }
       } else {
         console.error("Not Axios error:", error);

@@ -37,13 +37,15 @@ async function requestWithRetry(requestFn) {
                         continue;
                     }
                 }
-                // If it's a 5xx server error
-                if (error.response && error.response.status >= 500) {
+                else if (error.response && error.response.status >= 500) {
                     console.error(`5xx Server Error: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`);
                     if (attempt < MAX_RETRIES) {
                         await sleep(RETRY_DELAY);
                         continue;
                     }
+                }
+                else {
+                    console.error("Other AXIOS error not retrying!:", error);
                 }
             }
             else {
