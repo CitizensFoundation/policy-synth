@@ -11,6 +11,7 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+
   override get maxModelTokensOut(): number {
     return 2048;
   }

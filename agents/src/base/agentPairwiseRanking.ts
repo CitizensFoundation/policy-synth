@@ -189,10 +189,9 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
         }
       }
 
-      if (this.maxParallellRanking == 1) {
-        this.scheduleMemorySave();
-        this.checkLastMemorySaveError();
-      }
+      await this.scheduleMemorySave();
+      this.checkLastMemorySaveError();
+      await this.checkProgressForPauseOrStop();
     } catch (error) {
       throw error;
     }

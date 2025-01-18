@@ -1,7 +1,10 @@
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { EducationType, EducationTypes } from '../educationTypes.js'; // Adjust the path as needed
+import { EducationType, EducationTypes } from "../educationTypes.js"; // Adjust the path as needed
 
 // Import necessary types and interfaces
 // Assuming these are defined in your codebase
@@ -36,20 +39,27 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
     );
 
     // Ensure degreeAnalysis exists
-    jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {} as JobDescriptionDegreeAnalysis;
+    jobDescription.degreeAnalysis =
+      jobDescription.degreeAnalysis || ({} as JobDescriptionDegreeAnalysis);
     const degreeAnalysis = jobDescription.degreeAnalysis;
 
     // Ensure degreeRequirementStatus exists
-    degreeAnalysis.degreeRequirementStatus = degreeAnalysis.degreeRequirementStatus || {} as DegreeRequirementStatus;
+    degreeAnalysis.degreeRequirementStatus =
+      degreeAnalysis.degreeRequirementStatus || ({} as DegreeRequirementStatus);
     const degreeStatus = degreeAnalysis.degreeRequirementStatus;
 
     // Ensure mandatoryStatusExplanations exists
-    degreeAnalysis.mandatoryStatusExplanations = degreeAnalysis.mandatoryStatusExplanations || {} as MandatoryStatusExplanations;
+    degreeAnalysis.mandatoryStatusExplanations =
+      degreeAnalysis.mandatoryStatusExplanations ||
+      ({} as MandatoryStatusExplanations);
     const explanations = degreeAnalysis.mandatoryStatusExplanations;
 
     // Ensure professionalLicenseRequirement exists
-    degreeAnalysis.professionalLicenseRequirement = degreeAnalysis.professionalLicenseRequirement || {} as ProfessionalLicenseRequirement;
-    const professionalLicenseRequirement = degreeAnalysis.professionalLicenseRequirement;
+    degreeAnalysis.professionalLicenseRequirement =
+      degreeAnalysis.professionalLicenseRequirement ||
+      ({} as ProfessionalLicenseRequirement);
+    const professionalLicenseRequirement =
+      degreeAnalysis.professionalLicenseRequirement;
 
     // Initialize validationChecks
     degreeAnalysis.validationChecks = {} as DataConsistencyChecks;
@@ -84,13 +94,15 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
         explanations.bothTrueExplanation !== undefined &&
         explanations.bothTrueExplanation.trim() !== "";
 
-      validationChecks.requiredAlternativeExplanationConsistency = explanationFilled;
+      validationChecks.requiredAlternativeExplanationConsistency =
+        explanationFilled;
     } else if (bothRequiredAndAlternativeFalse) {
       const explanationFilled =
         explanations.bothFalseExplanation !== undefined &&
         explanations.bothFalseExplanation.trim() !== "";
 
-      validationChecks.requiredAlternativeExplanationConsistency = explanationFilled;
+      validationChecks.requiredAlternativeExplanationConsistency =
+        explanationFilled;
     } else {
       // If 'required' and 'alternative' are not both true or both false, the check is not applicable.
       validationChecks.requiredAlternativeExplanationConsistency = undefined;
@@ -126,7 +138,8 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
       degreeStatus.multipleQualificationPaths !== undefined
     ) {
       validationChecks.alternativeQualificationsConsistency =
-        degreeStatus.hasAlternativeQualifications === degreeStatus.multipleQualificationPaths;
+        degreeStatus.hasAlternativeQualifications ===
+        degreeStatus.multipleQualificationPaths;
     } else {
       // If either field is undefined, we cannot perform the check.
       validationChecks.alternativeQualificationsConsistency = undefined;
@@ -138,7 +151,8 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
       degreeStatus.isDegreeAbsolutelyRequired !== undefined
     ) {
       validationChecks.degreeMandatoryConsistency =
-        degreeStatus.isDegreeMandatory === degreeStatus.isDegreeAbsolutelyRequired;
+        degreeStatus.isDegreeMandatory ===
+        degreeStatus.isDegreeAbsolutelyRequired;
     } else {
       // If either field is undefined, we cannot perform the check.
       validationChecks.degreeMandatoryConsistency = undefined;
@@ -254,104 +268,111 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
 
     Do not include any explanations or additional text. Output only the JSON object.`;
 
-        // Call the LLM
-        const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(
-          PsAiModelType.Text,
-          this.modelSize,
-          messages,
-          true  // Indicate we expect JSON back
+    // Call the LLM
+    const messages = [this.createSystemMessage(systemPrompt)];
+    const resultText = await this.callModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Large,
+      messages,
+      true // Indicate we expect JSON back
+    );
+
+    let result;
+
+    if (typeof resultText === "string") {
+      // Extract JSON from the resultText
+      let jsonString = resultText;
+
+      // Use a regular expression to match and extract JSON content from code blocks
+      const jsonCodeBlockRegex = /```json\s*([\s\S]*?)\s*```/;
+      const match = resultText.match(jsonCodeBlockRegex);
+      if (match && match[1]) {
+        jsonString = match[1];
+        this.logger.debug("Extracted JSON from code block");
+      } else {
+        this.logger.warn(
+          "No JSON code block found in LLM response, using entire response as JSON"
+        );
+      }
+
+      // Parse the extracted JSON string
+      try {
+        result = JSON.parse(jsonString);
+        this.logger.info("Successfully parsed JSON from string response");
+      } catch (error) {
+        this.logger.error("Error parsing LLM response:", error);
+        throw new Error("Failed to parse LLM response as JSON.");
+      }
+    } else if (typeof resultText === "object") {
+      // LLM returned an object, use it directly
+      result = resultText;
+      this.logger.debug("LLM response is an object, using it directly");
+      this.logger.info("Successfully received JSON object from LLM");
+    } else {
+      throw new Error(`Unexpected type of LLM response: ${typeof resultText}`);
+    }
+
+    if (result) {
+      // Map the string values to boolean
+      const mapResult = (value: string): boolean => {
+        return value.toLowerCase() === "true";
+      };
+
+      // Use the LLM results in the JavaScript logic for validation checks 4 and 9
+
+      // 4. educationRequirementsConsistency
+      if (mapResult(result.includesHigherDegreeInEducationRequirements)) {
+        const degreeMandatoryOrAbsolutelyRequired =
+          degreeStatus.isDegreeMandatory === true ||
+          degreeStatus.isDegreeAbsolutelyRequired === true;
+
+        const alternativesCondition =
+          (degreeStatus.hasAlternativeQualifications === true ||
+            degreeStatus.multipleQualificationPaths === true) &&
+          degreeStatus.alternativeQualifications !== undefined &&
+          degreeStatus.alternativeQualifications.length > 0;
+
+        validationChecks.educationRequirementsConsistency =
+          degreeMandatoryOrAbsolutelyRequired || alternativesCondition;
+      } else {
+        // If educationRequirements does not include higher degrees, we consider the check not applicable.
+        validationChecks.educationRequirementsConsistency = undefined;
+      }
+
+      // 9. barriersToNonDegreeApplicantsConsistency
+      if (mapResult(result.mentionsHigherDegreeInBarriers)) {
+        const degreeMandatoryOrAbsolutelyRequired =
+          degreeStatus.isDegreeMandatory === true ||
+          degreeStatus.isDegreeAbsolutelyRequired === true;
+
+        const alternativesCondition =
+          (degreeStatus.hasAlternativeQualifications === true ||
+            degreeStatus.multipleQualificationPaths === true) &&
+          degreeStatus.alternativeQualifications !== undefined &&
+          degreeStatus.alternativeQualifications.length > 0;
+
+        const alternativeLanguageMatches = mapResult(
+          result.alternativeQualificationsMatchJobDescription
         );
 
-        let result;
-
-        if (typeof resultText === 'string') {
-          // Extract JSON from the resultText
-          let jsonString = resultText;
-
-          // Use a regular expression to match and extract JSON content from code blocks
-          const jsonCodeBlockRegex = /```json\s*([\s\S]*?)\s*```/;
-          const match = resultText.match(jsonCodeBlockRegex);
-          if (match && match[1]) {
-            jsonString = match[1];
-            this.logger.debug('Extracted JSON from code block');
-          } else {
-            this.logger.warn(
-              'No JSON code block found in LLM response, using entire response as JSON'
-            );
-          }
-
-          // Parse the extracted JSON string
-          try {
-            result = JSON.parse(jsonString);
-            this.logger.info('Successfully parsed JSON from string response');
-          } catch (error) {
-            this.logger.error('Error parsing LLM response:', error);
-            throw new Error('Failed to parse LLM response as JSON.');
-          }
-        } else if (typeof resultText === 'object') {
-          // LLM returned an object, use it directly
-          result = resultText;
-          this.logger.debug('LLM response is an object, using it directly');
-          this.logger.info('Successfully received JSON object from LLM');
-        } else {
-          throw new Error(`Unexpected type of LLM response: ${typeof resultText}`);
-        }
-
-        if (result) {
-          // Map the string values to boolean
-          const mapResult = (value: string): boolean => {
-            return value.toLowerCase() === 'true';
-          };
-
-          // Use the LLM results in the JavaScript logic for validation checks 4 and 9
-
-          // 4. educationRequirementsConsistency
-          if (mapResult(result.includesHigherDegreeInEducationRequirements)) {
-            const degreeMandatoryOrAbsolutelyRequired =
-              degreeStatus.isDegreeMandatory === true ||
-              degreeStatus.isDegreeAbsolutelyRequired === true;
-
-            const alternativesCondition =
-              (degreeStatus.hasAlternativeQualifications === true ||
-                degreeStatus.multipleQualificationPaths === true) &&
-              degreeStatus.alternativeQualifications !== undefined &&
-              degreeStatus.alternativeQualifications.length > 0;
-
-            validationChecks.educationRequirementsConsistency =
-              degreeMandatoryOrAbsolutelyRequired || alternativesCondition;
-          } else {
-            // If educationRequirements does not include higher degrees, we consider the check not applicable.
-            validationChecks.educationRequirementsConsistency = undefined;
-          }
-
-          // 9. barriersToNonDegreeApplicantsConsistency
-          if (mapResult(result.mentionsHigherDegreeInBarriers)) {
-            const degreeMandatoryOrAbsolutelyRequired =
-              degreeStatus.isDegreeMandatory === true ||
-              degreeStatus.isDegreeAbsolutelyRequired === true;
-
-            const alternativesCondition =
-              (degreeStatus.hasAlternativeQualifications === true ||
-                degreeStatus.multipleQualificationPaths === true) &&
-              degreeStatus.alternativeQualifications !== undefined &&
-              degreeStatus.alternativeQualifications.length > 0;
-
-            const alternativeLanguageMatches = mapResult(result.alternativeQualificationsMatchJobDescription);
-
-            validationChecks.barriersToNonDegreeApplicantsConsistency =
-              (degreeMandatoryOrAbsolutelyRequired || alternativesCondition) &&
-              alternativeLanguageMatches;
-          } else {
-            // If barriersToNonDegreeApplicants does not mention a higher degree, the check is not applicable.
-            validationChecks.barriersToNonDegreeApplicantsConsistency = undefined;
-          }
-        } else {
-          // Handle parsing error or invalid response
-          this.logger.error('Invalid response from LLM for data consistency validation.');
-          throw new Error('LLM did not return the expected data for validation.');
-        }
-
-        await this.updateRangedProgress(100, "Data consistency validation completed");
+        validationChecks.barriersToNonDegreeApplicantsConsistency =
+          (degreeMandatoryOrAbsolutelyRequired || alternativesCondition) &&
+          alternativeLanguageMatches;
+      } else {
+        // If barriersToNonDegreeApplicants does not mention a higher degree, the check is not applicable.
+        validationChecks.barriersToNonDegreeApplicantsConsistency = undefined;
       }
+    } else {
+      // Handle parsing error or invalid response
+      this.logger.error(
+        "Invalid response from LLM for data consistency validation."
+      );
+      throw new Error("LLM did not return the expected data for validation.");
     }
+
+    await this.updateRangedProgress(
+      100,
+      "Data consistency validation completed"
+    );
+  }
+}

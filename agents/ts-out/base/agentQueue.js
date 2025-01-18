@@ -325,6 +325,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     async stopAgent(agentId) {
         this.logger.info(`Stopping agent ${agentId}`);
         await this.updateAgentStatus(agentId, "stopped");
+        throw new Error("StoppedByUser");
     }
     async pauseAgent(agentId) {
         this.logger.info(`Pausing agent ${agentId}`);

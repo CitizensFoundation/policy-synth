@@ -1,4 +1,3 @@
-
 import { fileURLToPath } from "url";
 import path, { dirname, join } from "path";
 
@@ -8,7 +7,10 @@ const __dirname = dirname(__filename);
 
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import fs from "fs";
@@ -29,7 +31,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     return 0.0;
   }
 
-  private static readonly JOB_DESCRIPTION_AGENT_CLASS_BASE_ID = "efe71e49-50e5-4636-b3bd-f4adc97bbad4";
+  private static readonly JOB_DESCRIPTION_AGENT_CLASS_BASE_ID =
+    "efe71e49-50e5-4636-b3bd-f4adc97bbad4";
   private static readonly JOB_DESCRIPTION_AGENT_CLASS_VERSION = 1;
 
   constructor(
@@ -51,7 +54,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       path.join(__dirname, "data", "jobDescriptions.json"),
       "utf-8"
     );
-    const allJobDescriptions = JSON.parse(jobDescriptionsData) as JobDescription[];
+    const allJobDescriptions = JSON.parse(
+      jobDescriptionsData
+    ) as JobDescription[];
 
     // Get the number of job descriptions to process from configuration or default to 10
     const numJobDescriptions = 3771; // or this.agent.configuration?.numJobDescriptions
@@ -79,7 +84,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       const progress = (i / selectedJobDescriptions.length) * 100;
       await this.updateRangedProgress(
         progress,
-        `Processing job description ${i + 1} of ${selectedJobDescriptions.length}`
+        `Processing job description ${i + 1} of ${
+          selectedJobDescriptions.length
+        }`
       );
 
       // 2) Check for the HTML file, and if not present, set error and skip
@@ -90,7 +97,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         `${jobDescription.titleCode}.html`
       );
       if (!fs.existsSync(htmlFilePath)) {
-        this.logger.error(`HTML file not found for ${jobDescription.titleCode}`);
+        this.logger.error(
+          `HTML file not found for ${jobDescription.titleCode}`
+        );
         jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
         continue;
       }
@@ -126,92 +135,87 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     return htmlContent.replace(/<[^>]*>?/gm, ""); // Remove HTML tags
   }
 
-    // Function to process individual job descriptions
-    private async processJobDescription(jobDescription: JobDescription) {
-      // Step 1: Determine if the JobDescription includes a discussion of a college degree or higher education requirement.
-      const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(
-        this.agent,
-        this.memory,
-        0,
-        14
-      );
-      await determineDegreeStatusAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+  // Function to process individual job descriptions
+  private async processJobDescription(jobDescription: JobDescription) {
+    // Step 1: Determine if the JobDescription includes a discussion of a college degree or higher education requirement.
+    const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(
+      this.agent,
+      this.memory,
+      0,
+      14
+    );
+    await determineDegreeStatusAgent.processJobDescription(jobDescription);
+    await this.saveMemory();
 
-      // // // Step 2: For all EducationTypes identified as True (except HighSchool), review evidence quotcae.
-      const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(
-        this.agent,
-        this.memory,
-        14,
-        28
-      );
-      await reviewEvidenceQuoteAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    // // // Step 2: For all EducationTypes identified as True (except HighSchool), review evidence quotcae.
+    const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(
+      this.agent,
+      this.memory,
+      14,
+      28
+    );
+    await reviewEvidenceQuoteAgent.processJobDescription(jobDescription);
+    await this.saveMemory();
 
-      // // // Step 3: Determine whether any college degree requirement is mandatory or permissive.
-      const determineMandatoryStatusAgent = new DetermineMandatoryStatusAgent(
-        this.agent,
-        this.memory,
-        28,
-        42
-      );
-      await determineMandatoryStatusAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    // // // Step 3: Determine whether any college degree requirement is mandatory or permissive.
+    const determineMandatoryStatusAgent = new DetermineMandatoryStatusAgent(
+      this.agent,
+      this.memory,
+      28,
+      42
+    );
+    await determineMandatoryStatusAgent.processJobDescription(jobDescription);
+    await this.saveMemory();
 
-      // Step 4: Determine whether any professional license is required.
-      const determineProfessionalLicenseAgent = new DetermineProfessionalLicenseRequirementAgent(
+    // Step 4: Determine whether any professional license is required.
+    const determineProfessionalLicenseAgent =
+      new DetermineProfessionalLicenseRequirementAgent(
         this.agent,
         this.memory,
         42,
         56
       );
-      await determineProfessionalLicenseAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    await determineProfessionalLicenseAgent.processJobDescription(
+      jobDescription
+    );
+    await this.saveMemory();
 
-      // // // Step 5: Identify any barriers to hiring applicants without a college or university degree.
-      const identifyBarriersAgent = new IdentifyBarriersAgent(
-        this.agent,
-        this.memory,
-        56,
-        70
-      );
-      await identifyBarriersAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    // // // Step 5: Identify any barriers to hiring applicants without a college or university degree.
+    const identifyBarriersAgent = new IdentifyBarriersAgent(
+      this.agent,
+      this.memory,
+      56,
+      70
+    );
+    await identifyBarriersAgent.processJobDescription(jobDescription);
+    await this.saveMemory();
 
-      // // Step 6: Validate data consistency
-      const validateJobDescriptionAgent = new ValidateJobDescriptionAgent(
-        this.agent,
-        this.memory,
-        70,
-        84
-      );
-      await validateJobDescriptionAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    // // Step 6: Validate data consistency
+    const validateJobDescriptionAgent = new ValidateJobDescriptionAgent(
+      this.agent,
+      this.memory,
+      70,
+      84
+    );
+    await validateJobDescriptionAgent.processJobDescription(jobDescription);
+    await this.saveMemory();
 
-      // // Step 7: Analyze the readability of the job description via flesh kincaid
-      const readabilityTXTTSNPMJobDescriptionAgent = new ReadabilityScoreJobDescriptionAgent(
-        this.agent,
-        this.memory,
-        84,
-        100
-      );
-      await readabilityTXTTSNPMJobDescriptionAgent.processJobDescription(jobDescription);
-      await this.saveMemory();
+    // // Step 7: Analyze the readability of the job description via flesh kincaid
+    const readabilityTXTTSNPMJobDescriptionAgent =
+      new ReadabilityScoreJobDescriptionAgent(this.agent, this.memory, 84, 100);
+    await readabilityTXTTSNPMJobDescriptionAgent.processJobDescription(
+      jobDescription
+    );
+    await this.saveMemory();
 
-
-         // Step 8: Analyze the readability according to US job level and extract  difficult passages .
-         const readingLevelUSGradeAnalysisAgentP2 = new ReadingLevelUSGradeAnalysisAgentP2(
-          this.agent,
-          this.memory,
-          100,
-          114
-        );
-        await readingLevelUSGradeAnalysisAgentP2.processJobDescription(jobDescription);
-        await this.saveMemory();
-
-      }
-
-
+    // Step 8: Analyze the readability according to US job level and extract  difficult passages .
+    const readingLevelUSGradeAnalysisAgentP2 =
+      new ReadingLevelUSGradeAnalysisAgentP2(this.agent, this.memory, 100, 114);
+    await readingLevelUSGradeAnalysisAgentP2.processJobDescription(
+      jobDescription
+    );
+    await this.saveMemory();
+  }
 
   // Static method to get agent class attributes
   static getAgentClass(): PsAgentClassCreationAttributes {
@@ -228,7 +232,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         description:
           "An agent for analyzing job descriptions for education requirements",
         queueName: "JOB_DESCRIPTION_ANALYSIS",
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png", // Provide an image URL if available
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png", // Provide an image URL if available
         iconName: "job_description_analysis",
         capabilities: ["analysis", "text processing"],
         requestedAiModelSizes: [PsAiModelSize.Medium],

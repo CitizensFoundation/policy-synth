@@ -233,7 +233,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     }
   }
 
-  scheduleMemorySave(): void {
+  async scheduleMemorySave(): Promise<void> {
     if (!this.memorySaveTimer) {
       this.memorySaveTimer = setTimeout(async () => {
         try {
@@ -248,7 +248,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
             this.memorySaveTimer = null;
           }
         }
-      }, 15000);
+      }, 1500);
     }
   }
 

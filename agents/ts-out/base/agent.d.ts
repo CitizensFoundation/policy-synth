@@ -36,7 +36,7 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     getConfigOld<T>(uniqueId: string, defaultValue: T): T;
     loadStatusFromRedis(): Promise<PsAgentStatus | undefined>;
     checkProgressForPauseOrStop(): Promise<void>;
-    scheduleMemorySave(): void;
+    scheduleMemorySave(): Promise<void>;
     checkLastMemorySaveError(): void;
     saveMemory(): Promise<void>;
     getTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
