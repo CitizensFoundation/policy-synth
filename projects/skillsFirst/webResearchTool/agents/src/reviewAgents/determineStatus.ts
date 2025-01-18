@@ -7,8 +7,12 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  maxModelTokensOut = 2048;
-  modelTemperature = 0.0;
+  override get maxModelTokensOut(): number {
+    return 2048;
+  }
+  override get modelTemperature(): number {
+    return 0.0;
+  }
 
   constructor(
     agent: PsAgent,

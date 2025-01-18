@@ -1,2 +1,15 @@
 node_modules
+src/master_sheet_skillsbased_StateTitle_Analysis.csv
+src/addMainCategories.cjs
+src/updateStateTitles.cjs
+src/dataConsistency.cjs
+src/dataConsistency_revised_241009.cjs
+src/first_test_memory_validate.json
+src/first_test_memory_validate_241009.json
+src/countCat.py
+src/addOCtoTitleJSON.py
+
+
+startAgent.sh
+
 data

@@ -9,6 +9,7 @@ export enum EducationType {
   undefined = "undefined", // undefined
 }
 
+
 export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
   [EducationType.HighSchool]: {
     code: "Type1",

@@ -1,0 +1,339 @@
+[
+  {
+    "id": "occp_agriculture",
+    "mainCategory": "Agriculture, Fishery, Forestry and Related Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with propagating, growing, caring for, and gathering plant, animal, and fish life and products; and caring for parks, gardens, forests, and grounds. Excludes professional and scientific occupations in agriculture, fishery, and forestry.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN PLANTING AND GARDENING",
+        "descriptionSubCategory": "This category includes occupations concerned with tilling soil; propagating, cultivating, and harvesting plant life; gathering products of plant life; and caring for parks, gardens, and grounds.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/agriculture/OG40.pdf",
+        "id": "OG40",
+        "count": 28
+      },
+      {
+        "subCategory": "OCCUPATIONS IN ANIMAL FARMING",
+        "descriptionSubCategory": "This category includes occupations concerned with breeding, raising, maintaining, gathering, and caring for land animals, collecting their products, and providing services in support of these activities.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/agriculture/OG41.pdf",
+        "id": "OG41",
+        "count": 7
+      },
+      {
+        "subCategory": "OCCUPATIONS IN FISHERY AND RELATED FIELDS",
+        "descriptionSubCategory": "This category includes occupations concerned with seeding, cultivating, transplanting, stocking, catching, or gathering aquatic life.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/agriculture/OG42.pdf",
+        "id": "OG42",
+        "count": 0
+      },
+      {
+        "subCategory": "OCCUPATIONS IN FORESTRY",
+        "descriptionSubCategory": "This category includes occupations concerned with developing, maintaining, and cultivating forests and woodlands, and harvesting their products. Excludes occupations concerned with cultivating ornamental trees, shrubs, and flowers.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/agriculture/OG43.pdf",
+        "id": "OG43",
+        "count": 1
+      }
+    ],
+    "count": 36
+  },
+  {
+    "id": "occp_benchwork",
+    "mainCategory": "Benchwork Operations",
+    "descriptionMainCategory": "This major category includes occupations concerned with using body members, hand tools, and bench machines to fabricate, inspect, or repair relatively small equipment. The work is usually performed at a set position or station in a shop, or at a bench, or worktable.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN FABRICATION AND REPAIR OF SCIENTIFIC, MEDICAL, PHOTOGRAPHIC, OPTICAL, AND RELATED PRODUCTS",
+        "descriptionSubCategory": "This category includes occupations concerned with assembling, fabricating, and repairing scientific and medical apparatus, and photographic and optical goods.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/benchwork/OG70.pdf",
+        "id": "OG70",
+        "count": 1
+      },
+      {
+        "subCategory": "OCCUPATIONS IN REPAIR OF ELECTRICAL EQUIPMENT",
+        "descriptionSubCategory": "This category includes occupations concerned with assembling, fabricating, or repairing equipment, components, and parts for equipment to transmit, control, or convert electrical power; signaling and detection equipment; radio and television equipment; and communications equipment.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/benchwork/OG72.pdf",
+        "id": "OG72",
+        "count": 15
+      }
+    ],
+    "count": 16
+  },
+  {
+    "id": "occp_clerical",
+    "mainCategory": "Clerical Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with preparing, transcribing, systematizing, and preserving written communications and records; distributing information; collecting accounts; and handling materials and goods.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN STENOGRAPHY, TYPING, FILING, AND RELATED FIELDS",
+        "descriptionSubCategory": "This category includes occupations concerned with making, classifying, and filing records. Includes activities such as transmitting and receiving data by machines equipped with a typewriter-like keyboard; the input and retrieval of information into computer systems; and operating machines to duplicate records, correspondence and reports. Excludes occupations concerned primarily with statistical, financial, or other numerical data.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/clerical/OG20.pdf",
+        "id": "OG20",
+        "count": 170
+      },
+      {
+        "subCategory": "OCCUPATIONS IN COMPUTING AND ACCOUNT-RECORDING",
+        "descriptionSubCategory": "This category includes occupations concerned with systematizing information about transactions and activities into accounts and quantitative records, and paying and receiving money. Includes such activities as keeping and verifying records of business or financial transactions; receiving and disbursing money; operating electronic and electromechanical accounting and tabulating machines and equipment; computing and verifying amounts due for goods and services; preparing payrolls, timekeeping records, and duty rosters; and posting primarily financial or statistical data to accounting records.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/clerical/OG21.pdf",
+        "id": "OG21",
+        "count": 24
+      },
+      {
+        "subCategory": "OCCUPATIONS IN STOCK, STORAGE, AND INVENTORY",
+        "descriptionSubCategory": "This category includes occupations concerned with compiling and maintaining inventory records, expediting flow of work and materials, and receiving, storing, shipping, issuing, requisitioning, and accounting for materials and goods.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/clerical/OG22.pdf",
+        "id": "OG22",
+        "count": 30
+      },
+      {
+        "subCategory": "OCCUPATIONS IN INFORMATION AND MESSAGE DISTRIBUTION",
+        "descriptionSubCategory": "This category includes occupations concerned with the distribution of information and messages by direct personal, telephone, or radio contact, involving such activities as delivering mail, relaying messages by telephone or radio equipment, and directing visitors at reception points.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/clerical/OG24.pdf",
+        "id": "OG24",
+        "count": 36
+      }
+    ],
+    "count": 260
+  },
+  {
+    "id": "occp_machine",
+    "mainCategory": "Machine Trades Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with the operation of machines that cut, bore, mill, abrade, print, and similarly work such materials as metal, paper, wood, plastics, and stone. A worker's relationship to the machine is of primary importance. In other jobs, eye and hand coordination may be the most significant factor. Includes occupations concerned with installation, repair, and maintenance of machines and mechanical equipment.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN MACHINERY REPAIR",
+        "descriptionSubCategory": "This category includes occupations concerned with installing, inspecting, testing, repairing, rebuilding, and maintaining in efficient operating condition all types of engines and a wide variety of mechanical equipment designed for general or specific application.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/machine/OG60.pdf",
+        "id": "OG60",
+        "count": 30
+      },
+      {
+        "subCategory": "OCCUPATIONS IN PRINTING",
+        "descriptionSubCategory": "This category includes occupations concerned with reproducing data or designs by mechanical transfer of ink or dye to the surface of materials with the aid of type, plates, rolls, and the like. Includes the preparation of type and plate for machines and mechanical bookbinding.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/machine/OG65.pdf",
+        "id": "OG65",
+        "count": 14
+      }
+    ],
+    "count": 44
+  },
+  {
+    "id": "occp_professional",
+    "mainCategory": "Professional, Technical and Managerial Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with the theoretical, practical, and managerial aspects of fields such as architecture; engineering; physical, life, and social sciences; psychological and counseling services; medicine and health; education; museum, library, and archival sciences; law; writing; commercial arts; recreation; financial specialties; administrative specialties; inspections and investigations; and public broadcasting. Also includes occupations in support of the above. Many of these occupations require higher educational preparation or its equivalency in experience.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN ENGINEERING AND SURVEYING",
+        "descriptionSubCategory": "This category includes occupations concerned with the practical application of physical laws and principles of engineering for the development and utilization of machines, materials, instruments, structures, processes, and services. Typical specializations are research, design, construction, testing, procurement, production, and operations. Also includes preparation of drawings, specifications, cost estimates, and participation in verification tests. Excludes occupations, regardless of discipline, in which the primary function is inspection or investigation.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG00.pdf",
+        "id": "OG00",
+        "count": 123
+      },
+      {
+        "subCategory": "OCCUPATIONS IN ENVIRONMENTAL ENGINEERING AND ARCHITECTURE",
+        "descriptionSubCategory": "This category includes occupations concerned with the practical application of physical laws and principles of environmental engineering and/or architecture for the development and utilization of machines, materials, instruments, structures, processes, and services. Typical specializations are research, design, construction, testing, procurement, production, and operations. Also includes preparation of drawings, specifications, and cost estimates, and participation in verification tests. Excludes occupations, regardless of discipline, in which the primary function is inspection or investigation.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG01.pdf",
+        "id": "OG01",
+        "count": 20
+      },
+      {
+        "subCategory": "OCCUPATIONS IN PHYSICAL SCIENCES AND STATISTICS",
+        "descriptionSubCategory": "This category includes occupations concerned with research pertaining to the physical universe, and the application of established mathematical and scientific laws and principles to specific problems and situations.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG02.pdf",
+        "id": "OG02",
+        "count": 103
+      },
+      {
+        "subCategory": "OCCUPATIONS IN LIFE SCIENCES",
+        "descriptionSubCategory": "This category includes occupations concerned with research to increase basic knowledge of living organisms, including humans, and the scientific application of biological theories.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG04.pdf",
+        "id": "OG04",
+        "count": 95
+      },
+      {
+        "subCategory": "OCCUPATIONS IN COMMUNITY DEVELOPMENT AND SOCIAL SCIENCES",
+        "descriptionSubCategory": "This category includes occupations concerned with human society and its characteristic elements, and with economic and social relations, and institutions involved in human existence in organized communities. Also includes occupations concerned with planning community and social service programs, urban/regional planning, land use assessment and development, real estate and community housing, economic development, and program development directly related to community or service-oriented programs. Excludes occupations concerned with grants development.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG05.pdf",
+        "id": "OG05",
+        "count": 85
+      },
+      {
+        "subCategory": "OCCUPATIONS IN SOCIAL AND PSYCHOLOGICAL SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with rendering assistance to individuals or groups with problems such as poverty, illness, family maladjustments, antisocial behavior, financial mismanagement, and inadequate housing. Also assists in the collection, interpretation, and application of scientific data relating to human behavior and mental processes. Provides individual and group guidance and counseling services relative to problems of an educational, vocational, rehabilitative, or personal/social nature. Also includes occupations concerned with religious worship, observance, and guidance.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og065713.pdf",
+        "id": "og065713",
+        "count": 190
+      },
+      {
+        "subCategory": "OCCUPATIONS IN MEDICAL AND HEALTH SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with the health care and treatment of humans or animals in the fields of medicine, surgery, and dentistry; and in related patient-care areas such as nursing, therapy, dietetics, prosthetics, rehabilitation, and pharmacy. Includes occupations in environmental and public health, and in laboratories and other health facilities. Also included are titles dealing with disease vectors contained in consumable products such as milk or shellfish. Many occupations in this category require licensing or registration.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og075713.pdf",
+        "id": "og075713",
+        "count": 150
+      },
+      {
+        "subCategory": "OCCUPATIONS IN EDUCATION",
+        "descriptionSubCategory": "This category includes occupations in education concerned with administration and teaching. Also includes occupations that assist classroom teachers by instructing sections of classes, coaching individuals, and grading papers, but excludes aides where educational preparation is not specific and tasks performed include various clerical or service tasks. Also includes occupations concerned with formal staff training and development.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og095713.pdf",
+        "id": "og095713",
+        "count": 154
+      },
+      {
+        "subCategory": "OCCUPATIONS IN MUSEUM, LIBRARY, AND ARCHIVAL SCIENCES",
+        "descriptionSubCategory": "This category includes occupations concerned with library and archival sciences, which include the safekeeping of public records and documents; with collecting, preserving, exhibiting, researching, and maintaining museums or gallery-quality exhibits or collections (either scientific, historical, artistic, or technological); and the preservation of historic sites and cultural resources.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og105713.pdf",
+        "id": "og105713",
+        "count": 64
+      },
+      {
+        "subCategory": "OCCUPATIONS IN LAW",
+        "descriptionSubCategory": "This category includes occupations concerned with the application of principles relating to statute law and its administration.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og115713.pdf",
+        "id": "og115713",
+        "count": 136
+      },
+      {
+        "subCategory": "INFORMATION PROCESSING SYSTEMS",
+        "descriptionSubCategory": "This category includes occupations concerned with the application of information processing methods and techniques to store, manipulate, transform, or present information by means of computer systems, including the development of application system software, hardware systems design, and telecommunication systems.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og125713.pdf",
+        "id": "og125713",
+        "count": 78
+      },
+      {
+        "subCategory": "OCCUPATIONS IN WRITING",
+        "descriptionSubCategory": "This category includes occupations concerned with reporting, editing, promoting, and interpreting ideas and facts in written form; advertising programs and strategies; programs designed to promote changes in public attitudes; public information and public relations. Occupations concerned solely with translating and interpreting written and spoken words from one language to another are included in this category, but bilingual title variants in other disciplines are excluded.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og135713.pdf",
+        "id": "og135713",
+        "count": 33
+      },
+      {
+        "subCategory": "OCCUPATIONS IN ART",
+        "descriptionSubCategory": "This category includes occupations concerned with integrating personal expression, knowledge of subject matter, and art concepts, techniques, and processes to develop ideas and create environments, products, artwork, and photography. Excludes occupations concerned with teaching.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og145713.pdf",
+        "id": "og145713",
+        "count": 22
+      },
+      {
+        "subCategory": "OCCUPATIONS IN FINANCIAL SPECIALIZATIONS",
+        "descriptionSubCategory": "This category includes occupations concerned with a variety of professional financial specializations, such as accounting and auditing; sales, promotion, or marketing of a product, service, or industry; purchasing; budgetary systems; investments and securities; and grants administration.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/og155713.pdf",
+        "id": "og155713",
+        "count": 208
+      },
+      {
+        "subCategory": "OCCUPATIONS IN ADMINISTRATIVE SPECIALIZATIONS",
+        "descriptionSubCategory": "This category includes occupations concerned with a variety of professional administrative specializations related to the internal operation of an agency in supporting agency goals and objectives involving utilization of resources other than fiscal, such as formulating and recommending policies and administering programs; human resources management and labor relations; and program compliance review. Includes managerial occupations which may cross other categories in this dictionary but excludes managerial occupations of specific disciplines in other categories.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG16.pdf",
+        "id": "OG16",
+        "count": 642
+      },
+      {
+        "subCategory": "OCCUPATIONS IN INSPECTIONS AND INVESTIGATIONS",
+        "descriptionSubCategory": "This category includes occupations concerned with examining the condition of persons, plants, and animals; the quality of consumer products and services; and the operations of establishments, serving in the capacity of a governmental inspector or investigator in order to verify compliance with and enforcement of regulatory laws, health and safety laws, or the establishment's quality standards. Includes occupations which involve working in a specific professional discipline, such as engineering, medicine, or the physical and life sciences, and involve working for a governmental agency as an inspector or investigator. Also includes titles dealing with disease vectors contained in environmental sources such as water, sanitation, noise, and air. Excludes detective and investigator occupations concerned with enforcement of criminal laws.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG17.pdf",
+        "id": "OG17",
+        "count": 243
+      },
+      {
+        "subCategory": "OCCUPATIONS IN RECREATION",
+        "descriptionSubCategory": "This category includes occupations concerned with the planning, promoting, organizing, and administering of recreational activities. Excludes occupations in recreation therapy.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG18.pdf",
+        "id": "OG18",
+        "count": 6
+      },
+      {
+        "subCategory": "PUBLIC BROADCASTING AND TRANSMITTING OCCUPATIONS",
+        "descriptionSubCategory": "This category includes occupations concerned with providing various technical, production, and/or transmission services in motion pictures, radio, and television broadcasting. Excludes occupations which are primarily involved with writing.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/professional/OG19.pdf",
+        "id": "OG19",
+        "count": 5
+      }
+    ],
+    "count": 2357
+  },
+  {
+    "id": "occp_service",
+    "mainCategory": "Service Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with providing housekeeping, cleaning, and maintenance services in buildings, institutions, and laboratories; preparing and serving food and beverages in institutional or other facilities; providing grooming, cosmetic, and other personal and health care services; maintaining and cleaning clothing and linens; and providing protection for people and property. Excludes occupations concerned with repair functions.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN BUILDING, INSTITUTION, AND FACILITY SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with cleanliness, orderliness, and maintenance of buildings, institutions, and laboratories. Also includes occupations concerned with laundry and sewing services.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/service/OG30.pdf",
+        "id": "OG30",
+        "count": 32
+      },
+      {
+        "subCategory": "OCCUPATIONS IN FOOD AND BEVERAGE PREPARATION AND SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with preparing and serving food and beverages to residents, clients, inmates, students, patients, and staff at institutions with dining facilities. Occupations concerned with implementing mobile meals programs are in this category. Also included are occupations concerned with the management of food supply, food preparation, food service, and food delivery. Excludes occupations which direct the planning of nutrition and diet in support of good health.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/service/OG31.pdf",
+        "id": "OG31",
+        "count": 29
+      },
+      {
+        "subCategory": "OCCUPATIONS IN BARBERING, COSMETOLOGY, AND RELATED SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with rendering tonsorial and cosmetological services to individuals.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/service/OG33.pdf",
+        "id": "OG33",
+        "count": 4
+      },
+      {
+        "subCategory": "OCCUPATIONS IN DIRECT CARE AND RELATED PERSONAL AND HEALTH SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with attending to the directed treatment, physical comfort, safety, and appearance of individuals placed in governmental facilities for treatment, rehabilitation, education, or safety. Excludes occupations concerned with criminal incarceration.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/service/OG35.pdf",
+        "id": "OG35",
+        "count": 21
+      },
+      {
+        "subCategory": "OCCUPATIONS IN PROTECTIVE SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with protecting the public against crime, fire, and accidents; guarding persons, property, and public lands from illegal entry, fire, and theft; ensuring security and safety of agencies, institutions, or buildings, and the custody and discipline of prisoners, and those technical support occupations that review, store, and analyze evidence or information to be used in criminal prosecution.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/service/OG36.pdf",
+        "id": "OG36",
+        "count": 142
+      }
+    ],
+    "count": 228
+  },
+  {
+    "id": "occp_structural",
+    "mainCategory": "Structural Work Occupations",
+    "descriptionMainCategory": "This major category includes occupations concerned with fabricating, erecting, installing, paving, painting, and repairing structures and structural parts, such as bridges, buildings, roads, motor vehicle body and frame members, cables, girders, plates, and frames. The worker's relationship to hand tools and power tools is more important than that to stationary machines, which are also used. This category also includes semi or nonskilled occupations related to the above, as well as other occupations involved primarily in manual labor.",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN SKILLED TRADES",
+        "descriptionSubCategory": "This category includes skilled occupations concerned with fabricating, erecting, installing, painting, and repairing structures or structural parts. These occupations require recognized levels of competency often attained via apprenticeship.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/structural/OG80.pdf",
+        "id": "OG80",
+        "count": 28
+      },
+      {
+        "subCategory": "OCCUPATIONS IN INFRASTRUCTURE AND STRUCTURAL REPAIR AND MAINTENANCE",
+        "descriptionSubCategory": "This category includes semi- or nonskilled occupations concerned with installing, painting, and repairing structures or structural parts or performing a variety of manual labor tasks, and which do not require attainment of competency as do the skilled occupations; i.e., apprenticeship. Other occupations in this subcategory involve the collecting and disposing of refuse.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/structural/OG81.pdf",
+        "id": "OG81",
+        "count": 43
+      }
+    ],
+    "count": 71
+  },
+  {
+    "id": "occp_misc",
+    "mainCategory": "Miscellaneous Occupations",
+    "descriptionMainCategory": "",
+    "subCategories": [
+      {
+        "subCategory": "OCCUPATIONS IN TRANSPORTING SERVICES",
+        "descriptionSubCategory": "This category includes occupations concerned with transporting people or cargo over highways, streets, within compounds of construction or institutional areas, on waterways, or in the air.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/miscellaneous/OG90.pdf",
+        "id": "OG90",
+        "count": 20
+      },
+      {
+        "subCategory": "OCCUPATIONS IN PRODUCTION AND DISTRIBUTION OF UTILITIES",
+        "descriptionSubCategory": "This category includes occupations concerned with generation, transmission, and distribution of electricity; generation and distribution of steam for heat and power, including marine propulsion; generation of utility gas, and storage and distribution of natural and manufactured gas for power, illumination, or heating purposes; filtration, purification, and distribution of water for domestic, commercial, or industrial consumption; and collection, treatment, and disposal of sewage.",
+        "link": "https://www.nj.gov/csc/seekers/about/categories/pdf/miscellaneous/OG91.pdf",
+        "id": "OG91",
+        "count": 16
+      }
+    ],
+    "count": 36
+  }
+]
