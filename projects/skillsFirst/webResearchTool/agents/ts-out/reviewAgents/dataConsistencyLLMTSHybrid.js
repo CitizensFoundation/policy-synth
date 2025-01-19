@@ -12,6 +12,9 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
     get modelTemperature() {
         return 0.0;
     }
+    get reasoningEffort() {
+        return "high";
+    }
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         this.memory = memory;

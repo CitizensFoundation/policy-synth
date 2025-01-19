@@ -6,6 +6,7 @@ export declare class ValidateJobDescriptionAgent extends PolicySynthAgent {
     modelSize: PsAiModelSize;
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
     constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
     processJobDescription(jobDescription: JobDescription): Promise<void>;
 }
