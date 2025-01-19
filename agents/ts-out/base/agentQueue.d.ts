@@ -1,5 +1,6 @@
 import ioredis from "ioredis";
 import { PolicySynthAgent } from "./agent.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAgent } from "../dbModels/agent.js";
 export interface PsAgentStartJobData {
     agentId: number;
@@ -10,7 +11,7 @@ export interface PsAgentStartJobData {
  * Abstract queue that can hold multiple agent implementations
  * This class has been refactored to store multiple Agents in maps
  */
-export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
+export declare abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
     protected agentsMap: Map<number, PsAgent>;
     protected agentInstancesMap: Map<number, PolicySynthAgent>;
     protected agentStatusMap: Map<number, PsAgentStatus>;
@@ -33,6 +34,11 @@ export declare abstract class PolicySynthAgentQueue extends PolicySynthAgent {
      * so we always have an object with structuredAnswersOverrides set.
      */
     getOrCreateAgentInstance(agentId: number): PolicySynthAgent;
+    /**
+     * Loads agent memory from Redis if we haven't already,
+     * then stores it in this.agentMemoryMap.
+     */
+    loadAgentMemoryIfNeeded(agentId: number): Promise<PsAgentMemoryData>;
     processAllAgents(agentId: number): Promise<void>;
     loadAgentStatusFromRedis(agentId: number): Promise<PsAgentStatus | undefined>;
     saveAgentStatusToRedis(agentId: number): Promise<void>;

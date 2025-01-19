@@ -1,18 +1,18 @@
 //TODO: Make agentRegistry secure with access control through communities/domains
 //TODO: Make the angentRegistry support many instances of the agent classes running (counters?)
-import { PolicySynthAgent } from "./agent.js";
 import { PsAgentRegistry } from "../dbModels/agentRegistry.js";
 import { PsAgentClass } from "../dbModels/agentClass.js";
 import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
 import { initializeModels } from "../dbModels/index.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
-export class PsBaseAgentRunner extends PolicySynthAgent {
+import { PolicySynthAgentBase } from "./agentBase.js";
+export class PsBaseAgentRunner extends PolicySynthAgentBase {
     agentsToRun = [];
     agentRegistry = null;
     registeredAgentClasses = [];
     registeredConnectorClasses = [];
     constructor() {
-        super({}, undefined, 0, 100);
+        super();
         if (!process.env.YP_USER_ID_FOR_AGENT_CREATION) {
             throw new Error("YP_USER_ID_FOR_AGENT_CREATION environment variable not set");
         }

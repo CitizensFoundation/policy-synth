@@ -1,7 +1,6 @@
 // agentQueue.ts
 import ioredis from "ioredis";
 import { QueueEvents, Worker } from "bullmq";
-import { PolicySynthAgent } from "./agent.js";
 import { PsAgentConnector } from "../dbModels/agentConnector.js";
 import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
 import { PsAgentClass } from "../dbModels/agentClass.js";
@@ -10,12 +9,13 @@ import { Group } from "../dbModels/ypGroup.js";
 import { PsExternalApiUsage } from "../dbModels/externalApiUsage.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAgent } from "../dbModels/agent.js";
 /**
  * Abstract queue that can hold multiple agent implementations
  * This class has been refactored to store multiple Agents in maps
  */
-export class PolicySynthAgentQueue extends PolicySynthAgent {
+export class PolicySynthAgentQueue extends PolicySynthAgentBase {
     // Instead of single references, we keep them in maps keyed by agentId
     agentsMap = new Map();
     agentInstancesMap = new Map();
@@ -27,11 +27,13 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
     constructor() {
         // We pass a dummy agent to the super since we must call `super()`
         // The rest of the code is adjusted so we rarely use `this.agent` in this queue class
-        super({}, undefined, 0, 100);
+        super();
         this.initializeRedis();
     }
     initializeRedis() {
-        let redisUrl = process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379";
+        let redisUrl = process.env.REDIS_AGENT_URL ||
+            process.env.REDIS_URL ||
+            "redis://localhost:6379";
         // Handle 'redis://h:' case if needed
         if (redisUrl.startsWith("redis://h:")) {
             redisUrl = redisUrl.replace("redis://h:", "redis://:");
@@ -39,7 +41,9 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
         console.log("AgentQueueManager: Initializing Redis connection:", redisUrl);
         const options = {
             maxRetriesPerRequest: null,
-            tls: redisUrl.startsWith("rediss://") ? { rejectUnauthorized: false } : undefined,
+            tls: redisUrl.startsWith("rediss://")
+                ? { rejectUnauthorized: false }
+                : undefined,
         };
         this.redisClient = new ioredis(redisUrl, options);
         this.redisClient.on("error", (err) => {
@@ -146,6 +150,33 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
         }
         return policySynthAgent;
     }
+    /**
+     * Loads agent memory from Redis if we haven't already,
+     * then stores it in this.agentMemoryMap.
+     */
+    async loadAgentMemoryIfNeeded(agentId) {
+        const psAgent = this.agentsMap.get(agentId);
+        if (!psAgent) {
+            throw new Error(`No PsAgent found for agentId=${agentId}`);
+        }
+        // Check if we already have a memory object in memory
+        let agentMemory = this.agentMemoryMap.get(agentId);
+        if (!agentMemory) {
+            // Try to load from Redis
+            const memoryString = await this.redisClient.get(psAgent.redisMemoryKey);
+            if (memoryString) {
+                agentMemory = JSON.parse(memoryString);
+            }
+            if (!agentMemory) {
+                // If nothing in Redis, initialize a blank memory object
+                agentMemory = { agentId };
+            }
+            if (agentMemory) {
+                this.agentMemoryMap.set(agentId, agentMemory);
+            }
+        }
+        return agentMemory;
+    }
     // If you want multiple processor steps in sequence:
     async processAllAgents(agentId) {
         let totalProgress = 0;
@@ -160,11 +191,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                     throw new Error(`PsAgent not loaded for agentId=${agentId}`);
                 }
                 // Make sure the memory is the same one we've stored
-                let agentMemory = this.agentMemoryMap.get(agentId);
-                if (!agentMemory) {
-                    agentMemory = { agentId };
-                    this.agentMemoryMap.set(agentId, agentMemory);
-                }
+                const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
                 const policySynthAgent = new AgentClass(psAgent, agentMemory, startProgress, endProgress);
                 this.agentInstancesMap.set(agentId, policySynthAgent);
                 await policySynthAgent.process();
@@ -234,18 +261,17 @@ export class PolicySynthAgentQueue extends PolicySynthAgent {
                     // 1) Ensure PsAgent is loaded from DB
                     const loadedAgent = await this.getOrCreatePsAgent(agentId);
                     // 2) Make sure we have a memory object for this agent
-                    let agentMemory = this.agentMemoryMap.get(agentId);
-                    if (!agentMemory) {
-                        agentMemory = { agentId };
-                        this.agentMemoryMap.set(agentId, agentMemory);
-                    }
+                    const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
                     // 3) If we want to store structuredAnswersOverrides, do so here
                     if (structuredAnswersOverrides) {
                         this.structuredAnswersOverrides = structuredAnswersOverrides;
-                        agentMemory.structuredAnswersOverrides = structuredAnswersOverrides;
+                        agentMemory.structuredAnswersOverrides =
+                            structuredAnswersOverrides;
                     }
+                    this.logger.debug(`Have loaded agent ${loadedAgent.id} ${loadedAgent.redisMemoryKey} ${JSON.stringify(agentMemory, null, 2)}`);
                     // 4) Run any subclass-specific memory setup
                     await this.setupMemoryIfNeeded(agentId);
+                    this.logger.debug(`Have loaded memory for agent ${agentId}: ${JSON.stringify(agentMemory, null, 2)}`);
                     // 5) Setup status
                     await this.setupStatusIfNeeded(agentId);
                     // 6) Log the action
