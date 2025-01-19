@@ -8,13 +8,14 @@ import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
 import { PsAgent, initializeModels } from "../dbModels/index.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
 import { PolicySynthAgentQueue } from "./agentQueue.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 
 interface AgentQueueConstructor {
   new (...args: any[]): PolicySynthAgentQueue;
   getAgentClass(): PsAgentClassCreationAttributes;
 }
 
-export abstract class PsBaseAgentRunner extends PolicySynthAgent {
+export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
   protected agentsToRun: PolicySynthAgentQueue[] = [];
   protected agentRegistry: PsAgentRegistry | null = null;
   protected registeredAgentClasses: PsAgentClass[] = [];
@@ -24,7 +25,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgent {
   protected abstract connectorClasses: PsAgentConnectorClassCreationAttributes[];
 
   constructor() {
-    super({} as any, undefined, 0, 100);
+    super();
 
     if (!process.env.YP_USER_ID_FOR_AGENT_CREATION) {
       throw new Error(

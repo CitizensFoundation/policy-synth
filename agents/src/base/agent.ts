@@ -120,6 +120,12 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   }
 
   async loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData> {
+    if (!this.agent.redisMemoryKey) {
+      this.logger.error("Agent memory key not set");
+      this.logger.error(JSON.stringify(this.agent, null, 2));
+      throw new Error("Agent memory key not set");
+    }
+
     try {
       this.logger.debug(`Loading memory from Redis: ${this.agent.redisMemoryKey}`);
       const memoryData = await this.redis.get(this.agent.redisMemoryKey);

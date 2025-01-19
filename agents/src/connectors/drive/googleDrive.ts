@@ -27,7 +27,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
       description: "Connector for Google Drive",
       hasPublicAccess: true,
       imageUrl:
-        "https://aoi-storage-production.citizens.is/dl/948e0e85b5a4036af23fa33aad2672cc--retina-1.png",
+        "https://aoi-storage-production.citizens.is/dl/31f98f6ab00368d67b5bdee572d4b395--retina-1.png",
       iconName: "drive",
       questions: [
         {
