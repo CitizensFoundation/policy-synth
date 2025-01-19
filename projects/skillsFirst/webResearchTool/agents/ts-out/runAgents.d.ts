@@ -1,7 +1,7 @@
 import { PsBaseAgentRunner } from "@policysynth/agents/base/agentRunner.js";
 export declare class JobDescriptionAgentRunner extends PsBaseAgentRunner {
     protected agentClasses: PsAgentClassCreationAttributes[];
-    protected connectorClasses: PsAgentConnectorClassAttributes[];
+    protected connectorClasses: PsAgentConnectorClassCreationAttributes[];
     constructor();
     setupAgents(): Promise<void>;
     static runAgentManager(): Promise<void>;

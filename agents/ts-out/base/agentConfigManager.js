@@ -29,7 +29,7 @@ export class PsConfigManager extends PolicySynthAgentBase {
         }
         //this.logger.debug(`Value for ${uniqueId}: ${value}`);
         if (!value) {
-            this.logger.error(`Configuration answer not found for ${uniqueId}`);
+            this.logger.warn(`Configuration answer not found for ${uniqueId}`);
             return defaultValue;
         }
         // Check for null, undefined, or empty string and return defaultValue
@@ -83,7 +83,7 @@ export class PsConfigManager extends PolicySynthAgentBase {
             return answer.value;
         }
         else {
-            this.logger.error(`Configuration answer not found for ${uniqueId}`);
+            this.logger.warn(`Configuration answer not found for ${uniqueId}`);
         }
         return defaultValue;
     }

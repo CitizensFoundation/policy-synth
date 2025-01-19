@@ -88,7 +88,7 @@ export abstract class PsBaseConnector extends PolicySynthAgent {
         }
       }
     } else {
-      this.logger.error(`Configuration answer not found for ${uniqueId}`);
+      this.logger.warn(`Configuration answer not found for ${uniqueId}`);
       return defaultValue;
     }
   }

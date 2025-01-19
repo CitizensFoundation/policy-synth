@@ -4,5 +4,6 @@ export enum PsConnectorClassTypes {
   NotificationsAndChat = "notificationsAndChat",
   IdeasCollaboration = "ideasCollaboration",
   VotingCollaboration = "votingCollaboration",
+  Drive = "drive",
 }
 

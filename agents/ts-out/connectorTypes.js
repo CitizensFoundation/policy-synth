@@ -5,5 +5,6 @@ export var PsConnectorClassTypes;
     PsConnectorClassTypes["NotificationsAndChat"] = "notificationsAndChat";
     PsConnectorClassTypes["IdeasCollaboration"] = "ideasCollaboration";
     PsConnectorClassTypes["VotingCollaboration"] = "votingCollaboration";
+    PsConnectorClassTypes["Drive"] = "drive";
 })(PsConnectorClassTypes || (PsConnectorClassTypes = {}));
 //# sourceMappingURL=connectorTypes.js.map

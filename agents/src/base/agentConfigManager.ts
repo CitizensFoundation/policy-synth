@@ -35,7 +35,7 @@ export class PsConfigManager extends PolicySynthAgentBase{
       //this.logger.debug(`Value for ${uniqueId}: ${value}`);
 
       if (!value) {
-        this.logger.error(`Configuration answer not found for ${uniqueId}`);
+        this.logger.warn(`Configuration answer not found for ${uniqueId}`);
         return defaultValue;
       }
 
@@ -92,7 +92,7 @@ export class PsConfigManager extends PolicySynthAgentBase{
       }
       return answer.value as T;
     } else {
-      this.logger.error(`Configuration answer not found for ${uniqueId}`);
+      this.logger.warn(`Configuration answer not found for ${uniqueId}`);
     }
     return defaultValue;
   }

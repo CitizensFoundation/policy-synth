@@ -4,11 +4,6 @@ import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connecto
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector";
 
-interface JobDescriptionInput {
-  agentId: string;
-  jobDescriptions: JobDescription[];
-}
-
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
  * version to Google Sheets with the same columns/structure as the CSV version.

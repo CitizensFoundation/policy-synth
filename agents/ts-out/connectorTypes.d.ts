@@ -3,6 +3,7 @@ export declare enum PsConnectorClassTypes {
     Spreadsheet = "sheets",
     NotificationsAndChat = "notificationsAndChat",
     IdeasCollaboration = "ideasCollaboration",
-    VotingCollaboration = "votingCollaboration"
+    VotingCollaboration = "votingCollaboration",
+    Drive = "drive"
 }
 //# sourceMappingURL=connectorTypes.d.ts.map

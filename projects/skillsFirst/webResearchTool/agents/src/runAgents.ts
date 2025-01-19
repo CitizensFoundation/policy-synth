@@ -4,10 +4,12 @@ import { fileURLToPath } from "url";
 import { PsBaseAgentRunner } from "@policysynth/agents/base/agentRunner.js";
 import { JobDescriptionAnalysisQueue } from "./agentQueue.js";
 import { JobDescriptionAnalysisAgent } from "./jobDescriptionAgent.js";
+import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
+import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
 
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
   protected agentClasses: PsAgentClassCreationAttributes[];
-  protected connectorClasses: PsAgentConnectorClassAttributes[];
+  protected connectorClasses: PsAgentConnectorClassCreationAttributes[];
 
   constructor() {
     super();
@@ -15,8 +17,10 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
 
     this.agentClasses = [JobDescriptionAnalysisAgent.getAgentClass()];
 
+
     this.connectorClasses = [
-      // Add any connector classes if needed
+      PsGoogleDocsConnector.getConnectorClass,
+      PsGoogleSheetsConnector.getConnectorClass
     ];
   }
 

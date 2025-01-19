@@ -32,6 +32,7 @@ interface JobDescription {
   classification: import('./educationTypes.js').EducationType;
   url?: string;
   error?: string;
+  processed?: boolean;
   multiLevelJob?: boolean;
   cscRevised?: boolean;
   notes?: string;
@@ -408,6 +409,11 @@ interface JobDescriptionReadabilityAnalysis {
   assessedEducationLevel: EducationType; // The education level assessed for the job description (from Prompt #1)
   readingLevelMatchesDegreeRequirement: boolean; // True if assessed education level matches degree requirement
   readabilityAssessments: ReadabilityAssessment[]; // Array of readability assessments for different education levels
+}
+
+interface JobDescriptionInput {
+  agentId: number;
+  jobDescriptions: JobDescription[];
 }
 
 

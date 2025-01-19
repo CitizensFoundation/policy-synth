@@ -21,6 +21,10 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
     return 0.0;
   }
 
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,

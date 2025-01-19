@@ -3,6 +3,8 @@ import { fileURLToPath } from "url";
 import { PsBaseAgentRunner } from "@policysynth/agents/base/agentRunner.js";
 import { JobDescriptionAnalysisQueue } from "./agentQueue.js";
 import { JobDescriptionAnalysisAgent } from "./jobDescriptionAgent.js";
+import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
+import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
     agentClasses;
     connectorClasses;
@@ -11,7 +13,8 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
         this.agentsToRun = [new JobDescriptionAnalysisQueue()];
         this.agentClasses = [JobDescriptionAnalysisAgent.getAgentClass()];
         this.connectorClasses = [
-        // Add any connector classes if needed
+            PsGoogleDocsConnector.getConnectorClass,
+            PsGoogleSheetsConnector.getConnectorClass
         ];
     }
     async setupAgents() {

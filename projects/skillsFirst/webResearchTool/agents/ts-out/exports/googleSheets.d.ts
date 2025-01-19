@@ -1,9 +1,5 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-interface JobDescriptionInput {
-    agentId: string;
-    jobDescriptions: JobDescription[];
-}
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
  * version to Google Sheets with the same columns/structure as the CSV version.
@@ -45,5 +41,4 @@ export declare class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
      */
     private safeString;
 }
-export {};
 //# sourceMappingURL=googleSheets.d.ts.map
