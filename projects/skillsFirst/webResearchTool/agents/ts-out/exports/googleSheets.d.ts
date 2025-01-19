@@ -2,7 +2,8 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
- * version to Google Sheets with the same columns/structure as the CSV version.
+ * version to Google Sheets with the same columns/structure as the CSV version,
+ * now with two header rows (full path / short name).
  */
 export declare class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
     memory: any;
@@ -21,7 +22,7 @@ export declare class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
     processJsonData(jsonData: JobDescriptionInput): Promise<void>;
     /**
      * Creates the 2D array (rows) that will be pushed to the Google Sheet,
-     * exactly matching the CSV columns and order from your script.
+     * with two header rows: (1) full path and (2) short name, followed by data rows.
      */
     private generateSheetData;
     /**
@@ -33,7 +34,7 @@ export declare class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
      */
     private columnIndexToLetter;
     /**
-     * Makes sure values are strings (or for objects, uses JSON) to mirror CSV export style.
+     * Makes sure values are strings (or for objects, uses JSON).
      */
     private sanitizeData;
     /**

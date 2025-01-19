@@ -5,6 +5,7 @@ import { JobDescriptionAnalysisQueue } from "./agentQueue.js";
 import { JobDescriptionAnalysisAgent } from "./jobDescriptionAgent.js";
 import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
 import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
+import { PsGoogleDriveConnector } from "@policysynth/agents/connectors/drive/googleDrive.js";
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
     agentClasses;
     connectorClasses;
@@ -14,7 +15,8 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
         this.agentClasses = [JobDescriptionAnalysisAgent.getAgentClass()];
         this.connectorClasses = [
             PsGoogleDocsConnector.getConnectorClass,
-            PsGoogleSheetsConnector.getConnectorClass
+            PsGoogleSheetsConnector.getConnectorClass,
+            PsGoogleDriveConnector.getConnectorClass,
         ];
     }
     async setupAgents() {

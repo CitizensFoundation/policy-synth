@@ -6,13 +6,14 @@ import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSh
 
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
- * version to Google Sheets with the same columns/structure as the CSV version.
+ * version to Google Sheets with the same columns/structure as the CSV version,
+ * now with two header rows (full path / short name).
  */
 export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
   declare memory: any;
   private sheetsConnector: PsBaseSheetConnector;
   private sheetName = "Job Descriptions Analysis";  // Adjust to your target Sheet tab, if desired
-  private readonly chunkSize = 500;       // Number of rows to send per update
+  private readonly chunkSize = 500;                 // Number of rows to send per update
 
   constructor(
     agent: PsAgent,
@@ -49,9 +50,10 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
     await this.updateRangedProgress(0, "Starting Google Sheets export");
 
     // Generate the 2D array (headers + rows) with identical structure to your CSV
+    // but now with two header rows.
     const fullData = this.generateSheetData(jsonData);
 
-    // Convert all cells to strings (and JSON if object)
+    // Convert all cells to strings (and JSON if object) to match CSV export style
     const sanitizedData = this.sanitizeData(fullData);
 
     // Write in chunks so large data won't break the API
@@ -62,10 +64,10 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
 
   /**
    * Creates the 2D array (rows) that will be pushed to the Google Sheet,
-   * exactly matching the CSV columns and order from your script.
+   * with two header rows: (1) full path and (2) short name, followed by data rows.
    */
   private generateSheetData(jsonData: JobDescriptionInput): string[][] {
-    // Define the header row in the same order as your CSV
+    // Define the header row in the same order as your CSV (plus a new "validationScore" at the end)
     const headers = [
       "agentId",
       "titleCode",
@@ -110,7 +112,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
       // Barriers
       "degreeAnalysis.barriersToNonDegreeApplicants",
-      // Validation Checks (in reversed order per your script)
+      // Validation Checks (in reversed order)
       "degreeAnalysis.validationChecks.cscRevisedConsistency",
       "degreeAnalysis.validationChecks.requiredAlternativeExplanationConsistency",
       "degreeAnalysis.validationChecks.barriersToNonDegreeApplicantsConsistency",
@@ -129,12 +131,21 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       // Reading Level Analysis Results
       "readingLevelAnalysisResults.difficultPassages",
       "readingLevelAnalysisResults.usGradeLevelReadability",
+
+      // NEW final column for scoring the validation checks
+      "validationScore",
     ];
 
-    // Start building our 2D array of data with headers as the first row
-    const sheetData: string[][] = [headers];
+    // Create a second header row with only the final token after the last "."
+    const shortHeaders = headers.map((h) => {
+      const idx = h.lastIndexOf(".");
+      return idx === -1 ? h : h.substring(idx + 1);
+    });
 
-    // If there's no jobDescriptions array, return just the header row
+    // Initialize our 2D array of data with TWO header rows
+    const sheetData: string[][] = [headers, shortHeaders];
+
+    // If there's no jobDescriptions array, return just the 2 header rows
     if (!jsonData?.jobDescriptions) {
       return sheetData;
     }
@@ -162,16 +173,19 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       row.push(this.safeString(job.cscRevised));
       row.push(this.safeString(job.notes));
 
-      if (job.occupationalCategory) {
-        // Column: main category
-        row.push(this.safeString(job.occupationalCategory.mainCategory));
+      // occupationalCategory
+      if (job.occupationalCategory && Array.isArray(job.occupationalCategory)) {
+        // Join multiple main categories with a separator
+        const mainCategories = job.occupationalCategory
+          .map((cat) => this.safeString(cat.mainCategory))
+          .filter(Boolean)
+          .join("\r\n|\r\n");
+        row.push(mainCategories);
 
-        // Column: all subCategories, joined with a delimiter
-        const allSubs = job.occupationalCategory.subCategories
-          ? job.occupationalCategory.subCategories
-              .map((sc) => sc.subCategory)
-              .join(", ")
-          : "";
+        const allSubs = job.occupationalCategory
+          .map((cat) => this.safeString(cat.subCategory))
+          .filter(Boolean)
+          .join("\r\n|\r\n");
         row.push(allSubs);
       } else {
         row.push("", "");
@@ -211,7 +225,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       row.push(this.safeString(mse.bothFalseExplanation));
 
       // professionalLicenseRequirement
-      const plr = da.professionalLicenseRequirement!;
+      const plr = da.professionalLicenseRequirement || ({} as any);
       row.push(String(plr.isLicenseRequired ?? ""));
       row.push(this.safeString(plr.licenseDescription));
       row.push(this.safeString(plr.issuingAuthority));
@@ -220,7 +234,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       // barriersToNonDegreeApplicants
       row.push(this.safeString(da.barriersToNonDegreeApplicants));
 
-      // validationChecks in reversed order
+      // validationChecks (in reversed order)
       const vc = da.validationChecks || {};
       row.push(String(vc.cscRevisedConsistency ?? ""));
       row.push(String(vc.requiredAlternativeExplanationConsistency ?? ""));
@@ -233,7 +247,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       row.push(String(vc.needsCollegeDegreeConsistency ?? ""));
 
       // readingLevelUSGradeAnalysis
-      const rlu = job.readingLevelUSGradeAnalysis!;
+      const rlu = job.readingLevelUSGradeAnalysis || ({} as any);
       row.push(
         Array.isArray(rlu.difficultPassages)
           ? rlu.difficultPassages.join("\r\n|\r\n")
@@ -242,7 +256,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       row.push(this.safeString(rlu.usGradeLevelReadability));
 
       // readingLevelUSGradeAnalysisP2
-      const rlu2 = job.readingLevelUSGradeAnalysisP2!;
+      const rlu2 = job.readingLevelUSGradeAnalysisP2 || ({} as any);
       row.push(
         Array.isArray(rlu2.difficultPassages)
           ? rlu2.difficultPassages.join("\r\n|\r\n")
@@ -250,14 +264,32 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       );
       row.push(this.safeString(rlu2.usGradeLevelReadability));
 
-      // readingLevelAnalysisResults
-      const rlar = job.readingLevelUSGradeAnalysis!;
+      // readingLevelAnalysisResults (the code reuses readingLevelUSGradeAnalysis for these)
+      const rlar = job.readingLevelUSGradeAnalysis || ({} as any);
       row.push(
         Array.isArray(rlar.difficultPassages)
           ? rlar.difficultPassages.join("\r\n|\r\n")
           : ""
       );
       row.push(this.safeString(rlar.usGradeLevelReadability));
+
+      // Compute validationScore from all validationChecks that are `true`
+      const validationBoolArray = [
+        vc.cscRevisedConsistency,
+        vc.requiredAlternativeExplanationConsistency,
+        vc.barriersToNonDegreeApplicantsConsistency,
+        vc.licenseIncludesDegreeRequirementConsistency,
+        vc.alternativesIfTrueConsistency,
+        vc.degreeMandatoryConsistency,
+        vc.alternativeQualificationsConsistency,
+        vc.educationRequirementsConsistency,
+        vc.needsCollegeDegreeConsistency,
+      ];
+      const validationScore = validationBoolArray.reduce((acc, val) => {
+        // Count +1 only if val is strictly true
+        return acc + (val === true ? 1 : 0);
+      }, 0);
+      row.push(String(validationScore));
 
       // Add this row to our 2D array
       sheetData.push(row);
@@ -270,7 +302,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
    * Breaks the 2D array into chunks of `this.chunkSize` and updates the sheet range by range.
    */
   private async updateSheetInChunks(allRows: string[][]): Promise<void> {
-    // For convenience, let's figure out the total columns from the header row
+    // For convenience, let's figure out the total columns from the first row
     if (allRows.length === 0) return;
     const totalCols = allRows[0].length;
 
@@ -290,7 +322,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
       // Convert column count to a letter range for the end column, e.g. "Z", "AA", etc.
       const endColLetter = this.columnIndexToLetter(totalCols - 1);
 
-      // e.g. "Sheet1!A1:Z500"
+      // e.g. "Job Descriptions Analysis!A1:Z500"
       const range = `${this.sheetName}!A${startRow}:${endColLetter}${endRow}`;
 
       // Update the chunk into the specified range
@@ -315,7 +347,7 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
   }
 
   /**
-   * Makes sure values are strings (or for objects, uses JSON) to mirror CSV export style.
+   * Makes sure values are strings (or for objects, uses JSON).
    */
   private sanitizeData(data: any[][]): string[][] {
     return data.map((row) =>

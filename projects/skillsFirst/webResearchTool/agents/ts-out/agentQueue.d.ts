@@ -8,6 +8,6 @@ export declare class JobDescriptionAnalysisQueue extends PolicySynthAgentQueue {
         weight: number;
     }[];
     forceMemoryRestart: boolean;
-    setupMemoryIfNeeded(): Promise<void>;
+    setupMemoryIfNeeded(agentId: number): Promise<void>;
 }
 //# sourceMappingURL=agentQueue.d.ts.map

@@ -40,7 +40,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
   private static readonly JOB_DESCRIPTION_AGENT_CLASS_BASE_ID =
     "efe71e49-50e5-4636-b3bd-f4adc97bbad4";
-  private static readonly JOB_DESCRIPTION_AGENT_CLASS_VERSION = 2;
+  private static readonly JOB_DESCRIPTION_AGENT_CLASS_VERSION = 3;
 
   constructor(
     agent: PsAgent,
@@ -61,10 +61,10 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     let allJobDescriptions;
     const rerunExistingInMemory = this.getConfig<boolean>(
       "rerunExistingInMemory",
-      false
+      true
     );
 
-    if (!rerunExistingInMemory) {
+    if (false && !rerunExistingInMemory) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),
@@ -75,13 +75,14 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     } else {
       allJobDescriptions = this.memory.jobDescriptions;
     }
+    this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 1) Retrieve config values via this.getConfig(...)
     const numJobDescriptions = this.getConfig<number>("numJobDescriptions", 10);
 
     const useRandomJobDescriptions = this.getConfig<boolean>(
       "useRandomJobDescriptions",
-      true
+      false
     );
 
     let selectedJobDescriptions;
@@ -143,6 +144,19 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       jobDescription.processed = true;
       await this.saveMemory();
     }
+
+    const googleSheetsReportAgent = new GoogleSheetsJobDescriptionAgent(
+      this.agent,
+      this.memory,
+      95,
+      100,
+      "Sheet1"
+    );
+
+    await googleSheetsReportAgent.processJsonData({
+      agentId: this.agent.id,
+      jobDescriptions: this.memory.jobDescriptions,
+    });
 
     // Finalize and mark agent as completed
     await this.saveMemory();
@@ -287,18 +301,6 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
-    const googleSheetsReportAgent = new GoogleSheetsJobDescriptionAgent(
-      this.agent,
-      this.memory,
-      95,
-      100,
-      "Job Descriptions Analysis"
-    );
-
-    await googleSheetsReportAgent.processJsonData({
-      agentId: this.agent.id,
-      jobDescriptions: this.memory.jobDescriptions,
-    });
     await this.saveMemory();
   }
 
@@ -341,7 +343,11 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
           "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png",
         iconName: "job_description_analysis",
         capabilities: ["analysis", "text processing"],
-        requestedAiModelSizes: [PsAiModelSize.Medium],
+        requestedAiModelSizes: [
+          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+        ],
         defaultStructuredQuestions: [
           {
             uniqueId: "numJobDescriptions",
