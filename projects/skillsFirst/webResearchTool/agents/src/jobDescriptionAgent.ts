@@ -87,7 +87,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     let selectedJobDescriptions;
 
-    if (useRandomJobDescriptions) {
+    if (false && useRandomJobDescriptions) {
       selectedJobDescriptions = this.selectRandomJobDescriptions(
         allJobDescriptions,
         numJobDescriptions

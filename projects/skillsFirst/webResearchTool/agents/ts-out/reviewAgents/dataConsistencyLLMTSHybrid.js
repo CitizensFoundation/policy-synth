@@ -7,7 +7,7 @@ import { EducationType, EducationTypes } from "../educationTypes.js"; // Adjust 
 export class ValidateJobDescriptionAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;

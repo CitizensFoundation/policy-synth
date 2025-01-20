@@ -3,8 +3,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType } from "../educationTypes.js";
 export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -36,7 +37,7 @@ Please confirm if the evidence quote supports the conclusion that the job descri
 Answer "True" if it supports, "False" otherwise.
 `;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, false // don't parse as JSON
+            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false // don't parse as JSON
             );
             const result = resultText.trim();
             if (result.toLowerCase() === "true") {

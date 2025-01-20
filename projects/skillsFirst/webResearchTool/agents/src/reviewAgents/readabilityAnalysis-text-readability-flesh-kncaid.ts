@@ -25,7 +25,7 @@
 
      modelSize: PsAiModelSize = PsAiModelSize.Medium;
      override get maxModelTokensOut(): number {
-       return 2048;
+       return 16384;
      }
      override get modelTemperature(): number {
        return 0.0;

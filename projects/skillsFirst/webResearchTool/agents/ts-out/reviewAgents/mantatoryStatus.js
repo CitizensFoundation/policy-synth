@@ -2,8 +2,9 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -60,7 +61,7 @@ Provide the answers in the following JSON format:
 Do not include any explanations or comments before or after the JSON output.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true);
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, true);
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.degreeRequirementStatus = result;
@@ -83,7 +84,7 @@ ${jobDescription.text}
 Provide the explanation without any additional text.
 `;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, false);
+            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
             explanations.bothTrueExplanation = resultText.trim();
         }
         if (!degreeStatus.isDegreeMandatory && !degreeStatus.hasAlternativeQualifications) {
@@ -97,7 +98,7 @@ ${jobDescription.text}
 Provide the explanation without any additional text.
 `;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, false);
+            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
             explanations.bothFalseExplanation = resultText.trim();
         }
         // Degree requirement explanation
@@ -109,7 +110,7 @@ ${jobDescription.text}
 Provide the explanation without any additional text.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, false);
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
         explanations.degreeRequirementExplanation = resultText.trim();
         return explanations;
     }

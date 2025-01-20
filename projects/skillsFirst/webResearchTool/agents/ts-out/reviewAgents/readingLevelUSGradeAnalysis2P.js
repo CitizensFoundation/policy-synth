@@ -3,8 +3,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import sanitizeHtml from 'sanitize-html';
 export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -33,7 +34,7 @@ export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
         const messages = [this.createSystemMessage(prompt)];
         for (let attempt = 1; attempt <= maxRetries; attempt++) {
             try {
-                const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true // Expecting JSON output
+                const resultText = await this.callModel(this.modelType, this.modelSize, messages, true // Expecting JSON output
                 );
                 let result;
                 if (typeof resultText === 'string') {

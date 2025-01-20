@@ -7,8 +7,10 @@ export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+
   override get maxModelTokensOut(): number {
-    return 2048;
+    return 16384;
   }
   override get modelTemperature(): number {
     return 0.0;
@@ -58,7 +60,7 @@ Answer "True" if it supports, "False" otherwise.
       const messages = [this.createSystemMessage(systemPrompt)];
 
       const resultText = await this.callModel(
-        PsAiModelType.Text,
+        this.modelType,
         this.modelSize,
         messages,
         false // don't parse as JSON

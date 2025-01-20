@@ -2,8 +2,9 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class IdentifyBarriersAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -28,7 +29,7 @@ Do not fabricate any information.
 Provide the output as a plain text description without any additional text.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, false);
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.barriersToNonDegreeApplicants = resultText.trim();
         await this.updateRangedProgress(100, "Barriers identified");

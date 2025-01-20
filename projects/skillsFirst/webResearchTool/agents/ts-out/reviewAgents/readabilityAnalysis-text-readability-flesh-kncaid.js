@@ -17,7 +17,7 @@ import sanitizeHtml from 'sanitize-html'; // Import sanitize-html
 export class ReadabilityScoreJobDescriptionAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;

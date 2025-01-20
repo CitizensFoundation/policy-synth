@@ -7,8 +7,10 @@ export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+
   override get maxModelTokensOut(): number {
-    return 2048;
+    return 16384;
   }
   override get modelTemperature(): number {
     return 0.0;
@@ -51,7 +53,7 @@ export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const resultText = await this.callModel(
-          PsAiModelType.Text,
+          this.modelType,
           this.modelSize,
           messages,
           true  // Expecting JSON output

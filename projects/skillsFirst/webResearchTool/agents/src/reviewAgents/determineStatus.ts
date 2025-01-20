@@ -7,8 +7,10 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+
   override get maxModelTokensOut(): number {
-    return 2048;
+    return 16384;
   }
   override get modelTemperature(): number {
     return 0.0;
@@ -70,7 +72,7 @@ Please analyze the job description and provide the output in the specified JSON 
     ];
 
     const resultText = await this.callModel(
-      PsAiModelType.Text,
+      this.modelType,
       this.modelSize,
       messages,
       true

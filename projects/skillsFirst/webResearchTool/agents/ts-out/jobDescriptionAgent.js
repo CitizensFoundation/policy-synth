@@ -55,7 +55,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         const numJobDescriptions = this.getConfig("numJobDescriptions", 10);
         const useRandomJobDescriptions = this.getConfig("useRandomJobDescriptions", false);
         let selectedJobDescriptions;
-        if (useRandomJobDescriptions) {
+        if (false && useRandomJobDescriptions) {
             selectedJobDescriptions = this.selectRandomJobDescriptions(allJobDescriptions, numJobDescriptions);
         }
         else {

@@ -5,8 +5,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 // import { JobDescriptionMemoryData, JobDescription, readingLevelUSGradeAnalysis } from "../types.js";
 export class ReadingLevelUSGradeAnalysisAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -61,7 +62,7 @@ Provide your answer in the following JSON format:
 Do not include any explanations or additional text. Output only the JSON object.`;
         // Call the LLM
         const messages = [this.createHumanMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.TextReasoning, this.modelSize, messages, true // Indicate we expect JSON back
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, true // Indicate we expect JSON back
         );
         let result;
         if (typeof resultText === "string") {

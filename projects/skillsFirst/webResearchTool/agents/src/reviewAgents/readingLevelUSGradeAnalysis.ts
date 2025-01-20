@@ -13,8 +13,9 @@ export class ReadingLevelUSGradeAnalysisAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
   override get maxModelTokensOut(): number {
-    return 2048;
+    return 16384;
   }
   override get modelTemperature(): number {
     return 0.0;
@@ -89,7 +90,7 @@ Do not include any explanations or additional text. Output only the JSON object.
     // Call the LLM
     const messages = [this.createHumanMessage(systemPrompt)];
     const resultText = await this.callModel(
-      PsAiModelType.TextReasoning,
+      this.modelType,
       this.modelSize,
       messages,
       true // Indicate we expect JSON back

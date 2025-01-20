@@ -3,8 +3,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType, EducationTypes } from "../educationTypes.js";
 export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -51,7 +52,7 @@ Please analyze the job description and provide the output in the specified JSON 
             this.createSystemMessage(systemPrompt),
             this.createHumanMessage(userPrompt),
         ];
-        const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true);
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, true);
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.needsCollegeDegree = result.needsCollegeDegree;

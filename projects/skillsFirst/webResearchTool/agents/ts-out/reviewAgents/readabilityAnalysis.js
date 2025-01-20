@@ -4,8 +4,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType } from '../educationTypes.js'; // Adjust the path as needed
 export class ReadabilityAnalysisAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 2048;
+        return 16384;
     }
     get modelTemperature() {
         return 0.0;
@@ -102,7 +103,7 @@ ${JSON.stringify(EducationType, null, 2)}
 Do not include any explanations or additional text. Output only the JSON object.`;
         // Call the LLM
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.Text, this.modelSize, messages, true // parse as JSON
+        const resultText = await this.callModel(this.modelType, this.modelSize, messages, true // parse as JSON
         );
         // Parse the LLM's response
         let result;
