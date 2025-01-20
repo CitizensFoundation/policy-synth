@@ -3,7 +3,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType, EducationTypes } from "../educationTypes.js";
 export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }

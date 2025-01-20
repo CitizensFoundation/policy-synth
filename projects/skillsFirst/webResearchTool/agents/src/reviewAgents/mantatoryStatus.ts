@@ -5,7 +5,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelSize: PsAiModelSize = PsAiModelSize.Small;
   modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {

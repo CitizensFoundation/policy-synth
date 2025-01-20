@@ -2,7 +2,7 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineProfessionalLicenseRequirementAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }
