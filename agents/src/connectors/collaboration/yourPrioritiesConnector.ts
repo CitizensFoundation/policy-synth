@@ -1,12 +1,17 @@
-import axios, { AxiosError } from "axios";
+import axios from "axios";
 import qs from "qs";
-import { PsAgent } from "../../dbModels/agent";
+import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import fs from "fs";
 import FormData from "form-data";
+import { EventEmitter } from "events";
 
-const MAX_RETRIES = 6*30;
+// Increase max event listeners to reduce the warning
+EventEmitter.defaultMaxListeners = 30;
+
+const MAX_CONNECTION_RETRIES = 180;   // For ECONNREFUSED, ECONNRESET, etc.
+const MAX_5XX_RETRIES = 30;          // For 5xx server errors
 const RETRY_DELAY = 10000;
 const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
@@ -16,53 +21,66 @@ async function sleep(ms: number) {
 }
 
 /**
- * Retries the given request up to MAX_RETRIES times, when
- * either connection is refused (ECONNREFUSED) or a 5xx
- * HTTP error occurs.
+ * Retries the given request up to:
+ *   - MAX_CONNECTION_RETRIES times for connection errors (ECONNRESET, etc.)
+ *   - MAX_5XX_RETRIES times for HTTP 5xx errors
+ * Other errors are thrown immediately.
  */
 async function requestWithRetry<T>(requestFn: () => Promise<T>): Promise<T> {
-  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+  let connectionErrorsSoFar = 0;
+  let serverErrorsSoFar = 0;
+
+  while (true) {
     try {
+      // Attempt the request
       return await requestFn();
-    } catch (error) {
+    } catch (error: any) {
+      // If it's an Axios error, check the code or status
       if (axios.isAxiosError(error)) {
-        // If the server is down or refused connection
-        if (error.code === "ECONNREFUSED" ||
-            error.code === "ECONNRESET" ||
-            error.code === "ECONNABORTED" ||
-            error.code === "ETIMEDOUT" ||
-            error.code === "EAI_AGAIN" ||
-            error.code === "ENOTFOUND" ||
-            error.code === "ENETUNREACH") {
+        // Connection-level errors
+        if (
+          error.code === "ECONNREFUSED" ||
+          error.code === "ECONNRESET" ||
+          error.code === "ECONNABORTED" ||
+          error.code === "ETIMEDOUT" ||
+          error.code === "EAI_AGAIN" ||
+          error.code === "ENOTFOUND" ||
+          error.code === "ENETUNREACH"
+        ) {
+          connectionErrorsSoFar++;
           console.error(
-            `${error.code}: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`
+            `${error.code}: Retry ${connectionErrorsSoFar}/${MAX_CONNECTION_RETRIES} in ${RETRY_DELAY}ms`
           );
-          if (attempt < MAX_RETRIES) {
+          if (connectionErrorsSoFar < MAX_CONNECTION_RETRIES) {
             await sleep(RETRY_DELAY);
             continue;
           }
-        } else if (error.response && error.response.status >= 500) {
+          // If we exhaust attempts for connection errors, throw
+        }
+        // 5xx errors
+        else if (error.response && error.response.status >= 500) {
+          serverErrorsSoFar++;
           console.error(
-            `5xx Server Error: Retry ${attempt}/${MAX_RETRIES} in ${RETRY_DELAY}ms`
+            `5xx Server Error: Retry ${serverErrorsSoFar}/${MAX_5XX_RETRIES} in ${RETRY_DELAY}ms`
           );
-          if (attempt < MAX_RETRIES) {
+          if (serverErrorsSoFar < MAX_5XX_RETRIES) {
             await sleep(RETRY_DELAY);
             continue;
           }
-        } else {
-          console.error("Other AXIOS error not retrying!:", error);
+          // If we exhaust attempts for 5xx errors, throw
+        }
+        // Anything else
+        else {
+          console.error("Other Axios error, not retrying:", error);
         }
       } else {
-        console.error("Not Axios error:", error);
+        console.error("Non-Axios error, not retrying:", error);
       }
 
-      // If we get here, it’s not ECONNREFUSED or 5xx => re-throw
+      // If we get here, we either exhausted retries or it’s a non-retryable error
       throw error;
     }
   }
-
-  // Exhausted all retries
-  throw new Error(`Failed after ${MAX_RETRIES} retries.`);
 }
 
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
@@ -182,8 +200,6 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       `Your Priorities Connector created with group ID: ${groupId} serverBaseUrl: ${this.serverBaseUrl}`
     );
   }
-
-  // req.headers["x-api-key"] ===
 
   async login(): Promise<void> {
     if (!process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY) {
