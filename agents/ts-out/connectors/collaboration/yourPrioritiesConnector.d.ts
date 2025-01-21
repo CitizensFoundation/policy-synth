@@ -1,4 +1,4 @@
-import { PsAgent } from "../../dbModels/agent";
+import { PsAgent } from "../../dbModels/agent.js";
 import { PsBaseIdeasCollaborationConnector } from "../base/baseIdeasCollaborationConnector.js";
 export declare class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
     static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID = "1bfc3d1e-5f6a-7b8c-9d0e-1f2a3b4c5d6e";

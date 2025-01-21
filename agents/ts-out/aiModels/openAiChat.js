@@ -20,8 +20,6 @@ export class OpenAiChat extends BaseChatModel {
             role: msg.role,
             content: msg.message,
         }));
-        console.log(this.modelConfig.modelSize);
-        console.log(this.modelConfig.modelType);
         // 2. Collapse system message if the model is "small" reasoning
         if (this.modelConfig.modelSize === PsAiModelSize.Small &&
             this.modelConfig.modelType === PsAiModelType.TextReasoning &&
@@ -48,7 +46,6 @@ export class OpenAiChat extends BaseChatModel {
         this.logger.debug(`Model config: type=${this.modelConfig.modelType}, size=${this.modelConfig.modelSize}, ` +
             `effort=${this.modelConfig.reasoningEffort}, temp=${this.modelConfig.temperature}, ` +
             `maxTokens=${this.modelConfig.maxTokensOut}`);
-        console.log(formattedMessages);
         // 3. Streaming vs. Non-streaming
         if (streaming) {
             const stream = await this.client.chat.completions.create({

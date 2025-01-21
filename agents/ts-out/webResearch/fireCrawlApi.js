@@ -3,18 +3,18 @@ import { PolicySynthAgent } from "../base/agent.js";
 import { parse } from "tldts";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModelSize } from "../aiModelTypes.js";
+import { WebScraper } from "./webScraper.js";
 export class FirecrawlScrapeAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
     crawlPageLimit = 50;
-    constructor(agent, memory, startProgress, endProgress, crawlPageLimit = 50) {
+    constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;
         if (!apiKey) {
             throw new Error("Missing FIRECRAWL_API_KEY environment variable");
         }
         this.app = new FirecrawlApp({ apiKey });
-        this.crawlPageLimit = crawlPageLimit;
     }
     /**
      * Extracts the primary domain (e.g. "example.com") from a given URL.
@@ -150,6 +150,26 @@ Your JSON output:`,
                     }
                     await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
                     retries++;
+                }
+                else if (error.response && error.response.status !== 403) {
+                    const fallbackScraper = new WebScraper();
+                    let fallbackResponse;
+                    try {
+                        fallbackResponse = await fallbackScraper.scrapeUrl(url);
+                        if (fallbackResponse.success) {
+                            return {
+                                markdown: fallbackResponse.data.rawHtml,
+                                rawHtml: fallbackResponse.data.rawHtml,
+                                metadata: {
+                                    source: "fallback",
+                                },
+                            };
+                        }
+                    }
+                    catch (fallbackErr) {
+                        this.logger.error("Fallback also failed: " + fallbackErr.message);
+                        throw fallbackErr; // re-throw
+                    }
                 }
                 else {
                     // Some other error

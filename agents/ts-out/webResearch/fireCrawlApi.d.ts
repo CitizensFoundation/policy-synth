@@ -4,7 +4,7 @@ export declare class FirecrawlScrapeAgent extends PolicySynthAgent {
     needsAiModel: boolean;
     private app;
     crawlPageLimit: number;
-    constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number, crawlPageLimit?: number);
+    constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
     /**
      * Extracts the primary domain (e.g. "example.com") from a given URL.
      *

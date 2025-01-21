@@ -4,6 +4,7 @@ import { parse } from "tldts";
 import { PsAgent } from "../dbModels/agent.js";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModelSize } from "../aiModelTypes.js";
+import { WebScraper } from "./webScraper.js";
 
 interface PrivacyPolicyCheckResult {
   isOnlyPrivacyPolicyOrTermsOfService: boolean;
@@ -19,8 +20,7 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined,
     startProgress: number,
-    endProgress: number,
-    crawlPageLimit: number = 50
+    endProgress: number
   ) {
     super(agent, memory, startProgress, endProgress);
     const apiKey = process.env.FIRECRAWL_API_KEY;
@@ -28,7 +28,6 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
       throw new Error("Missing FIRECRAWL_API_KEY environment variable");
     }
     this.app = new FirecrawlApp({ apiKey });
-    this.crawlPageLimit = crawlPageLimit;
   }
 
   /**
@@ -190,7 +189,9 @@ Your JSON output:`,
             ? scrapeResponse.data.map((item: any) => item.rawHtml).join("\n\n")
             : "";
         } else {
-          this.logger.debug(`Successfully scraped: ${url} skipImages ${skipImages}`);
+          this.logger.debug(
+            `Successfully scraped: ${url} skipImages ${skipImages}`
+          );
           scrapeResponse = await this.app.scrapeUrl(url, {
             formats,
             excludeTags: skipImages
@@ -224,6 +225,24 @@ Your JSON output:`,
             setTimeout(resolve, retryAfter * 1000)
           );
           retries++;
+        } else if (error.response && error.response.status !== 403) {
+          const fallbackScraper = new WebScraper();
+          let fallbackResponse;
+          try {
+            fallbackResponse = await fallbackScraper.scrapeUrl(url);
+            if (fallbackResponse.success) {
+              return {
+                markdown: fallbackResponse.data.rawHtml,
+                rawHtml: fallbackResponse.data.rawHtml,
+                metadata: {
+                  source: "fallback",
+                },
+              };
+            }
+          } catch (fallbackErr: any) {
+            this.logger.error("Fallback also failed: " + fallbackErr.message);
+            throw fallbackErr; // re-throw
+          }
         } else {
           // Some other error
           this.logger.error(`Error scraping ${url}: ${error.message}`);

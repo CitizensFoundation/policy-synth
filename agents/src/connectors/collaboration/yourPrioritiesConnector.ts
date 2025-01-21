@@ -8,10 +8,10 @@ import FormData from "form-data";
 import { EventEmitter } from "events";
 
 // Increase max event listeners to reduce the warning
-EventEmitter.defaultMaxListeners = 30;
+EventEmitter.defaultMaxListeners = 60;
 
-const MAX_CONNECTION_RETRIES = 180;   // For ECONNREFUSED, ECONNRESET, etc.
-const MAX_5XX_RETRIES = 30;          // For 5xx server errors
+const MAX_CONNECTION_RETRIES = 10;   // For ECONNREFUSED, ECONNRESET, etc.
+const MAX_5XX_RETRIES = 10;          // For 5xx server errors
 const RETRY_DELAY = 10000;
 const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 
