@@ -2,7 +2,7 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Small;
-    modelType = PsAiModelType.TextReasoning;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }
@@ -16,11 +16,12 @@ export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     // Processing function for determining mandatory status
     async processJobDescription(jobDescription) {
         await this.updateRangedProgress(0, `Determining mandatory status for ${jobDescription.name}`);
-        const systemPrompt = `You are an expert in analyzing job descriptions for education requirements.
-Your task is to determine whether any college degree requirement is mandatory or permissive.
-
-Job Description:
+        const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions for education requirements.
+Your task is to determine whether any college degree requirement is mandatory or permissive.
 
 Please answer the following questions:
 
@@ -89,11 +90,12 @@ Provide the explanation without any additional text.
         }
         if (!degreeStatus.isDegreeMandatory && !degreeStatus.hasAlternativeQualifications) {
             // Both 2a and 2b are False
-            const systemPrompt = `Both DegreeRequirementStatus.isDegreeMandatory and DegreeRequirementStatus.hasAlternativeQualifications are False.
-Explain why you reached the same conclusion for both, relying only on the job description and your expertise.
-
-Job Description:
+            const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
+
+Both DegreeRequirementStatus.isDegreeMandatory and DegreeRequirementStatus.hasAlternativeQualifications are False.
+Explain why you reached the same conclusion for both, relying only on the job description and your expertise.
 
 Provide the explanation without any additional text.
 `;
@@ -102,10 +104,11 @@ Provide the explanation without any additional text.
             explanations.bothFalseExplanation = resultText.trim();
         }
         // Degree requirement explanation
-        const systemPrompt = `Explain your judgment regarding whether a higher educational degree is absolutely required for this job.
-
-Job Description:
+        const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
+
+Explain your judgment regarding whether a higher educational degree is absolutely required for this job.
 
 Provide the explanation without any additional text.
 `;

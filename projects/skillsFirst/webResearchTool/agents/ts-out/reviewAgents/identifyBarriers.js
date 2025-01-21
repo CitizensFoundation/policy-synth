@@ -16,11 +16,13 @@ export class IdentifyBarriersAgent extends PolicySynthAgent {
     // Processing function for identifying barriers
     async processJobDescription(jobDescription) {
         await this.updateRangedProgress(0, `Identifying barriers for non-degree applicants in ${jobDescription.name}`);
-        const systemPrompt = `You are an expert in analyzing job descriptions.
-Your task is to identify any barriers or obstacles stated, suggested, or described in the job description to hiring an applicant who does not have a college or university degree.
-
-Job Description:
+        const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions.
+
+Your task is to identify any barriers or obstacles stated, suggested, or described in the job description to hiring an applicant who does not have a college or university degree.
 
 If there are barriers, describe them.
 If no barriers are found, leave the field blank.

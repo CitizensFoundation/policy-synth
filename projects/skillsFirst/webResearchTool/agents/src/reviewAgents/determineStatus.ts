@@ -33,7 +33,11 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
       `Determining college degree status for ${jobDescription.name}`
     );
 
-    const systemPrompt = `You are an expert in analyzing job descriptions for education requirements.
+    const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions for education requirements.
 Your task is to determine if the job description includes a discussion of a college degree or higher education requirement.
 Follow these determination steps:
 
@@ -60,10 +64,7 @@ Provide the output in JSON format as follows:
 Do not include any explanations or comments before or after the JSON output.
 `;
 
-    const userPrompt = `Job Description:
-${jobDescription.text}
-
-Please analyze the job description and provide the output in the specified JSON format.
+    const userPrompt = `Please analyze the job description and provide the output in the specified JSON format.
 `;
 
     const messages = [

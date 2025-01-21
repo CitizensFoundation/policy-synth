@@ -15,6 +15,8 @@ export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
   private sheetName = "Job Descriptions Analysis";  // Adjust to your target Sheet tab, if desired
   private readonly chunkSize = 500;                 // Number of rows to send per update
 
+  skipAiModels = true;
+
   constructor(
     agent: PsAgent,
     memory: any,

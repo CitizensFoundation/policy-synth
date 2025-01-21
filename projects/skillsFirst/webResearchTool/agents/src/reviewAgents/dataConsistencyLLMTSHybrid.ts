@@ -225,14 +225,15 @@ export class ValidateJobDescriptionAgent extends PolicySynthAgent {
       .map((phrase) => phrase.toLowerCase());
 
     // Prepare the system prompt for the LLM
-    const systemPrompt = `You are an expert in analyzing text for specific content.
+    const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
 
-    Based on the provided data, answer the following questions with "True" or "False".
+You are an expert in analyzing text for specific content.
 
-    Job Description Text:
-    ${jobDescription.text}
+Based on the provided Job Description data, answer the following questions with "True" or "False".
 
-    Extracted Data:
+    <Extracted Data>
 
     degreeAnalysis.educationRequirements:
     ${JSON.stringify(degreeAnalysis.educationRequirements, null, 2)}

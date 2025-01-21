@@ -7,7 +7,7 @@ export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+  modelType: PsAiModelType = PsAiModelType.Text;
 
   override get maxModelTokensOut(): number {
     return 16384;
@@ -42,11 +42,12 @@ export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
 
     for (const requirement of educationRequirementsToReview) {
       // Ask the LLM to confirm the evidenceQuote
-      const systemPrompt = `You are an expert in analyzing job descriptions for education requirements.
-Your task is to verify the evidence quote for the education requirement.
-
-Job Description:
+      const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions for education requirements.
+Your task is to verify the evidence quote for the education requirement.
 
 Education Requirement:
 Type: ${requirement.type}

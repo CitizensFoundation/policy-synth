@@ -7,7 +7,7 @@ export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+  modelType: PsAiModelType = PsAiModelType.Text;
 
   override get maxModelTokensOut(): number {
     return 16384;
@@ -143,11 +143,11 @@ export class ReadingLevelUSGradeAnalysisAgentP2 extends PolicySynthAgent {
     ];
 
     // First Prompt: Identify the most difficult passages
-    const firstPrompt = `Identify the most difficult to read and comprehend passages in the job description.
-
-<JobDescriptionText>
+    const firstPrompt = `<JobDescription>
 ${jobDescription.text}
-</JobDescriptionText>
+</JobDescription>
+
+Identify the most difficult to read and comprehend passages in the job description.
 
 Provide your answer in the following JSON format:
 
@@ -196,15 +196,16 @@ Do not include any explanations or additional text. Output only the JSON object.
     const difficultPassagesList = readingLevelUSGradeAnalysisP2!.difficultPassages
       .map(passage => `- ${passage}`).join('\n');
 
-    const secondPrompt = `Based on the following passages and the entire job description, what reading level must an individual have attained in order to fully comprehend the job description? Choose only from the U.S. Grade Levels listed:
+    const secondPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+Based on the following passages and the entire job description, what reading level must an individual have attained in order to fully comprehend the job description? Choose only from the U.S. Grade Levels listed:
 
 ${gradeLevels.join('\n')}
 
 Most difficult passages:
 ${difficultPassagesList}
-
-Job Description Text:
-${jobDescription.text}
 
 Provide your answer in the following JSON format:
 

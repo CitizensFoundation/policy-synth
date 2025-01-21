@@ -4,7 +4,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType } from '../educationTypes.js'; // Adjust the path as needed
 export class ReadabilityAnalysisAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }
@@ -22,14 +22,13 @@ export class ReadabilityAnalysisAgent extends PolicySynthAgent {
         jobDescription.readabilityAnalysis = jobDescription.readabilityAnalysis || {};
         const readabilityAnalysis = jobDescription.readabilityAnalysis;
         // Prepare the system prompt for the LLM
-        const systemPrompt = `You are an expert in linguistic analysis and assessing reading levels of texts.
+        const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+You are an expert in linguistic analysis and assessing reading levels of texts.
 
 Your task is to analyze the following job description and perform the assessments as per the prompts provided.
-
-Job Description:
-\`\`\`
-${jobDescription.text}
-\`\`\`
 
 Existing Degree Requirements:
 ${JSON.stringify(jobDescription.degreeAnalysis?.educationRequirements?.map(er => er.type), null, 2)}

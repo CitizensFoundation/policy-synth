@@ -22,7 +22,7 @@ import { IdentifyBarriersAgent } from "./reviewAgents/identifyBarriers.js";
 import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistencyLLMTSHybrid.js";
 import { ReadabilityScoreJobDescriptionAgent } from "./reviewAgents/readabilityAnalysis-text-readability-flesh-kncaid.js";
 import { ReadingLevelUSGradeAnalysisAgentP2 } from "./reviewAgents/readingLevelUSGradeAnalysis2P.js";
-import { GoogleSheetsJobDescriptionAgent } from "./exports/googleSheets.js";
+import { GoogleSheetsJobDescriptionAgent } from "./exports/sheetsExport.js";
 
 // ------------------
 // Type Definitions

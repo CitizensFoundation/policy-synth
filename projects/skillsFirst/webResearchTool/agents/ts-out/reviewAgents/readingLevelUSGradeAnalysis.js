@@ -5,7 +5,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 // import { JobDescriptionMemoryData, JobDescription, readingLevelUSGradeAnalysis } from "../types.js";
 export class ReadingLevelUSGradeAnalysisAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }
@@ -41,14 +41,15 @@ export class ReadingLevelUSGradeAnalysisAgent extends PolicySynthAgent {
             "Postgraduate Level",
         ];
         // Prepare the prompt for the LLM
-        const systemPrompt = `What reading level must an individual have attained in order to fully comprehend this job description? Choose only from the U.S. Grade Levels listed:
+        const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+What reading level must an individual have attained in order to fully comprehend this job description? Choose only from the U.S. Grade Levels listed:
 
 ${gradeLevels.join("\n")}
 
 Quote each sentence or paragraph you reviewed in the job description that explains why you have identified this U.S. Grade Level.
-
-Job Description Text:
-${jobDescription.text}
 
 Provide your answer in the following JSON format:
 

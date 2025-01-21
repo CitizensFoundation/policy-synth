@@ -9,7 +9,7 @@ export class ReadabilityAnalysisAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+  modelType: PsAiModelType = PsAiModelType.Text;
 
   override get maxModelTokensOut(): number {
     return 16384;
@@ -40,14 +40,13 @@ export class ReadabilityAnalysisAgent extends PolicySynthAgent {
     const readabilityAnalysis = jobDescription.readabilityAnalysis;
 
     // Prepare the system prompt for the LLM
-    const systemPrompt = `You are an expert in linguistic analysis and assessing reading levels of texts.
+    const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+You are an expert in linguistic analysis and assessing reading levels of texts.
 
 Your task is to analyze the following job description and perform the assessments as per the prompts provided.
-
-Job Description:
-\`\`\`
-${jobDescription.text}
-\`\`\`
 
 Existing Degree Requirements:
 ${JSON.stringify(jobDescription.degreeAnalysis?.educationRequirements?.map(er => er.type), null, 2)}

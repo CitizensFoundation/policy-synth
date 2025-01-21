@@ -16,11 +16,13 @@ export class DetermineProfessionalLicenseRequirementAgent extends PolicySynthAge
     // Processing function for determining professional license requirements
     async processJobDescription(jobDescription) {
         await this.updateRangedProgress(0, `Determining professional license requirements for ${jobDescription.name}`);
-        const systemPrompt = `You are an expert in analyzing job descriptions for professional license requirements.
+        const systemPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions for professional license requirements.
 Your task is to determine whether any professional license is required that might include a college or university degree requirement.
 
-Job Description:
-${jobDescription.text}
 
 Please answer the following questions:
 
