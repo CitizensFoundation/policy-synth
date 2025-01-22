@@ -9,7 +9,7 @@ import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSh
  * version to Google Sheets with the same columns/structure as the CSV version,
  * now with two header rows (full path / short name).
  */
-export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
+export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
   declare memory: any;
   private sheetsConnector: PsBaseSheetConnector;
   private sheetName = "Job Descriptions Analysis";  // Adjust to your target Sheet tab, if desired

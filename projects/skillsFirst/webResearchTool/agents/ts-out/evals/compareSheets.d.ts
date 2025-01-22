@@ -4,9 +4,17 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  * The main agent that compares multiple sheets of job descriptions
  * and attempts to resolve conflicts using an LLM.
  */
-export declare class GoogleSheetsComparisonAgent extends PolicySynthAgent {
+export declare class SheetsComparisonAgent extends PolicySynthAgent {
     private sheetNames;
-    constructor(agent: PsAgent, memory: any, startProgress: number, endProgress: number, sheetNames: string[]);
+    memory: JobDescriptionMemoryData;
+    private static readonly JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_BASE_ID;
+    private static readonly JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION;
+    constructor(agent: PsAgent, memory: any, startProgress: number, endProgress: number);
+    static getAgentClass(): PsAgentClassCreationAttributes;
+    /**
+     * Returns a list of questions (configuration fields) for this agent.
+     */
+    static getConfigurationQuestions(): YpStructuredQuestionData[];
     /**
      * Main process method:
      *   1) read from each sheet

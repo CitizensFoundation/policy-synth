@@ -1,17 +1,72 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
-import { GoogleSheetsJobDescriptionImportAgent } from "./googleSheetsJobDescriptionImportAgent";
+import { SheetsJobDescriptionImportAgent } from "../imports/sheetsImport.js";
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
+import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 /**
  * The main agent that compares multiple sheets of job descriptions
  * and attempts to resolve conflicts using an LLM.
  */
-export class GoogleSheetsComparisonAgent extends PolicySynthAgent {
+export class SheetsComparisonAgent extends PolicySynthAgent {
     // Configuration: list of sheet names to compare
     sheetNames = [];
-    constructor(agent, memory, startProgress, endProgress, sheetNames // e.g. ["ModelA_Analysis", "ModelB_Analysis", ...]
-    ) {
+    static JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_BASE_ID = "fefe1e19-aefa-4636-bcbd-f4adc17bbad4";
+    static JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION = 1;
+    constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
-        this.sheetNames = sheetNames;
+    }
+    static getAgentClass() {
+        return {
+            class_base_id: this.JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_BASE_ID,
+            user_id: 0,
+            name: "Job Description Compare Sheets Agent",
+            version: this.JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION,
+            available: true,
+            configuration: {
+                category: PsAgentClassCategories.DataAnalysis,
+                subCategory: "jobDescriptionCompareSheets",
+                hasPublicAccess: false,
+                description: "An agent for comparing job descriptions across multiple sheets",
+                queueName: "JOB_DESCRIPTION_COMPARE_SHEETS",
+                imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/71844202-56ce-4139-88e2-1cfcab0dd59f.png",
+                iconName: "job_description_compare_sheets",
+                capabilities: ["analysis", "text processing"],
+                requestedAiModelSizes: [
+                    PsAiModelSize.Small,
+                    PsAiModelSize.Medium,
+                    PsAiModelSize.Large,
+                ],
+                defaultStructuredQuestions: [
+                    {
+                        uniqueId: "maxNumSheets",
+                        type: "textField",
+                        subType: "number",
+                        value: 10,
+                        maxLength: 4,
+                        required: true,
+                        text: "Maximum number of sheets to compare",
+                    },
+                ],
+                supportedConnectors: [],
+                questions: this.getConfigurationQuestions(),
+            },
+        };
+    }
+    /**
+     * Returns a list of questions (configuration fields) for this agent.
+     */
+    static getConfigurationQuestions() {
+        return [
+            // How many job descriptions to process
+            {
+                uniqueId: "numJobDescriptions",
+                type: "textField",
+                subType: "number",
+                value: 10,
+                maxLength: 4,
+                required: true,
+                text: "Number of job descriptions to analyze",
+            },
+        ];
     }
     /**
      * Main process method:
@@ -26,7 +81,7 @@ export class GoogleSheetsComparisonAgent extends PolicySynthAgent {
         const allImportedData = {};
         for (let i = 0; i < this.sheetNames.length; i++) {
             const sn = this.sheetNames[i];
-            const importAgent = new GoogleSheetsJobDescriptionImportAgent(this.agent, this.memory, 0, 0, sn);
+            const importAgent = new SheetsJobDescriptionImportAgent(this.agent, this.memory, 0, 0, sn);
             const imported = await importAgent.importJobDescriptions();
             allImportedData[sn] = imported.jobDescriptions || [];
             this.logger.info(`Imported ${allImportedData[sn].length} job descriptions from sheet "${sn}".`);
@@ -161,6 +216,7 @@ Output your answer as JSON exactly in the format:
 \`\`\`json
 {
   "resolvedValue": "<the single best value>",
+  "winningSheet": "<the sheet name that contains the winning value>",
   "explanation": "<one short sentence explaining your choice>"
 }
 \`\`\`
@@ -168,6 +224,7 @@ If you truly cannot decide, say:
 \`\`\`json
 {
   "resolvedValue": "Cannot determine",
+  "winningSheet": "None",
   "explanation": "There is no basis to choose any value from the text."
 }
 \`\`\`

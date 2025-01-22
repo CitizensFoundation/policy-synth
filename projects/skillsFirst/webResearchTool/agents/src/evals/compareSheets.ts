@@ -1,10 +1,12 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { GoogleSheetsJobDescriptionImportAgent } from "./googleSheetsJobDescriptionImportAgent";
+import { SheetsJobDescriptionImportAgent } from "../imports/sheetsImport.js";
 import {
   PsAiModelType,
   PsAiModelSize,
 } from "@policysynth/agents/aiModelTypes.js";
+import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 
 /**
  * Representation of a difference in a field's values across multiple sheets.
@@ -27,20 +29,79 @@ interface ComparisonDifferenceReturn {
  * The main agent that compares multiple sheets of job descriptions
  * and attempts to resolve conflicts using an LLM.
  */
-export class GoogleSheetsComparisonAgent extends PolicySynthAgent {
+export class SheetsComparisonAgent extends PolicySynthAgent {
   // Configuration: list of sheet names to compare
   private sheetNames: string[] = [];
   declare memory: JobDescriptionMemoryData;
+  private static readonly JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_BASE_ID =
+  "fefe1e19-aefa-4636-bcbd-f4adc17bbad4";
+  private static readonly JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION = 1;
 
   constructor(
     agent: PsAgent,
     memory: any,
     startProgress: number,
     endProgress: number,
-    sheetNames: string[] // e.g. ["ModelA_Analysis", "ModelB_Analysis", ...]
   ) {
     super(agent, memory, startProgress, endProgress);
-    this.sheetNames = sheetNames;
+  }
+
+  static getAgentClass(): PsAgentClassCreationAttributes {
+    return {
+      class_base_id: this.JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_BASE_ID,
+      user_id: 0,
+      name: "Job Description Compare Sheets Agent",
+      version: this.JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION,
+      available: true,
+      configuration: {
+        category: PsAgentClassCategories.DataAnalysis,
+        subCategory: "jobDescriptionCompareSheets",
+        hasPublicAccess: false,
+        description:
+          "An agent for comparing job descriptions across multiple sheets",
+        queueName: "JOB_DESCRIPTION_COMPARE_SHEETS",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/71844202-56ce-4139-88e2-1cfcab0dd59f.png",
+        iconName: "job_description_compare_sheets",
+        capabilities: ["analysis", "text processing"],
+        requestedAiModelSizes: [
+          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+        ],
+        defaultStructuredQuestions: [
+          {
+            uniqueId: "maxNumSheets",
+            type: "textField",
+            subType: "number",
+            value: 10,
+            maxLength: 4,
+            required: true,
+            text: "Maximum number of sheets to compare",
+          },
+        ],
+        supportedConnectors: [] as PsConnectorClassTypes[],
+        questions: this.getConfigurationQuestions(),
+      },
+    };
+  }
+
+  /**
+   * Returns a list of questions (configuration fields) for this agent.
+   */
+  static getConfigurationQuestions(): YpStructuredQuestionData[] {
+    return [
+      // How many job descriptions to process
+      {
+        uniqueId: "numJobDescriptions",
+        type: "textField",
+        subType: "number",
+        value: 10,
+        maxLength: 4,
+        required: true,
+        text: "Number of job descriptions to analyze",
+      },
+    ];
   }
 
   /**
@@ -58,7 +119,7 @@ export class GoogleSheetsComparisonAgent extends PolicySynthAgent {
 
     for (let i = 0; i < this.sheetNames.length; i++) {
       const sn = this.sheetNames[i];
-      const importAgent = new GoogleSheetsJobDescriptionImportAgent(
+      const importAgent = new SheetsJobDescriptionImportAgent(
         this.agent,
         this.memory,
         0,

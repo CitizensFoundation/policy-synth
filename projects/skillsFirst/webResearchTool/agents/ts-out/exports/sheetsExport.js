@@ -6,7 +6,7 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
  * version to Google Sheets with the same columns/structure as the CSV version,
  * now with two header rows (full path / short name).
  */
-export class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
+export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
     sheetsConnector;
     sheetName = "Job Descriptions Analysis"; // Adjust to your target Sheet tab, if desired
     chunkSize = 500; // Number of rows to send per update

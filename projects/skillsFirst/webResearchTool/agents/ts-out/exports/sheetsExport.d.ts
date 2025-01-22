@@ -5,7 +5,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  * version to Google Sheets with the same columns/structure as the CSV version,
  * now with two header rows (full path / short name).
  */
-export declare class GoogleSheetsJobDescriptionAgent extends PolicySynthAgent {
+export declare class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
     memory: any;
     private sheetsConnector;
     private sheetName;

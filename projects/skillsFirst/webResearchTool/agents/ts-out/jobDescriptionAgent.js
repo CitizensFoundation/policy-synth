@@ -17,7 +17,7 @@ import { IdentifyBarriersAgent } from "./reviewAgents/identifyBarriers.js";
 import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistencyLLMTSHybrid.js";
 import { ReadabilityScoreJobDescriptionAgent } from "./reviewAgents/readabilityAnalysis-text-readability-flesh-kncaid.js";
 import { ReadingLevelUSGradeAnalysisAgentP2 } from "./reviewAgents/readingLevelUSGradeAnalysis2P.js";
-import { GoogleSheetsJobDescriptionAgent } from "./exports/sheetsExport.js";
+import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
 // ------------------
 // Type Definitions
 // ------------------
@@ -88,7 +88,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             jobDescription.processed = true;
             await this.saveMemory();
         }
-        const googleSheetsReportAgent = new GoogleSheetsJobDescriptionAgent(this.agent, this.memory, 95, 100, "Sheet1");
+        const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(this.agent, this.memory, 95, 100, "Sheet1");
         await googleSheetsReportAgent.processJsonData({
             agentId: this.agent.id,
             jobDescriptions: this.memory.jobDescriptions,
