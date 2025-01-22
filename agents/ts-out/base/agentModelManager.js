@@ -19,7 +19,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     modelTemperature;
     reasoningEffort = 'medium';
     limitedLLMmaxRetryCount = 1;
-    mainLLMmaxRetryCount = 10;
+    mainLLMmaxRetryCount = 42;
     constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = 'medium', agentId, userId) {
         super();
         this.maxModelTokensOut = maxModelTokensOut;

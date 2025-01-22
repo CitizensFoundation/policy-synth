@@ -24,7 +24,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
 
   limitedLLMmaxRetryCount = 1;
-  mainLLMmaxRetryCount = 10;
+  mainLLMmaxRetryCount = 42;
 
   constructor(
     aiModels: PsAiModelAttributes[],
