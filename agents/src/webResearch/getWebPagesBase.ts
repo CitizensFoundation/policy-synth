@@ -121,6 +121,8 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
 
     const gzipData = gzipSync(dataToWrite);
     await writeFileAsync(fullPath, gzipData);
+
+    this.logger.info(`Cached ${suffix} for ${url}`);
   }
 
   /**
@@ -277,8 +279,10 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
 
     if (scrapeResponse.markdownArray) {
       markdownArray = scrapeResponse.markdownArray;
+      this.logger.debug(`Got markdownArray: ${markdownArray.length}`);
     } else {
       markdownArray = [scrapeResponse.markdown];
+      this.logger.debug(`Got markdown single: ${markdownArray.length}`);
     }
     const rawHtml = scrapeResponse.rawHtml;
 
@@ -286,6 +290,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
     if (markdownArray) {
       await this.cacheData(url, "markdown", markdownArray);
     }
+
     if (rawHtml) {
       await this.cacheData(url, "rawHtml", rawHtml);
     }

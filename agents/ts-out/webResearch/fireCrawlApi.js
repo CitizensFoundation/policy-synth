@@ -128,7 +128,7 @@ Your JSON output:`,
                         : "";
                 }
                 else {
-                    this.logger.debug(`Successfully scraped: ${url} skipImages ${skipImages}`);
+                    this.logger.debug(`Starting to scrape: ${url}`);
                     scrapeResponse = await this.app.scrapeUrl(url, {
                         formats,
                         excludeTags: skipImages
@@ -136,6 +136,7 @@ Your JSON output:`,
                             : [],
                     });
                 }
+                this.logger.debug(`Successfully scraped: ${url}`);
                 return scrapeResponse;
             }
             catch (error) {

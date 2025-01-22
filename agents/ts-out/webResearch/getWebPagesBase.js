@@ -86,6 +86,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
         }
         const gzipData = gzipSync(dataToWrite);
         await writeFileAsync(fullPath, gzipData);
+        this.logger.info(`Cached ${suffix} for ${url}`);
     }
     /**
      * Process PDF files (fallback if no Firecrawl).
@@ -210,8 +211,13 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
         let markdownArray;
         if (scrapeResponse.markdownArray) {
             markdownArray = scrapeResponse.markdownArray;
+            this.logger.debug(`Got markdownArray: ${markdownArray.length}`);
         }
-        const rawHtml = [scrapeResponse.rawHtml];
+        else {
+            markdownArray = [scrapeResponse.markdown];
+            this.logger.debug(`Got markdown single: ${markdownArray.length}`);
+        }
+        const rawHtml = scrapeResponse.rawHtml;
         // Firecrawl returns markdown and rawHtml properties directly on scrapeResponse
         if (markdownArray) {
             await this.cacheData(url, "markdown", markdownArray);
