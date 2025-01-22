@@ -3,7 +3,6 @@ import { PolicySynthAgent } from "../base/agent.js";
 import { parse } from "tldts";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModelSize } from "../aiModelTypes.js";
-import { WebScraper } from "./webScraper.js";
 export class FirecrawlScrapeAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
@@ -151,25 +150,24 @@ Your JSON output:`,
                     await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
                     retries++;
                 }
-                else if (error.response && error.response.status !== 403) {
-                    const fallbackScraper = new WebScraper();
+                else if ( /*error.response && error.response.status !== 403*/false) {
+                    /*const fallbackScraper = new WebScraper();
                     let fallbackResponse;
                     try {
-                        fallbackResponse = await fallbackScraper.scrapeUrl(url);
-                        if (fallbackResponse.success) {
-                            return {
-                                markdown: fallbackResponse.data.rawHtml,
-                                rawHtml: fallbackResponse.data.rawHtml,
-                                metadata: {
-                                    source: "fallback",
-                                },
-                            };
-                        }
-                    }
-                    catch (fallbackErr) {
-                        this.logger.error("Fallback also failed: " + fallbackErr.message);
-                        throw fallbackErr; // re-throw
-                    }
+                      fallbackResponse = await fallbackScraper.scrapeUrl(url);
+                      if (fallbackResponse.success) {
+                        return {
+                          markdown: fallbackResponse.data.rawHtml,
+                          rawHtml: fallbackResponse.data.rawHtml,
+                          metadata: {
+                            source: "fallback",
+                          },
+                        };
+                      }
+                    } catch (fallbackErr: any) {
+                      this.logger.error("Fallback also failed: " + fallbackErr.message);
+                      throw fallbackErr; // re-throw
+                    }*/
                 }
                 else {
                     // Some other error

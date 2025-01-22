@@ -4,7 +4,7 @@ import { parse } from "tldts";
 import { PsAgent } from "../dbModels/agent.js";
 import { PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModelSize } from "../aiModelTypes.js";
-import { WebScraper } from "./webScraper.js";
+//import { WebScraper } from "./webScraper.js";
 
 interface PrivacyPolicyCheckResult {
   isOnlyPrivacyPolicyOrTermsOfService: boolean;
@@ -225,8 +225,8 @@ Your JSON output:`,
             setTimeout(resolve, retryAfter * 1000)
           );
           retries++;
-        } else if (error.response && error.response.status !== 403) {
-          const fallbackScraper = new WebScraper();
+        } else if (/*error.response && error.response.status !== 403*/ false) {
+          /*const fallbackScraper = new WebScraper();
           let fallbackResponse;
           try {
             fallbackResponse = await fallbackScraper.scrapeUrl(url);
@@ -242,7 +242,7 @@ Your JSON output:`,
           } catch (fallbackErr: any) {
             this.logger.error("Fallback also failed: " + fallbackErr.message);
             throw fallbackErr; // re-throw
-          }
+          }*/
         } else {
           // Some other error
           this.logger.error(`Error scraping ${url}: ${error.message}`);
