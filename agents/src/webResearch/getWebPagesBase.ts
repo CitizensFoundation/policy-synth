@@ -277,9 +277,10 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
 
     if (scrapeResponse.markdownArray) {
       markdownArray = scrapeResponse.markdownArray;
+    } else {
+      markdownArray = [scrapeResponse.markdown];
     }
-
-    const rawHtml = [scrapeResponse.rawHtml];
+    const rawHtml = scrapeResponse.rawHtml;
 
     // Firecrawl returns markdown and rawHtml properties directly on scrapeResponse
     if (markdownArray) {

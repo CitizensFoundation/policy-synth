@@ -190,7 +190,7 @@ Your JSON output:`,
             : "";
         } else {
           this.logger.debug(
-            `Successfully scraped: ${url} skipImages ${skipImages}`
+            `Starting to scrape: ${url}`
           );
           scrapeResponse = await this.app.scrapeUrl(url, {
             formats,
@@ -199,6 +199,9 @@ Your JSON output:`,
               : [],
           });
         }
+        this.logger.debug(
+          `Successfully scraped: ${url}`
+        );
 
         return scrapeResponse;
       } catch (error: any) {
