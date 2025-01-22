@@ -98,5 +98,15 @@ export class PsConnectorFactory {
         }
         return null;
     }
+    static getAllConnectors(agent, memory, connectorType, isInput = true) {
+        const connectors = isInput ? agent.InputConnectors : agent.OutputConnectors;
+        if (!connectors)
+            return [];
+        return connectors
+            .filter((c) => c.Class?.configuration.classType === connectorType)
+            .filter((c) => c.Class !== undefined)
+            .map((c) => this.createConnector(c, c.Class, agent, memory))
+            .filter((connector) => connector !== null);
+    }
 }
 //# sourceMappingURL=connectorFactory.js.map

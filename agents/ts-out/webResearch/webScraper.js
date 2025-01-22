@@ -20,6 +20,7 @@ export class WebScraper {
         if (!WebScraper.browserInstance) {
             WebScraper.browserInstance = await puppeteer.launch({
                 headless: true,
+                args: ["--no-sandbox", "--disable-setuid-sandbox"]
             });
         }
         return WebScraper.browserInstance;

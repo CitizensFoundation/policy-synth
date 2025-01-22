@@ -14,6 +14,7 @@ export declare class PsConnectorFactory {
     static createIdeasCollaborationConnector(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any): PsBaseIdeasCollaborationConnector | null;
     static createVotingCollaborationConnector(connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any): PsBaseVotingCollaborationConnector | null;
     static getConnector(agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput?: boolean): PsBaseConnectorTypes | null;
+    static getAllConnectors(agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput?: boolean): PsBaseConnectorTypes[];
 }
 export {};
 //# sourceMappingURL=connectorFactory.d.ts.map

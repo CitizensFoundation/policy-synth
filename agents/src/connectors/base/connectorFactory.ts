@@ -226,4 +226,20 @@ export class PsConnectorFactory {
 
     return null;
   }
+
+  static getAllConnectors(
+    agent: PsAgent,
+    memory: any,
+    connectorType: PsConnectorClassTypes,
+    isInput: boolean = true
+  ): PsBaseConnectorTypes[] {
+    const connectors = isInput ? agent.InputConnectors : agent.OutputConnectors;
+    if (!connectors) return [];
+
+    return connectors
+      .filter((c) => c.Class?.configuration.classType === connectorType)
+      .filter((c): c is PsAgentConnectorAttributes & { Class: PsAgentConnectorClassAttributes } => c.Class !== undefined)
+      .map((c) => this.createConnector(c, c.Class, agent, memory))
+      .filter((connector): connector is PsBaseConnectorTypes => connector !== null);
+  }
 }
