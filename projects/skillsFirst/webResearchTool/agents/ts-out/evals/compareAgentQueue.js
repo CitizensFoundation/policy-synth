@@ -1,16 +1,16 @@
 // agentQueue.ts
 import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
-import { JobDescriptionAnalysisAgent } from "./jobDescriptionAgent.js";
-export class JobDescriptionAnalysisQueue extends PolicySynthAgentQueue {
+import { SheetsComparisonAgent } from "./compareSheets.js";
+export class JobDescriptionCompareSheetsQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
-        return "JOB_DESCRIPTION_ANALYSIS";
+        return "JOB_DESCRIPTION_COMPARE_SHEETS";
     }
     get processors() {
         return [
             {
-                processor: JobDescriptionAnalysisAgent,
+                processor: SheetsComparisonAgent,
                 weight: 100,
-            }
+            },
         ];
     }
     forceMemoryRestart = false;
@@ -28,4 +28,4 @@ export class JobDescriptionAnalysisQueue extends PolicySynthAgentQueue {
         }
     }
 }
-//# sourceMappingURL=agentQueue.js.map
+//# sourceMappingURL=compareAgentQueue.js.map

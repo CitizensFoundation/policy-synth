@@ -1,21 +1,21 @@
 // agentQueue.ts
 
 import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
-import { JobDescriptionAnalysisAgent } from "./jobDescriptionAgent.js";
+import { SheetsComparisonAgent } from "./compareSheets.js";
 
-export class JobDescriptionAnalysisQueue extends PolicySynthAgentQueue {
+export class JobDescriptionCompareSheetsQueue extends PolicySynthAgentQueue {
   declare memory: JobDescriptionMemoryData;
 
   get agentQueueName(): string {
-    return "JOB_DESCRIPTION_ANALYSIS";
+    return "JOB_DESCRIPTION_COMPARE_SHEETS";
   }
 
   get processors() {
     return [
       {
-        processor: JobDescriptionAnalysisAgent,
+        processor: SheetsComparisonAgent,
         weight: 100,
-      }
+      },
     ];
   }
 
