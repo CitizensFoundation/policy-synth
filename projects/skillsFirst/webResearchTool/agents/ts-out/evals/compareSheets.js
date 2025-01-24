@@ -218,13 +218,20 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         const differencesWithResolution = differences.filter((d) => d.correctConnectorNames).length;
         this.logger.info(`Differences with LLM identifying correctness: ${differencesWithResolution}`);
         // Log or store the "winsCount" and "attemptsCount" stats by connector & field
-        this.logger.info("Final correctness counts by connector & field:");
-        for (const connector of Object.keys(this.winsCount)) {
-            const fieldCounts = this.winsCount[connector];
+        this.logger.info("Final correctness counts by connector & field (including 0/0 fields):");
+        // 1) Collect the full list of connectors from either allImportedData or from the attempts/wins keys.
+        const allConnectors = new Set([
+            ...Object.keys(allImportedData), // All connectors that actually imported data
+            ...Object.keys(this.attemptsCount), // Connectors with recorded attempts
+            ...Object.keys(this.winsCount), // Connectors with recorded wins
+        ]);
+        // 2) Iterate over each connector in a stable order (e.g. sorted alphabetically if desired).
+        for (const connector of [...allConnectors].sort()) {
             this.logger.info(`Connector: ${connector}`);
-            for (const field of Object.keys(fieldCounts)) {
-                const wins = fieldCounts[field];
+            // 3) For each field you care about, show <wins>/<attempts> correct.
+            for (const field of this.fieldsToCheck) {
                 const attempts = this.attemptsCount[connector]?.[field] ?? 0;
+                const wins = this.winsCount[connector]?.[field] ?? 0;
                 this.logger.info(`   Field "${field}": ${wins}/${attempts} correct`);
             }
         }
