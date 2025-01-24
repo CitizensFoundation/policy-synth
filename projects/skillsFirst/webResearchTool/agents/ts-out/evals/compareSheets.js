@@ -18,13 +18,22 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     }
     /**
      * A structure to track how many times each connector is chosen as correct
-     * for each field. Shape is:
+     * for each field.
      *
      *  winsCount = {
      *    [connectorName]: { [fieldName]: number }
      *  }
      */
     winsCount = {};
+    /**
+     * A structure to track how many times each connector was evaluated
+     * for each field (the denominator when calculating X out of Y correct).
+     *
+     *  attemptsCount = {
+     *    [connectorName]: { [fieldName]: number }
+     *  }
+     */
+    attemptsCount = {};
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
     }
@@ -92,10 +101,10 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         "degreeAnalysis.degreeRequirementStatus.substitutionPossible",
         "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
         "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
-        "readingLevelUSGradeAnalysisP2.usGradeLevelReadability"
+        "readingLevelUSGradeAnalysisP2.usGradeLevelReadability",
     ];
     getNestedValue(obj, path) {
-        return path.split('.').reduce((acc, key) => acc?.[key], obj);
+        return path.split(".").reduce((acc, key) => acc?.[key], obj);
     }
     /**
      * Main process method:
@@ -178,26 +187,27 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
                 continue;
             }
             try {
-                const { correctConnectors, incorrectConnectors, explanation } = await this.resolveDifferenceWithLLM(originalJD, diff);
-                // Store the LLM result data on our diff object
-                diff.correctConnectors = correctConnectors;
-                diff.incorrectConnectors = incorrectConnectors;
-                diff.correctConnectorNames = correctConnectors.map((c) => c.connectorName);
-                diff.resolutionExplanation = explanation;
-                // Increment a "correctness" counter for *each* correct connector
-                if (correctConnectors.length > 0) {
-                    for (const connectorInfo of correctConnectors) {
+                // Call LLM to resolve correctness
+                const llmResult = await this.resolveDifferenceWithLLM(originalJD, diff);
+                // (A) For every connector in this difference, increment attempts
+                for (const val of diff.values) {
+                    this.incrementAttemptCounter(val.connectorName, diff.field);
+                }
+                // (B) For each connector that was deemed correct by the LLM, increment "wins"
+                if (llmResult.correctConnectors.length > 0) {
+                    for (const connectorInfo of llmResult.correctConnectors) {
                         this.incrementWinCounter(connectorInfo.connectorName, diff.field);
                     }
-                    this.logger.info(`titleCode=${diff.titleCode}, field=${diff.field}, ` +
-                        `correct connectors: ${correctConnectors
-                            .map((c) => c.connectorName)
-                            .join(", ")}`);
+                    diff.correctConnectors = llmResult.correctConnectors;
+                    diff.correctConnectorNames = llmResult.correctConnectors.map((c) => c.connectorName);
                 }
-                else {
-                    this.logger.info(`titleCode=${diff.titleCode}, field=${diff.field}, ` +
-                        `LLM could not determine any correct connectors`);
-                }
+                // Mark the incorrect connectors
+                diff.incorrectConnectors = llmResult.incorrectConnectors;
+                diff.resolutionExplanation = llmResult.explanation;
+                this.logger.info(`titleCode=${diff.titleCode}, field=${diff.field}, ` +
+                    `correct connectors: ${llmResult.correctConnectors
+                        .map((c) => c.connectorName)
+                        .join(", ")}`);
             }
             catch (err) {
                 this.logger.error(`Error resolving difference for titleCode=${diff.titleCode}, field=${diff.field}: ${err.message}`);
@@ -207,13 +217,15 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         this.logger.info(`Total differences found: ${differences.length}`);
         const differencesWithResolution = differences.filter((d) => d.correctConnectorNames).length;
         this.logger.info(`Differences with LLM identifying correctness: ${differencesWithResolution}`);
-        // Finally, log or store the "winsCount" stats by connector & field
+        // Log or store the "winsCount" and "attemptsCount" stats by connector & field
         this.logger.info("Final correctness counts by connector & field:");
         for (const connector of Object.keys(this.winsCount)) {
             const fieldCounts = this.winsCount[connector];
             this.logger.info(`Connector: ${connector}`);
             for (const field of Object.keys(fieldCounts)) {
-                this.logger.info(`   Field "${field}": ${fieldCounts[field]} correct`);
+                const wins = fieldCounts[field];
+                const attempts = this.attemptsCount[connector]?.[field] ?? 0;
+                this.logger.info(`   Field "${field}": ${wins}/${attempts} correct`);
             }
         }
         // Build a table-like structure for logging
@@ -233,7 +245,6 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
             return {
                 titleCode: diff.titleCode,
                 field: diff.field,
-                // Join connector:value pairs for quick reference
                 parsedValues: diff.values
                     .map((v) => `${v.connectorName}=${v.value ?? "(empty)"}`)
                     .join("; "),
@@ -253,10 +264,11 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         // You could store these differences in memory or elsewhere if desired:
         // this.memory.sheetDifferences = differences;
         // this.memory.sheetWinsCount = this.winsCount;
+        // this.memory.sheetAttemptsCount = this.attemptsCount;
         await this.updateRangedProgress(100, "Comparison and resolution completed");
     }
     /**
-     * Increment the counter for a given connector and field.
+     * Increment the counter for a given connector and field (wins).
      */
     incrementWinCounter(connectorName, field) {
         if (!this.winsCount[connectorName]) {
@@ -266,6 +278,18 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
             this.winsCount[connectorName][field] = 0;
         }
         this.winsCount[connectorName][field]++;
+    }
+    /**
+     * Increment the 'attempts' counter for a given connector and field (the denominator).
+     */
+    incrementAttemptCounter(connectorName, field) {
+        if (!this.attemptsCount[connectorName]) {
+            this.attemptsCount[connectorName] = {};
+        }
+        if (!this.attemptsCount[connectorName][field]) {
+            this.attemptsCount[connectorName][field] = 0;
+        }
+        this.attemptsCount[connectorName][field]++;
     }
     /**
      * Uses the LLM to determine which connectors are correct for the specified difference.

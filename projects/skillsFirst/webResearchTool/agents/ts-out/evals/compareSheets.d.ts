@@ -13,13 +13,22 @@ export declare class SheetsComparisonAgent extends PolicySynthAgent {
     get maxModelTokensOut(): number;
     /**
      * A structure to track how many times each connector is chosen as correct
-     * for each field. Shape is:
+     * for each field.
      *
      *  winsCount = {
      *    [connectorName]: { [fieldName]: number }
      *  }
      */
     private winsCount;
+    /**
+     * A structure to track how many times each connector was evaluated
+     * for each field (the denominator when calculating X out of Y correct).
+     *
+     *  attemptsCount = {
+     *    [connectorName]: { [fieldName]: number }
+     *  }
+     */
+    private attemptsCount;
     constructor(agent: PsAgent, memory: any, startProgress: number, endProgress: number);
     static getAgentClass(): PsAgentClassCreationAttributes;
     /**
@@ -37,9 +46,13 @@ export declare class SheetsComparisonAgent extends PolicySynthAgent {
      */
     process(): Promise<void>;
     /**
-     * Increment the counter for a given connector and field.
+     * Increment the counter for a given connector and field (wins).
      */
     private incrementWinCounter;
+    /**
+     * Increment the 'attempts' counter for a given connector and field (the denominator).
+     */
+    private incrementAttemptCounter;
     /**
      * Uses the LLM to determine which connectors are correct for the specified difference.
      * Expects JSON in the shape of `ComparisonDifferenceReturn`, e.g.:
