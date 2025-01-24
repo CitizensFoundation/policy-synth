@@ -17,10 +17,29 @@ interface ComparisonDifference {
   values: { connectorName: string; value: string | undefined }[];
   resolvedValue?: string;
   resolutionExplanation?: string;
-  correctConnectorNames?: string[]; // «NEW»
+
+  /**
+   * (Legacy) We used to store just the connector names that were correct.
+   */
+  correctConnectorNames?: string[];
+
+  /**
+   * NEW: Store the full data for correct and incorrect connectors,
+   * each with connectorName + fieldValue.
+   */
+  correctConnectors?: {
+    connectorName: string;
+    fieldValue: string;
+  }[];
+  incorrectConnectors?: {
+    connectorName: string;
+    fieldValue: string;
+  }[];
 }
 
-/** «NEW»: Return structure from the LLM with multiple correct connectors. */
+/**
+ * NEW: Return structure from the LLM with multiple correct/incorrect connectors.
+ */
 interface ComparisonDifferenceReturn {
   field: string;
   correctConnectors: {
@@ -46,8 +65,12 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     "fefe1e19-aefa-4636-bcbd-f4adc17bbad4";
   private static readonly JOB_DESCRIPTION_COMPARE_SHEETS_AGENT_CLASS_VERSION = 1;
 
-  get reasoningEffort(): "low" | "medium" | "high" {
+  override get reasoningEffort(): "low" | "medium" | "high" {
     return "high";
+  }
+
+  override get maxModelTokensOut(): number {
+    return 50000;
   }
 
   /**
@@ -137,8 +160,7 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     "degreeAnalysis.degreeRequirementStatus.substitutionPossible",
     "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
     "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
-    "readingLevelUSGradeAnalysisP2.usGradeLevelReadability",
-    "readingLevelUSGradeAnalysisP2.difficultPassages"
+    "readingLevelUSGradeAnalysisP2.usGradeLevelReadability"
   ];
 
   getNestedValue(obj: any, path: string) {
@@ -232,7 +254,6 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
           const valStr = rawVal === undefined ? undefined : String(rawVal);
           allValues.add(valStr);
           connectorValuePairs.push({ connectorName, value: valStr });
-          //this.logger.info(`Field: ${field}, Value: ${valStr}`);
         }
 
         // If more than one distinct value, we have a difference
@@ -268,26 +289,33 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       }
 
       try {
-        const { correctConnectorNames, explanation } =
-          await this.resolveDifferenceWithLLM(originalJD, diff);
+        const {
+          correctConnectors,
+          incorrectConnectors,
+          explanation
+        } = await this.resolveDifferenceWithLLM(originalJD, diff);
 
-        // Store results
-        diff.correctConnectorNames = correctConnectorNames;
+        // Store the LLM result data on our diff object
+        diff.correctConnectors = correctConnectors;
+        diff.incorrectConnectors = incorrectConnectors;
+        diff.correctConnectorNames = correctConnectors.map((c) => c.connectorName);
         diff.resolutionExplanation = explanation;
 
         // Increment a "correctness" counter for *each* correct connector
-        if (correctConnectorNames.length > 0) {
-          for (const connector of correctConnectorNames) {
-            this.incrementWinCounter(connector, diff.field);
+        if (correctConnectors.length > 0) {
+          for (const connectorInfo of correctConnectors) {
+            this.incrementWinCounter(connectorInfo.connectorName, diff.field);
           }
           this.logger.info(
-            `titleCode=${diff.titleCode}, field=${
-              diff.field
-            }, correct connectors: ${correctConnectorNames.join(", ")}`
+            `titleCode=${diff.titleCode}, field=${diff.field}, ` +
+            `correct connectors: ${correctConnectors
+              .map((c) => c.connectorName)
+              .join(", ")}`
           );
         } else {
           this.logger.info(
-            `titleCode=${diff.titleCode}, field=${diff.field}, LLM could not determine any correct connectors`
+            `titleCode=${diff.titleCode}, field=${diff.field}, ` +
+            `LLM could not determine any correct connectors`
           );
         }
       } catch (err) {
@@ -318,7 +346,26 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       }
     }
 
+    // Build a table-like structure for logging
     const tableData = differences.map((diff) => {
+      // Build a nice string for correctConnectors
+      const correctStr = diff.correctConnectors?.length
+        ? diff.correctConnectors
+            .map(
+              (c) => `${c.connectorName}=${c.fieldValue}`
+            )
+            .join("; ")
+        : "";
+
+      // Build a nice string for incorrectConnectors
+      const incorrectStr = diff.incorrectConnectors?.length
+        ? diff.incorrectConnectors
+            .map(
+              (c) => `${c.connectorName}=${c.fieldValue}`
+            )
+            .join("; ")
+        : "";
+
       return {
         titleCode: diff.titleCode,
         field: diff.field,
@@ -326,22 +373,24 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         parsedValues: diff.values
           .map((v) => `${v.connectorName}=${v.value ?? "(empty)"}`)
           .join("; "),
-        correctConnectors: diff.correctConnectorNames?.join(", ") || "",
+        correctConnectors: correctStr,
+        incorrectConnectors: incorrectStr,
         explanation: diff.resolutionExplanation || "",
       };
     });
 
-    // If your runtime supports console.table, you can do:
-    // console.table(tableData);
-    // Otherwise, you can print manually:
     this.logger.info("Differences Table:");
     for (const row of tableData) {
       this.logger.info(
-        `• titleCode=${row.titleCode}, field="${row.field}", values=[${row.parsedValues}], correct=[${row.correctConnectors}], explanation="${row.explanation}"`
+        `• titleCode=${row.titleCode}, field="${row.field}", ` +
+        `values=[${row.parsedValues}], ` +
+        `correct=[${row.correctConnectors}], ` +
+        `incorrect=[${row.incorrectConnectors}], ` +
+        `explanation="${row.explanation}"`
       );
     }
 
-    // Optionally store or export differences and the aggregated wins
+    // You could store these differences in memory or elsewhere if desired:
     // this.memory.sheetDifferences = differences;
     // this.memory.sheetWinsCount = this.winsCount;
 
@@ -363,6 +412,21 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
 
   /**
    * Uses the LLM to determine which connectors are correct for the specified difference.
+   * Expects JSON in the shape of `ComparisonDifferenceReturn`, e.g.:
+   *
+   * ```json
+   * {
+   *   "field": "<field name>",
+   *   "correctConnectors": [
+   *     { "connectorName": "Connector A", "fieldValue": "yes" },
+   *     { "connectorName": "Connector B", "fieldValue": "yes" }
+   *   ],
+   *   "incorrectConnectors": [
+   *     { "connectorName": "Connector C", "fieldValue": "no" }
+   *   ],
+   *   "explanation": "One short sentence"
+   * }
+   * ```
    */
   private async resolveDifferenceWithLLM(
     originalJD: JobDescription,
@@ -387,7 +451,7 @@ ${diff.field}
 ${diff.values
   .map(
     (pair) =>
-      `<ValueFromConnector name="${pair.connectorName}">${pair.value ?? "(empty)"}</ValueFromConnector>\n`
+      `<ValueFromConnector name="${pair.connectorName}">${pair.value ?? "(empty)"}</ValueFromConnector>`
   )
   .join("\n")}
 </CandidateValues>
@@ -427,7 +491,7 @@ If you cannot determine correctness for any connector, output an empty array:
 \`\`\`json
 {
   "field": "<field name>",
-  "correctConnectorNames": [],
+  "correctConnectors": [],
   "incorrectConnectors": [],
   "explanation": "Cannot determine correctness for any connector."
 }
@@ -435,7 +499,8 @@ If you cannot determine correctness for any connector, output an empty array:
 `.trim();
 
     const messages = [this.createSystemMessage(systemPrompt)];
-    //this.logger.debug(JSON.stringify(messages, null, 2));
+
+    // Call your model with the prompts
     const result = (await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Medium,
@@ -443,9 +508,14 @@ If you cannot determine correctness for any connector, output an empty array:
       true
     )) as ComparisonDifferenceReturn;
 
-    this.logger.info(`Result: ${JSON.stringify(result, null, 2)}`);
+    this.logger.info(`LLM raw result: ${JSON.stringify(result, null, 2)}`);
 
-    // Provide safe defaults
-    return result;
+    // Provide safe defaults if the LLM's output is empty or invalid
+    return {
+      field: result.field ?? diff.field,
+      correctConnectors: result.correctConnectors ?? [],
+      incorrectConnectors: result.incorrectConnectors ?? [],
+      explanation: result.explanation ?? "No explanation provided",
+    };
   }
 }
