@@ -75,13 +75,23 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
 
   /**
    * A structure to track how many times each connector is chosen as correct
-   * for each field. Shape is:
+   * for each field.
    *
    *  winsCount = {
    *    [connectorName]: { [fieldName]: number }
    *  }
    */
   private winsCount: Record<string, Record<string, number>> = {};
+
+  /**
+   * A structure to track how many times each connector was evaluated
+   * for each field (the denominator when calculating X out of Y correct).
+   *
+   *  attemptsCount = {
+   *    [connectorName]: { [fieldName]: number }
+   *  }
+   */
+  private attemptsCount: Record<string, Record<string, number>> = {};
 
   constructor(
     agent: PsAgent,
@@ -160,11 +170,11 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     "degreeAnalysis.degreeRequirementStatus.substitutionPossible",
     "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
     "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
-    "readingLevelUSGradeAnalysisP2.usGradeLevelReadability"
+    "readingLevelUSGradeAnalysisP2.usGradeLevelReadability",
   ];
 
   getNestedValue(obj: any, path: string) {
-    return path.split('.').reduce((acc, key) => acc?.[key], obj);
+    return path.split(".").reduce((acc, key) => acc?.[key], obj);
   }
 
   /**
@@ -289,35 +299,35 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       }
 
       try {
-        const {
-          correctConnectors,
-          incorrectConnectors,
-          explanation
-        } = await this.resolveDifferenceWithLLM(originalJD, diff);
+        // Call LLM to resolve correctness
+        const llmResult = await this.resolveDifferenceWithLLM(originalJD, diff);
 
-        // Store the LLM result data on our diff object
-        diff.correctConnectors = correctConnectors;
-        diff.incorrectConnectors = incorrectConnectors;
-        diff.correctConnectorNames = correctConnectors.map((c) => c.connectorName);
-        diff.resolutionExplanation = explanation;
+        // (A) For every connector in this difference, increment attempts
+        for (const val of diff.values) {
+          this.incrementAttemptCounter(val.connectorName, diff.field);
+        }
 
-        // Increment a "correctness" counter for *each* correct connector
-        if (correctConnectors.length > 0) {
-          for (const connectorInfo of correctConnectors) {
+        // (B) For each connector that was deemed correct by the LLM, increment "wins"
+        if (llmResult.correctConnectors.length > 0) {
+          for (const connectorInfo of llmResult.correctConnectors) {
             this.incrementWinCounter(connectorInfo.connectorName, diff.field);
           }
-          this.logger.info(
-            `titleCode=${diff.titleCode}, field=${diff.field}, ` +
-            `correct connectors: ${correctConnectors
-              .map((c) => c.connectorName)
-              .join(", ")}`
-          );
-        } else {
-          this.logger.info(
-            `titleCode=${diff.titleCode}, field=${diff.field}, ` +
-            `LLM could not determine any correct connectors`
+          diff.correctConnectors = llmResult.correctConnectors;
+          diff.correctConnectorNames = llmResult.correctConnectors.map(
+            (c) => c.connectorName
           );
         }
+
+        // Mark the incorrect connectors
+        diff.incorrectConnectors = llmResult.incorrectConnectors;
+        diff.resolutionExplanation = llmResult.explanation;
+
+        this.logger.info(
+          `titleCode=${diff.titleCode}, field=${diff.field}, ` +
+            `correct connectors: ${llmResult.correctConnectors
+              .map((c) => c.connectorName)
+              .join(", ")}`
+        );
       } catch (err) {
         this.logger.error(
           `Error resolving difference for titleCode=${diff.titleCode}, field=${
@@ -336,13 +346,17 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       `Differences with LLM identifying correctness: ${differencesWithResolution}`
     );
 
-    // Finally, log or store the "winsCount" stats by connector & field
+    // Log or store the "winsCount" and "attemptsCount" stats by connector & field
     this.logger.info("Final correctness counts by connector & field:");
+
     for (const connector of Object.keys(this.winsCount)) {
       const fieldCounts = this.winsCount[connector];
       this.logger.info(`Connector: ${connector}`);
+
       for (const field of Object.keys(fieldCounts)) {
-        this.logger.info(`   Field "${field}": ${fieldCounts[field]} correct`);
+        const wins = fieldCounts[field];
+        const attempts = this.attemptsCount[connector]?.[field] ?? 0;
+        this.logger.info(`   Field "${field}": ${wins}/${attempts} correct`);
       }
     }
 
@@ -351,25 +365,20 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       // Build a nice string for correctConnectors
       const correctStr = diff.correctConnectors?.length
         ? diff.correctConnectors
-            .map(
-              (c) => `${c.connectorName}=${c.fieldValue}`
-            )
+            .map((c) => `${c.connectorName}=${c.fieldValue}`)
             .join("; ")
         : "";
 
       // Build a nice string for incorrectConnectors
       const incorrectStr = diff.incorrectConnectors?.length
         ? diff.incorrectConnectors
-            .map(
-              (c) => `${c.connectorName}=${c.fieldValue}`
-            )
+            .map((c) => `${c.connectorName}=${c.fieldValue}`)
             .join("; ")
         : "";
 
       return {
         titleCode: diff.titleCode,
         field: diff.field,
-        // Join connector:value pairs for quick reference
         parsedValues: diff.values
           .map((v) => `${v.connectorName}=${v.value ?? "(empty)"}`)
           .join("; "),
@@ -383,22 +392,23 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     for (const row of tableData) {
       this.logger.info(
         `• titleCode=${row.titleCode}, field="${row.field}", ` +
-        `values=[${row.parsedValues}], ` +
-        `correct=[${row.correctConnectors}], ` +
-        `incorrect=[${row.incorrectConnectors}], ` +
-        `explanation="${row.explanation}"`
+          `values=[${row.parsedValues}], ` +
+          `correct=[${row.correctConnectors}], ` +
+          `incorrect=[${row.incorrectConnectors}], ` +
+          `explanation="${row.explanation}"`
       );
     }
 
     // You could store these differences in memory or elsewhere if desired:
     // this.memory.sheetDifferences = differences;
     // this.memory.sheetWinsCount = this.winsCount;
+    // this.memory.sheetAttemptsCount = this.attemptsCount;
 
     await this.updateRangedProgress(100, "Comparison and resolution completed");
   }
 
   /**
-   * Increment the counter for a given connector and field.
+   * Increment the counter for a given connector and field (wins).
    */
   private incrementWinCounter(connectorName: string, field: string): void {
     if (!this.winsCount[connectorName]) {
@@ -408,6 +418,19 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       this.winsCount[connectorName][field] = 0;
     }
     this.winsCount[connectorName][field]++;
+  }
+
+  /**
+   * Increment the 'attempts' counter for a given connector and field (the denominator).
+   */
+  private incrementAttemptCounter(connectorName: string, field: string): void {
+    if (!this.attemptsCount[connectorName]) {
+      this.attemptsCount[connectorName] = {};
+    }
+    if (!this.attemptsCount[connectorName][field]) {
+      this.attemptsCount[connectorName][field] = 0;
+    }
+    this.attemptsCount[connectorName][field]++;
   }
 
   /**
@@ -449,11 +472,11 @@ ${diff.field}
 
 <CandidateValues>
 ${diff.values
-  .map(
-    (pair) =>
-      `<ValueFromConnector name="${pair.connectorName}">${pair.value ?? "(empty)"}</ValueFromConnector>`
-  )
-  .join("\n")}
+      .map(
+        (pair) =>
+          `<ValueFromConnector name="${pair.connectorName}">${pair.value ?? "(empty)"}</ValueFromConnector>`
+      )
+      .join("\n")}
 </CandidateValues>
 
 Your task:
