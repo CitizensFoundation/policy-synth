@@ -142,10 +142,10 @@ interface MandatoryStatusExplanations {
  * Enumeration of possible education requirement types.
  */
 type JobEducationRequirementTypes =
-  | "highschool" // Type 1: "high school degree", "high school degree completion"
-  | "collegeCoursework" // Type 2: "college coursework", "study at a college", "study at a university"
-  | "associatesDegree" // Type 3: "associate's degree", "associate degree", etc.
-  | "bachelorsDegree" // Type 4: "bachelor's degree", "bachelor degree", etc.
+  | "High school" // Type 1: "high school degree", "high school degree completion"
+  | "Some college" // Type 2: "college coursework", "study at a college", "study at a university"
+  | "Associate's degree" // Type 3: "associate's degree", "associate degree", etc.
+  | "Bachelor's degree" // Type 4: "bachelor's degree", "bachelor degree", etc.
   | "mastersDegree" // Type 5: "master's degree", "master degree", etc.
   | "doctoralDegree"; // Type 6: "juris doctor", "doctor of philosophy", "Ph.D.", etc.
 
@@ -280,12 +280,12 @@ interface MandatoryStatusExplanations {
  * Enumeration of possible education requirement types.
  */
 type JobEducationRequirementTypes =
-  | "highschool" // Type 1: "high school degree", "high school degree completion"
-  | "collegeCoursework" // Type 2: "college coursework", "study at a college", "study at a university"
-  | "associatesDegree" // Type 3: "associate's degree", "associate degree", etc.
-  | "bachelorsDegree" // Type 4: "bachelor's degree", "bachelor degree", etc.
-  | "mastersDegree" // Type 5: "master's degree", "master degree", etc.
-  | "doctoralDegree"; // Type 6: "juris doctor", "doctor of philosophy", "Ph.D.", etc.
+  | "High school" // Type 1: "high school degree", "high school degree completion"
+  | "Some college" // Type 2: "college coursework", "study at a college", "study at a university"
+  | "Associate's degree" // Type 3: "associate's degree", "associate degree", etc.
+  | "Bachelor's degree" // Type 4: "bachelor's degree", "bachelor degree", etc.
+  | "Master's degree" // Type 5: "master's degree", "master degree", etc.
+  | "Doctoral degree"; // Type 6: "juris doctor", "doctor of philosophy", "Ph.D.", etc.
 
 /**
  * Enumeration of classification types based on the Determination Steps.

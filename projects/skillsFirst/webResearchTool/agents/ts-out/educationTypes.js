@@ -1,12 +1,12 @@
 // educationTypes.ts
 export var EducationType;
 (function (EducationType) {
-    EducationType["HighSchool"] = "highschool";
-    EducationType["CollegeCoursework"] = "collegeCoursework";
-    EducationType["AssociatesDegree"] = "associatesDegree";
-    EducationType["BachelorsDegree"] = "bachelorsDegree";
-    EducationType["MastersDegree"] = "mastersDegree";
-    EducationType["DoctoralDegree"] = "doctoralDegree";
+    EducationType["HighSchool"] = "High school";
+    EducationType["CollegeCoursework"] = "Some college";
+    EducationType["AssociatesDegree"] = "Associate's degree";
+    EducationType["BachelorsDegree"] = "Bachelor's degree";
+    EducationType["MastersDegree"] = "Master's degree";
+    EducationType["DoctoralDegree"] = "Doctoral degree";
 })(EducationType || (EducationType = {}));
 export const EducationTypes = {
     [EducationType.HighSchool]: {
