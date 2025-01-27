@@ -78,7 +78,7 @@ export class PsConfigManager extends PolicySynthAgentBase{
   }
 
   public getConfigOld<T>(uniqueId: string, defaultValue: T): T {
-    this.logger.debug(JSON.stringify(this.configuration, null, 2));
+    //this.logger.debug(JSON.stringify(this.configuration, null, 2));
     const answer = this.configuration.answers?.find(
       (a) => a.uniqueId === uniqueId
     );

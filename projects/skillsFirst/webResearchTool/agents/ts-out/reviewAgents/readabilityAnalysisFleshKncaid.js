@@ -14,7 +14,7 @@ import sanitizeHtml from 'sanitize-html'; // Import sanitize-html
 //   MandatoryStatusExplanations,
 //   ProfessionalLicenseRequirement
 // } from "../types.js";
-export class ReadabilityScoreJobDescriptionAgent extends PolicySynthAgent {
+export class ReadabilityFleshKncaidJobDescriptionAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     get maxModelTokensOut() {
         return 16384;
@@ -45,7 +45,7 @@ export class ReadabilityScoreJobDescriptionAgent extends PolicySynthAgent {
         const text = sanitizedText
             .replace(/\\r\\n|\\n|\\r/g, '\n')
             .replace(/\\t/g, ' ');
-        this.logger.info(`words ${text}`);
+        //this.logger.info(`words ${text}`)
         // Count words
         const wordsArray = text.match(/\b\w+\b/g) || [];
         const wordCount = wordsArray.length;
@@ -68,4 +68,4 @@ export class ReadabilityScoreJobDescriptionAgent extends PolicySynthAgent {
         await this.updateRangedProgress(100, "Readability analysis completed with package 'flesch-kincaid'");
     }
 }
-//# sourceMappingURL=readabilityAnalysis-text-readability-flesh-kncaid.js.map
+//# sourceMappingURL=readabilityAnalysisFleshKncaid.js.map

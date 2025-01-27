@@ -55,8 +55,9 @@ Evidence Quote: "${requirement.evidenceQuote}"
 
 Please confirm if the evidence quote supports the conclusion that the job description mentions ${requirement.type}.
 
-Answer "True" if it supports, "False" otherwise.
-`;
+Answer only "True" if it supports or only "False" otherwise, nothing else.
+
+Your True or False answer:`;
 
       const messages = [this.createSystemMessage(systemPrompt)];
 

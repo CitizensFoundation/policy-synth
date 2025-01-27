@@ -17,10 +17,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     agentId;
     maxModelTokensOut;
     modelTemperature;
-    reasoningEffort = 'medium';
+    reasoningEffort = "medium";
     limitedLLMmaxRetryCount = 1;
     mainLLMmaxRetryCount = 42;
-    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = 'medium', agentId, userId) {
+    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = "medium", agentId, userId) {
         super();
         this.maxModelTokensOut = maxModelTokensOut;
         this.modelTemperature = modelTemperature;
@@ -65,7 +65,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 temperature: this.modelTemperature,
                 reasoningEffort: this.reasoningEffort,
                 modelType: modelType,
-                modelSize: modelSize
+                modelSize: modelSize,
             };
             switch (modelProvider.toLowerCase()) {
                 case "anthropic":
@@ -78,7 +78,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     model = new GoogleGeminiChat(baseConfig);
                     break;
                 case "azure":
-                    if (!process.env.PS_AI_MODEL_ENDPOINT || !process.env.PS_AI_MODEL_DEPLOYMENT_NAME) {
+                    if (!process.env.PS_AI_MODEL_ENDPOINT ||
+                        !process.env.PS_AI_MODEL_DEPLOYMENT_NAME) {
                         this.logger.warn("Missing Azure-specific environment variables");
                         return;
                     }
@@ -117,13 +118,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             const modelType = model.configuration.type;
             const modelSize = model.configuration.modelSize;
             const modelKey = `${modelType}_${modelSize}`;
-            this.logger.debug(`Initializing model ${model.id} ${modelKey}`);
+            this.logger.debug(`Initializing model ${model.id} ${modelType} ${modelSize} ${modelKey}`);
             const apiKeyConfig = accessConfiguration.find((access) => access.aiModelId === model.id);
-            this.logger.debug(`Initializing model ${model.id}`);
-            this.logger.debug(`Initializing model ${modelType}`);
-            this.logger.debug(`Initializing model ${modelKey}`);
-            this.logger.debug(`Initializing model ${modelSize}`);
-            this.logger.debug(`Access configuration: ${JSON.stringify(accessConfiguration)}`);
+            /*this.logger.debug(
+              `Access configuration: ${JSON.stringify(accessConfiguration)}`
+            );*/
             if (!apiKeyConfig) {
                 this.logger.warn(`API key configuration not found for model ${model.id}`);
                 continue;
@@ -135,7 +134,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 temperature: this.modelTemperature,
                 reasoningEffort: this.reasoningEffort,
                 modelType: modelType,
-                modelSize: modelSize
+                modelSize: modelSize,
             };
             this.logger.debug(`Reasoning effort is set to ${this.reasoningEffort} here`);
             let newModel;

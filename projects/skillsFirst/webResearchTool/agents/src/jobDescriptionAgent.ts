@@ -19,9 +19,9 @@ import { ReviewEvidenceQuoteAgent } from "./reviewAgents/reviewEvidenceAgent.js"
 import { DetermineMandatoryStatusAgent } from "./reviewAgents/mantatoryStatus.js";
 import { DetermineProfessionalLicenseRequirementAgent } from "./reviewAgents/additionalRequirements.js";
 import { IdentifyBarriersAgent } from "./reviewAgents/identifyBarriers.js";
-import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistencyLLMTSHybrid.js";
-import { ReadabilityScoreJobDescriptionAgent } from "./reviewAgents/readabilityAnalysis-text-readability-flesh-kncaid.js";
-import { ReadingLevelUSGradeAnalysisAgentP2 } from "./reviewAgents/readingLevelUSGradeAnalysis2P.js";
+import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistency.js";
+import { ReadabilityFleshKncaidJobDescriptionAgent } from "./reviewAgents/readabilityAnalysisFleshKncaid.js";
+import { ReadingLevelAnalysisAgent } from "./reviewAgents/readingLevelAnalysis.js";
 import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
 
 // ------------------
@@ -214,6 +214,10 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
+    if (jobDescription.degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements) {
+      this.logger.warn(`Job description ${jobDescription.titleCode} has multiple job levels with different educational requirements`);
+    }
+
     // STEP 2: Review evidence quote for higher education
     if (enableReviewEvidenceQuote) {
       const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(
@@ -279,7 +283,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     // STEP 7: Analyze readability via Flesch-Kincaid
     if (enableReadabilityScore) {
-      const readabilityAgent = new ReadabilityScoreJobDescriptionAgent(
+      const readabilityAgent = new ReadabilityFleshKncaidJobDescriptionAgent(
         this.agent,
         this.memory,
         84,
@@ -291,7 +295,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     // STEP 8: Analyze reading level & extract difficult passages
     if (enableReadingLevelAnalysis) {
-      const readingLevelAgent = new ReadingLevelUSGradeAnalysisAgentP2(
+      const readingLevelAgent = new ReadingLevelAnalysisAgent(
         this.agent,
         this.memory,
         90,

@@ -37,24 +37,24 @@ ${jobDescription.text}
 </JobDescription>
 
 You are an expert in analyzing job descriptions for professional license requirements.
-Your task is to determine whether any professional license is required that might include a college or university degree requirement.
 
+Your task is to determine whether any professional license is required that might include a college or university degree requirement.
 
 Please answer the following questions:
 
-- ProfessionalLicenseRequirement.isLicenseRequired (4a):
+- ProfessionalLicenseRequirement.isLicenseRequired:
   Is a specified professional license mandatory to be hired?
-  Answer: True/False
+  Answer: true/false
 
-- ProfessionalLicenseRequirement.licenseDescription (4b):
+- ProfessionalLicenseRequirement.licenseDescription:
   Quote the language describing the professional license requirement.
 
-- ProfessionalLicenseRequirement.issuingAuthority (4c):
+- ProfessionalLicenseRequirement.issuingAuthority:
   State the issuing entity of the professional license if known from the job description or your expertise.
 
-- ProfessionalLicenseRequirement.includesDegreeRequirement (4d):
+- ProfessionalLicenseRequirement.includesDegreeRequirement:
   Does the professional license requirement include obtaining one of the specified degrees?
-  Answer: True/False
+  Answer: true/false
 
 Provide the answers in the following JSON format:
 

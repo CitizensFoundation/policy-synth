@@ -21,20 +21,27 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
 ${jobDescription.text}
 </JobDescription>
 
-You are an expert in analyzing job descriptions for education requirements.
-Your task is to determine if the job description includes a discussion of a college degree or higher education requirement.
-Follow these determination steps:
-
-- For each EducationType, check if the job description mentions any of the phrases associated with that type.
-
-Education Types:
+<EducationTypes>
 ${this.renderEducationTypes()}
+</EducationTypes>
+
+You are an expert in analyzing job descriptions for education requirements.
+
+Your task is to determine if the job description includes a discussion of a college degree or higher education requirement.
+
+Follow these determination steps:
+- Check if the job needs a college degree or other higher education requirement.
+- Determine the maximum degree requirement for the job based on the <EducationTypes> above.
+- Check if the job description includes multiple job levels with different educational requirements.
+- For each EducationType, check if the job description mentions any of the phrases associated with that type.
 
 Provide the output in JSON format as follows:
 
 \`\`\`json
 {
   "needsCollegeDegree": boolean,
+  "maximumDegreeRequirement": "string",
+  "includesMultipleJobLevelsWithDifferentEducationalRequirements": boolean,
   "educationRequirements": [
     {
       "type": "EducationType",
@@ -46,7 +53,8 @@ Provide the output in JSON format as follows:
 \`\`\`
 
 Do not include any explanations or comments before or after the JSON output.
-`;
+
+Your JSON output:`;
         const userPrompt = `Please analyze the job description and provide the output in the specified JSON format.
 `;
         const messages = [
@@ -57,7 +65,9 @@ Do not include any explanations or comments before or after the JSON output.
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.needsCollegeDegree = result.needsCollegeDegree;
+        jobDescription.degreeAnalysis.maximumDegreeRequirement = result.maximumDegreeRequirement;
         jobDescription.degreeAnalysis.educationRequirements = result.educationRequirements;
+        jobDescription.degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements = result.includesMultipleJobLevelsWithDifferentEducationalRequirements;
         this.logger.debug(`College degree status determined for ${jobDescription.name} - ${result.needsCollegeDegree}`);
         await this.updateRangedProgress(100, "College degree status determined");
     }

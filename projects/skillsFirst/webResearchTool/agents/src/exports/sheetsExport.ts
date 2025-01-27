@@ -94,6 +94,8 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
       "occupationalCategory.subCategory",
       // Degree Analysis
       "degreeAnalysis.needsCollegeDegree",
+      "degreeAnalysis.maximumDegreeRequirement",
+      "degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements",
       // Education Requirements
       "degreeAnalysis.educationRequirements",
       // Degree Requirement Status
@@ -124,16 +126,10 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
       "degreeAnalysis.validationChecks.alternativeQualificationsConsistency",
       "degreeAnalysis.validationChecks.educationRequirementsConsistency",
       "degreeAnalysis.validationChecks.needsCollegeDegreeConsistency",
-      // Reading Level US Grade Analysis
-      "readingLevelUSGradeAnalysis.difficultPassages",
-      "readingLevelUSGradeAnalysis.usGradeLevelReadability",
-      // Reading Level US Grade Analysis P2
-      "readingLevelUSGradeAnalysisP2.difficultPassages",
-      "readingLevelUSGradeAnalysisP2.usGradeLevelReadability",
-      // Reading Level Analysis Results
-      "readingLevelAnalysisResults.difficultPassages",
-      "readingLevelAnalysisResults.usGradeLevelReadability",
-
+      // Reading Level Grade Analysis
+      "readingLevelGradeAnalysis.difficultPassages",
+      "readingLevelGradeAnalysis.readabilityLevel",
+      "readingLevelGradeAnalysis.fleschKincaidGrade",
       // NEW final column for scoring the validation checks
       "validationScore",
     ];
@@ -196,7 +192,8 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
       // degreeAnalysis
       const da = job.degreeAnalysis || {};
       row.push(String(da.needsCollegeDegree ?? ""));
-
+      row.push(String(da.maximumDegreeRequirement ?? ""));
+      row.push(String(da.includesMultipleJobLevelsWithDifferentEducationalRequirements ?? ""));
       // educationRequirements
       if (da.educationRequirements && Array.isArray(da.educationRequirements)) {
         const eduReqs = da.educationRequirements
@@ -248,32 +245,14 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
       row.push(String(vc.educationRequirementsConsistency ?? ""));
       row.push(String(vc.needsCollegeDegreeConsistency ?? ""));
 
-      // readingLevelUSGradeAnalysis
-      const rlu = job.readingLevelUSGradeAnalysis || ({} as any);
-      row.push(
-        Array.isArray(rlu.difficultPassages)
-          ? rlu.difficultPassages.join("\r\n|\r\n")
-          : ""
-      );
-      row.push(this.safeString(rlu.usGradeLevelReadability));
-
-      // readingLevelUSGradeAnalysisP2
-      const rlu2 = job.readingLevelUSGradeAnalysisP2 || ({} as any);
-      row.push(
-        Array.isArray(rlu2.difficultPassages)
-          ? rlu2.difficultPassages.join("\r\n|\r\n")
-          : ""
-      );
-      row.push(this.safeString(rlu2.usGradeLevelReadability));
-
-      // readingLevelAnalysisResults (the code reuses readingLevelUSGradeAnalysis for these)
-      const rlar = job.readingLevelUSGradeAnalysis || ({} as any);
+      const rlar = job.readingLevelGradeAnalysis || ({} as any);
       row.push(
         Array.isArray(rlar.difficultPassages)
           ? rlar.difficultPassages.join("\r\n|\r\n")
           : ""
       );
-      row.push(this.safeString(rlar.usGradeLevelReadability));
+      row.push(this.safeString(rlar.readabilityLevel));
+      row.push(this.safeString(job.readabilityAnalysisTextTSNPM?.fleschKincaidGrade ?? ""));
 
       // Compute validationScore from all validationChecks that are `true`
       const validationBoolArray = [
@@ -289,7 +268,7 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
       ];
       const validationScore = validationBoolArray.reduce((acc, val) => {
         // Count +1 only if val is strictly true
-        return acc + (val === true ? 1 : 0);
+        return acc + (val === "pass" ? 1 : 0);
       }, 0);
       row.push(String(validationScore));
 

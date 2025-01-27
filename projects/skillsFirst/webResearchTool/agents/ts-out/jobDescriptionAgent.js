@@ -14,9 +14,9 @@ import { ReviewEvidenceQuoteAgent } from "./reviewAgents/reviewEvidenceAgent.js"
 import { DetermineMandatoryStatusAgent } from "./reviewAgents/mantatoryStatus.js";
 import { DetermineProfessionalLicenseRequirementAgent } from "./reviewAgents/additionalRequirements.js";
 import { IdentifyBarriersAgent } from "./reviewAgents/identifyBarriers.js";
-import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistencyLLMTSHybrid.js";
-import { ReadabilityScoreJobDescriptionAgent } from "./reviewAgents/readabilityAnalysis-text-readability-flesh-kncaid.js";
-import { ReadingLevelUSGradeAnalysisAgentP2 } from "./reviewAgents/readingLevelUSGradeAnalysis2P.js";
+import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistency.js";
+import { ReadabilityFleshKncaidJobDescriptionAgent } from "./reviewAgents/readabilityAnalysisFleshKncaid.js";
+import { ReadingLevelAnalysisAgent } from "./reviewAgents/readingLevelAnalysis.js";
 import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
 // ------------------
 // Type Definitions
@@ -117,6 +117,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             await determineDegreeStatusAgent.processJobDescription(jobDescription);
             await this.saveMemory();
         }
+        if (jobDescription.degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements) {
+            this.logger.warn(`Job description ${jobDescription.titleCode} has multiple job levels with different educational requirements`);
+        }
         // STEP 2: Review evidence quote for higher education
         if (enableReviewEvidenceQuote) {
             const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(this.agent, this.memory, 14, 28);
@@ -149,13 +152,13 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         }
         // STEP 7: Analyze readability via Flesch-Kincaid
         if (enableReadabilityScore) {
-            const readabilityAgent = new ReadabilityScoreJobDescriptionAgent(this.agent, this.memory, 84, 100);
+            const readabilityAgent = new ReadabilityFleshKncaidJobDescriptionAgent(this.agent, this.memory, 84, 100);
             await readabilityAgent.processJobDescription(jobDescription);
             await this.saveMemory();
         }
         // STEP 8: Analyze reading level & extract difficult passages
         if (enableReadingLevelAnalysis) {
-            const readingLevelAgent = new ReadingLevelUSGradeAnalysisAgentP2(this.agent, this.memory, 90, 95);
+            const readingLevelAgent = new ReadingLevelAnalysisAgent(this.agent, this.memory, 90, 95);
             await readingLevelAgent.processJobDescription(jobDescription);
             await this.saveMemory();
         }

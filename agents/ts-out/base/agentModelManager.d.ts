@@ -11,7 +11,7 @@ export declare class PsAiModelManager extends PolicySynthAgentBase {
     agentId: number;
     maxModelTokensOut: number;
     modelTemperature: number;
-    reasoningEffort: 'low' | 'medium' | 'high';
+    reasoningEffort: "low" | "medium" | "high";
     limitedLLMmaxRetryCount: number;
     mainLLMmaxRetryCount: number;
     constructor(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[], maxModelTokensOut: number | undefined, modelTemperature: number | undefined, reasoningEffort: ("low" | "medium" | "high") | undefined, agentId: number, userId: number);

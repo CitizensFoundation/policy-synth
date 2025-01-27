@@ -1,7 +1,7 @@
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-export declare class ValidateJobDescriptionAgent extends PolicySynthAgent {
+export declare class ReadabilityFleshKncaidJobDescriptionAgent extends PolicySynthAgent {
     memory: JobDescriptionMemoryData;
     modelSize: PsAiModelSize;
     get maxModelTokensOut(): number;
@@ -9,4 +9,4 @@ export declare class ValidateJobDescriptionAgent extends PolicySynthAgent {
     constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
     processJobDescription(jobDescription: JobDescription): Promise<void>;
 }
-//# sourceMappingURL=dataConsistencyLLM.d.ts.map
+//# sourceMappingURL=readabilityAnalysisFleshKncaid.d.ts.map

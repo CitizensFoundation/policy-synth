@@ -30,7 +30,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     constructor(agent, memory = undefined, startProgress, endProgress) {
         super();
         this.agent = agent;
-        this.logger.debug(JSON.stringify(agent));
+        this.logger.debug(`Agent ${agent.id} constructor`);
         if (!this.agent &&
             (!process.env.PS_AGENT_MAX_MODEL_TOKENS_OUT ||
                 !process.env.PS_AGENT_MODEL_TEMPERATURE ||

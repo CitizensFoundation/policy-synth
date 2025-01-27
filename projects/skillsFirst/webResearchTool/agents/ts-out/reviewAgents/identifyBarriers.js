@@ -25,11 +25,12 @@ You are an expert in analyzing job descriptions.
 Your task is to identify any barriers or obstacles stated, suggested, or described in the job description to hiring an applicant who does not have a college or university degree.
 
 If there are barriers, describe them.
-If no barriers are found, leave the field blank.
-Do not fabricate any information.
+
+If no barriers are found, state "No barriers found".
 
 Provide the output as a plain text description without any additional text.
-`;
+
+Your output:`;
         const messages = [this.createSystemMessage(systemPrompt)];
         const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};

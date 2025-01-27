@@ -20,7 +20,7 @@
    //   ProfessionalLicenseRequirement
    // } from "../types.js";
 
-   export class ReadabilityScoreJobDescriptionAgent extends PolicySynthAgent {
+   export class ReadabilityFleshKncaidJobDescriptionAgent extends PolicySynthAgent {
      declare memory: JobDescriptionMemoryData;
 
      modelSize: PsAiModelSize = PsAiModelSize.Medium;
@@ -67,7 +67,7 @@
        const text = sanitizedText
          .replace(/\\r\\n|\\n|\\r/g, '\n')
          .replace(/\\t/g, ' ');
-       this.logger.info(`words ${text}`)
+       //this.logger.info(`words ${text}`)
        // Count words
        const wordsArray = text.match(/\b\w+\b/g) || [];
        const wordCount = wordsArray.length;

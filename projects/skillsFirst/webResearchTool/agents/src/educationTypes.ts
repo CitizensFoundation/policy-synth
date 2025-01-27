@@ -5,22 +5,21 @@ export enum EducationType {
   AssociatesDegree = "associatesDegree", // Type3: Associate's degree or equivalent.
   BachelorsDegree = "bachelorsDegree", // Type4: Bachelor's degree or equivalent.
   MastersDegree = "mastersDegree", // Type5: Master's degree or equivalent.
-  DoctoralDegree = "doctoralDegree", // Type6: Doctoral degree or equivalent.
-  undefined = "undefined", // undefined
+  DoctoralDegree = "doctoralDegree"
 }
 
 
 export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
   [EducationType.HighSchool]: {
-    code: "Type1",
+    code: "High school",
     phrases: ["high school degree", "high school degree completion"],
   },
   [EducationType.CollegeCoursework]: {
-    code: "Type2",
+    code: "Some college",
     phrases: ["college coursework", "study at a college", "study at a university"],
   },
   [EducationType.AssociatesDegree]: {
-    code: "Type3",
+    code: "Associate's degree",
     phrases: [
       "associate’s degree",
       "associate degree",
@@ -30,7 +29,7 @@ export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
     ],
   },
   [EducationType.BachelorsDegree]: {
-    code: "Type4",
+    code: "Bachelor's degree",
     phrases: [
       "bachelor's degree",
       "bachelor degree",
@@ -41,7 +40,7 @@ export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
     ],
   },
   [EducationType.MastersDegree]: {
-    code: "Type5",
+    code: "Master's degree",
     phrases: [
       "master’s degree",
       "master degree",
@@ -51,7 +50,7 @@ export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
     ],
   },
   [EducationType.DoctoralDegree]: {
-    code: "Type6",
+    code: "Doctoral degree",
     phrases: [
       "juris doctor",
       "law degree",
@@ -62,9 +61,5 @@ export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
       "MD",
       "dental degree",
     ],
-  },
-  [EducationType.undefined]: {
-    code: "undefined",
-    phrases: []
   }
 };

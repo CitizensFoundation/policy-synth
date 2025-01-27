@@ -21,7 +21,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   maxModelTokensOut: number;
   modelTemperature: number;
-  reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
+  reasoningEffort: "low" | "medium" | "high" = "medium";
 
   limitedLLMmaxRetryCount = 1;
   mainLLMmaxRetryCount = 42;
@@ -31,7 +31,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     accessConfiguration: YpGroupPrivateAccessConfiguration[],
     maxModelTokensOut: number = 4096,
     modelTemperature: number = 0.7,
-    reasoningEffort: 'low' | 'medium' | 'high' = 'medium',
+    reasoningEffort: "low" | "medium" | "high" = "medium",
     agentId: number,
     userId: number
   ) {
@@ -68,7 +68,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     if (!modelType || !modelSize || !modelProvider || !modelName || !apiKey) {
-      this.logger.warn("Missing required environment variables for AI model initialization");
+      this.logger.warn(
+        "Missing required environment variables for AI model initialization"
+      );
       return;
     }
 
@@ -83,7 +85,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         modelType: modelType,
-        modelSize: modelSize
+        modelSize: modelSize,
       };
 
       switch (modelProvider.toLowerCase()) {
@@ -97,7 +99,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           model = new GoogleGeminiChat(baseConfig);
           break;
         case "azure":
-          if (!process.env.PS_AI_MODEL_ENDPOINT || !process.env.PS_AI_MODEL_DEPLOYMENT_NAME) {
+          if (
+            !process.env.PS_AI_MODEL_ENDPOINT ||
+            !process.env.PS_AI_MODEL_DEPLOYMENT_NAME
+          ) {
             this.logger.warn("Missing Azure-specific environment variables");
             return;
           }
@@ -118,16 +123,23 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         this.modelIds.set(modelKey, -1); // Use -1 to indicate that this is a single model not really in db
         this.modelIdsByType.set(modelType, -1);
 
-        this.logger.info(`Initialized AI model from environment variables: ${modelKey}`);
+        this.logger.info(
+          `Initialized AI model from environment variables: ${modelKey}`
+        );
       } else {
-        this.logger.warn(`Failed to initialize AI model from environment variables: ${modelKey}`);
+        this.logger.warn(
+          `Failed to initialize AI model from environment variables: ${modelKey}`
+        );
       }
     }
 
     return model;
   }
 
-  initializeModels(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[]) {
+  initializeModels(
+    aiModels: PsAiModelAttributes[],
+    accessConfiguration: YpGroupPrivateAccessConfiguration[]
+  ) {
     if (!aiModels || aiModels.length === 0) {
       this.logger.info(`No AI models found for agent ${this.agentId}`);
       if (process.env.PS_AI_MODEL_TYPE) {
@@ -140,19 +152,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const modelType = model.configuration.type;
       const modelSize = model.configuration.modelSize;
       const modelKey = `${modelType}_${modelSize}`;
-      this.logger.debug(`Initializing model ${model.id} ${modelKey}`);
+      this.logger.debug(
+        `Initializing model ${model.id} ${modelType} ${modelSize} ${modelKey}`
+      );
       const apiKeyConfig = accessConfiguration.find(
         (access) => access.aiModelId === model.id
       );
 
-      this.logger.debug(`Initializing model ${model.id}`);
-      this.logger.debug(`Initializing model ${modelType}`);
-      this.logger.debug(`Initializing model ${modelKey}`);
-      this.logger.debug(`Initializing model ${modelSize}`);
-            this.logger.debug(`Access configuration: ${JSON.stringify(accessConfiguration)}`);
+      /*this.logger.debug(
+        `Access configuration: ${JSON.stringify(accessConfiguration)}`
+      );*/
 
       if (!apiKeyConfig) {
-        this.logger.warn(`API key configuration not found for model ${model.id}`);
+        this.logger.warn(
+          `API key configuration not found for model ${model.id}`
+        );
         continue;
       }
 
@@ -163,10 +177,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         modelType: modelType,
-        modelSize: modelSize
+        modelSize: modelSize,
       };
 
-      this.logger.debug(`Reasoning effort is set to ${this.reasoningEffort} here`)
+      this.logger.debug(
+        `Reasoning effort is set to ${this.reasoningEffort} here`
+      );
 
       let newModel: BaseChatModel;
 
@@ -188,7 +204,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           });
           break;
         default:
-          this.logger.warn(`Unsupported model provider: ${model.configuration.provider}`);
+          this.logger.warn(
+            `Unsupported model provider: ${model.configuration.provider}`
+          );
           continue;
       }
 
@@ -216,7 +234,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.debug("\n\n\n\n\n\n\n\nDebugging callModel");
       this.logger.debug(`modelType: ${modelType}`);
       this.logger.debug(`modelSize: ${modelSize}`);
-      this.logger.debug(`messages: ${JSON.stringify(messages)}\n\n\n\n\n\n\n\n`);
+      this.logger.debug(
+        `messages: ${JSON.stringify(messages)}\n\n\n\n\n\n\n\n`
+      );
     }
     switch (modelType) {
       case PsAiModelType.Text:
@@ -336,7 +356,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           );
 
           if (results) {
-            const {tokensIn, tokensOut, content} = results;
+            const { tokensIn, tokensOut, content } = results;
 
             //await this.updateRateLimits(modelType, tokensOut);
             await this.saveTokenUsage(
@@ -446,7 +466,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     return null;
   }
 
-
   public async saveTokenUsage(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
@@ -478,7 +497,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     this.logger.debug(`Model: ${model.modelName}`);
 
     if (!this.agentId && process.env.PS_AI_MODEL_TYPE) {
-      console.log(`Token usage for model ${model.modelName}: tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
+      console.log(
+        `Token usage for model ${model.modelName}: tokensIn: ${tokensIn} tokensOut: ${tokensOut}`
+      );
     } else {
       try {
         // Use a transaction to ensure data consistency
@@ -521,12 +542,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         this.logger.error(error);
         throw error;
       }
-
     }
-
   }
 
-  public async getTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  public async getTokensFromMessages(
+    messages: PsModelMessage[]
+  ): Promise<number> {
     let encoding;
     if (this.models.get(PsAiModelType.Text)) {
       encoding = encoding_for_model(

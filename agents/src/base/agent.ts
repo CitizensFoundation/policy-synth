@@ -46,7 +46,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   ) {
     super();
     this.agent = agent;
-    this.logger.debug(JSON.stringify(agent));
+    this.logger.debug(`Agent ${agent.id} constructor`);
 
     if (
       !this.agent &&

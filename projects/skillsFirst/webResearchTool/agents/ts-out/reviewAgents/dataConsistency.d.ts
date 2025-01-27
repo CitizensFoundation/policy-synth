@@ -8,6 +8,12 @@ export declare class ValidateJobDescriptionAgent extends PolicySynthAgent {
     get modelTemperature(): number;
     get reasoningEffort(): "low" | "medium" | "high";
     constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
+    /**
+     * Processing function for validating job descriptions.
+     *
+     * This function populates `jobDescription.degreeAnalysis.validationChecks`
+     * with pass/fail/n/a for each check.
+     */
     processJobDescription(jobDescription: JobDescription): Promise<void>;
 }
-//# sourceMappingURL=dataConsistencyLLMTSHybrid.d.ts.map
+//# sourceMappingURL=dataConsistency.d.ts.map

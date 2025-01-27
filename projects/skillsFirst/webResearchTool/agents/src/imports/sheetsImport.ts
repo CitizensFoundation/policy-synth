@@ -3,6 +3,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
+import { EducationType } from "src/educationTypes";
 
 interface ImportedJobDescriptionData {
   jobDescriptions: JobDescription[];
@@ -177,6 +178,8 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
 
       // Build out the required degreeAnalysis
       degreeAnalysis: {
+        maximumDegreeRequirement: getValue("degreeAnalysis.maximumDegreeRequirement") as EducationType,
+        includesMultipleJobLevelsWithDifferentEducationalRequirements: this.parseBooleanIfPossible(getValue("degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements")) || false,
         needsCollegeDegree:
           this.parseBooleanIfPossible(getValue("degreeAnalysis.needsCollegeDegree")) || false,
         educationRequirements: this.parseEducationRequirements(
@@ -238,66 +241,45 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
           "degreeAnalysis.barriersToNonDegreeApplicants"
         ),
         validationChecks: {
-          cscRevisedConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.cscRevisedConsistency")
-          ),
-          requiredAlternativeExplanationConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.requiredAlternativeExplanationConsistency")
-          ),
-          barriersToNonDegreeApplicantsConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.barriersToNonDegreeApplicantsConsistency")
-          ),
-          licenseIncludesDegreeRequirementConsistency: this.parseBooleanIfPossible(
-            getValue(
-              "degreeAnalysis.validationChecks.licenseIncludesDegreeRequirementConsistency"
-            )
-          ),
-          alternativesIfTrueConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.alternativesIfTrueConsistency")
-          ),
-          degreeMandatoryConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.degreeMandatoryConsistency")
-          ),
-          alternativeQualificationsConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.alternativeQualificationsConsistency")
-          ),
-          educationRequirementsConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.educationRequirementsConsistency")
-          ),
-          needsCollegeDegreeConsistency: this.parseBooleanIfPossible(
-            getValue("degreeAnalysis.validationChecks.needsCollegeDegreeConsistency")
-          ),
+          cscRevisedConsistency: getValue("degreeAnalysis.validationChecks.cscRevisedConsistency"),
+          requiredAlternativeExplanationConsistency: getValue("degreeAnalysis.validationChecks.requiredAlternativeExplanationConsistency"),
+          barriersToNonDegreeApplicantsConsistency: getValue("degreeAnalysis.validationChecks.barriersToNonDegreeApplicantsConsistency"),
+          licenseIncludesDegreeRequirementConsistency: getValue("degreeAnalysis.validationChecks.licenseIncludesDegreeRequirementConsistency"),
+          alternativesIfTrueConsistency: getValue("degreeAnalysis.validationChecks.alternativesIfTrueConsistency"),
+          degreeMandatoryConsistency: getValue("degreeAnalysis.validationChecks.degreeMandatoryConsistency"),
+          alternativeQualificationsConsistency: getValue("degreeAnalysis.validationChecks.alternativeQualificationsConsistency"),
+          educationRequirementsConsistency: getValue("degreeAnalysis.validationChecks.educationRequirementsConsistency"),
+          needsCollegeDegreeConsistency: getValue("degreeAnalysis.validationChecks.needsCollegeDegreeConsistency"),
         },
       },
 
       // We won’t fill readabilityAnalysis by default, but we can do so if needed:
       readabilityAnalysis: undefined,
-      readingLevelUSGradeAnalysis: undefined,
-      readingLevelUSGradeAnalysisP2: undefined,
+      readingLevelGradeAnalysis: undefined,
       readabilityAnalysisTextTSNPM: undefined,
     };
 
-    // Possibly parse readingLevelUSGradeAnalysis or P2 if exported:
+    // Possibly parse readingLevelGradeAnalysis or P2 if exported:
     const rluDifficult = this.parseStringList(
-      getValue("readingLevelUSGradeAnalysis.difficultPassages")
+      getValue("readingLevelGradeAnalysis.difficultPassages")
     );
-    const rluGrade = getValue("readingLevelUSGradeAnalysis.usGradeLevelReadability");
+    const rluGrade = getValue("readingLevelGradeAnalysis.readabilityLevel");
     if (rluDifficult.length > 0 || rluGrade) {
-      job.readingLevelUSGradeAnalysis = {
+      job.readingLevelGradeAnalysis = {
         readabilityLevelExplanation: "Imported from sheet",
-        usGradeLevelReadability: rluGrade,
+        readabilityLevel: rluGrade,
         difficultPassages: rluDifficult,
       };
     }
 
     const rlu2Difficult = this.parseStringList(
-      getValue("readingLevelUSGradeAnalysisP2.difficultPassages")
+      getValue("readingLevelGradeAnalysis.difficultPassages")
     );
-    const rlu2Grade = getValue("readingLevelUSGradeAnalysisP2.usGradeLevelReadability");
+    const rlu2Grade = getValue("readingLevelGradeAnalysis.readabilityLevel");
     if (rlu2Difficult.length > 0 || rlu2Grade) {
-      job.readingLevelUSGradeAnalysisP2 = {
+      job.readingLevelGradeAnalysis = {
         readabilityLevelExplanation: "Imported from sheet",
-        usGradeLevelReadability: rlu2Grade,
+        readabilityLevel: rlu2Grade,
         difficultPassages: rlu2Difficult,
       };
     }
@@ -306,12 +288,12 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
     const rlarDifficult = this.parseStringList(
       getValue("readingLevelAnalysisResults.difficultPassages")
     );
-    const rlarGrade = getValue("readingLevelAnalysisResults.usGradeLevelReadability");
+    const rlarGrade = getValue("readingLevelAnalysisResults.readabilityLevel");
     if (rlarDifficult.length > 0 || rlarGrade) {
       // This property must exist in your interface or it will fail
-      job.readingLevelUSGradeAnalysis = {
+      job.readingLevelGradeAnalysis = {
         readabilityLevelExplanation: "Imported from sheet",
-        usGradeLevelReadability: rlarGrade,
+        readabilityLevel: rlarGrade,
         difficultPassages: rlarDifficult,
       };
     }
@@ -373,7 +355,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
         // e.g. "bachelorsDegree: Must have a BA"
         const [rawType, rawQuote] = line.split(/:(.*)/s);
         return {
-          type: (rawType || "").trim(),
+          type: (rawType || "").trim() as EducationType,
           evidenceQuote: (rawQuote || "").trim(),
           isMandatory: false, // or parse from text if you have columns for that
         };

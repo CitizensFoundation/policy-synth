@@ -163,6 +163,8 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
   // Decide which fields you want to compare
   fieldsToCheck = [
     "degreeAnalysis.needsCollegeDegree",
+    "degreeAnalysis.maximumDegreeRequirement",
+    "degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements",
     "degreeAnalysis.degreeRequirementStatus.isDegreeMandatory",
     "degreeAnalysis.degreeRequirementStatus.hasAlternativeQualifications",
     "degreeAnalysis.degreeRequirementStatus.multipleQualificationPaths",
@@ -170,7 +172,7 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
     "degreeAnalysis.degreeRequirementStatus.substitutionPossible",
     "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
     "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
-    "readingLevelUSGradeAnalysisP2.usGradeLevelReadability",
+    "readingLevelGradeAnalysis.readabilityLevel",
   ];
 
   getNestedValue(obj: any, path: string) {

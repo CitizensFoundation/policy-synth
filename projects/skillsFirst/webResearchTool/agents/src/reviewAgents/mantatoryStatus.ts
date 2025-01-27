@@ -112,14 +112,15 @@ Do not include any explanations or comments before or after the JSON output.
 
     if (degreeStatus.isDegreeMandatory && degreeStatus.hasAlternativeQualifications) {
       // Both 2a and 2b are True
-      const systemPrompt = `Both DegreeRequirementStatus.isDegreeMandatory and DegreeRequirementStatus.hasAlternativeQualifications are True.
-Explain why you reached the same conclusion for both, relying only on the job description and your expertise.
-
-Job Description:
+      const systemPrompt = `<JobDescription>
 ${jobDescription.text}
+</JobDescription>
 
-Provide the explanation without any additional text.
-`;
+Both DegreeRequirementStatus.isDegreeMandatory and DegreeRequirementStatus.hasAlternativeQualifications are True.
+
+Explain why this conclusion was reached, relying only on the job description and your expertise.
+
+Your output:`;
 
       const messages = [this.createSystemMessage(systemPrompt)];
 
@@ -140,7 +141,7 @@ ${jobDescription.text}
 </JobDescription>
 
 Both DegreeRequirementStatus.isDegreeMandatory and DegreeRequirementStatus.hasAlternativeQualifications are False.
-Explain why you reached the same conclusion for both, relying only on the job description and your expertise.
+Explain why this reached the same conclusion for both, relying only on the job description and your expertise.
 
 Provide the explanation without any additional text.
 `;
@@ -162,10 +163,11 @@ Provide the explanation without any additional text.
 ${jobDescription.text}
 </JobDescription>
 
-Explain your judgment regarding whether a higher educational degree is absolutely required for this job.
+Explain why a higher educational degree is absolutely required for this job?
 
 Provide the explanation without any additional text.
-`;
+
+Your output:`;
 
     const messages = [this.createSystemMessage(systemPrompt)];
 
