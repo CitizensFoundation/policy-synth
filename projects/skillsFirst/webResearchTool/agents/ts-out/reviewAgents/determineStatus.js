@@ -10,13 +10,17 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
     get modelTemperature() {
         return 0.0;
     }
-    constructor(agent, memory, startProgress, endProgress) {
+    processCounter;
+    totalProcesses;
+    constructor(agent, memory, startProgress, endProgress, processCounter, totalProcesses) {
         super(agent, memory, startProgress, endProgress);
         this.memory = memory;
+        this.processCounter = processCounter;
+        this.totalProcesses = totalProcesses;
     }
     // Processing function for determining college degree status
     async processJobDescription(jobDescription) {
-        await this.updateRangedProgress(0, `Determining college degree status for ${jobDescription.name}`);
+        await this.updateRangedProgress(0, `${this.processCounter}/${this.totalProcesses}: Determining college degree status for ${jobDescription.name}`);
         const systemPrompt = `<JobDescription>
 ${jobDescription.text}
 </JobDescription>

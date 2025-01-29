@@ -5,8 +5,8 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export class DetermineProfessionalLicenseRequirementAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+  modelSize: PsAiModelSize = PsAiModelSize.Large;
+  modelType: PsAiModelType = PsAiModelType.Text;
 
   override get maxModelTokensOut(): number {
     return 16384;
@@ -71,15 +71,20 @@ Do not include any explanations or comments before or after the JSON output.
 `;
 
     const messages = [this.createSystemMessage(systemPrompt)];
-
-    let resultText = await this.callModel(
-      this.modelType,
-      this.modelSize,
-      messages,
-      true,
-      true
-    );
-
+    let resultText;
+    try {
+      resultText = await this.callModel(
+        this.modelType,
+        this.modelSize,
+        messages,
+        true,
+        true
+      );
+    } catch (error) {
+      this.logger.error(error);
+      this.memory.llmErrors.push(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+      this.logger.error(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+    }
 
     if (!resultText) {
       this.memory.llmErrors.push(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);

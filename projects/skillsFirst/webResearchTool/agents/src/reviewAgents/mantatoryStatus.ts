@@ -15,21 +15,28 @@ export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     return 0.0;
   }
 
+  processCounter: number;
+  totalProcesses: number;
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,
     startProgress: number,
-    endProgress: number
+    endProgress: number,
+    processCounter: number,
+    totalProcesses: number
   ) {
     super(agent, memory, startProgress, endProgress);
     this.memory = memory;
+    this.processCounter = processCounter;
+    this.totalProcesses = totalProcesses;
   }
 
   // Processing function for determining mandatory status
   async processJobDescription(jobDescription: JobDescription) {
     await this.updateRangedProgress(
       0,
-      `Determining mandatory status for ${jobDescription.name}`
+      `${this.processCounter}/${this.totalProcesses}: Determining mandatory status for ${jobDescription.name}`
     );
 
     const systemPrompt = `<JobDescription>

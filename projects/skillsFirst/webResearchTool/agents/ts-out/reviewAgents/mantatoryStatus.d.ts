@@ -7,7 +7,9 @@ export declare class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     modelType: PsAiModelType;
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
-    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
+    processCounter: number;
+    totalProcesses: number;
+    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number, processCounter: number, totalProcesses: number);
     processJobDescription(jobDescription: JobDescription): Promise<void>;
     private determineMandatoryStatusExplanations;
 }

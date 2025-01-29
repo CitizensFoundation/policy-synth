@@ -1,8 +1,8 @@
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineProfessionalLicenseRequirementAgent extends PolicySynthAgent {
-    modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
+    modelSize = PsAiModelSize.Large;
+    modelType = PsAiModelType.Text;
     get maxModelTokensOut() {
         return 16384;
     }
@@ -54,7 +54,15 @@ Provide the answers in the following JSON format:
 Do not include any explanations or comments before or after the JSON output.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
-        let resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+        let resultText;
+        try {
+            resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+        }
+        catch (error) {
+            this.logger.error(error);
+            this.memory.llmErrors.push(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+            this.logger.error(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+        }
         if (!resultText) {
             this.memory.llmErrors.push(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);

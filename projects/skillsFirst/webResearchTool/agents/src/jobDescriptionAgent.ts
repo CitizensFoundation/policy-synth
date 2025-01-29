@@ -138,7 +138,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       jobDescription.text = this.extractTextFromHtml(htmlContent);
 
       // Process the job description
-      await this.processJobDescription(jobDescription);
+      await this.processJobDescription(jobDescription, i+1, selectedJobDescriptions.length);
 
       // Mark as processed
       jobDescription.processed = true;
@@ -167,7 +167,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
   /**
    * Processes a single job description, using config toggles for each step.
    */
-  private async processJobDescription(jobDescription: JobDescription) {
+  private async processJobDescription(jobDescription: JobDescription, processCounter: number, totalProcesses: number) {
     // Read toggles from config using getConfig
     const enableDetermineCollegeDegreeStatus = this.getConfig<boolean>(
       "enableDetermineCollegeDegreeStatus",
@@ -202,13 +202,19 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
+    if (!this.memory.llmErrors) {
+      this.memory.llmErrors = [];
+    }
+
     // STEP 1: Determine if the JobDescription includes college/higher ed requirement
     if (enableDetermineCollegeDegreeStatus) {
       const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(
         this.agent,
         this.memory,
         0,
-        14
+        14,
+        processCounter,
+        totalProcesses
       );
       await determineDegreeStatusAgent.processJobDescription(jobDescription);
       await this.saveMemory();
@@ -237,7 +243,9 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         this.agent,
         this.memory,
         28,
-        42
+        42,
+        processCounter,
+        totalProcesses
       );
       await determineMandatoryStatusAgent.processJobDescription(jobDescription);
       await this.saveMemory();
