@@ -1,7 +1,7 @@
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
-    modelSize = PsAiModelSize.Small;
+    modelSize = PsAiModelSize.Medium;
     modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
         return 16384;
@@ -25,26 +25,26 @@ Your task is to determine whether any college degree requirement is mandatory or
 
 Please answer the following questions:
 
-- DegreeRequirementStatus.isDegreeMandatory (2a):
+- DegreeRequirementStatus.isDegreeMandatory:
   Is obtaining one of the specified degrees or credentials mandatory to be hired for the job?
-  Answer: True/False
+  Answer: true/false
 
-- DegreeRequirementStatus.hasAlternativeQualifications (2b):
+- DegreeRequirementStatus.hasAlternativeQualifications:
   Does the JobDescription allow hiring applicants with alternative qualifications unrelated to the specified degrees (e.g., work experience, non-degree credentials)?
-  Answer: True/False
+  Answer: true/false
   If True, list any discovered alternative qualifications.
 
-- DegreeRequirementStatus.multipleQualificationPaths (2c):
+- DegreeRequirementStatus.multipleQualificationPaths:
   Do applicants have multiple paths to qualify (either the specified degrees or other qualifications)?
-  Answer: True/False
+  Answer: true/false
 
-- DegreeRequirementStatus.isDegreeAbsolutelyRequired (2d):
+- DegreeRequirementStatus.isDegreeAbsolutelyRequired:
   Is a higher educational degree absolutely required for this job?
-  Answer: True/False
+  Answer: true/false
 
-- DegreeRequirementStatus.substitutionPossible (2d):
+- DegreeRequirementStatus.substitutionPossible:
   Could specific skills or other qualifications substitute for the degree?
-  Answer: True/False
+  Answer: true/false
 
 Provide the answers in the following JSON format:
 
@@ -52,7 +52,7 @@ Provide the answers in the following JSON format:
 {
   "isDegreeMandatory": boolean,
   "hasAlternativeQualifications": boolean,
-  "alternativeQualifications": ["string"],
+  "alternativeQualifications": string[],
   "multipleQualificationPaths": boolean,
   "isDegreeAbsolutelyRequired": boolean,
   "substitutionPossible": boolean
@@ -62,12 +62,18 @@ Provide the answers in the following JSON format:
 Do not include any explanations or comments before or after the JSON output.
 `;
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(this.modelType, this.modelSize, messages, true);
+        let resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+        if (!resultText) {
+            this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+            this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+            // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true);
+        }
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.degreeRequirementStatus = result;
         // Handle mandatory status explanations based on conditions
-        const explanations = await this.determineMandatoryStatusExplanations(jobDescription, result);
+        let explanations = await this.determineMandatoryStatusExplanations(jobDescription, result);
         jobDescription.degreeAnalysis.mandatoryStatusExplanations = explanations;
         await this.updateRangedProgress(100, "Mandatory status determined");
     }
@@ -86,7 +92,13 @@ Explain why this conclusion was reached, relying only on the job description and
 
 Your output:`;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
+            let resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, false, true);
+            if (!resultText) {
+                this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+                this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+                // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+                resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+            }
             explanations.bothTrueExplanation = resultText.trim();
         }
         if (!degreeStatus.isDegreeMandatory && !degreeStatus.hasAlternativeQualifications) {
@@ -101,7 +113,13 @@ Explain why this reached the same conclusion for both, relying only on the job d
 Provide the explanation without any additional text.
 `;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
+            let resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false, true);
+            if (!resultText) {
+                this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+                this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+                // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+                resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+            }
             explanations.bothFalseExplanation = resultText.trim();
         }
         // Degree requirement explanation
@@ -115,7 +133,13 @@ Provide the explanation without any additional text.
 
 Your output:`;
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(this.modelType, this.modelSize, messages, false);
+        let resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false, true);
+        if (!resultText) {
+            this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+            this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
+            // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+        }
         explanations.degreeRequirementExplanation = resultText.trim();
         return explanations;
     }

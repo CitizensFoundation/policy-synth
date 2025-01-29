@@ -219,7 +219,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 2: Review evidence quote for higher education
-    if (enableReviewEvidenceQuote) {
+    // SKIPPED FOR NOW AS NOT SAVED IN MEMORY
+    if (false && enableReviewEvidenceQuote) {
       const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(
         this.agent,
         this.memory,
@@ -270,7 +271,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 6: Validate data consistency
-    if (enableValidateJobDescription) {
+    // SKIPPED FOR NOW
+    if (false && enableValidateJobDescription) {
       const validateJobDescriptionAgent = new ValidateJobDescriptionAgent(
         this.agent,
         this.memory,

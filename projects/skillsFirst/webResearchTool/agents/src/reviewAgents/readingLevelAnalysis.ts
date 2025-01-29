@@ -57,6 +57,7 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
         this.modelType,
         this.modelSize,
         messages,
+        true,
         true
       );
 
@@ -120,11 +121,7 @@ Provide your answer in the following JSON format:
 
 \`\`\`json
 {
-  "difficultPassages": [
-    {"passage-1":"passage"},
-    {"passage-2":"passage"},
-    ...
-  ]
+  "difficultPassages": string[]
 }
 \`\`\`
 
@@ -142,13 +139,7 @@ Do not include any explanations or additional text. Output only the JSON object.
 
     // Validate the structure of `difficultPassages`
     if (Array.isArray(difficultPassagesResult.difficultPassages)) {
-      const dpArray = difficultPassagesResult.difficultPassages;
-      const passages = dpArray
-        .map((obj: Record<string, string>) => {
-          const keys = Object.keys(obj);
-          return keys.length > 0 ? obj[keys[0]] : null;
-        })
-        .filter((p: string | null) => p !== null) as string[];
+      const passages = difficultPassagesResult.difficultPassages;
 
       if (passages.length === 0) {
         this.logger.error("No passages found in the LLM response.");

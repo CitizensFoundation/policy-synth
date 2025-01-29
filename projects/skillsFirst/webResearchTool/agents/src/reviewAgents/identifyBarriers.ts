@@ -5,8 +5,8 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export class IdentifyBarriersAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
+  modelSize: PsAiModelSize = PsAiModelSize.Large;
+  modelType: PsAiModelType = PsAiModelType.Text;
 
   override get maxModelTokensOut(): number {
     return 16384;
@@ -50,12 +50,25 @@ Your output:`;
 
     const messages = [this.createSystemMessage(systemPrompt)];
 
-    const resultText = await this.callModel(
+    let resultText = await this.callModel(
       this.modelType,
       this.modelSize,
       messages,
-      false
+      false,
+      true
     );
+
+    if (!resultText) {
+      this.memory.llmErrors.push(`IdentifyBarriersAgent - ${systemPrompt}`);
+      this.logger.error(`IdentifyBarriersAgent - ${systemPrompt}`);
+      // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+      resultText = await this.callModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Large,
+        messages,
+        false
+      );
+    }
 
     jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {} as JobDescriptionDegreeAnalysis;
     jobDescription.degreeAnalysis.barriersToNonDegreeApplicants = resultText.trim();

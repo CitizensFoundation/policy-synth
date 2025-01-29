@@ -121,7 +121,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             this.logger.warn(`Job description ${jobDescription.titleCode} has multiple job levels with different educational requirements`);
         }
         // STEP 2: Review evidence quote for higher education
-        if (enableReviewEvidenceQuote) {
+        // SKIPPED FOR NOW AS NOT SAVED IN MEMORY
+        if (false && enableReviewEvidenceQuote) {
             const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(this.agent, this.memory, 14, 28);
             await reviewEvidenceQuoteAgent.processJobDescription(jobDescription);
             await this.saveMemory();
@@ -145,7 +146,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             await this.saveMemory();
         }
         // STEP 6: Validate data consistency
-        if (enableValidateJobDescription) {
+        // SKIPPED FOR NOW
+        if (false && enableValidateJobDescription) {
             const validateJobDescriptionAgent = new ValidateJobDescriptionAgent(this.agent, this.memory, 70, 84);
             await validateJobDescriptionAgent.processJobDescription(jobDescription);
             await this.saveMemory();
