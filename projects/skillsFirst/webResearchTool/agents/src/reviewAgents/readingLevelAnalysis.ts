@@ -53,12 +53,28 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
   async callLLM(prompt: string, maxRetries = 3): Promise<any> {
     const messages = [this.createSystemMessage(prompt)];
     try {
-      const resultText = await this.callModel(
+      let resultText = await this.callModel(
         this.modelType,
         this.modelSize,
         messages,
         true
       );
+
+      if (!this.memory.llmErrors) {
+        this.memory.llmErrors = [];
+      }
+
+      if (!resultText) {
+        this.memory.llmErrors.push(`ReadingLevelAnalysisAgent - ${this.modelType} - ${this.modelSize} - ${prompt}`);
+        this.logger.error(`ReadingLevelAnalysisAgent - ${this.modelType} - ${this.modelSize} - ${prompt}`);
+        // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+        resultText = await this.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Large,
+          messages,
+          true
+        );
+      }
 
       // If successful, return the result
       return resultText;

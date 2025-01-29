@@ -53,6 +53,7 @@ interface JobDescription {
 
 interface JobDescriptionMemoryData extends PsAgentMemoryData {
   jobDescriptions: JobDescription[]; // Holds an array of job descriptions, from "interface JobDescriptionMemoryData extends PsAgentMemoryData { jobDescriptions: JobDescription[]; }"
+  llmErrors: string[];
 }
 
 /**

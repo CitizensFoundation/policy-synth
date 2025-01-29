@@ -383,8 +383,13 @@ If you cannot determine correctness for any connector, output an empty array:
 `.trim();
         const messages = [this.createSystemMessage(systemPrompt)];
         // Call your model with the prompts
-        const result = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, true));
-        this.logger.info(`LLM raw result: ${JSON.stringify(result, null, 2)}`);
+        let result = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, true, true));
+        if (!result) {
+            this.memory.llmErrors.push(`SheetsComparisonAgent -  ${prompt}`);
+            this.logger.error(`SheetsComparisonAgent - ${prompt}`);
+            // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
+            result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true));
+        }
         // Provide safe defaults if the LLM's output is empty or invalid
         return {
             field: result.field ?? diff.field,
