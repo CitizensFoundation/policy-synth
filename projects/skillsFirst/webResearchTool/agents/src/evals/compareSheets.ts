@@ -192,6 +192,10 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
       "Starting comparison from all connectors"
     );
 
+    if (!this.memory.llmErrors) {
+      this.memory.llmErrors = [];
+    }
+
     // 1) Import from ALL spreadsheet connectors
     const importAgent = new SheetsJobDescriptionImportAgent(
       this.agent,

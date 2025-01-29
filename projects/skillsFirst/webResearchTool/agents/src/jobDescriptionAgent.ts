@@ -64,7 +64,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
-    if (false && !rerunExistingInMemory) {
+    if (false /*&& !rerunExistingInMemory*/) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),
@@ -87,7 +87,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     let selectedJobDescriptions;
 
-    if (false && useRandomJobDescriptions) {
+    if (false/* && useRandomJobDescriptions*/) {
       selectedJobDescriptions = this.selectRandomJobDescriptions(
         allJobDescriptions,
         numJobDescriptions
@@ -99,50 +99,61 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     this.memory.jobDescriptions = selectedJobDescriptions;
 
     // 3) Process each job description
-    for (let i = 0; i < selectedJobDescriptions.length; i++) {
-      const jobDescription = selectedJobDescriptions[i];
+    const concurrency = 10;
 
-      // If there's an existing error, skip it
-      if (jobDescription.error && jobDescription.error.trim() !== "") {
-        this.logger.warn(
-          `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
-        );
-        continue;
-      }
+    for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
+      const chunk = selectedJobDescriptions.slice(i, i + concurrency);
 
-      const progress = (i / selectedJobDescriptions.length) * 100;
-      await this.updateRangedProgress(
-        progress,
-        `Processing job description ${i + 1} of ${
-          selectedJobDescriptions.length
-        }`
+      await Promise.all(
+        chunk.map(async (jobDescription, indexInChunk) => {
+          // If there's an existing error, skip it
+          if (jobDescription.error && jobDescription.error.trim() !== "") {
+            this.logger.warn(
+              `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
+            );
+            return;
+          }
+
+          const progress =
+            ((i + indexInChunk) / selectedJobDescriptions.length) * 100;
+          await this.updateRangedProgress(
+            progress,
+            `Processing job description ${i + indexInChunk + 1} of ${
+              selectedJobDescriptions.length
+            }`
+          );
+
+          // Check if we have a matching HTML file
+          const htmlFilePath = path.join(
+            __dirname,
+            "data",
+            "descriptions",
+            `${jobDescription.titleCode}.html`
+          );
+          if (!fs.existsSync(htmlFilePath)) {
+            this.logger.error(
+              `HTML file not found for ${jobDescription.titleCode}`
+            );
+            jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
+            return;
+          }
+
+          // Read HTML content
+          const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
+          jobDescription.text = this.extractTextFromHtml(htmlContent);
+
+          // Process the job description
+          await this.processJobDescription(
+            jobDescription,
+            i + indexInChunk + 1,
+            selectedJobDescriptions.length
+          );
+
+          // Mark as processed
+          jobDescription.processed = true;
+          await this.saveMemory();
+        })
       );
-
-      // Check if we have a matching HTML file
-      const htmlFilePath = path.join(
-        __dirname,
-        "data",
-        "descriptions",
-        `${jobDescription.titleCode}.html`
-      );
-      if (!fs.existsSync(htmlFilePath)) {
-        this.logger.error(
-          `HTML file not found for ${jobDescription.titleCode}`
-        );
-        jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
-        continue;
-      }
-
-      // Read HTML content
-      const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
-      jobDescription.text = this.extractTextFromHtml(htmlContent);
-
-      // Process the job description
-      await this.processJobDescription(jobDescription, i+1, selectedJobDescriptions.length);
-
-      // Mark as processed
-      jobDescription.processed = true;
-      await this.saveMemory();
     }
 
     const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(
@@ -167,7 +178,11 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
   /**
    * Processes a single job description, using config toggles for each step.
    */
-  private async processJobDescription(jobDescription: JobDescription, processCounter: number, totalProcesses: number) {
+  private async processJobDescription(
+    jobDescription: JobDescription,
+    processCounter: number,
+    totalProcesses: number
+  ) {
     // Read toggles from config using getConfig
     const enableDetermineCollegeDegreeStatus = this.getConfig<boolean>(
       "enableDetermineCollegeDegreeStatus",
@@ -220,8 +235,13 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
-    if (jobDescription.degreeAnalysis.includesMultipleJobLevelsWithDifferentEducationalRequirements) {
-      this.logger.warn(`Job description ${jobDescription.titleCode} has multiple job levels with different educational requirements`);
+    if (
+      jobDescription.degreeAnalysis
+        .includesMultipleJobLevelsWithDifferentEducationalRequirements
+    ) {
+      this.logger.warn(
+        `Job description ${jobDescription.titleCode} has multiple job levels with different educational requirements`
+      );
     }
 
     // STEP 2: Review evidence quote for higher education

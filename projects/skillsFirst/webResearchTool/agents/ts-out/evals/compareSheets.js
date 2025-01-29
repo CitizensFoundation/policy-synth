@@ -117,6 +117,9 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
      */
     async process() {
         await this.updateRangedProgress(0, "Starting comparison from all connectors");
+        if (!this.memory.llmErrors) {
+            this.memory.llmErrors = [];
+        }
         // 1) Import from ALL spreadsheet connectors
         const importAgent = new SheetsJobDescriptionImportAgent(this.agent, this.memory, 0, 0);
         const allImportedResults = await importAgent.importJobDescriptionsFromAllConnectors();
