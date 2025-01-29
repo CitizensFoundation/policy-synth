@@ -4,7 +4,7 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
     sheetsConnector;
     sheetName = "Sheet1"; // Default
-    startRow = 3; // The first row that includes headers
+    startRow = 1; // The first row that includes headers
     startCol = 1; // The first column, "A"
     maxRows = 10000; // Adjust if needed
     maxCols = 60; // Enough columns to capture all fields
@@ -24,14 +24,14 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
      * Main entry point: Reads from the sheet, reconstructs jobDescriptions, returns them.
      */
     async importJobDescriptions() {
-        await this.updateRangedProgress(0, "Starting Google Sheets import");
+        await this.updateRangedProgress(0, "Starting Google Sheets import: " + this.sheetsConnector.name);
         // Read up to maxRows x maxCols
         const endColLetter = this.columnIndexToLetter(this.maxCols - 1);
         const range = `${this.sheetName}!A${this.startRow}:${endColLetter}${this.maxRows}`;
         const rows = await this.sheetsConnector.getRange(range);
         if (!rows || rows.length < 3) {
             // Must have at least 3 rows: 2 header rows + 1 data row
-            this.logger.warn("No data or insufficient rows in sheet");
+            this.logger.warn("No data or insufficient rows in sheet: " + this.sheetsConnector.name);
             return { jobDescriptions: [], connectorName: this.sheetsConnector.name };
         }
         // first two rows are headers
@@ -95,6 +95,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
                 return "";
             return row[idx] ?? "";
         };
+        this.logger.debug(`Headers: ${headers.join(", ")}`);
         const job = {
             text: "",
             titleCode: getValue("titleCode"),
@@ -188,7 +189,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
                 difficultPassages: rlarDifficult,
             };
         }
-        this.logger.info(`Built job description object: ${JSON.stringify(job, null, 2)}`);
+        //this.logger.info(`Built job description object: ${JSON.stringify(job, null, 2)}`);
         return job;
     }
     /**

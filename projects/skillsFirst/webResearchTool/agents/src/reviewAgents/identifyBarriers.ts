@@ -6,7 +6,7 @@ export class IdentifyBarriersAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.Text;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {
     return 16384;

@@ -3,7 +3,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { EducationType } from "../educationTypes.js";
 export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.Text;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
         return 16384;
     }

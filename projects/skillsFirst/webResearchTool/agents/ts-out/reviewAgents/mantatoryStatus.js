@@ -2,7 +2,7 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Small;
-    modelType = PsAiModelType.Text;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
         return 16384;
     }

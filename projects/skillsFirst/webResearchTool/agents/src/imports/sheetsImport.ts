@@ -13,7 +13,7 @@ interface ImportedJobDescriptionData {
 export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
   private sheetsConnector: PsBaseSheetConnector;
   private sheetName = "Sheet1"; // Default
-  private startRow = 3;  // The first row that includes headers
+  private startRow = 1;  // The first row that includes headers
   private startCol = 1;  // The first column, "A"
   private maxRows = 10000; // Adjust if needed
   private maxCols = 60;    // Enough columns to capture all fields
@@ -49,7 +49,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
    * Main entry point: Reads from the sheet, reconstructs jobDescriptions, returns them.
    */
   async importJobDescriptions(): Promise<ImportedJobDescriptionData> {
-    await this.updateRangedProgress(0, "Starting Google Sheets import");
+    await this.updateRangedProgress(0, "Starting Google Sheets import: " + this.sheetsConnector.name);
 
     // Read up to maxRows x maxCols
     const endColLetter = this.columnIndexToLetter(this.maxCols - 1);
@@ -58,7 +58,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
     const rows = await this.sheetsConnector.getRange(range);
     if (!rows || rows.length < 3) {
       // Must have at least 3 rows: 2 header rows + 1 data row
-      this.logger.warn("No data or insufficient rows in sheet");
+      this.logger.warn("No data or insufficient rows in sheet: " + this.sheetsConnector.name);
       return { jobDescriptions: [], connectorName: this.sheetsConnector.name };
     }
 
@@ -150,6 +150,8 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
       if (idx === -1 || idx >= row.length) return "";
       return row[idx] ?? "";
     };
+
+    this.logger.debug(`Headers: ${headers.join(", ")}`);
 
     const job: JobDescription = {
       text: "",
@@ -298,7 +300,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
       };
     }
 
-    this.logger.info(`Built job description object: ${JSON.stringify(job, null, 2)}`);
+    //this.logger.info(`Built job description object: ${JSON.stringify(job, null, 2)}`);
 
     return job;
   }

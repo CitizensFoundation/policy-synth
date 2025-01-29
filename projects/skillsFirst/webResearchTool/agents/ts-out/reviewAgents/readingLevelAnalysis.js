@@ -3,7 +3,7 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import sanitizeHtml from "sanitize-html";
 export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.Text;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
         return 16384;
     }

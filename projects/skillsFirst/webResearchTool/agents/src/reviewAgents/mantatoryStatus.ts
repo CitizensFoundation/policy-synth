@@ -6,7 +6,7 @@ export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
   modelSize: PsAiModelSize = PsAiModelSize.Small;
-  modelType: PsAiModelType = PsAiModelType.Text;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {
     return 16384;
