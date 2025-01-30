@@ -58,7 +58,7 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
         this.modelSize,
         messages,
         true,
-        true
+        false
       );
 
       if (!this.memory.llmErrors) {

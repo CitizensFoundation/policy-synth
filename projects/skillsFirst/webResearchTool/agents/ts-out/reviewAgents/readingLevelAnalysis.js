@@ -33,7 +33,7 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
     async callLLM(prompt, maxRetries = 3) {
         const messages = [this.createSystemMessage(prompt)];
         try {
-            let resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+            let resultText = await this.callModel(this.modelType, this.modelSize, messages, true, false);
             if (!this.memory.llmErrors) {
                 this.memory.llmErrors = [];
             }

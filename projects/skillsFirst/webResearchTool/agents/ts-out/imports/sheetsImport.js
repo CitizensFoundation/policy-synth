@@ -159,28 +159,9 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
             readingLevelGradeAnalysis: undefined,
             readabilityAnalysisTextTSNPM: undefined,
         };
-        // Possibly parse readingLevelGradeAnalysis or P2 if exported:
-        const rluDifficult = this.parseStringList(getValue("readingLevelGradeAnalysis.difficultPassages"));
-        const rluGrade = getValue("readingLevelGradeAnalysis.readabilityLevel");
-        if (rluDifficult.length > 0 || rluGrade) {
-            job.readingLevelGradeAnalysis = {
-                readabilityLevelExplanation: "Imported from sheet",
-                readabilityLevel: rluGrade,
-                difficultPassages: rluDifficult,
-            };
-        }
-        const rlu2Difficult = this.parseStringList(getValue("readingLevelGradeAnalysis.difficultPassages"));
-        const rlu2Grade = getValue("readingLevelGradeAnalysis.readabilityLevel");
-        if (rlu2Difficult.length > 0 || rlu2Grade) {
-            job.readingLevelGradeAnalysis = {
-                readabilityLevelExplanation: "Imported from sheet",
-                readabilityLevel: rlu2Grade,
-                difficultPassages: rlu2Difficult,
-            };
-        }
         // If your sheet includes columns for readingLevelAnalysisResults:
-        const rlarDifficult = this.parseStringList(getValue("readingLevelAnalysisResults.difficultPassages"));
-        const rlarGrade = getValue("readingLevelAnalysisResults.readabilityLevel");
+        const rlarDifficult = this.parseStringList(getValue("readingLevelGradeAnalysis.difficultPassages"));
+        const rlarGrade = getValue("readingLevelGradeAnalysis.readabilityLevel");
         if (rlarDifficult.length > 0 || rlarGrade) {
             // This property must exist in your interface or it will fail
             job.readingLevelGradeAnalysis = {

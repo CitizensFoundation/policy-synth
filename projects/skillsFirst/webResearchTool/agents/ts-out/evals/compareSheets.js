@@ -183,40 +183,42 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         }
         // 4) For each difference, let the LLM tell us which connectors' values are correct
         let diffCount = 0;
-        for (const diff of differences) {
-            diffCount++;
-            await this.updateRangedProgress(50 + (diffCount / differences.length) * 25, `Resolving differences ${diffCount} of ${differences.length}`);
-            const originalJD = this.memory.jobDescriptions?.find((jd) => jd.titleCode === diff.titleCode);
-            if (!originalJD) {
-                this.logger.warn(`No original job description in memory for titleCode=${diff.titleCode}. Skipping LLM resolution.`);
-                continue;
-            }
-            try {
-                // Call LLM to resolve correctness
-                const llmResult = await this.resolveDifferenceWithLLM(originalJD, diff);
-                // (A) For every connector in this difference, increment attempts
-                for (const val of diff.values) {
-                    this.incrementAttemptCounter(val.connectorName, diff.field);
+        const chunkSize = 10;
+        for (let i = 0; i < differences.length; i += chunkSize) {
+            const chunk = differences.slice(i, i + chunkSize);
+            await Promise.all(chunk.map(async (diff) => {
+                diffCount++;
+                await this.updateRangedProgress(50 + (diffCount / differences.length) * 25, `Resolving differences ${diffCount} of ${differences.length}`);
+                const originalJD = this.memory.jobDescriptions?.find((jd) => jd.titleCode === diff.titleCode);
+                if (!originalJD) {
+                    this.logger.warn(`No original job description in memory for titleCode=${diff.titleCode}. Skipping LLM resolution.`);
+                    return;
                 }
-                // (B) For each connector that was deemed correct by the LLM, increment "wins"
-                if (llmResult.correctConnectors.length > 0) {
-                    for (const connectorInfo of llmResult.correctConnectors) {
-                        this.incrementWinCounter(connectorInfo.connectorName, diff.field);
+                try {
+                    const llmResult = await this.resolveDifferenceWithLLM(originalJD, diff);
+                    // (A) attempts
+                    for (const val of diff.values) {
+                        this.incrementAttemptCounter(val.connectorName, diff.field);
                     }
-                    diff.correctConnectors = llmResult.correctConnectors;
-                    diff.correctConnectorNames = llmResult.correctConnectors.map((c) => c.connectorName);
+                    // (B) wins
+                    if (llmResult.correctConnectors.length > 0) {
+                        for (const connectorInfo of llmResult.correctConnectors) {
+                            this.incrementWinCounter(connectorInfo.connectorName, diff.field);
+                        }
+                        diff.correctConnectors = llmResult.correctConnectors;
+                        diff.correctConnectorNames = llmResult.correctConnectors.map((c) => c.connectorName);
+                    }
+                    diff.incorrectConnectors = llmResult.incorrectConnectors;
+                    diff.resolutionExplanation = llmResult.explanation;
+                    this.logger.info(`titleCode=${diff.titleCode}, field=${diff.field}, ` +
+                        `correct connectors: ${llmResult.correctConnectors
+                            .map((c) => c.connectorName)
+                            .join(", ")}`);
                 }
-                // Mark the incorrect connectors
-                diff.incorrectConnectors = llmResult.incorrectConnectors;
-                diff.resolutionExplanation = llmResult.explanation;
-                this.logger.info(`titleCode=${diff.titleCode}, field=${diff.field}, ` +
-                    `correct connectors: ${llmResult.correctConnectors
-                        .map((c) => c.connectorName)
-                        .join(", ")}`);
-            }
-            catch (err) {
-                this.logger.error(`Error resolving difference for titleCode=${diff.titleCode}, field=${diff.field}: ${err.message}`);
-            }
+                catch (err) {
+                    this.logger.error(`Error resolving difference for titleCode=${diff.titleCode}, field=${diff.field}: ${err.message}`);
+                }
+            }));
         }
         // After all differences are processed, log final stats
         this.logger.info(`Total differences found: ${differences.length}`);
@@ -326,16 +328,19 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
 ${originalJD.text}
 </JobDescription>
 
-<TitleCode>
-${diff.titleCode}
-</TitleCode>
-
 You are an expert in job description analysis.
 
-We have a mismatch in the field
+We have a mismatch in the field:
+
 <FieldWithMismatch>
 ${diff.field}
 </FieldWithMismatch>
+
+${diff.field == "xxxxxxreadingLevelGradeAnalysis.readabilityLevel"
+            ? `<MostDifficultPassages>${originalJD.readingLevelGradeAnalysis?.difficultPassages
+                .map((p) => p)
+                .join("\n")}</MostDifficultPassages>`
+            : ""}
 
 <CandidateValues>
 ${diff.values
@@ -385,6 +390,9 @@ If you cannot determine correctness for any connector, output an empty array:
 \`\`\`
 `.trim();
         const messages = [this.createSystemMessage(systemPrompt)];
+        if (diff.field == "readingLevelGradeAnalysis.readabilityLevel") {
+            this.logger.debug(JSON.stringify(messages, null, 2));
+        }
         // Call your model with the prompts
         let result = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, true, true));
         if (!result) {
