@@ -64,7 +64,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
-    if (false /*&& !rerunExistingInMemory*/) {
+    if (true /*&& !rerunExistingInMemory*/) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),

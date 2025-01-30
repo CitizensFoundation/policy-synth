@@ -42,7 +42,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         await this.updateRangedProgress(0, "Starting Job Description Analysis");
         let allJobDescriptions;
         const rerunExistingInMemory = this.getConfig("rerunExistingInMemory", true);
-        if (false /*&& !rerunExistingInMemory*/) {
+        if (true /*&& !rerunExistingInMemory*/) {
             // Load jobDescriptions.json (adjust path for your environment)
             const jobDescriptionsData = fs.readFileSync(path.join(__dirname, "data", "jobDescriptions.json"), "utf-8");
             allJobDescriptions = JSON.parse(jobDescriptionsData);
