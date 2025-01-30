@@ -10,6 +10,7 @@ export class OpenAiChat extends BaseChatModel {
         super(modelName, maxTokensOut);
         if (process.env.PS_AGENT_OPENAI_API_KEY) {
             apiKey = process.env.PS_AGENT_OPENAI_API_KEY;
+            this.logger.debug("Using OpenAI API key from PS_AGENT_OPENAI_API_KEY environment variable");
         }
         this.client = new OpenAI({ apiKey });
         this.modelConfig = config;

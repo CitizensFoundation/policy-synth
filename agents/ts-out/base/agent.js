@@ -2,7 +2,7 @@ import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAiModelManager } from "./agentModelManager.js";
 import { PsProgressTracker } from "./agentProgressTracker.js";
 import { PsConfigManager } from "./agentConfigManager.js";
-import Redis from "ioredis";
+import sharedRedisClient from "./redisClient.js";
 export class AgentExecutionStoppedError extends Error {
     constructor(message) {
         super(message);
@@ -51,7 +51,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         }
         this.progressTracker = new PsProgressTracker(agent ? agent.redisStatusKey : "agent:status:-1", //TODO: Look into this fallback
         startProgress, endProgress);
-        this.redis = new Redis(process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379");
+        this.redis = sharedRedisClient;
         if (memory) {
             this.memory = memory;
             /*console.log(

@@ -23,8 +23,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   modelTemperature: number;
   reasoningEffort: "low" | "medium" | "high" = "medium";
 
-  limitedLLMmaxRetryCount = 1;
-  mainLLMmaxRetryCount = 42;
+  limitedLLMmaxRetryCount = 3;
+  mainLLMmaxRetryCount = 40;
 
   constructor(
     aiModels: PsAiModelAttributes[],
