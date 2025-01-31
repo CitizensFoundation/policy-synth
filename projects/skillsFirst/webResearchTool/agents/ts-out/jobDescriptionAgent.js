@@ -42,7 +42,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         await this.updateRangedProgress(0, "Starting Job Description Analysis");
         let allJobDescriptions;
         const rerunExistingInMemory = this.getConfig("rerunExistingInMemory", true);
-        if (true /*&& !rerunExistingInMemory*/) {
+        if (false /*&& !rerunExistingInMemory*/) {
             // Load jobDescriptions.json (adjust path for your environment)
             const jobDescriptionsData = fs.readFileSync(path.join(__dirname, "data", "jobDescriptions.json"), "utf-8");
             allJobDescriptions = JSON.parse(jobDescriptionsData);
@@ -70,6 +70,10 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
                 // If there's an existing error, skip it
                 if (jobDescription.error && jobDescription.error.trim() !== "") {
                     this.logger.warn(`Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`);
+                    return;
+                }
+                if (jobDescription.processed === true) {
+                    this.logger.info(`Skipping '${jobDescription.titleCode}' as it has already been processed`);
                     return;
                 }
                 const progress = ((i + indexInChunk) / selectedJobDescriptions.length) * 100;

@@ -64,7 +64,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
-    if (true /*&& !rerunExistingInMemory*/) {
+    if (false /*&& !rerunExistingInMemory*/) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),
@@ -110,6 +110,13 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
           if (jobDescription.error && jobDescription.error.trim() !== "") {
             this.logger.warn(
               `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
+            );
+            return;
+          }
+
+          if (jobDescription.processed===true) {
+            this.logger.info(
+              `Skipping '${jobDescription.titleCode}' as it has already been processed`
             );
             return;
           }
