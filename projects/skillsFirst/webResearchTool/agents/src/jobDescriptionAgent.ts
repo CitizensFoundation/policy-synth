@@ -64,7 +64,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
-    if (false /*&& !rerunExistingInMemory*/) {
+    if (!rerunExistingInMemory) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),
@@ -87,7 +87,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     let selectedJobDescriptions;
 
-    if (false/* && useRandomJobDescriptions*/) {
+    if (useRandomJobDescriptions) {
       selectedJobDescriptions = this.selectRandomJobDescriptions(
         allJobDescriptions,
         numJobDescriptions
@@ -97,6 +97,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     this.memory.jobDescriptions = selectedJobDescriptions;
+
 
     // 3) Process each job description
     const concurrency = 10;

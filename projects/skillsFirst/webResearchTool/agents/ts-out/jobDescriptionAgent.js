@@ -1,8 +1,7 @@
 import { fileURLToPath } from "url";
-import path, { dirname } from "path";
+import { dirname } from "path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-import fs from "fs";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
@@ -40,61 +39,74 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
      */
     async process() {
         await this.updateRangedProgress(0, "Starting Job Description Analysis");
-        let allJobDescriptions;
-        const rerunExistingInMemory = this.getConfig("rerunExistingInMemory", true);
-        if (false /*&& !rerunExistingInMemory*/) {
-            // Load jobDescriptions.json (adjust path for your environment)
-            const jobDescriptionsData = fs.readFileSync(path.join(__dirname, "data", "jobDescriptions.json"), "utf-8");
-            allJobDescriptions = JSON.parse(jobDescriptionsData);
-        }
-        else {
-            allJobDescriptions = this.memory.jobDescriptions;
-        }
-        this.logger.debug(JSON.stringify(this.memory, null, 2));
-        // 1) Retrieve config values via this.getConfig(...)
-        const numJobDescriptions = this.getConfig("numJobDescriptions", 10);
-        const useRandomJobDescriptions = this.getConfig("useRandomJobDescriptions", false);
-        let selectedJobDescriptions;
-        if (false /* && useRandomJobDescriptions*/) {
-            selectedJobDescriptions = this.selectRandomJobDescriptions(allJobDescriptions, numJobDescriptions);
-        }
-        else {
-            selectedJobDescriptions = allJobDescriptions.slice(0, numJobDescriptions);
-        }
-        this.memory.jobDescriptions = selectedJobDescriptions;
+        /*
+    
         // 3) Process each job description
         const concurrency = 10;
+    
         for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
-            const chunk = selectedJobDescriptions.slice(i, i + concurrency);
-            await Promise.all(chunk.map(async (jobDescription, indexInChunk) => {
-                // If there's an existing error, skip it
-                if (jobDescription.error && jobDescription.error.trim() !== "") {
-                    this.logger.warn(`Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`);
-                    return;
-                }
-                if (jobDescription.processed === true) {
-                    this.logger.info(`Skipping '${jobDescription.titleCode}' as it has already been processed`);
-                    return;
-                }
-                const progress = ((i + indexInChunk) / selectedJobDescriptions.length) * 100;
-                await this.updateRangedProgress(progress, `Processing job description ${i + indexInChunk + 1} of ${selectedJobDescriptions.length}`);
-                // Check if we have a matching HTML file
-                const htmlFilePath = path.join(__dirname, "data", "descriptions", `${jobDescription.titleCode}.html`);
-                if (!fs.existsSync(htmlFilePath)) {
-                    this.logger.error(`HTML file not found for ${jobDescription.titleCode}`);
-                    jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
-                    return;
-                }
-                // Read HTML content
-                const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
-                jobDescription.text = this.extractTextFromHtml(htmlContent);
-                // Process the job description
-                await this.processJobDescription(jobDescription, i + indexInChunk + 1, selectedJobDescriptions.length);
-                // Mark as processed
-                jobDescription.processed = true;
-                await this.saveMemory();
-            }));
+          const chunk = selectedJobDescriptions.slice(i, i + concurrency);
+    
+          await Promise.all(
+            chunk.map(async (jobDescription, indexInChunk) => {
+              // If there's an existing error, skip it
+              if (jobDescription.error && jobDescription.error.trim() !== "") {
+                this.logger.warn(
+                  `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
+                );
+                return;
+              }
+    
+              if (jobDescription.processed===true) {
+                this.logger.info(
+                  `Skipping '${jobDescription.titleCode}' as it has already been processed`
+                );
+                return;
+              }
+    
+              const progress =
+                ((i + indexInChunk) / selectedJobDescriptions.length) * 100;
+              await this.updateRangedProgress(
+                progress,
+                `Processing job description ${i + indexInChunk + 1} of ${
+                  selectedJobDescriptions.length
+                }`
+              );
+    
+              // Check if we have a matching HTML file
+              const htmlFilePath = path.join(
+                __dirname,
+                "data",
+                "descriptions",
+                `${jobDescription.titleCode}.html`
+              );
+              if (!fs.existsSync(htmlFilePath)) {
+                this.logger.error(
+                  `HTML file not found for ${jobDescription.titleCode}`
+                );
+                jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
+                return;
+              }
+    
+              // Read HTML content
+              const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
+              jobDescription.text = this.extractTextFromHtml(htmlContent);
+    
+              // Process the job description
+              await this.processJobDescription(
+                jobDescription,
+                i + indexInChunk + 1,
+                selectedJobDescriptions.length
+              );
+    
+              // Mark as processed
+              jobDescription.processed = true;
+              await this.saveMemory();
+            })
+          );
         }
+    
+        */
         const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(this.agent, this.memory, 95, 100, "Sheet1");
         await googleSheetsReportAgent.processJsonData({
             agentId: this.agent.id,
