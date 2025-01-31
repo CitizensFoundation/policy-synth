@@ -1,5 +1,6 @@
 import Redis from "ioredis";
 import { PolicySynthAgentBase } from "./agentBase.js";
+import sharedRedisClient from "./redisClient.js";
 
 export class PsProgressTracker extends PolicySynthAgentBase {
   redis: Redis;
@@ -17,7 +18,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
       "redis://localhost:6379"
   ) {
     super();
-    this.redis = new Redis(redisUrl);
+    this.redis = sharedRedisClient;
     this.redisStatusKey = redisStatusKey;
     this.startProgress = startProgress;
     this.endProgress = endProgress;
