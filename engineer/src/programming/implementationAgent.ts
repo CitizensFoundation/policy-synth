@@ -1,9 +1,17 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import path from "path";
 import fs from "fs";
+import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
+import {
+  PsAiModelType,
+  PsAiModelSize,
+} from "@policysynth/agents/aiModelTypes.js";
 
+import { PsConstants } from "@policysynth/agents/constants.js";
+
+/**
+ * Upgraded to use the new `callModel` approach with reasoning.
+ * Retains the same functionality and logic as before.
+ */
 export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedFirstUserDebugMessage = true;
 
@@ -17,7 +25,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       6. Never remove any logging from the code except if that is a part of the task explicitly, even when refactoring.
-      7. Never add any explanations or comments before or after the code.
       ${
         currentErrors
           ? `11. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
@@ -30,7 +37,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       <SpecialAttention>
         Pay special attention to <YourCurrentTask> and for support <OverAllTaskInstructions> in your coding efforts
       </SpecialAttention>
-
 `;
   }
 
@@ -184,7 +190,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       currentFileToUpdateContents = this.loadFileContents(fileName);
       if (!currentFileToUpdateContents) {
         console.error(`Error loading file ${fileName}`);
-        //throw new Error(`Error loading file ${fileName}`);
       } else {
         this.setOriginalFileIfNeeded(fileName, currentFileToUpdateContents);
       }
@@ -208,15 +213,46 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     while (!hasPassedReview && retryCount < this.maxRetries) {
       console.log(`Calling LLM... Attempt ${retryCount + 1}`);
-      newCode = await this.callLLM(
-        "engineering-agent",
-        PsConstants.engineerModel,
-        [
-          new SystemMessage(this.codingSystemPrompt(currentErrors)),
-          new HumanMessage(
-            this.codingUserPrompt(
+
+      // Use the new callModel approach:
+      const messagesForCoding = [
+        this.createSystemMessage(this.codingSystemPrompt(currentErrors)),
+        this.createHumanMessage(
+          this.codingUserPrompt(
+            fileName,
+            fileAction,
+            currentActions,
+            currentFileToUpdateContents,
+            completedActions,
+            futureActions,
+            retryCount,
+            reviewLog
+          )
+        ),
+      ];
+
+      try {
+        newCode = await this.callModel(
+          PsAiModelType.TextReasoning,
+          PsAiModelSize.Medium,
+          messagesForCoding,
+          false
+        );
+      } catch (error: any) {
+        console.error("Error calling the model for new code:", error.message);
+        retryCount++;
+        continue;
+      }
+
+      if (newCode) {
+        console.log(`Coding received: ${newCode}`);
+
+        const messagesForReview = [
+          this.createSystemMessage(this.reviewSystemPrompt()),
+          this.createHumanMessage(
+            this.getUserReviewPrompt(
+              newCode,
               fileName,
-              fileAction,
               currentActions,
               currentFileToUpdateContents,
               completedActions,
@@ -225,32 +261,21 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
               reviewLog
             )
           ),
-        ],
-        false
-      );
+        ];
 
-      if (newCode) {
-        console.log(`Coding received: ${newCode}`);
-        const review = await this.callLLM(
-          "engineering-agent",
-          PsConstants.engineerModel,
-          [
-            new SystemMessage(this.reviewSystemPrompt()),
-            new HumanMessage(
-              this.getUserReviewPrompt(
-                newCode,
-                fileName,
-                currentActions,
-                currentFileToUpdateContents,
-                completedActions,
-                futureActions,
-                retryCount,
-                reviewLog
-              )
-            ),
-          ],
-          false
-        );
+        let review = "";
+        try {
+          review = await this.callModel(
+            PsAiModelType.TextReasoning,
+            PsAiModelSize.Medium,
+            messagesForReview,
+            false
+          );
+        } catch (error: any) {
+          console.error("Error calling the model for review:", error.message);
+          retryCount++;
+          continue;
+        }
 
         console.log(`\n\nCode review received: ${review}\n\n`);
 
@@ -264,7 +289,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           retryCount++;
         }
       } else {
-        console.error("No plan received");
+        console.error("No code response received from model.");
         retryCount++;
       }
     }
@@ -274,27 +299,22 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     );
 
     newCode = newCode.trim();
-
     newCode = newCode.replace(/```typescript/g, "");
-
     if (newCode.endsWith("```")) {
       newCode = newCode.slice(0, -3);
     }
 
     let fullFileName = fileName;
-
     if (fullFileName.indexOf(this.memory.workspaceFolder) === -1) {
       fullFileName = path.join(this.memory.workspaceFolder, fileName);
     }
 
     const directory = path.dirname(fullFileName);
-
     if (!fs.existsSync(directory)) {
       fs.mkdirSync(directory, { recursive: true });
     }
 
     fs.writeFileSync(fullFileName, newCode);
-
     this.updateMemoryWithFileContents(fullFileName, newCode);
 
     return newCode as string;

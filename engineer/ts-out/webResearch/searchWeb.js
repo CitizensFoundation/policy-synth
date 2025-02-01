@@ -1,13 +1,13 @@
-import { SearchWebProcessor } from "@policysynth/agents/solutions/web/searchWeb.js";
-export class ResearchWeb extends SearchWebProcessor {
+import { BaseSearchWebAgent } from "@policysynth/agents/webResearch/searchWeb.js";
+export class ResearchWeb extends BaseSearchWebAgent {
     constructor(memory) {
-        super(undefined, memory);
+        super();
     }
     async search(searchQueries) {
         this.logger.info("Searching the web");
         this.logger.info(`Search queries: ${JSON.stringify(searchQueries)}`);
         this.seenUrls = new Map();
-        const results = await this.getQueryResults(searchQueries, "webScanner");
+        const results = await this.getQueryResults(searchQueries, "webScanner", 20);
         return results.searchResults;
     }
 }

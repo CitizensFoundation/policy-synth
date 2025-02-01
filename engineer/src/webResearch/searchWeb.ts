@@ -1,8 +1,8 @@
-import { SearchWebProcessor } from "@policysynth/agents/solutions/web/searchWeb.js";
+import { BaseSearchWebAgent } from "@policysynth/agents/webResearch/searchWeb.js";
 
-export class ResearchWeb extends SearchWebProcessor {
-  constructor(memory: PsSmarterCrowdsourcingMemoryData) {
-    super(undefined as any, memory);
+export class ResearchWeb extends BaseSearchWebAgent {
+  constructor(memory: PsAgentMemoryData) {
+    super();
   }
 
   async search(searchQueries: string[]) {
@@ -10,7 +10,11 @@ export class ResearchWeb extends SearchWebProcessor {
     this.logger.info(`Search queries: ${JSON.stringify(searchQueries)}`);
     this.seenUrls = new Map();
 
-    const results = await this.getQueryResults(searchQueries, "webScanner");
+    const results = await this.getQueryResults(
+      searchQueries,
+      "webScanner",
+      20
+    );
 
     return results.searchResults;
   }

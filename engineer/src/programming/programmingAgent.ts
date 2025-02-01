@@ -16,7 +16,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     let hasCompleted = false;
     let currentErrors: string | undefined = undefined;
 
-    const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
+    const buildAgent = new PsEngineerProgrammingBuildAgent(this.agent, this.memory, 0, 100);
 
     while (!hasCompleted && retryCount < this.maxRetries) {
       await this.createAndRunActionPlan(currentErrors);
@@ -31,12 +31,15 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
   }
 
   async searchForSolutionsToErrors(currentErrors: string) {
-    const docsResearcher = new PsEngineerErrorWebResearchAgent(this.memory);
+    const docsResearcher = new PsEngineerErrorWebResearchAgent(this.agent, this.memory, 0, 100);
   }
 
   async createAndRunActionPlan(currentErrors: string | undefined = undefined) {
     const planningAgent = new PsEngineerProgrammingPlanningAgent(
+      this.agent,
       this.memory,
+      0,
+      100,
       this.likelyToChangeFilesContents,
       this.otherFilesToKeepInContextContent,
       this.documentationFilesInContextContent,
@@ -49,7 +52,10 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
 
     if (actionPlan) {
       const implementationAgent = new PsEngineerProgrammingImplementationAgent(
+        this.agent,
         this.memory,
+        0,
+        100,
         this.likelyToChangeFilesContents,
         this.otherFilesToKeepInContextContent,
         this.documentationFilesInContextContent,

@@ -7,7 +7,7 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
         console.log(`Starting build process in ${this.memory.workspaceFolder}`);
         try {
             const { stdout, stderr } = await execPromise("npm run build", {
-                cwd: this.memory.workspaceFolder
+                cwd: this.memory.workspaceFolder,
             });
             console.log("Build output:", stdout);
             if (stderr) {

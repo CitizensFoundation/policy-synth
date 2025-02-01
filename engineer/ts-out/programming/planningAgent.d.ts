@@ -9,7 +9,13 @@ export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBasePr
     getUserActionPlanReviewPrompt(actionPlan: PsEngineerCodingActionPlanItem[]): string;
     getActionPlanSystemPrompt(): string;
     getUserActionPlanPrompt(codingPlan: string, reviewLog: string): string;
+    /**
+     * Orchestrates the retrieval + review of the coding plan.
+     */
     private getCodingPlan;
+    /**
+     * Orchestrates the retrieval of the action plan (JSON array).
+     */
     getActionPlan(currentErrors?: string | undefined): Promise<PsEngineerCodingActionPlanItem[] | undefined>;
 }
 //# sourceMappingURL=planningAgent.d.ts.map

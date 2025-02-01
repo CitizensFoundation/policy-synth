@@ -12,7 +12,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         const retriesUntilWebResearch = 3;
         let hasCompleted = false;
         let currentErrors = undefined;
-        const buildAgent = new PsEngineerProgrammingBuildAgent(this.memory);
+        const buildAgent = new PsEngineerProgrammingBuildAgent(this.agent, this.memory, 0, 100);
         while (!hasCompleted && retryCount < this.maxRetries) {
             await this.createAndRunActionPlan(currentErrors);
             currentErrors = await buildAgent.build();
@@ -25,20 +25,20 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         }
     }
     async searchForSolutionsToErrors(currentErrors) {
-        const docsResearcher = new PsEngineerErrorWebResearchAgent(this.memory);
+        const docsResearcher = new PsEngineerErrorWebResearchAgent(this.agent, this.memory, 0, 100);
     }
     async createAndRunActionPlan(currentErrors = undefined) {
-        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
         const actionPlan = await planningAgent.getActionPlan(currentErrors);
         console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
         if (actionPlan) {
-            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.memory, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
             // Loop until all actions are completed
             let allCompleted = false;
             while (!allCompleted) {
                 await implementationAgent.implementCodingActionPlan(actionPlan, currentErrors);
                 // Check if all actions are completed
-                allCompleted = actionPlan.every(action => action.status === "completed");
+                allCompleted = actionPlan.every((action) => action.status === "completed");
                 if (!allCompleted) {
                     console.log("Not all actions completed, running again...");
                 }

@@ -6,5 +6,7 @@ export declare class PsEngineerErrorWebResearchAgent extends PsEngineerBaseWebRe
     maxTopContentResultsToUse: number;
     searchInstructions: string;
     scanType: PsEngineerWebResearchTypes;
+    rankingInstructions: string;
+    scanningSystemPrompt: string;
 }
 //# sourceMappingURL=errorsWebResearch.d.ts.map

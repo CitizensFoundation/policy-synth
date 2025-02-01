@@ -1,13 +1,20 @@
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-
-import { Project, ReturnTypedNode } from "ts-morph";
-
 import fs from "fs";
+import { Project, ReturnTypedNode } from "ts-morph";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
-export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentBase {
-  override memory: PsEngineerMemoryData;
+import {
+  PsAiModelType,
+  PsAiModelSize,
+} from "@policysynth/agents/aiModelTypes.js";
+
+/**
+ * Extend PolicySynthAgent instead of the older PolicySynthScAgentBase,
+ * but keep all your existing functionality and method logic.
+ */
+export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
+  declare memory: PsEngineerMemoryData;
+
   otherFilesToKeepInContextContent: string | undefined | null;
   documentationFilesInContextContent: string | undefined | null;
   currentFileContents: string | undefined | null;
@@ -18,27 +25,25 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
 
   tsMorphProject: Project | undefined;
 
+  /**
+   * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
+   */
   constructor(
+    agent: PsAgent,
     memory: PsEngineerMemoryData,
-    likelyToChangeFilesContents: string | null | undefined = undefined,
-    otherFilesToKeepInContextContent: string | null | undefined = undefined,
-    documentationFilesInContextContent: string | null | undefined = undefined,
-    tsMorphProject: Project | undefined = undefined
+    startProgress = 0,
+    endProgress = 100,
+    otherFilesToKeepInContextContent?: string | null,
+    documentationFilesInContextContent?: string | null,
+    likelyToChangeFilesContents?: string | null,
+    tsMorphProject?: Project
   ) {
-    super(memory);
-    this.likelyToChangeFilesContents = likelyToChangeFilesContents;
-    this.otherFilesToKeepInContextContent = otherFilesToKeepInContextContent;
-    this.documentationFilesInContextContent =
-      documentationFilesInContextContent;
-    this.tsMorphProject = tsMorphProject;
+    super(agent, memory, startProgress, endProgress);
 
-    this.memory = memory;
-    this.chat = new ChatOpenAI({
-      temperature: 0.0,
-      maxTokens: 4096,
-      modelName: "gpt-4o",
-      verbose: false,
-    });
+    this.otherFilesToKeepInContextContent = otherFilesToKeepInContextContent;
+    this.documentationFilesInContextContent = documentationFilesInContextContent;
+    this.likelyToChangeFilesContents = likelyToChangeFilesContents;
+    this.tsMorphProject = tsMorphProject;
   }
 
   updateMemoryWithFileContents(fileName: string, content: string) {
@@ -61,15 +66,14 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
       this.memory.currentTask.filesCompleted.push({ fileName, content });
     }
 
-    // Ensure the first two files and the last two files are always kept
+    // Ensure the first two files and the last three files are always kept
     const filesCompleted = this.memory.currentTask.filesCompleted;
     if (filesCompleted.length > 5) {
-      // Keep the first two files and the last three files
       const firstTwoFiles = filesCompleted.slice(0, 2);
-      const lastTwoFiles = filesCompleted.slice(-3);
+      const lastThreeFiles = filesCompleted.slice(-3);
       this.memory.currentTask.filesCompleted = [
         ...firstTwoFiles,
-        ...lastTwoFiles,
+        ...lastThreeFiles,
       ];
     }
   }
@@ -77,17 +81,18 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
   renderCodingRules() {
     return `<ImportantCodingRulesForYourCodeGeneration>
       Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
-      Never generate import statements typescript type declarations files the *.d.ts files are global by default.
-      Never generate export statements for interfaces in typescript declaration files (*.d.ts files).
+      Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
+      Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
     </ImportantCodingRulesForYourCodeGeneration>`;
   }
 
   setOriginalFileIfNeeded(fileName: string, content: string) {
-    if (!this.memory.currentTask)
+    if (!this.memory.currentTask) {
       this.memory.currentTask = { filesCompleted: [] };
-
-    if (!this.memory.currentTask.originalFiles)
+    }
+    if (!this.memory.currentTask.originalFiles) {
       this.memory.currentTask.originalFiles = [];
+    }
 
     const existingFileIndex = this.memory.currentTask.originalFiles.findIndex(
       (f) => f.fileName === fileName
@@ -102,13 +107,13 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
 
   getCompletedFileContent() {
     if (!this.currentErrors) {
-      this.memory
+      return this.memory
         .currentTask!.filesCompleted!.map(
           (f) => `${f.fileName}:\n${f.content}\n`
         )
         .join("\n");
     } else {
-      // Write out the files with line numbers
+      // Write out the files with line numbers to help fix errors
       return this.memory.currentTask!.filesCompleted!.map((f) => {
         const lines = f.content.split("\n");
         return `${f.fileName}:\n${lines
@@ -145,10 +150,11 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
 
   renderDefaultTaskAndContext() {
     const hasContextFromSearch =
-      this.memory.exampleContextItems || this.memory.docsContextItems;
+      (this.memory.exampleContextItems &&
+        this.memory.exampleContextItems.length > 0) ||
+      (this.memory.docsContextItems && this.memory.docsContextItems.length > 0);
 
     let hasCompletedFiles = false;
-
     if (
       this.memory.currentTask &&
       this.memory.currentTask.filesCompleted &&
@@ -162,62 +168,63 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
         ? `<ContextFromOnlineSearch>${
             this.memory.exampleContextItems &&
             this.memory.exampleContextItems.length > 0
-              ? `Potentally relevant code examples from web search:
-        ${this.memory.exampleContextItems.map((i) => i)}`
+              ? `Potentially relevant code examples from web search:
+          ${this.memory.exampleContextItems.join("\n")}`
               : ``
           }
-        ${
-          this.memory.docsContextItems &&
-          this.memory.docsContextItems.length > 0
-            ? `Potentally relevant documentation from a web search:
-        ${this.memory.docsContextItems.map((i) => i)}`
-            : ``
-        }</ContextFromOnlineSearch>`
+          ${
+            this.memory.docsContextItems &&
+            this.memory.docsContextItems.length > 0
+              ? `\nPotentially relevant documentation from a web search:
+          ${this.memory.docsContextItems.join("\n")}`
+              : ``
+          }
+        </ContextFromOnlineSearch>`
         : ``
     }
-        <Context>
-          Typescript file that might have to change:
-          ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
+    <Context>
+      Typescript files that might have to change:
+      ${
+        this.memory.existingTypeScriptFilesLikelyToChange
+          ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
+          : "(none listed)"
+      }
 
-          ${
-            this.documentationFilesInContextContent
-              ? `Local documentation:\n${this.documentationFilesInContextContent}`
-              : ``
-          }
+      ${
+        this.documentationFilesInContextContent
+          ? `Local documentation:\n${this.documentationFilesInContextContent}`
+          : ``
+      }
 
-          All typedefs:
-          ${this.memory.allTypeDefsContents}
+      All typedefs:
+      ${this.memory.allTypeDefsContents}
 
-          ${
-            !hasCompletedFiles
-              ? `<ContentOfFilesThatMightChange>
-            ${this.likelyToChangeFilesContents}
-          </ContentOfFilesThatMightChange>`
-              : ``
-          }
+      ${
+        !hasCompletedFiles
+          ? `<ContentOfFilesThatMightChange>
+              ${this.likelyToChangeFilesContents || ""}
+            </ContentOfFilesThatMightChange>`
+          : ``
+      }
 
-          ${
-            this.otherFilesToKeepInContextContent
-              ? `
-           <OtherFilesPossiblyRelevant>
-             ${this.otherFilesToKeepInContextContent}
-           </OtherFilesPossiblyRelevant> `
-              : ``
-          }
+      ${
+        this.otherFilesToKeepInContextContent
+          ? `<OtherFilesPossiblyRelevant>
+               ${this.otherFilesToKeepInContextContent}
+             </OtherFilesPossiblyRelevant>`
+          : ``
+      }
 
-          ${
-            hasCompletedFiles
-              ? `
-          <CodeFilesYouHaveAlreadyCompleted>
-            ${this.getCompletedFileContent()}
-          </CodeFilesYouHaveAlreadyCompleted>
-          `
-              : ``
-          }
+      ${
+        hasCompletedFiles
+          ? `<CodeFilesYouHaveAlreadyCompleted>
+               ${this.getCompletedFileContent()}
+             </CodeFilesYouHaveAlreadyCompleted>`
+          : ``
+      }
+    </Context>
 
-        </Context>
-
-        ${this.renderProjectDescription()}
+    ${this.renderProjectDescription()}
 `;
   }
 
@@ -229,28 +236,27 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
       Overall project description:
       ${this.memory.taskDescription}
 
-      <OverAllTaskInstructions>:
+      <OverAllTaskInstructions>
         ${this.memory.taskInstructions}
-      </OverAllTaskInstructions>:
-
+      </OverAllTaskInstructions>
     </ProjectInstructions>`;
   }
 
   renderOriginalFiles() {
+    if (
+      !this.memory.currentTask ||
+      !this.memory.currentTask.originalFiles ||
+      this.memory.currentTask.originalFiles.length === 0
+    ) {
+      return ``;
+    }
     return `
-    ${
-      this.memory.currentTask &&
-      this.memory.currentTask.originalFiles &&
-      this.memory.currentTask.originalFiles.length > 0
-        ? `
     <OriginalCodefilesBeforeYourChanges>
       ${this.memory.currentTask.originalFiles
         .map((f) => `${f.fileName}:\n${f.content}\n`)
         .join("\n")}
     </OriginalCodefilesBeforeYourChanges>
-    `
-        : ``
-    }`;
+    `;
   }
 
   loadFileContents(fileName: string) {
@@ -270,8 +276,42 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthScAgentB
         if (fileContent) {
           return `${fileName}\n${fileContent}`;
         }
+        return null;
       })
       .filter(Boolean)
       .join("\n");
+  }
+
+  /**
+   * Example usage of the new callModel approach if you need to invoke the LLM:
+   */
+  async exampleModelCall(sampleUserInput: string): Promise<string> {
+    const systemPrompt = "You are a helpful assistant that writes code.";
+    const userPrompt = `User's question or request: ${sampleUserInput}`;
+
+    const messages = [
+      this.createSystemMessage(systemPrompt),
+      this.createHumanMessage(userPrompt),
+    ];
+
+    try {
+      // This calls the LLM using the new approach.
+      const response = await this.callModel(
+        PsAiModelType.TextReasoning,
+        PsAiModelSize.Medium,
+        messages,
+        true // can stream or not based on your preference
+      );
+
+      if (typeof response === "string") {
+        return response;
+      } else {
+        // If you parse JSON or arrays, handle that here.
+        return JSON.stringify(response, null, 2);
+      }
+    } catch (error: any) {
+      console.error(`Error calling the model: ${error.message}`);
+      return "Error in LLM call.";
+    }
   }
 }

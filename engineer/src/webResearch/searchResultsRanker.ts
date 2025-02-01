@@ -1,21 +1,43 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
+import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
-export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
+export class SearchResultsRanker extends PairwiseRankingAgent {
   instructions: string | undefined;
   override memory: PsEngineerMemoryData;
 
+  // New properties based on the example
+  defaultModelSize = PsAiModelSize.Medium;
+  numberOfMatchesForEachPrompt = 10;
+  updatePrefix = "Rank Search Results";
+
+  /**
+   * The constructor now accepts additional parameters:
+   * - agent: The agent instance (of type PsAgent)
+   * - memory: Your memory data (of type PsEngineerMemoryData)
+   * - progressFunction: Optional progress callback
+   * - startProgress / endProgress: Bounds for progress tracking
+   * - useSmallModelForSearchResultsRanking: Flag that when true switches to a small model and increases match count
+   */
   constructor(
+    agent: PsAgent,
     memory: PsEngineerMemoryData,
-    progressFunction: Function | undefined = undefined
+    startProgress: number,
+    endProgress: number,
+    useSmallModelForSearchResultsRanking: boolean = false
   ) {
-    super(undefined as any, memory);
+    super(agent, memory, startProgress, endProgress);
     this.memory = memory;
-    this.progressFunction = progressFunction;
+    if (useSmallModelForSearchResultsRanking) {
+      this.defaultModelSize = PsAiModelSize.Small;
+      this.numberOfMatchesForEachPrompt = 12;
+    }
   }
 
+  /**
+   * Compares two search result items.
+   * The system message is constructed using helper functions and follows a similar template as the first example.
+   */
   async voteOnPromptPair(
     index: number,
     promptPair: number[]
@@ -26,90 +48,85 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     const itemOne = this.allItems![index]![itemOneIndex] as PsSearchResultItem;
     const itemTwo = this.allItems![index]![itemTwoIndex] as PsSearchResultItem;
 
-    console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
-    console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
+    // Log the two items in a similar style to the first example.
+    console.log(`\nitemOne: ${itemOne.title} - ${itemOne.description} ${itemOne.url}\n`);
+    console.log(`\nitemTwo: ${itemTwo.title} - ${itemTwo.description} ${itemTwo.url}\n`);
 
     const messages = [
-      new SystemMessage(
-        `
-        You are an AI expert trained to rank search results based on their relevance to the user instructions.
+      this.createSystemMessage(
+        `<searchResultsRanker>
+You are an AI expert trained to rank search results based on their relevance to the user instructions.
 
-        Instructions:
-        1. You will receive a research question.
-        2. You will also see two web search results, marked as "Search Result One" and "Search Result Two".
-        3. Your task is to analyze, compare, and rank these search results based on their relevance to the user instructions.
-        4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
-        5. Let's think step by step.
-        `
+<TaskDetails>
+${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle}
+</OverallTaskTitle>` : ""}
+
+${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription}
+</OverallTaskDescription>` : ""}
+
+${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions}
+</OverallTaskInstructions>` : ""}
+</TaskDetails>
+${
+  this.memory.likelyRelevantNpmPackageDependencies &&
+  this.memory.likelyRelevantNpmPackageDependencies.length > 0
+    ? "Likely relevant npm dependencies:\n" +
+      this.memory.likelyRelevantNpmPackageDependencies.join("\n")
+    : ""
+}
+
+Instructions:
+1. You will receive user instructions and task details above.
+2. You will also see two web search results, marked as "Search Result One" and "Search Result Two".
+3. Your task is to analyze, compare, and rank these search results based on their relevance to the user instructions.
+4. Output your decision as "One", "Two" or "Neither". Output nothing else. No explanation is required.
+</searchResultsRanker>`
       ),
-      new HumanMessage(
-        `
-        User instructions: ${this.instructions}
+      this.createHumanMessage(
+        `User instructions: ${this.instructions}
 
-        Overall task title:
-        ${this.memory.taskTitle}
+Search Results to Rank:
 
-        Overall task description:
-        ${this.memory.taskDescription}
+Search Result One:
+${itemOne.title}
+${itemOne.description}
+${itemOne.url}
 
-        Overall task instructions: ${this.memory.taskInstructions}
+Search Result Two:
+${itemTwo.title}
+${itemTwo.description}
+${itemTwo.url}
 
-        ${
-          this.memory.likelyRelevantNpmPackageDependencies?.length > 0
-            ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(
-                `\n`
-              )}`
-            : ``
-        }
-
-        Search Results to Rank:
-
-        Search Results One:
-        ${itemOne.title}
-        ${itemOne.description}
-        ${itemOne.url}
-
-        Search Results Two:
-        ${itemTwo.title}
-        ${itemTwo.description}
-        ${itemTwo.url}
-
-        The Most Relevant Search Results Is:
-       `
+The Most Relevant Search Results Is:`
       ),
     ];
 
-    return await this.getResultsFromLLM(
-      index,
-      "rank-search-results",
-      PsConstants.searchResultsRankingsModel,
-      messages,
-      itemOneIndex,
-      itemTwoIndex
-    );
+    return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
   }
 
+  /**
+   * Sets up the ranking prompts based on the number of search results, performs the pairwise ranking,
+   * saves memory, and returns the ordered list.
+   */
   async rankSearchResults(
     queriesToRank: PsSearchResultItem[],
-    instructions: string,
-    maxPrompts = 150
+    instructions: string
   ) {
     this.instructions = instructions;
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: "gpt-4o",
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
-
+    // Compute the total number of ranking prompts to use.
     this.setupRankingPrompts(
       -1,
       queriesToRank,
-      maxPrompts,
-      this.progressFunction
+      queriesToRank.length * this.numberOfMatchesForEachPrompt,
+      this.progressFunction,
+      12
     );
     await this.performPairwiseRanking(-1);
+    await this.saveMemory();
     return this.getOrderedListOfItems(-1) as PsSearchResultItem[];
   }
 }

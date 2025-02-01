@@ -1,20 +1,18 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { ChatOpenAI } from "@langchain/openai";
 import fs from "fs";
 import path from "path";
-export class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
-    memory;
-    constructor(memory) {
-        super(memory);
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js"; // or your new base agent
+import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
+    /**
+     * Adapted constructor:
+     *   - If you don’t need a PsAgent object, you can pass a dummy object or adjust
+     *     your base class constructor so it only needs memory.
+     */
+    constructor(agent, memory, startProgress, endProgress) {
+        // This uses a dummy object for "agent" since the base class typically expects (agent, memory, ...).
+        // Adjust as needed if you actually have a PsAgent instance to pass in.
+        super(agent, memory, startProgress, endProgress);
         this.memory = memory;
-        this.chat = new ChatOpenAI({
-            temperature: 0.0,
-            maxTokens: 4096,
-            modelName: "gpt-4o",
-            verbose: true,
-        });
     }
     readNpmDependencies() {
         const packageJsonPath = path.join(this.memory.workspaceFolder, "package.json");
@@ -66,16 +64,16 @@ export class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
     }
     async analyzeAndSetup() {
         this.logger.info(`Analyzing and setting up task`);
+        // Read dependencies from package.json
         const allNpmPackageDependencies = this.readNpmDependencies();
+        // Utility to find all .md docs recursively
         const getAllDocumentationFiles = (folderPath) => {
             const files = [];
             const items = fs.readdirSync(folderPath);
             for (const item of items) {
                 const itemPath = path.join(folderPath, item);
                 const stat = fs.statSync(itemPath);
-                if (stat.isDirectory() &&
-                    item !== "ts-out" &&
-                    item !== "node_modules") {
+                if (stat.isDirectory() && item !== "ts-out" && item !== "node_modules") {
                     files.push(...getAllDocumentationFiles(itemPath));
                 }
                 else if (path.extname(item) === ".md") {
@@ -85,11 +83,24 @@ export class PsEngineerInitialAnalyzer extends PolicySynthScAgentBase {
             return files;
         };
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
-        const analyzisResults = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-            new SystemMessage(this.analyzeSystemPrompt),
-            new HumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
-        ], true));
+        // Use the new callModel approach
+        const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, // pick your type
+        PsAiModelSize.Medium, // pick your size
+        [
+            this.createSystemMessage(this.analyzeSystemPrompt),
+            this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
+        ], false // not streaming, set to true if you want streamed responses
+        );
+        let analyzisResults;
+        if (typeof analysisResponse === "string") {
+            analyzisResults = JSON.parse(analysisResponse);
+        }
+        else {
+            // if the LLM returned an object (already parsed)
+            analyzisResults = analysisResponse;
+        }
         console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
+        // Store the results into memory
         this.memory.existingTypeScriptFilesLikelyToChange =
             analyzisResults.existingTypeScriptFilesLikelyToChange;
         this.memory.existingOtherTypescriptFilesToKeepInContext =

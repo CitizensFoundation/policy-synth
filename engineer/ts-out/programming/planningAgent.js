@@ -1,5 +1,4 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "@policysynth/agents/constants.js";
+import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
@@ -16,8 +15,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     7. Prefer classes rather than exported functions in files.
     8. Never suggesting importing typedefs those are always automatically imported from the d.ts files
     ${this.currentErrors
-            ? `9. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing. The project is not compiling because of those recent additions or changes you've made.
-           10. Do not add new files with errors to the plan but focus on fixing the errors in the code you just did. We don't want to refactor our whole project.`
+            ? `9. You have already built the project, but it's not compiling due to errors from recent changes. The coding plan should focus on fixing those errors in the files you've been changing.
+           10. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
             : ``}</ImportantInstructions>
     `;
     }
@@ -52,8 +51,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     7. The coding plan does not have to include every detail, the goal is to provide a high-level plan for the changes needed for each file and each task.
     8. The plan should not suggest importing typedefs from files those are always automatically imported from the d.ts files
     ${this.currentErrors
-            ? `9. You have already build the project and now you need a new coding plan to fix errors provided by the user, the coding plan should focus on fixing the errors in the files you have been changing nothing else and don't try to fix other files. The project is not compiling because of those recent changes or additions you've made.
-           10. Focus on the file or files with errors do not suggest changing other files except absolutely necessary to fix errors.`
+            ? `9. You have already built the project, but it's not compiling due to errors from recent changes. Focus the plan on only those files with errors.
+           10. Don't fix or change anything else if not required.`
             : ``}
     Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     `;
@@ -81,7 +80,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     6. For files you are changing there should be "change" in the fileAction JSON field.
     7. If you are deleting a file there should be "delete" in the fileAction JSON field.
     ${this.currentErrors
-            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user.`
+            ? `8.  You have already built the project, but it's not compiling due to recent changes. Focus the plan on fixing the known errors.`
             : ``}
     Important: If the action plan is good, with no major issues, only output "Action plan looks good", nothing else.
     `;
@@ -107,15 +106,15 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     6. If you are deleting a file output "delete" in the fileAction JSON field.
     7. Put a full detailed description from the coding plan in the codingTaskFullDescription field.
     ${this.currentErrors
-            ? `8.  You have already build the project and now you need a new coding plan to fix errors provided by the user, the file action on already implemented files should be "change" not add, as you already added them last time.`
+            ? `8.  Since you already tried building and have errors, for files you recently created, maintain "add" action only if truly new. If it's an existing file, use "change".`
             : ``}
     Expected JSON Array Output:
     [
       {
-        fullPathToNewOrUpdatedFile: string;
-        codingTaskTitle: string;
-        codingTaskFullDescription: string;
-        fileAction: "add" | "change" | "delete";
+        "fullPathToNewOrUpdatedFile": string,
+        "codingTaskTitle": string,
+        "codingTaskFullDescription": string,
+        "fileAction": "add" | "change" | "delete"
       }
     ]
     `;
@@ -135,6 +134,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       Your action plan in JSON array:
     `;
     }
+    /**
+     * Orchestrates the retrieval + review of the coding plan.
+     */
     async getCodingPlan() {
         let planReady = false;
         let planRetries = 0;
@@ -148,20 +150,43 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog)}`);
                 this.havePrintedDebugPrompt = true;
             }
-            codingPlan = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-                new SystemMessage(this.planSystemPrompt()),
-                new HumanMessage(this.getUserPlanPrompt(reviewLog)),
-            ], false);
+            // -- Call the model with the new approach
+            const planResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                this.createSystemMessage(this.planSystemPrompt()),
+                this.createHumanMessage(this.getUserPlanPrompt(reviewLog)),
+            ], false // not streaming
+            );
+            // Convert the plan response into a string if needed
+            if (planResponse) {
+                if (typeof planResponse === "string") {
+                    codingPlan = planResponse;
+                }
+                else {
+                    // If it came back as JSON, convert to string
+                    codingPlan = JSON.stringify(planResponse, null, 2);
+                }
+            }
             if (codingPlan) {
-                console.log(`Coding plan received: ${codingPlan}`);
+                console.log(`Coding plan received:\n${codingPlan}`);
+                // Now we review the coding plan
                 if (reviewRetries < maxReviewsRetries) {
-                    const review = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-                        new SystemMessage(this.reviewSystemPrompt()),
-                        new HumanMessage(this.getUserReviewPrompt(codingPlan)),
-                    ], false);
+                    const reviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                        this.createSystemMessage(this.reviewSystemPrompt()),
+                        this.createHumanMessage(this.getUserReviewPrompt(codingPlan)),
+                    ], false // not streaming
+                    );
+                    let review = "";
+                    if (reviewResponse) {
+                        if (typeof reviewResponse === "string") {
+                            review = reviewResponse;
+                        }
+                        else {
+                            review = JSON.stringify(reviewResponse, null, 2);
+                        }
+                    }
                     console.log(`\n\nReview received: ${review}\n\n`);
-                    if ((review && review.indexOf("Coding plan looks good") > -1) ||
-                        review.indexOf("No changes needed to this code") > -1) {
+                    if (review.includes("Coding plan looks good") ||
+                        review.includes("No changes needed to this code")) {
                         planReady = true;
                         console.log("Coding plan approved");
                     }
@@ -183,6 +208,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         }
         return codingPlan;
     }
+    /**
+     * Orchestrates the retrieval of the action plan (JSON array).
+     */
     async getActionPlan(currentErrors = undefined) {
         let planReady = false;
         let planRetries = 0;
@@ -190,21 +218,50 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         let actionPlan;
         this.setCurrentErrors(currentErrors);
         const codingPlan = await this.getCodingPlan();
-        if (codingPlan) {
-            while (!planReady && planRetries < this.maxRetries) {
-                console.log(`Getting action plan attempt ${planRetries + 1}`);
-                actionPlan = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-                    new SystemMessage(this.getActionPlanSystemPrompt()),
-                    new HumanMessage(this.getUserActionPlanPrompt(codingPlan, reviewLog)),
-                ], true);
+        if (!codingPlan) {
+            console.error("No coding plan received; cannot produce action plan.");
+            return;
+        }
+        while (!planReady && planRetries < this.maxRetries) {
+            console.log(`Getting action plan attempt ${planRetries + 1}`);
+            const actionPlanResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                this.createSystemMessage(this.getActionPlanSystemPrompt()),
+                this.createHumanMessage(this.getUserActionPlanPrompt(codingPlan, reviewLog)),
+            ], false // can be true if you prefer streaming
+            );
+            // Parse the action plan response into PsEngineerCodingActionPlanItem[]
+            if (actionPlanResponse) {
+                let planStr = "";
+                if (typeof actionPlanResponse === "string") {
+                    planStr = actionPlanResponse;
+                }
+                else {
+                    planStr = JSON.stringify(actionPlanResponse, null, 2);
+                }
+                try {
+                    actionPlan = JSON.parse(planStr);
+                }
+                catch (err) {
+                    console.error("Error parsing action plan JSON:", err);
+                }
                 if (actionPlan) {
                     console.log(`Action plan received: ${JSON.stringify(actionPlan, null, 2)}`);
-                    const review = await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-                        new SystemMessage(this.actionPlanReviewSystemPrompt()),
-                        new HumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
+                    // Review the action plan
+                    const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                        this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
+                        this.createHumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
                     ], false);
-                    console.log(`\n\Coding Action Plan Review received: ${review}\n\n`);
-                    if (review && review.indexOf("Action plan looks good") > -1) {
+                    let review = "";
+                    if (actionPlanReviewResponse) {
+                        if (typeof actionPlanReviewResponse === "string") {
+                            review = actionPlanReviewResponse;
+                        }
+                        else {
+                            review = JSON.stringify(actionPlanReviewResponse, null, 2);
+                        }
+                    }
+                    console.log(`\n\nCoding Action Plan Review received: ${review}\n\n`);
+                    if (review.includes("Action plan looks good")) {
                         planReady = true;
                         console.log("Action plan approved");
                     }
@@ -214,37 +271,38 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                     }
                 }
                 else {
-                    console.error("No action plan received");
                     planRetries++;
                 }
             }
-            actionPlan?.forEach((action) => {
-                action.status = "notStarted";
-            });
-            // Go through actoinplan and add all actions with "add" to filesAdded
-            actionPlan?.forEach((action) => {
-                if (action.fileAction === "add") {
-                    if (!this.memory.currentFilesBeingAdded) {
-                        this.memory.currentFilesBeingAdded = [];
-                    }
-                    this.memory.currentFilesBeingAdded.push(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile));
-                }
-            });
-            // Go through the action plan and look at all actions with "change", if those are in the filesAdded change them back to "add"
-            actionPlan?.forEach((action) => {
-                if (action.fileAction === "change") {
-                    if (this.memory.currentFilesBeingAdded?.includes(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile))) {
-                        action.fileAction = "add";
-                        console.log(`Changing action back to add: ${action.fullPathToNewOrUpdatedFile}`);
-                    }
-                }
-            });
-            return actionPlan;
+            else {
+                console.error("No action plan received");
+                planRetries++;
+            }
         }
-        else {
-            console.error("No coding plan received");
-            return;
-        }
+        // If we got a final actionPlan, mark them as notStarted
+        actionPlan?.forEach((action) => {
+            action.status = "notStarted";
+        });
+        // Mark newly added files in memory
+        actionPlan?.forEach((action) => {
+            if (action.fileAction === "add") {
+                if (!this.memory.currentFilesBeingAdded) {
+                    this.memory.currentFilesBeingAdded = [];
+                }
+                this.memory.currentFilesBeingAdded.push(this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile));
+            }
+        });
+        // If we are changing a file that we previously had as "add", revert to "add"
+        actionPlan?.forEach((action) => {
+            const shortPath = this.removeWorkspacePathFromFileIfNeeded(action.fullPathToNewOrUpdatedFile);
+            if (action.fileAction === "change") {
+                if (this.memory.currentFilesBeingAdded?.includes(shortPath)) {
+                    action.fileAction = "add";
+                    console.log(`Changing action back to add: ${shortPath}`);
+                }
+            }
+        });
+        return actionPlan;
     }
 }
 //# sourceMappingURL=planningAgent.js.map

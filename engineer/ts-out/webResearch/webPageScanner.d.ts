@@ -1,25 +1,55 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { Page } from "puppeteer";
-import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPages.js";
-export declare class WebPageScanner extends GetWebPagesProcessor {
+import { GetWebPagesBaseAgent } from "@policysynth/agents/webResearch/getWebPagesBase.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+/**
+ * Possible types of web research this agent performs
+ */
+export type PsEngineerWebResearchTypes = "documentation" | "codeExamples" | "solutionsForErrors";
+/**
+ * WebPageScanner merges the logic from your older “WebPageScanner” example
+ * but uses the structure from your first snippet (PolicySynthAgent-based).
+ */
+export declare class WebPageScanner extends GetWebPagesBaseAgent {
     memory: PsEngineerMemoryData;
     scanType?: PsEngineerWebResearchTypes;
     instructions: string;
     collectedWebPages: any[];
-    constructor(memory: PsEngineerMemoryData, instructions: string);
+    totalPagesSave: number;
+    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number, instructions: string);
+    /**
+     * We override the modelTemperature from the base agent if needed
+     */
+    get modelTemperature(): number;
+    /**
+     * A helper to sanitize text (kept from your old snippet).
+     */
     sanitizeInput(text: string): string;
-    renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): (SystemMessage | HumanMessage)[];
-    getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
-        totalTokenCount: number;
-        promptTokenCount: {
-            totalCount: number;
-            countPerMessage: never[];
-        };
-    }>;
-    getAIAnalysis(text: string, subProblemIndex?: number, entityIndex?: number): Promise<any>;
-    getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined): string;
-    processPageText(text: string, subProblemIndex: number | undefined, url: string, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined, policy?: PSPolicy | undefined): Promise<void | PSRefinedRootCause[]>;
-    getAndProcessPage(subProblemIndex: number | undefined, url: string, browserPage: Page, type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes, entityIndex: number | undefined): Promise<boolean>;
+    /**
+     * Render the scanning prompt, adjusting based on the scanType
+     */
+    renderScanningPrompt(text: string): PsModelMessage[];
+    /**
+     * This is analogous to processPageAnalysis in your first snippet:
+     * it calls the model with the scanning prompt.
+     */
+    processPageAnalysis(text: string): Promise<any>;
+    /**
+     * Optionally handle PDF content if you want to preserve that logic.
+     * This calls the PDF reader, merges text, etc.
+     */
+    getAndProcessPdf(url: string): Promise<string>;
+    /**
+     * Optionally handle HTML pages if you want to preserve that logic.
+     * Could call your base class's getAndProcessPage method,
+     * or your own implementation with puppeteer.
+     */
+    getAndProcessHtml(url: string): Promise<string>;
+    /**
+     * For each page, decide if it's PDF or HTML, fetch text, then do AI analysis
+     */
+    analyzeSinglePage(url: string): Promise<void>;
+    /**
+     * Main scanning method — uses concurrency with p-limit (like your first snippet).
+     */
     scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes): Promise<any[]>;
 }
 //# sourceMappingURL=webPageScanner.d.ts.map

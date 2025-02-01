@@ -70,7 +70,7 @@ interface PsEngineerFileData {
   content: string;
 }
 
-interface PsEngineerMemoryData extends PSMemoryData {
+interface PsEngineerMemoryData extends PsAgentMemoryData {
   workspaceFolder: string;
   taskDescription: string;
   taskTitle: string;

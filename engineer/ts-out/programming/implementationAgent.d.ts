@@ -1,4 +1,8 @@
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
+/**
+ * Upgraded to use the new `callModel` approach with reasoning.
+ * Retains the same functionality and logic as before.
+ */
 export declare class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedFirstUserDebugMessage: boolean;
     codingSystemPrompt(currentErrors: string | undefined): string;

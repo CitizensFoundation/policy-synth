@@ -1,20 +1,22 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
 
-import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
-
-export class PsEngineerWebContentRanker extends BasePairwiseRankingsProcessor {
+export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
   instructions: string | undefined;
   override memory: PsEngineerMemoryData;
+  defaultModelSize = PsAiModelSize.Medium;
+  updatePrefix = "Ranking Results";
 
   constructor(
+    agent: PsAgent,
     memory: PsEngineerMemoryData,
-    progressFunction: Function | undefined = undefined
+   startProgress: number = 0,
+    endProgress: number = 100
   ) {
-    super(undefined as any, memory);
+    super(agent, memory, startProgress, endProgress);
     this.memory = memory;
-    this.progressFunction = progressFunction;
   }
 
   async voteOnPromptPair(
@@ -28,57 +30,55 @@ export class PsEngineerWebContentRanker extends BasePairwiseRankingsProcessor {
     const itemTwo = this.allItems![index]![itemTwoIndex] as string;
 
     const messages = [
-      new SystemMessage(
-        `
-        You are an AI expert trained to rank search queries based on their relevance to the user instructions.
+      this.createSystemMessage(`
+<psEngineerWebContentRanker>
+You are an AI expert trained to rank search queries based on their relevance to the user instructions.
 
-        Instructions:
-        1. You will see instructions from the user.
-        2. You will also see two web search queries, each marked as "Search Query One" and "Search Query Two".
-        3. Your task is to analyze, compare, and rank these search queries based on their relevance to the user instructions.
-        4. Output your decision as either "One", "Two" or "Neither". No explanation is required.
-        5. Let's think step by step.
-        `
-      ),
-      new HumanMessage(
-        `Overall task title:
-        ${this.memory.taskTitle}
+${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle}
+</OverallTaskTitle>` : ""}
 
-        Overall task description:
-        ${this.memory.taskDescription}
+${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription}
+</OverallTaskDescription>` : ""}
 
-        Overall task instructions: ${this.memory.taskInstructions}
+${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions}
+</OverallTaskInstructions>` : ""}
 
-        ${
-          this.memory.likelyRelevantNpmPackageDependencies?.length > 0
-            ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(
-                `\n`
-              )}`
-            : ``
-        }
+${this.memory.likelyRelevantNpmPackageDependencies &&
+  this.memory.likelyRelevantNpmPackageDependencies.length > 0
+    ? `Likely relevant npm dependencies:
+${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
+    : ""}
 
-        User instructions: ${this.instructions}
+Instructions:
+1. You will see user instructions and two search queries.
+2. Analyze, compare, and rank the queries based on their relevance.
+3. Output your decision as "One", "Two" or "Neither". No explanation is required.
+</psEngineerWebContentRanker>
+      `),
+      this.createHumanMessage(`
+User instructions: ${this.instructions}
 
-        Search Queries to Rank:
+Search Queries to Rank:
 
-        Search Query One:
-        ${itemOne}
+Search Query One:
+${itemOne}
 
-        Search Query Two:
-        ${itemTwo}
+Search Query Two:
+${itemTwo}
 
-        The Most Relevant Search Query Is:
-       `
-      ),
+The Most Relevant Search Query Is:
+      `)
     ];
 
-    return await this.getResultsFromLLM(
-      index,
-      "rank-search-queries",
-      PsConstants.searchQueryRankingsModel,
+    // callModel is our new unified method that replaces getResultsFromLLM.
+    return await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Medium,
       messages,
-      itemOneIndex,
-      itemTwoIndex
+      true
     );
   }
 
@@ -89,13 +89,7 @@ export class PsEngineerWebContentRanker extends BasePairwiseRankingsProcessor {
   ) {
     this.instructions = instructions;
 
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.searchQueryRankingsModel.temperature,
-      maxTokens: PsConstants.searchQueryRankingsModel.maxOutputTokens,
-      modelName: "gpt-4o",
-      verbose: PsConstants.searchQueryRankingsModel.verbose,
-    });
-
+    // Set up the prompts for pairwise ranking.
     this.setupRankingPrompts(
       -1,
       queriesToRank,
@@ -103,6 +97,7 @@ export class PsEngineerWebContentRanker extends BasePairwiseRankingsProcessor {
       this.progressFunction
     );
     await this.performPairwiseRanking(-1);
+    await this.saveMemory();
     return this.getOrderedListOfItems(-1) as string[];
   }
 }

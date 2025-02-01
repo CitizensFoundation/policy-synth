@@ -1,55 +1,40 @@
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
-import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
-import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
-import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import axios from "axios";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
-import axios from "axios";
-export class PSEngineerAgent extends PolicySynthScAgentBase {
-    memory;
+import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
+import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
+import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
+import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
+/**
+ * The new Engineer Agent.
+ * It now extends PolicySynthAgent and supports configuration for:
+ *  - A long-form task description (“Task”)
+ *  - A local file system path (the code directory to work on)
+ *
+ * All previous functionality (GitHub issue fetching, web research,
+ * TypeScript file scanning, filtering, etc.) is preserved.
+ */
+export class PsEngineerAgent extends PolicySynthAgent {
     githubIssueUrl;
-    constructor(githubIssueUrl = undefined) {
-        super();
+    static ENGINEER_AGENT_CLASS_BASE_ID = "15e7af42-4cf5-1b36-b3cd-f6adc97b63d4";
+    static ENGINEER_AGENT_CLASS_VERSION = 1;
+    constructor(agent, memory, startProgress, endProgress, githubIssueUrl) {
+        super(agent, memory, startProgress, endProgress);
         this.githubIssueUrl = githubIssueUrl;
-        this.memory = {
-            actionLog: [],
-            workspaceFolder: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-            taskTitle: "",
-            taskDescription: ``,
-            taskInstructions: ``,
-            stages: PSEngineerAgent.emptyDefaultStages,
-            docsSiteToScan: [], // Hardcoded docs sites to scan that will be scanned even if they are not found through the autoamted web research
-        };
-        this.chat = new ChatOpenAI({
-            temperature: 0.0,
-            maxTokens: 4096,
-            modelName: "gpt-4o",
-            verbose: true,
-        });
-        if (this.githubIssueUrl) {
-            this.fetchGitHubIssue(this.githubIssueUrl)
-                .then((issue) => {
-                console.log("Github body", issue.body);
-                const parsedDescription = this.parseIssueBody(issue.body);
-                if (!parsedDescription) {
-                    throw new Error("Failed to parse Task Description and Task Instructions from the issue body.");
-                }
-                this.memory.taskTitle = issue.title;
-                this.memory.taskDescription = parsedDescription.taskDescription;
-                this.memory.taskInstructions = parsedDescription.taskInstructions;
-                console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
-                console.log(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
-            })
-                .catch((error) => {
-                console.error(error.message);
-            });
-        }
+        // Initialize defaults in memory if they are not already set.
+        this.memory.actionLog = this.memory.actionLog || [];
+        this.memory.workspaceFolder = this.getConfig("codeLocalPath", "/home/robert/Scratch/policy-synth-engineer-tests/agents");
+        this.memory.taskTitle = this.memory.taskTitle || "";
+        this.memory.taskDescription = this.memory.taskDescription || "";
+        this.memory.taskInstructions = this.memory.taskInstructions || "";
+        this.memory.docsSiteToScan = this.memory.docsSiteToScan || [];
     }
+    /**
+     * If a GitHub issue URL was provided, fetch the issue and extract the
+     * task title, description, and instructions.
+     */
     async initializeFromGitHubIssue() {
         if (this.githubIssueUrl) {
             const issue = await this.fetchGitHubIssue(this.githubIssueUrl);
@@ -60,25 +45,31 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
             this.memory.taskTitle = issue.title;
             this.memory.taskDescription = parsedDescription.taskDescription;
             this.memory.taskInstructions = parsedDescription.taskInstructions;
-            console.log(`GitHub Issue Title: ${issue.title}`);
-            console.log(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
-            console.log(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
+            this.logger.info(`GitHub Issue Title: ${issue.title}`);
+            this.logger.info(`GitHub Issue Desc: ${parsedDescription.taskDescription}`);
+            this.logger.info(`GitHub Issue Task: ${parsedDescription.taskInstructions}`);
+            await this.saveMemory();
         }
     }
+    /**
+     * Fetches a GitHub issue given its URL by converting it to the GitHub API URL.
+     */
     async fetchGitHubIssue(url) {
         try {
             const apiUrl = this.convertToApiUrl(url);
             const response = await axios.get(apiUrl);
-            const issue = {
+            return {
                 title: response.data.title,
                 body: response.data.body,
             };
-            return issue;
         }
         catch (error) {
             throw new Error(`Failed to fetch issue: ${error.message}`);
         }
     }
+    /**
+     * Converts a GitHub issue URL into its corresponding API URL.
+     */
     convertToApiUrl(issueUrl) {
         const regex = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/issues\/(\d+)/;
         const match = issueUrl.match(regex);
@@ -88,6 +79,9 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
         const [, owner, repo, issueNumber] = match;
         return `https://api.github.com/repos/${owner}/${repo}/issues/${issueNumber}`;
     }
+    /**
+     * Parses the body of a GitHub issue to extract the task description and instructions.
+     */
     parseIssueBody(body) {
         const TASK_DESCRIPTION_TOKEN = "**Task Description**";
         const TASK_INSTRUCTIONS_TOKEN = "**Task Instructions**";
@@ -107,18 +101,30 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
             taskInstructions,
         };
     }
+    /**
+     * Removes comments from the given code using the "strip-comments" package.
+     */
     removeCommentsFromCode(code) {
         return strip(code);
     }
+    /**
+     * Optionally remove the workspace folder prefix from a file path.
+     */
     removeWorkspacePathFromFileIfNeeded(filePath) {
         return filePath.replace(this.memory.workspaceFolder, "");
     }
+    /**
+     * Adds the workspace folder prefix to a file path if needed.
+     */
     addWorkspacePathToFileIfNeeded(filePath) {
         return path.join(this.memory.workspaceFolder, filePath);
     }
+    /**
+     * Performs web research using helper agents.
+     */
     async doWebResearch() {
-        const exampleResearcher = new PsEngineerExamplesWebResearchAgent(this.memory);
-        const docsResearcher = new PsEngineerDocsWebResearchAgent(this.memory);
+        const exampleResearcher = new PsEngineerExamplesWebResearchAgent(this.agent, this.memory, 0, 100);
+        const docsResearcher = new PsEngineerDocsWebResearchAgent(this.agent, this.memory, 0, 100);
         const [exampleContextItems, docsContextItems] = await Promise.all([
             exampleResearcher.doWebResearch(),
             docsResearcher.doWebResearch(),
@@ -126,7 +132,11 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
         this.memory.exampleContextItems = exampleContextItems;
         this.memory.docsContextItems = docsContextItems;
         this.memory.actionLog.push("Web research completed");
+        await this.saveMemory();
     }
+    /**
+     * Recursively reads all TypeScript file names in a folder.
+     */
     async readAllTypescriptFileNames(folderPath) {
         const files = fs.readdirSync(folderPath);
         const allFiles = [];
@@ -143,41 +153,42 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
         }
         return allFiles;
     }
+    /**
+     * Searches for .d.ts files in node_modules by recursively reading directories.
+     */
     async searchDtsFilesInNodeModules() {
         const dtsFiles = [];
         const readDtsFilesRecursively = async (directory) => {
             try {
                 const entries = fs.readdirSync(directory, { withFileTypes: true });
-                console.log(`Reading directory: ${directory}`);
+                this.logger.info(`Reading directory: ${directory}`);
                 for (const entry of entries) {
                     const fullPath = path.join(directory, entry.name);
                     if (entry.isDirectory()) {
-                        // Recursively read nested directories
-                        console.log(`Entering directory: ${fullPath}`);
+                        this.logger.info(`Entering directory: ${fullPath}`);
                         await readDtsFilesRecursively(fullPath);
                     }
                     else if (entry.isFile() && entry.name.endsWith(".d.ts")) {
-                        // Add file to list if it's a .d.ts file
-                        console.log(`Found .d.ts file: ${fullPath}`);
+                        this.logger.info(`Found .d.ts file: ${fullPath}`);
                         dtsFiles.push(fullPath);
                     }
                     else {
-                        console.log(`Skipping: ${fullPath}`);
+                        this.logger.debug(`Skipping: ${fullPath}`);
                     }
                 }
             }
             catch (error) {
-                console.error(`Error reading directory ${directory}: ${error}`);
+                this.logger.error(`Error reading directory ${directory}: ${error}`);
             }
         };
         const searchPackages = async () => {
             if (this.memory.likelyRelevantNpmPackageDependencies &&
                 this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
-                console.log(`Searching packages: ${this.memory.likelyRelevantNpmPackageDependencies.join(", ")}`);
+                this.logger.info(`Searching packages: ${this.memory.likelyRelevantNpmPackageDependencies.join(", ")}`);
                 for (const packageName of this.memory
                     .likelyRelevantNpmPackageDependencies) {
                     const packagePath = path.join(this.memory.workspaceFolder, "node_modules", packageName);
-                    console.log(`Searching package: ${packagePath}`);
+                    this.logger.info(`Searching package: ${packagePath}`);
                     await readDtsFilesRecursively(packagePath);
                 }
             }
@@ -186,19 +197,21 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
             }
         };
         await searchPackages();
-        // Call LLM to filter relevant .d.ts files
-        console.log("Filtering relevant .d.ts files", dtsFiles);
+        this.logger.info("Filtering relevant .d.ts files", dtsFiles);
         const relevantDtsFiles = await this.filterRelevantDtsFiles(dtsFiles);
-        console.log(`Relevant .d.ts files: ${relevantDtsFiles.join(", ")}`);
+        this.logger.info(`Relevant .d.ts files: ${relevantDtsFiles.join(", ")}`);
         return relevantDtsFiles;
     }
+    /**
+     * Filters the given list of .d.ts files by calling the LLM.
+     */
     async filterRelevantDtsFiles(dtsFiles, addMinOneFileInstructions = false) {
         dtsFiles = dtsFiles.map((filePath) => this.removeWorkspacePathFromFileIfNeeded(filePath));
         const getSystemPrompt = (addInstruction) => `You are an expert software engineering analyzer.
 
 Instructions:
 1. You will receive a list of .d.ts file paths from the user to analyze.
-2. Always output the d.ts file paths again that are possibly to be relevant for the upcoming user task.
+2. Always output the d.ts file paths again that are possibly relevant for the upcoming user task.
 3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
 ${addInstruction
             ? "4. Always output at least one d.ts file, the best one to help with the task at hand."
@@ -221,16 +234,20 @@ Please return a JSON string array of the relevant files:`;
         while (retryCount < 5) {
             const systemPrompt = getSystemPrompt(addMinOneFileInstructions);
             try {
-                relevantFiles = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [new SystemMessage(systemPrompt), new HumanMessage(userPrompt)], true));
-                console.log(JSON.stringify(relevantFiles, null, 2));
+                const messages = [
+                    this.createSystemMessage(systemPrompt),
+                    this.createHumanMessage(userPrompt),
+                ];
+                relevantFiles = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, true));
+                this.logger.info(JSON.stringify(relevantFiles, null, 2));
                 relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
-                console.log("Filtered relevant files", relevantFiles);
+                this.logger.info("Filtered relevant files", relevantFiles);
                 if (relevantFiles.length > 0) {
                     return relevantFiles;
                 }
             }
             catch (error) {
-                console.error("Error parsing LLM response:", error);
+                this.logger.error("Error parsing LLM response:", error);
             }
             retryCount++;
             if (retryCount > 0) {
@@ -239,14 +256,34 @@ Please return a JSON string array of the relevant files:`;
         }
         return relevantFiles;
     }
+    /**
+     * Loads the content of a file given its path.
+     */
+    async loadFileContents(fileName) {
+        try {
+            const content = fs.readFileSync(fileName, "utf-8");
+            return content;
+        }
+        catch (error) {
+            this.logger.error(`Error reading file ${fileName}: ${error}`);
+            return null;
+        }
+    }
+    /**
+     * Main processing method.
+     * This method initializes the agent (including GitHub issue parsing),
+     * scans TypeScript source and declaration files, performs web research if needed,
+     * and finally calls the programming agent to implement the task.
+     */
     async run() {
         await this.initializeFromGitHubIssue();
+        // Read all TypeScript source file names from the configured workspace.
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
-        //TODO: Get .d.ts file for npms also likely to be relevant from the nodes_modules folder
+        // Assemble all .d.ts files from the source files.
         this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
-            .map((filePath) => {
+            .map(async (filePath) => {
             if (filePath.endsWith(".d.ts")) {
-                const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
+                const content = this.removeCommentsFromCode((await this.loadFileContents(filePath)) || "");
                 if (content && content.length > 75) {
                     return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                 }
@@ -259,15 +296,14 @@ Please return a JSON string array of the relevant files:`;
             .filter(Boolean)
             .join("\n");
         this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
-        //console.log(`All typescript defs: ${this.memory.allTypeDefsContents}`)
-        const analyzeAgent = new PsEngineerInitialAnalyzer(this.memory);
-        await analyzeAgent.analyzeAndSetup();
-        if (this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
+        // If there are any likely-relevant npm package dependencies, search for .d.ts files.
+        if (this.memory.likelyRelevantNpmPackageDependencies &&
+            this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
             const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
-                    .map((filePath) => {
-                    const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
+                    .map(async (filePath) => {
+                    const content = this.removeCommentsFromCode((await this.loadFileContents(filePath)) || "");
                     if (content && content.length > 75) {
                         return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                     }
@@ -284,24 +320,87 @@ Please return a JSON string array of the relevant files:`;
             }
         }
         else {
-            console.warn("No npm packages to search for .d.ts files");
+            this.logger.warn("No npm packages to search for .d.ts files");
         }
-        this.logger.info(`All TYPEDEFS ${this.memory.allTypeDefsContents}`);
+        this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
         if (this.memory.needsDocumentionsAndExamples === true) {
             await this.doWebResearch();
         }
-        const programmer = new PsEngineerProgrammingAgent(this.memory);
+        // Finally, call the programming agent to implement the task.
+        const programmer = new PsEngineerProgrammingAgent(this.agent, this.memory, 0, 100);
         await programmer.implementTask();
+        await this.setCompleted("Task Completed");
     }
-    loadFileContents(fileName) {
-        try {
-            const content = fs.readFileSync(fileName, "utf-8");
-            return content;
-        }
-        catch (error) {
-            console.error(`Error reading file ${fileName}: ${error}`);
-            return null;
-        }
+    /**
+     * Returns configuration questions for the Engineer Agent.
+     * Here we include a long text area for the task and a field for the local code path.
+     */
+    static getConfigurationQuestions() {
+        return [
+            {
+                uniqueId: "task",
+                type: "textAreaLong",
+                value: "",
+                maxLength: 75000,
+                required: true,
+                rows: 5,
+                charCounter: true,
+                text: "Task description for the Engineer Agent",
+            },
+            {
+                uniqueId: "codeLocalPath",
+                type: "textField",
+                value: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
+                maxLength: 512,
+                required: true,
+                text: "Local path to the code that should be worked on",
+            },
+        ];
+    }
+    /**
+     * Returns the metadata used to register this agent class.
+     */
+    static getAgentClass() {
+        return {
+            class_base_id: PsEngineerAgent.ENGINEER_AGENT_CLASS_BASE_ID,
+            user_id: 0,
+            name: "Engineer Agent",
+            version: PsEngineerAgent.ENGINEER_AGENT_CLASS_VERSION,
+            available: true,
+            configuration: {
+                category: "Engineering",
+                subCategory: "codeAnalysis",
+                hasPublicAccess: false,
+                description: "An agent for analyzing and improving code based on a given task",
+                queueName: "ENGINEER_AGENT_QUEUE",
+                imageUrl: "https://aoi-storage-production.citizens.is/dl/d3693387415227931c57bfb63fa2e1ed--retina-1.png",
+                iconName: "engineering",
+                capabilities: ["analysis", "web research", "programming"],
+                requestedAiModelSizes: [],
+                defaultStructuredQuestions: [
+                    {
+                        uniqueId: "task",
+                        type: "textAreaLong",
+                        value: "",
+                        maxLength: 75000,
+                        required: true,
+                        rows: 7,
+                        charCounter: true,
+                        text: "Task description for the Engineer Agent",
+                    },
+                    {
+                        uniqueId: "codeLocalPath",
+                        type: "textField",
+                        value: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
+                        maxLength: 255,
+                        required: true,
+                        text: "Local path to the code that should be worked on",
+                    },
+                ],
+                questions: PsEngineerAgent.getConfigurationQuestions(),
+                supportedConnectors: [],
+            },
+        };
     }
 }
 //# sourceMappingURL=agent.js.map

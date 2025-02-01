@@ -1,66 +1,93 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { ChatOpenAI } from "@langchain/openai";
-import { PsEngineerBaseProgrammingAgent } from "../programming/baseAgent.js";
-export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
+import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import pLimit from "p-limit";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+/**
+ * Upgraded PsEngineerWebContentFilter class to use:
+ * - `createSystemMessage` & `createHumanMessage` from your base agent
+ * - `callModel` in place of direct ChatOpenAI usage
+ * - optional concurrency using `p-limit` for filtering large arrays
+ */
+export class PsEngineerWebContentFilter extends PolicySynthAgent {
     memory;
-    constructor(memory) {
-        super(memory);
+    constructor(agent, memory, startProgress, endProgress) {
+        super(agent, memory, startProgress, endProgress);
         this.memory = memory;
-        this.chat = new ChatOpenAI({
-            temperature: 0.0,
-            maxTokens: 3,
-            modelName: "gpt-4o",
-            verbose: true,
-        });
     }
+    /**
+     * A short system prompt describing how the model should respond with “Yes” or “No”.
+     */
     get filterSystemPrompt() {
-        return `Your are an expert software engineering analyzer.
-
+        return `
+      You are an expert software engineering analyzer.
       Instructions:
-      1. Review the task name, description and instructions.
+      1. Review the task name, description, and instructions.
       2. You will see content from the web to decide if it's relevant to the task or not, to help inform the programming of this task.
-      3. If ther content to evalute is empty just answer No
-      4. Only answer with: Yes or No if the content is relevant or not to the task.
+      3. If the content to evaluate is empty, just answer "No"
+      4. Only answer with: "Yes" or "No" indicating if the content is relevant or not to the task.
     `;
     }
+    /**
+     * A user prompt that includes the user's dev task context plus the snippet to evaluate.
+     */
     filterUserPrompt(contentToEvaluate) {
-        return `Overall task title:
-    ${this.memory.taskTitle}
+        // Add references to npm dependencies if present
+        const npmDeps = this.memory.likelyRelevantNpmPackageDependencies?.length
+            ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
+            : "";
+        return `
+${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle}
+</OverallTaskTitle>` : ""}
 
-    Overall task description:
-    ${this.memory.taskDescription}
+${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription}
+</OverallTaskDescription>` : ""}
 
-    Overall task instructions: ${this.memory.taskInstructions}
+${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions}
+</OverallTaskInstructions>` : ""}
 
-    ${this.memory.likelyRelevantNpmPackageDependencies?.length > 0
-            ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(`\n`)}`
-            : ``}
+${npmDeps}
 
-    Content to evaluate for relevance to the task:
-    ${contentToEvaluate}
+Content to evaluate for relevance to the task:
+${contentToEvaluate}
 
-    Is the content relvant to the task? Yes or No: `;
+Is the content relevant to the task? Yes or No:
+    `;
     }
+    /**
+     * Filter incoming content: returns only items that the model deems “Yes”.
+     * Optionally parallelize with p-limit if you have a large set of content.
+     */
     async filterContent(webContentToFilter) {
         const filteredContent = [];
-        for (const content of webContentToFilter) {
-            if (content && content.trim().length > 70) {
-                const analyzisResults = (await this.callLLM("engineering-agent", PsConstants.engineerModel, [
-                    new SystemMessage(this.filterSystemPrompt),
-                    new HumanMessage(this.filterUserPrompt(content)),
-                ], false));
-                if (analyzisResults.trim() === "Yes") {
-                    filteredContent.push(content);
-                }
-                else {
-                    console.log(`--------!!!!> Content is not relevant to the task: ${content}`);
-                }
+        // Optionally limit concurrency. Adjust as you wish:
+        const concurrency = 5;
+        const limit = pLimit(concurrency);
+        // Create tasks for each content chunk
+        const tasks = webContentToFilter.map((content) => limit(async () => {
+            if (!content || content.trim().length < 70) {
+                // If the snippet is too small, skip it
+                this.logger.debug("Skipping short/empty content from the list of content to filter.");
+                return;
+            }
+            // Build your conversation messages
+            const messages = [
+                this.createSystemMessage(this.filterSystemPrompt),
+                this.createHumanMessage(this.filterUserPrompt(content)),
+            ];
+            // Call model using the new callModel style
+            const analysisResults = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false));
+            const trimmedResponse = analysisResults.trim();
+            if (trimmedResponse === "Yes") {
+                filteredContent.push(content);
             }
             else {
-                console.log("Removing empty content from the list of content to filter.");
+                this.logger.debug(`filterContent: Content is NOT relevant to the task:\n${content}\n`);
             }
-        }
+        }));
+        // Run all tasks
+        await Promise.all(tasks);
         return filteredContent;
     }
 }

@@ -1,66 +1,73 @@
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
+import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent";
+import { PsAgent } from "@policysynth/agents/dbModels/agent";
 
-export class SearchQueriesGenerator extends PolicySynthScAgentBase {
+export class SearchQueriesGenerator extends PolicySynthAgent {
   systemPrompt: string;
   userPrompt: string;
   override memory: PsEngineerMemoryData;
 
   constructor(
     memory: PsEngineerMemoryData,
+    agent: PsAgent,
+    startProgress: number,
+    endProgress: number,
     numberOfQueriesToGenerate: number,
     instructions: string
   ) {
-    super(memory);
+    super(agent, memory, startProgress, endProgress);
     this.memory = memory;
-    this.systemPrompt = `Inspired by the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
 
-      Always output as a JSON array of strings, where each string is a high quality search query:
-        [searchQuery1, searchQuery2, ...]
+    this.systemPrompt = `Inspired by the instructions below and our project details, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
+
+<OverallProjectDetails>
+${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle}
+</OverallTaskTitle>` : ""}
+
+${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription}
+</OverallTaskDescription>` : ""}
+
+${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions}
+</OverallTaskInstructions>` : ""}
+${
+  this.memory.likelyRelevantNpmPackageDependencies?.length
+    ? `Likely relevant npm dependencies:
+${this.memory.likelyRelevantNpmPackageDependencies.join('\n')}`
+    : ""
+}
+</OverallProjectDetails>
+
+<CurrentDate>
+${new Date().getDate()}. ${new Date().toLocaleString("en-US", { month: "long" })} ${new Date().getFullYear()}
+</CurrentDate>
+
+Always output as a JSON array of strings, where each string is a high quality search query:
+  [searchQuery1, searchQuery2, ...]
+Only output the JSON array with no explanations.
     `;
-    this.userPrompt = `Overall project title:
-       ${this.memory.taskTitle}
 
-       Overall project description:
-       ${this.memory.taskDescription}
+    this.userPrompt = `User instructions: ${instructions}
 
-       Overall project instructions: ${this.memory.taskInstructions}
-
-       User Instructions: ${instructions}
-
-       ${
-         this.memory.likelyRelevantNpmPackageDependencies?.length > 0
-           ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join(
-               `\n`
-             )}`
-           : ``
-       }
-
+Your JSON array output:
     `;
 
     console.log(`User prompt is: ${this.userPrompt}`);
-
-    this.chat = new ChatOpenAI({
-      temperature: PsConstants.createSearchQueriesModel.temperature,
-      maxTokens: PsConstants.createSearchQueriesModel.maxOutputTokens,
-      modelName: "gpt-4o",
-      verbose: PsConstants.createSearchQueriesModel.verbose,
-    });
   }
 
   async renderMessages() {
     return [
-      new SystemMessage(this.systemPrompt),
-      new HumanMessage(this.userPrompt),
+      this.createSystemMessage(this.systemPrompt),
+      this.createHumanMessage(this.userPrompt),
     ];
   }
 
   async generateSearchQueries(): Promise<string[]> {
-    return await this.callLLM(
-      "create-search-queries",
-      PsConstants.createSearchQueriesModel,
+    return await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Large,
       await this.renderMessages()
     );
   }

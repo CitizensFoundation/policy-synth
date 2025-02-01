@@ -1,264 +1,290 @@
-import { ChatOpenAI } from "@langchain/openai";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { HTTPResponse, Page } from "puppeteer";
+import { Page } from "puppeteer";
 import puppeteer from "puppeteer-extra";
+import pLimit from "p-limit";
+
 import { PdfReader } from "pdfreader";
 import axios from "axios";
-
-import { createGzip, gunzipSync, gzipSync } from "zlib";
 import { promisify } from "util";
 import { writeFile, readFile, existsSync } from "fs";
+import { createGzip, gunzipSync, gzipSync } from "zlib";
 
-import { GetWebPagesProcessor } from "@policysynth/agents/solutions/web/getWebPages.js";
+// Core PolicySynth imports
+import { GetWebPagesBaseAgent } from "@policysynth/agents/webResearch/getWebPagesBase.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 
-const gzip = promisify(createGzip);
-const writeFileAsync = promisify(writeFile);
-const readFileAsync = promisify(readFile);
+/**
+ * Possible types of web research this agent performs
+ */
+export type PsEngineerWebResearchTypes =
+  | "documentation"
+  | "codeExamples"
+  | "solutionsForErrors";
 
-export class WebPageScanner extends GetWebPagesProcessor {
-  declare memory: PsEngineerMemoryData;
+/**
+ * WebPageScanner merges the logic from your older “WebPageScanner” example
+ * but uses the structure from your first snippet (PolicySynthAgent-based).
+ */
+export class WebPageScanner extends GetWebPagesBaseAgent {
+  declare memory: PsEngineerMemoryData; // Must match the interface we declared above
+
   scanType?: PsEngineerWebResearchTypes;
   instructions: string;
 
   collectedWebPages: any[] = [];
+  totalPagesSave: number = 0;
 
-  constructor(memory: PsEngineerMemoryData, instructions: string) {
-    super(undefined as any, memory);
+  constructor(
+    agent: PsAgent,
+    memory: PsEngineerMemoryData,
+    startProgress: number,
+    endProgress: number,
+    instructions: string
+  ) {
+    // call the parent constructor from GetWebPagesBaseAgent
+    super(agent, memory, startProgress, endProgress);
+
     this.instructions = instructions;
   }
 
+  /**
+   * We override the modelTemperature from the base agent if needed
+   */
+  override get modelTemperature(): number {
+    // Force to 0 for more consistent completions
+    return 0.0;
+  }
+
+  /**
+   * A helper to sanitize text (kept from your old snippet).
+   */
   sanitizeInput(text: string): string {
     try {
-      // Encode the text as UTF-8 and then decode it back to string
       const buffer = Buffer.from(text, "utf8");
       const decodedText = buffer.toString("utf8");
       return decodedText;
     } catch (error) {
       console.error("Error sanitizing input text:", error);
-      return ""; // Return an empty string or handle the error as needed
+      return "";
     }
   }
 
-  renderScanningPrompt(
-    problemStatement: PsProblemStatement,
-    text: string,
-    subProblemIndex?: number,
-    entityIndex?: number
-  ) {
-    let systemMessage = new SystemMessage("");
-    if (this.scanType == "documentation") {
-      systemMessage = new SystemMessage(
-        `Your are an expert in extracing documentation from web pages for a given task and npm modules:
+  /**
+   * Render the scanning prompt, adjusting based on the scanType
+   */
+  renderScanningPrompt(text: string) {
+    // We'll use the typical approach from your first snippet: build a system message
+    // plus a human message. We base the system instructions on scanType:
+    let systemMessageText = "";
 
-        Important Instructions:
-        1. Examine the <TextContext> and copy all documentation highly relevant to the task provided by the user.
-        2. Just copy highly relevant documentation from the <TextContext> word by word do not add anything except formating.
-        3. If no highly relevant, to the user provided task, documentation is found, output: No relevant documentation found.
-        4. Output in Markdown format otherwise.
-`
-      );
-    } else if (this.scanType == "codeExamples") {
-      systemMessage = new SystemMessage(
-        `Your are an expert in extracing source code examples from web pages for a given task and npm modules:
+    if (this.scanType === "documentation") {
+      systemMessageText = `
+You are an expert at extracting relevant documentation from web pages for a given task and NPM modules.
 
-          Important Instructions:
-          1. Examine the <TextContext> and output all source code examples that are highly relvant to the task provided by the user.
-          2. Just copy highly relevant source code examples from the <TextContext> word by word do not add anything except formating.
-          3. If no relevant, to the user provided task, source code examples are found, output: No relevant source code examples found.
-          4. Output in Markdown format otherwise.`
-      );
-    } else if (this.scanType == "solutionsForErrors") {
-      systemMessage = new SystemMessage(
-        `Your are an expert in extracing solutions to errors from web pages for a given task and npm modules:
+Important instructions:
+1. Examine the <TextContext> and copy all documentation *highly relevant* to the task provided by the user.
+2. Just copy relevant documentation word-for-word (maintaining basic formatting).
+3. If nothing relevant is found, output: "No relevant documentation found."
+4. Output in Markdown format.
+      `;
+    } else if (this.scanType === "codeExamples") {
+      systemMessageText = `
+You are an expert at extracting source code examples from web pages for a given task and NPM modules.
 
-          Important Instructions:
-          1. Examine the <TextContext> and <UserErrors> output all potential solutions to the users errors highly relvant to the task provided by the user.
-          2. Just copy potential solutions to the users errors from the <TextContext> word by word do not add anything except formating.
-          3. If no relevant, to the user provided task, source code examples are found, output: No solutions to errors found.
-          4. Output in Markdown format otherwise.`
-      );
+Important instructions:
+1. Examine the <TextContext> and output all source code examples highly relevant to the user's task.
+2. Copy them word-for-word, preserving formatting.
+3. If nothing relevant is found, output: "No relevant source code examples found."
+4. Output in Markdown format.
+      `;
+    } else if (this.scanType === "solutionsForErrors") {
+      systemMessageText = `
+You are an expert at extracting solutions to errors from web pages for a given task and NPM modules.
+
+Important instructions:
+1. Examine the <TextContext> and the user's potential errors, then copy solutions from the <TextContext> that address those errors.
+2. Copy them word-for-word, preserving formatting.
+3. If nothing relevant is found, output: "No solutions to errors found."
+4. Output in Markdown format.
+      `;
     } else {
-      console.error(`Unknown scan type ${this.scanType}`);
-      throw new Error(`Unknown scan type ${this.scanType}`);
+      // fallback or error
+      systemMessageText = `Unknown scan type: ${this.scanType}. Just pass the text through.`;
     }
 
-    return [
-      systemMessage,
-      new HumanMessage(
-        `<TextContext>:
-        ${text}
-        </TextContext>
+    // Create the final system message
+    const systemMessage = this.createSystemMessage(systemMessageText);
 
-        The overall task we are gathering practical information about: ${
-          this.memory.taskTitle
-        }
-        Overall task we are researching description: ${
-          this.memory.taskDescription
-        }
-        Overall task we are researching instructions (not for you to follow now, just FYI): ${
-          this.memory.taskInstructions
-        }
+    // You can embed additional context about your memory or instructions here:
+    const userMessageText = `
+<TextContext>:
+${text}
+</TextContext>
 
-        All likely npm package.json dependencies:
-        ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
+---
+${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle}
+</OverallTaskTitle>` : ""}
 
-        All likely typescript files in workspace likely to change:
-        ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
+${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription}
+</OverallTaskDescription>` : ""}
 
-        Important instructions: ${this.instructions}
+${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions}
+</OverallTaskInstructions>` : ""}
 
-        Markdown Output:
-        `
-      ),
-    ];
+Likely NPM dependencies:
+${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
+
+Likely TypeScript files in workspace:
+${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
+
+Important instructions from user: ${this.instructions}
+
+Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
+    `;
+
+    const humanMessage = this.createHumanMessage(userMessageText);
+
+    return [systemMessage, humanMessage];
   }
 
-  async getTokenCount(text: string, subProblemIndex: number | undefined) {
-    const words = text.split(" ");
-    const tokenCount = words.length * 1.25;
-    const promptTokenCount = { totalCount: 500, countPerMessage: [] };
-    const totalTokenCount =
-      tokenCount +
-      500 +
-      PsConstants.getSolutionsPagesAnalysisModel.maxOutputTokens;
+  /**
+   * This is analogous to processPageAnalysis in your first snippet:
+   * it calls the model with the scanning prompt.
+   */
+  async processPageAnalysis(text: string) {
+    // If text is too short, skip
+    if (text.length < 100) {
+      return "No relevant content found (page text too short).";
+    }
 
-    return { totalTokenCount, promptTokenCount };
-  }
+    const messages = this.renderScanningPrompt(text);
+    if (process.env.PS_DEBUG_AI_MESSAGES) {
+      console.log(
+        "Messages for AI Analysis:",
+        JSON.stringify(messages, null, 2)
+      );
+    }
 
-  async getAIAnalysis(
-    text: string,
-    subProblemIndex?: number,
-    entityIndex?: number
-  ) {
-    this.logger.info("Get AI Analysis");
-    const messages = this.renderScanningPrompt(
-      "" as any,
-      text,
-      subProblemIndex,
-      entityIndex
+    const analysis = await this.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Medium,
+      messages,
+      false
     );
 
-    console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
+    if (process.env.PS_DEBUG_AI_MESSAGES) {
+      console.log("AI Analysis result:", analysis);
+    }
 
-    const analysis = (await this.callLLM(
-      "web-get-pages",
-      PsConstants.getSolutionsPagesAnalysisModel,
-      messages,
-      false,
-      true
-    )) as any;
-
-    console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
   }
 
-  getAllTextForTokenCheck(text: string, subProblemIndex: number | undefined) {
-    const promptMessages = this.renderScanningPrompt("" as any, "", -1);
-
-    const promptMessagesText = promptMessages!.map((m) => m.text).join("\n");
-
-    return `${promptMessagesText} ${text}`;
+  /**
+   * Optionally handle PDF content if you want to preserve that logic.
+   * This calls the PDF reader, merges text, etc.
+   */
+  async getAndProcessPdf(url: string): Promise<string> {
+    return (await this.getAndProcessPage(url, "markdown")) as string;
   }
 
-  async processPageText(
-    text: string,
-    subProblemIndex: number | undefined,
-    url: string,
-    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
-    entityIndex: number | undefined,
-    policy: PSPolicy | undefined = undefined
-  ): Promise<void | PSRefinedRootCause[]> {
-    this.logger.debug(
-      `Processing page text ${text.slice(
-        0,
-        150
-      )} for ${url} for ${type} search results ${subProblemIndex} sub problem index`
-    );
-
-    try {
-      const textAnalysis = await this.getTextAnalysis(text);
-
-      if (textAnalysis) {
-        this.collectedWebPages.push(textAnalysis);
-
-        this.logger.debug(`Saving text analysis ${textAnalysis}`);
-      } else {
-        this.logger.warn(`No text analysis for ${url}`);
-      }
-    } catch (e: any) {
-      this.logger.error(`Error in processPageText`);
-      this.logger.error(e.stack || e);
-    }
+  /**
+   * Optionally handle HTML pages if you want to preserve that logic.
+   * Could call your base class's getAndProcessPage method,
+   * or your own implementation with puppeteer.
+   */
+  async getAndProcessHtml(url: string): Promise<string> {
+    // If you have a base class method that fetches text, you can use it:
+    // const content = await this.getAndProcessPage(url, "markdown");
+    // return content;
+    return (await this.getAndProcessPage(url, "markdown")) as string;
   }
 
-  async getAndProcessPage(
-    subProblemIndex: number | undefined,
-    url: string,
-    browserPage: Page,
-    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
-    entityIndex: number | undefined
-  ) {
+  /**
+   * For each page, decide if it's PDF or HTML, fetch text, then do AI analysis
+   */
+  async analyzeSinglePage(url: string) {
+    let text = "";
     if (url.toLowerCase().endsWith(".pdf")) {
-      await this.getAndProcessPdf(subProblemIndex, url, type, entityIndex);
+      try {
+        text = await this.getAndProcessPdf(url);
+      } catch (error) {
+        this.logger.error(`Error reading PDF at ${url}: ${error}`);
+        return;
+      }
     } else {
-      await this.getAndProcessHtml(
-        subProblemIndex,
-        url,
-        browserPage,
-        type,
-        entityIndex
-      );
+      try {
+        text = await this.getAndProcessHtml(url);
+      } catch (error) {
+        this.logger.error(`Error reading HTML at ${url}: ${error}`);
+        return;
+      }
     }
-    return true;
+
+    text = this.sanitizeInput(text);
+    const analysis = await this.processPageAnalysis(text);
+    if (analysis) {
+      // Attach the URL so you know where it came from
+      const finalResult = {
+        fromUrl: url,
+        analysis,
+      };
+      this.collectedWebPages.push(finalResult);
+      this.totalPagesSave++;
+    }
   }
 
+  /**
+   * Main scanning method — uses concurrency with p-limit (like your first snippet).
+   */
   async scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes) {
     this.scanType = scanType;
 
-    this.chat = new ChatOpenAI({
-      temperature: 0.0,
-      maxTokens: 4096,
-      modelName: "gpt-4o",
-      verbose: true,
-    });
+    // Deduplicate
+    listOfUrls = Array.from(new Set(listOfUrls));
 
-    this.logger.info("Web Pages Scanner");
-
+    this.logger.info(`Starting WebPageScanner for ${listOfUrls.length} URLs.`);
+    this.collectedWebPages = [];
     this.totalPagesSave = 0;
 
-    const browser = await puppeteer.launch({ headless: true });
-    this.logger.debug("Launching browser");
+    // concurrency
+    const MAX_URLS_TO_FETCH_PARALLEL = 5;
+    const limit = pLimit(MAX_URLS_TO_FETCH_PARALLEL);
 
-    const browserPage = await browser.newPage();
-    browserPage.setDefaultTimeout(PsConstants.webPageNavTimeout);
-    browserPage.setDefaultNavigationTimeout(PsConstants.webPageNavTimeout);
+    let completed = 0;
+    const tasks = listOfUrls.map((url, i) =>
+      limit(async () => {
+        // Just a simple progress update
+        const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
+        await this.updateRangedProgress(
+          progress,
+          `Scanning (${i + 1}/${listOfUrls.length}) ${url}`
+        );
 
-    await browserPage.setUserAgent(PsConstants.currentUserAgent);
+        this.logger.info(`Scanning ${url}...`);
+        await this.analyzeSinglePage(url);
 
-    if (this.memory.docsSiteToScan) {
-      listOfUrls = [...listOfUrls, ...this.memory.docsSiteToScan];
-      console.log(`Adding docsSiteToScan ${this.memory.docsSiteToScan}`);
-    }
+        completed++;
+        await this.updateRangedProgress(
+          progress,
+          `Scanned (${completed}/${listOfUrls.length}) ${url}`
+        );
+      })
+    );
 
-    for (let i = 0; i < listOfUrls.length; i++) {
-      this.logger.info(`${i + 1}/${listOfUrls.length}`);
-      this.logger.info(`------> Searching ${listOfUrls[i]} <------`);
+    await Promise.all(tasks);
 
-      await this.getAndProcessPage(
-        5021,
-        listOfUrls[i],
-        browserPage,
-        "news",
-        undefined
-      );
-    }
-
-    await browser.close();
-
-    this.logger.info("Browser closed");
-    this.logger.info(`Saved ${this.totalPagesSave} pages`);
-    this.logger.info("Get Web Pages Processor Complete");
+    this.logger.info(
+      `Scan completed. Analyzed ${this.totalPagesSave} pages successfully.`
+    );
+    // Optionally save memory or do post-processing
+    await this.saveMemory();
 
     return this.collectedWebPages;
   }
