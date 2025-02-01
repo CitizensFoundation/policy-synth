@@ -39,6 +39,7 @@ export class OpenAiChat extends BaseChatModel {
     // 2. Collapse system message if the model is "small" reasoning
     if (
       this.modelConfig.modelSize === PsAiModelSize.Small &&
+      this.modelName.toLowerCase().includes("o1 mini") &&
       this.modelConfig.modelType === PsAiModelType.TextReasoning &&
       formattedMessages.length > 1 &&
       (formattedMessages[0].role === "system" ||
@@ -54,6 +55,7 @@ export class OpenAiChat extends BaseChatModel {
       // Remove the system message from the array
       formattedMessages.shift();
     } else if (this.modelConfig.modelSize === PsAiModelSize.Small &&
+      this.modelName.toLowerCase().includes("o1 mini") &&
       this.modelConfig.modelType === PsAiModelType.TextReasoning &&
       formattedMessages.length == 1 &&
       formattedMessages[0].role === "system"
