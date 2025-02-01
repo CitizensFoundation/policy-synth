@@ -100,7 +100,7 @@ export class SearchQueriesRanker extends BasePairwiseRankingsProcessor {
     this.setupRankingPrompts(
       -1,
       queriesToRank,
-      queriesToRank.length*7,
+      queriesToRank.length * 7,
       this.progressFunction
     );
     await this.performPairwiseRanking(-1);

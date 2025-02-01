@@ -253,7 +253,9 @@ export class PSEngineerAgent extends PolicySynthScAgentBase {
       this.removeWorkspacePathFromFileIfNeeded(filePath)
     );
 
-    const getSystemPrompt = (addInstruction: boolean) => `You are an expert software engineering analyzer.
+    const getSystemPrompt = (
+      addInstruction: boolean
+    ) => `You are an expert software engineering analyzer.
 
 Instructions:
 1. You will receive a list of .d.ts file paths from the user to analyze.

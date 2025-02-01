@@ -28,7 +28,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentB
       try {
         if (fs.existsSync(cacheDebugFilePath)) {
           const cacheFileContent = fs.readFileSync(cacheDebugFilePath, {
-        encoding: "utf8",
+            encoding: "utf8",
           });
           this.debugCache = JSON.parse(cacheFileContent);
         } else {
@@ -75,7 +75,9 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentB
 
       // Search the web
       this.logger.info("Searching the Web...");
-      const webSearch = new ResearchWeb(this.memory as PsSmarterCrowdsourcingMemoryData);
+      const webSearch = new ResearchWeb(
+        this.memory as PsSmarterCrowdsourcingMemoryData
+      );
       const searchResults = await webSearch.search(queriesToSearch);
       this.logger.info(`Found ${searchResults.length} Web Pages`);
 
@@ -134,11 +136,17 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthScAgentB
         );
       }
 
-      const topWebScanResults = webScanResults.slice(0, this.maxTopContentResultsToUse);
+      const topWebScanResults = webScanResults.slice(
+        0,
+        this.maxTopContentResultsToUse
+      );
       console.log("Top Web Scan Results:", topWebScanResults);
       if (this.useDebugCache) {
         try {
-          fs.writeFileSync(cacheDebugFilePath, JSON.stringify(topWebScanResults, null, 2));
+          fs.writeFileSync(
+            cacheDebugFilePath,
+            JSON.stringify(topWebScanResults, null, 2)
+          );
         } catch (err) {
           console.error(`Error writing cache file: ${err}`);
         }

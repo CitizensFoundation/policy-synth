@@ -56,7 +56,7 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
   async filterContent(webContentToFilter: string[]) {
     const filteredContent = [];
     for (const content of webContentToFilter) {
-      if (content && content.trim().length>70) {
+      if (content && content.trim().length > 70) {
         const analyzisResults = (await this.callLLM(
           "engineering-agent",
           PsConstants.engineerModel,
@@ -69,10 +69,14 @@ export class PsEngineerWebContentFilter extends PsEngineerBaseProgrammingAgent {
         if (analyzisResults.trim() === "Yes") {
           filteredContent.push(content);
         } else {
-          console.log(`--------!!!!> Content is not relevant to the task: ${content}`);
+          console.log(
+            `--------!!!!> Content is not relevant to the task: ${content}`
+          );
         }
       } else {
-        console.log("Removing empty content from the list of content to filter.")
+        console.log(
+          "Removing empty content from the list of content to filter."
+        );
       }
     }
     return filteredContent;

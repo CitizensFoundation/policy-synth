@@ -10,10 +10,7 @@ export class ResearchWeb extends SearchWebProcessor {
     this.logger.info(`Search queries: ${JSON.stringify(searchQueries)}`);
     this.seenUrls = new Map();
 
-    const results = await this.getQueryResults(
-      searchQueries,
-      "webScanner"
-    );
+    const results = await this.getQueryResults(searchQueries, "webScanner");
 
     return results.searchResults;
   }

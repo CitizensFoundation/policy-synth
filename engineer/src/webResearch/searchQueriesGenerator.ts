@@ -15,14 +15,12 @@ export class SearchQueriesGenerator extends PolicySynthScAgentBase {
   ) {
     super(memory);
     this.memory = memory;
-    this.systemPrompt =
-      `Inspired by the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
+    this.systemPrompt = `Inspired by the instructions below, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used in Google or Bing search.
 
       Always output as a JSON array of strings, where each string is a high quality search query:
         [searchQuery1, searchQuery2, ...]
     `;
-    this.userPrompt =
-      `Overall project title:
+    this.userPrompt = `Overall project title:
        ${this.memory.taskTitle}
 
        Overall project description:

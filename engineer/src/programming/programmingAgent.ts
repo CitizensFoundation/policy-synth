@@ -59,10 +59,15 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       // Loop until all actions are completed
       let allCompleted = false;
       while (!allCompleted) {
-        await implementationAgent.implementCodingActionPlan(actionPlan, currentErrors);
+        await implementationAgent.implementCodingActionPlan(
+          actionPlan,
+          currentErrors
+        );
 
         // Check if all actions are completed
-        allCompleted = actionPlan.every(action => action.status === "completed");
+        allCompleted = actionPlan.every(
+          (action) => action.status === "completed"
+        );
 
         if (!allCompleted) {
           console.log("Not all actions completed, running again...");

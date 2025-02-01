@@ -165,10 +165,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     text: string,
     subProblemIndex: number | undefined,
     url: string,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined,
     policy: PSPolicy | undefined = undefined
   ): Promise<void | PSRefinedRootCause[]> {
@@ -199,10 +196,7 @@ export class WebPageScanner extends GetWebPagesProcessor {
     subProblemIndex: number | undefined,
     url: string,
     browserPage: Page,
-    type:
-      | PsWebPageTypes
-      | PSEvidenceWebPageTypes
-      | PSRootCauseWebPageTypes,
+    type: PsWebPageTypes | PSEvidenceWebPageTypes | PSRootCauseWebPageTypes,
     entityIndex: number | undefined
   ) {
     if (url.toLowerCase().endsWith(".pdf")) {

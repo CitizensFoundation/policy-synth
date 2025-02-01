@@ -1,4 +1,3 @@
-
 import { ChatOpenAI } from "@langchain/openai";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
 import { BasePairwiseRankingsProcessor } from "@policysynth/agents/basePairwiseRanking.js";
@@ -24,12 +23,8 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
     const itemOneIndex = promptPair[0];
     const itemTwoIndex = promptPair[1];
 
-    const itemOne = this.allItems![index]![
-      itemOneIndex
-    ] as PsSearchResultItem;
-    const itemTwo = this.allItems![index]![
-      itemTwoIndex
-    ] as PsSearchResultItem;
+    const itemOne = this.allItems![index]![itemOneIndex] as PsSearchResultItem;
+    const itemTwo = this.allItems![index]![itemTwoIndex] as PsSearchResultItem;
 
     console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
     console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
@@ -108,7 +103,12 @@ export class SearchResultsRanker extends BasePairwiseRankingsProcessor {
       verbose: PsConstants.searchQueryRankingsModel.verbose,
     });
 
-    this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
+    this.setupRankingPrompts(
+      -1,
+      queriesToRank,
+      maxPrompts,
+      this.progressFunction
+    );
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as PsSearchResultItem[];
   }
