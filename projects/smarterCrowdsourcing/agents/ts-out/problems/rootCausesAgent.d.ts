@@ -6,9 +6,8 @@ import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
 export declare class RootCausesAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     private sheetsConnector;
-    process(): Promise<void>;
     get agentQueueName(): "smarter_crowdsourcing_root_causes";
-    setupMemoryIfNeeded(): Promise<void>;
+    setupMemoryIfNeeded(agentId: number): Promise<void>;
     private initializeConnectors;
     get processors(): ({
         processor: typeof CreateRootCausesSearchQueriesAgent;

@@ -7,8 +7,7 @@ import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
 export declare class ProblemsAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_problems_preperation";
-    process(): Promise<void>;
-    setupMemoryIfNeeded(): Promise<void>;
+    setupMemoryIfNeeded(agentId: number): Promise<void>;
     get processors(): ({
         processor: typeof CreateProblemStatementImageAgent;
         weight: number;

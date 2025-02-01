@@ -21,8 +21,12 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
     webPageVectorStore = new WebPageVectorStore();
     urlsScanned = new Map();
     totalPagesSave = 0;
-    maxModelTokensOut = 16384;
-    modelTemperature = 0.0;
+    get maxModelTokensOut() {
+        return 16384;
+    }
+    get modelTemperature() {
+        return 0.0;
+    }
     renderScanningPrompt(problemStatement, text, subProblemIndex, entityIndex) {
         return [
             this.createSystemMessage(`Your are an AI expert in analyzing text for practical solutions to difficult problems:

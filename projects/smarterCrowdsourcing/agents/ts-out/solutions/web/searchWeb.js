@@ -7,11 +7,11 @@ export class SearchWebAgent extends SolutionsWebResearchSmarterCrowdsourcingAgen
         if (process.env.GOOGLE_SEARCH_API_KEY &&
             process.env.GOOGLE_SEARCH_API_CX_ID) {
             const googleSearchApi = new GoogleSearchApi();
-            return await googleSearchApi.search(query);
+            return await googleSearchApi.search(query, 20);
         }
         else if (process.env.AZURE_BING_SEARCH_KEY) {
             const bingSearchApi = new BingSearchApi();
-            return await bingSearchApi.search(query);
+            return await bingSearchApi.search(query, 20);
         }
         else {
             this.logger.error("Missing search API key");

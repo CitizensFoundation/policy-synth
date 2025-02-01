@@ -7,8 +7,7 @@ import { SmarterCrowdsourcingGetWebPagesAgent } from "./web/getWebPages.js";
 export declare class SolutionsWebResearchAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_solutions_web_research";
-    process(): Promise<void>;
-    setupMemoryIfNeeded(): Promise<void>;
+    setupMemoryIfNeeded(agentId: number): Promise<void>;
     get processors(): ({
         processor: typeof CreateSearchQueriesAgent;
         weight: number;

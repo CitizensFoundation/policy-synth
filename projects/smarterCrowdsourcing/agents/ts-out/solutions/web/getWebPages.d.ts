@@ -5,8 +5,8 @@ export declare class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolu
     webPageVectorStore: WebPageVectorStore;
     urlsScanned: Map<number, Set<string>>;
     totalPagesSave: number;
-    maxModelTokensOut: number;
-    modelTemperature: number;
+    get maxModelTokensOut(): number;
+    get modelTemperature(): number;
     renderScanningPrompt(problemStatement: PsProblemStatement, text: string, subProblemIndex?: number, entityIndex?: number): PsModelMessage[];
     getTokenCount(text: string, subProblemIndex: number | undefined): Promise<{
         totalTokenCount: number;

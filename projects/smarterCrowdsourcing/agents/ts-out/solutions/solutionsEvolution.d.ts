@@ -9,8 +9,7 @@ import { SolutionsFromSearchSheetsExportAgent } from "./export/sheetsWebSolution
 export declare class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
     memory: PsSmarterCrowdsourcingMemoryData;
     get agentQueueName(): "smarter_crowdsourcing_solutions_evolution";
-    process(): Promise<void>;
-    setupMemoryIfNeeded(): Promise<void>;
+    setupMemoryIfNeeded(agentId: number): Promise<void>;
     get processors(): ({
         processor: typeof CreateInitialSolutionsAgent;
         weight: number;

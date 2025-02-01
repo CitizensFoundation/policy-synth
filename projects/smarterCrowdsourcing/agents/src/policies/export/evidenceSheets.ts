@@ -179,6 +179,7 @@ export class PoliciesSheetsExportAgent extends PolicySynthAgent {
         } else {
           console.warn(
             `Evidence not included in export due to low scores or missing data: ${evidence.url}`
+          );
         }
       });
     }

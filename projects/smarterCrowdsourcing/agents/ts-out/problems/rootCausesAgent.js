@@ -10,25 +10,23 @@ import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connecto
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 export class RootCausesAgentQueue extends PolicySynthAgentQueue {
     sheetsConnector = null;
-    async process() {
-        await this.processAllAgents();
-        await this.exportSubproblemsToSheet();
-    }
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_ROOT_CAUSES;
     }
-    async setupMemoryIfNeeded() {
+    async setupMemoryIfNeeded(agentId) {
         if (!this.memory || !this.memory.subProblems) {
-            this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
-            await this.saveMemory();
+            this.logger.info(`Setting up memory for agent ${agentId}`);
+            const psAgent = await this.getOrCreatePsAgent(agentId);
+            this.memory = emptySmarterCrowdsourcingMemory(psAgent.group_id, psAgent.id);
         }
-        this.initializeConnectors();
+        await this.initializeConnectors(agentId);
     }
-    initializeConnectors() {
-        this.sheetsConnector = PsConnectorFactory.getConnector(this.agent, this.memory, PsConnectorClassTypes.Spreadsheet, false);
+    async initializeConnectors(agentId) {
+        const psAgent = await this.getOrCreatePsAgent(agentId);
+        this.sheetsConnector = PsConnectorFactory.getConnector(psAgent, this.memory, PsConnectorClassTypes.Spreadsheet, false);
         if (!this.sheetsConnector) {
             this.logger.error("Sheets connector not found");
-            this.agent.OutputConnectors?.forEach((connector) => {
+            psAgent.OutputConnectors?.forEach((connector) => {
                 this.logger.error(`Output connector: ${connector.Class?.name}`);
             });
         }

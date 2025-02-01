@@ -31,8 +31,13 @@ export class SmarterCrowdsourcingGetWebPagesAgent extends SolutionsEvolutionSmar
 
   totalPagesSave = 0;
 
-  maxModelTokensOut = 16384;
-  modelTemperature = 0.0;
+  override get maxModelTokensOut() {
+    return 16384;
+  }
+
+  override get modelTemperature() {
+    return 0.0;
+  }
 
   renderScanningPrompt(
     problemStatement: PsProblemStatement,

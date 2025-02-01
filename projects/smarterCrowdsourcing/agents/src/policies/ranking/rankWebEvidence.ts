@@ -4,7 +4,9 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 
 export class RankWebEvidenceAgent extends BaseSmarterCrowdsourcingAgent {
   evidenceWebPageVectorStore = new EvidenceWebPageVectorStore();
-  modelTemperature = 0.0;
+  override get modelTemperature() {
+    return 0.0;
+  }
 
   async renderProblemPrompt(
     subProblemIndex: number | null,

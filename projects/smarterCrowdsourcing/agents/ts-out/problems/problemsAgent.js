@@ -11,14 +11,11 @@ export class ProblemsAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_PROBLEMS_PREPERATION;
     }
-    async process() {
-        await this.processAllAgents();
-        ;
-    }
-    async setupMemoryIfNeeded() {
+    async setupMemoryIfNeeded(agentId) {
         if (!this.memory || !this.memory.subProblems) {
-            this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
-            await this.saveMemory();
+            this.logger.info(`Setting up memory for agent ${agentId}`);
+            const psAgent = await this.getOrCreatePsAgent(agentId);
+            this.memory = emptySmarterCrowdsourcingMemory(psAgent.group_id, psAgent.id);
         }
     }
     get processors() {

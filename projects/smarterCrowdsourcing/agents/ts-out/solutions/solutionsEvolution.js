@@ -13,14 +13,11 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
     get agentQueueName() {
         return PsClassScAgentType.SMARTER_CROWDSOURCING_SOLUTIONS_EVOLUTION;
     }
-    async process() {
-        await this.processAllAgents();
-    }
-    async setupMemoryIfNeeded() {
+    async setupMemoryIfNeeded(agentId) {
         if (!this.memory || !this.memory.subProblems) {
             // Initialize memory if it doesn't exist
-            this.memory = emptySmarterCrowdsourcingMemory(this.agent.group_id, this.agent.id);
-            await this.saveMemory();
+            const psAgent = await this.getOrCreatePsAgent(agentId);
+            this.memory = emptySmarterCrowdsourcingMemory(psAgent.group_id, psAgent.id);
         }
         // Iterate through each subproblem to ensure the solutions object with populations is set up
         for (let subProblem of this.memory.subProblems) {
@@ -30,7 +27,6 @@ export class SolutionsEvolutionAgentQueue extends PolicySynthAgentQueue {
                 };
             }
         }
-        await this.saveMemory();
     }
     get processors() {
         if (this.memory.subProblems[0].solutions.populations.length === 0) {
