@@ -7,6 +7,7 @@ export declare class IdentifyBarriersAgent extends PolicySynthAgent {
     modelType: PsAiModelType;
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
     constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
     processJobDescription(jobDescription: JobDescription): Promise<void>;
 }

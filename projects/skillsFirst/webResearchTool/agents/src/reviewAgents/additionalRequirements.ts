@@ -5,14 +5,19 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export class DetermineProfessionalLicenseRequirementAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Large;
-  modelType: PsAiModelType = PsAiModelType.Text;
+  modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {
-    return 16384;
+    return 100000;
   }
+
   override get modelTemperature(): number {
     return 0.0;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
   }
 
   constructor(
@@ -91,7 +96,7 @@ Do not include any explanations or comments before or after the JSON output.
       this.logger.error(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
       // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
       resultText = await this.callModel(
-        PsAiModelType.Text,
+        PsAiModelType.TextReasoning,
         PsAiModelSize.Large,
         messages,
         true

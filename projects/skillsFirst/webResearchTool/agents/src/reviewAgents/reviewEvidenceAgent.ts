@@ -10,10 +10,14 @@ export class ReviewEvidenceQuoteAgent extends PolicySynthAgent {
   modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {
-    return 16384;
+    return 100000;
   }
   override get modelTemperature(): number {
     return 0.0;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
   }
 
   constructor(

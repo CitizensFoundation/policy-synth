@@ -5,10 +5,13 @@ export class DetermineCollegeDegreeStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 16384;
+        return 100000;
     }
     get modelTemperature() {
         return 0.0;
+    }
+    get reasoningEffort() {
+        return "high";
     }
     processCounter;
     totalProcesses;

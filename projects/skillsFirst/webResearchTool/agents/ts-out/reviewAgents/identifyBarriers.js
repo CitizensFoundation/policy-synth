@@ -2,12 +2,15 @@ import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.j
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class IdentifyBarriersAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Large;
-    modelType = PsAiModelType.Text;
+    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 16384;
+        return 100000;
     }
     get modelTemperature() {
         return 0.0;
+    }
+    get reasoningEffort() {
+        return "high";
     }
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);

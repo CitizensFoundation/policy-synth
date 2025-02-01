@@ -4,10 +4,13 @@ export class DetermineMandatoryStatusAgent extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
-        return 16384;
+        return 100000;
     }
     get modelTemperature() {
         return 0.0;
+    }
+    get reasoningEffort() {
+        return "high";
     }
     processCounter;
     totalProcesses;
@@ -71,7 +74,7 @@ Do not include any explanations or comments before or after the JSON output.
             this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
-            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true);
+            resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
         }
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
@@ -117,12 +120,12 @@ Explain why this reached the same conclusion for both, relying only on the job d
 Provide the explanation without any additional text.
 `;
             const messages = [this.createSystemMessage(systemPrompt)];
-            let resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false, true);
+            let resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, false, true);
             if (!resultText) {
                 this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
                 this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
                 // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
-                resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+                resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, false);
             }
             explanations.bothFalseExplanation = resultText.trim();
         }
@@ -137,7 +140,7 @@ Provide the explanation without any additional text.
 
 Your output:`;
         const messages = [this.createSystemMessage(systemPrompt)];
-        let resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false, true);
+        let resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, false, true);
         if (!resultText) {
             this.memory.llmErrors.push(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`DetermineMandatoryStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
