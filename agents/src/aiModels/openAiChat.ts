@@ -105,7 +105,7 @@ export class OpenAiChat extends BaseChatModel {
         messages: formattedMessages,
         reasoning_effort:
           this.modelConfig.modelType === PsAiModelType.TextReasoning &&
-          this.modelConfig.modelSize !== PsAiModelSize.Small
+          !this.modelName.toLowerCase().includes("o1 mini")
             ? this.modelConfig.reasoningEffort
             : undefined,
         temperature:
