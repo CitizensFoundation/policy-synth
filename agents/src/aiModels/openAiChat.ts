@@ -12,7 +12,7 @@ export class OpenAiChat extends BaseChatModel {
     let {
       apiKey,
       modelName = "gpt-4o",
-      maxTokensOut = 4096,
+      maxTokensOut = 16384,
       temperature = 0.7,
     } = config;
     super(modelName, maxTokensOut);
@@ -102,6 +102,9 @@ export class OpenAiChat extends BaseChatModel {
       }
     } else {
       this.logger.debug("Calling OpenAI model...");
+      if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+        this.logger.debug(`Messages: ${JSON.stringify(formattedMessages, null, 2)}`);
+      }
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
