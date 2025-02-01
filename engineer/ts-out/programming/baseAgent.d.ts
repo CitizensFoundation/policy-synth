@@ -15,6 +15,9 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     currentErrors: string | undefined | null;
     previousCurrentErrors: string | undefined | null;
     tsMorphProject: Project | undefined;
+    get maxModelTokensOut(): number;
+    get modelTemperature(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */

@@ -25,6 +25,18 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
 
   tsMorphProject: Project | undefined;
 
+  override get maxModelTokensOut(): number {
+    return 100000;
+  }
+
+  override get modelTemperature(): number {
+    return 0.0;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
+
   /**
    * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
    */

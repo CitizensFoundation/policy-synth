@@ -33,17 +33,6 @@ export declare class WebPageScanner extends GetWebPagesBaseAgent {
      */
     processPageAnalysis(text: string): Promise<any>;
     /**
-     * Optionally handle PDF content if you want to preserve that logic.
-     * This calls the PDF reader, merges text, etc.
-     */
-    getAndProcessPdf(url: string): Promise<string>;
-    /**
-     * Optionally handle HTML pages if you want to preserve that logic.
-     * Could call your base class's getAndProcessPage method,
-     * or your own implementation with puppeteer.
-     */
-    getAndProcessHtml(url: string): Promise<string>;
-    /**
      * For each page, decide if it's PDF or HTML, fetch text, then do AI analysis
      */
     analyzeSinglePage(url: string): Promise<void>;

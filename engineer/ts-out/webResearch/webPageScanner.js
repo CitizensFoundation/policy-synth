@@ -135,56 +135,31 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
         return analysis;
     }
     /**
-     * Optionally handle PDF content if you want to preserve that logic.
-     * This calls the PDF reader, merges text, etc.
-     */
-    async getAndProcessPdf(url) {
-        return (await this.getAndProcessPage(url, "markdown"));
-    }
-    /**
-     * Optionally handle HTML pages if you want to preserve that logic.
-     * Could call your base class's getAndProcessPage method,
-     * or your own implementation with puppeteer.
-     */
-    async getAndProcessHtml(url) {
-        // If you have a base class method that fetches text, you can use it:
-        // const content = await this.getAndProcessPage(url, "markdown");
-        // return content;
-        return (await this.getAndProcessPage(url, "markdown"));
-    }
-    /**
      * For each page, decide if it's PDF or HTML, fetch text, then do AI analysis
      */
     async analyzeSinglePage(url) {
-        let text = "";
-        if (url.toLowerCase().endsWith(".pdf")) {
-            try {
-                text = await this.getAndProcessPdf(url);
-            }
-            catch (error) {
-                this.logger.error(`Error reading PDF at ${url}: ${error}`);
-                return;
-            }
+        let content;
+        try {
+            // Use a single method to fetch and process the page
+            content = await this.getAndProcessPage(url, "markdown");
         }
-        else {
-            try {
-                text = await this.getAndProcessHtml(url);
-            }
-            catch (error) {
-                this.logger.error(`Error reading HTML at ${url}: ${error}`);
-                return;
-            }
+        catch (error) {
+            this.logger.error(`Error processing page at ${url}: ${error}`);
+            return;
         }
-        text = this.sanitizeInput(text);
-        const analysis = await this.processPageAnalysis(text);
-        if (analysis) {
-            // Attach the URL so you know where it came from
-            const finalResult = {
-                fromUrl: url,
-                analysis,
-            };
-            this.collectedWebPages.push(finalResult);
-            this.totalPagesSave++;
+        // Normalize to an array if not already
+        const contentArray = Array.isArray(content) ? content : [content];
+        for (const text of contentArray) {
+            const sanitizedText = this.sanitizeInput(text);
+            const analysis = await this.processPageAnalysis(sanitizedText);
+            if (analysis) {
+                const finalResult = {
+                    fromUrl: url,
+                    analysis,
+                };
+                this.collectedWebPages.push(finalResult);
+                this.totalPagesSave++;
+            }
         }
     }
     /**

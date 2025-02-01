@@ -1,5 +1,5 @@
 import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 export class SearchQueriesGenerator extends PolicySynthAgent {
     systemPrompt;
     userPrompt;

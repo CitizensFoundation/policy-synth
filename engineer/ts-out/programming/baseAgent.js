@@ -14,6 +14,15 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     currentErrors;
     previousCurrentErrors;
     tsMorphProject;
+    get maxModelTokensOut() {
+        return 100000;
+    }
+    get modelTemperature() {
+        return 0.0;
+    }
+    get reasoningEffort() {
+        return "high";
+    }
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */

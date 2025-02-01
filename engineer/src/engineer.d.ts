@@ -76,7 +76,8 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   taskTitle: string;
   taskInstructions: string;
   actionLog: string[];
-  docsSiteToScan?: string[];
+  outsideTypedefPath?: string;
+  docsSitesToScan?: string[];
   currentTask?: {
     filesCompleted?: PsEngineerFileData[];
     originalFiles?: PsEngineerFileData[];

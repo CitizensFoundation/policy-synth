@@ -3,33 +3,37 @@ import axios from "axios";
 import fs from "fs";
 import path from "path";
 import strip from "strip-comments";
+// These are your helper agents – assumed to be defined elsewhere
+import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
 import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
 import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
 import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
-/**
- * The new Engineer Agent.
- * It now extends PolicySynthAgent and supports configuration for:
- *  - A long-form task description (“Task”)
- *  - A local file system path (the code directory to work on)
- *
- * All previous functionality (GitHub issue fetching, web research,
- * TypeScript file scanning, filtering, etc.) is preserved.
- */
 export class PsEngineerAgent extends PolicySynthAgent {
     githubIssueUrl;
+    get maxModelTokensOut() {
+        return 100000;
+    }
+    get modelTemperature() {
+        return 0.0;
+    }
+    get reasoningEffort() {
+        return "high";
+    }
     static ENGINEER_AGENT_CLASS_BASE_ID = "15e7af42-4cf5-1b36-b3cd-f6adc97b63d4";
-    static ENGINEER_AGENT_CLASS_VERSION = 1;
-    constructor(agent, memory, startProgress, endProgress, githubIssueUrl) {
+    static ENGINEER_AGENT_CLASS_VERSION = 2;
+    constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
-        this.githubIssueUrl = githubIssueUrl;
+        this.githubIssueUrl = this.getConfig("githubIssueUrl", "");
         // Initialize defaults in memory if they are not already set.
         this.memory.actionLog = this.memory.actionLog || [];
         this.memory.workspaceFolder = this.getConfig("codeLocalPath", "/home/robert/Scratch/policy-synth-engineer-tests/agents");
         this.memory.taskTitle = this.memory.taskTitle || "";
         this.memory.taskDescription = this.memory.taskDescription || "";
-        this.memory.taskInstructions = this.memory.taskInstructions || "";
-        this.memory.docsSiteToScan = this.memory.docsSiteToScan || [];
+        this.memory.taskInstructions = this.getConfig("taskInstructions", "") || "";
+        this.memory.docsSitesToScan = this.getConfig("docsSitesToScan", "") || [];
+        this.memory.outsideTypedefPath =
+            this.getConfig("outsideTypedefPath", "") || "";
     }
     /**
      * If a GitHub issue URL was provided, fetch the issue and extract the
@@ -259,7 +263,7 @@ Please return a JSON string array of the relevant files:`;
     /**
      * Loads the content of a file given its path.
      */
-    async loadFileContents(fileName) {
+    loadFileContents(fileName) {
         try {
             const content = fs.readFileSync(fileName, "utf-8");
             return content;
@@ -275,15 +279,29 @@ Please return a JSON string array of the relevant files:`;
      * scans TypeScript source and declaration files, performs web research if needed,
      * and finally calls the programming agent to implement the task.
      */
-    async run() {
-        await this.initializeFromGitHubIssue();
+    async process() {
+        if (this.githubIssueUrl) {
+            await this.initializeFromGitHubIssue();
+        }
         // Read all TypeScript source file names from the configured workspace.
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
+        let allTypescriptFilesForTypedefs;
+        if (this.memory.outsideTypedefPath) {
+            const files = await this.readAllTypescriptFileNames(this.memory.outsideTypedefPath);
+            allTypescriptFilesForTypedefs = [
+                ...this.memory.allTypescriptSrcFiles,
+                ...files,
+            ];
+        }
+        else {
+            allTypescriptFilesForTypedefs = this.memory.allTypescriptSrcFiles;
+        }
+        this.logger.debug(`All typescript files for typedefs: ${JSON.stringify(allTypescriptFilesForTypedefs, null, 2)}`);
         // Assemble all .d.ts files from the source files.
-        this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
-            .map(async (filePath) => {
+        this.memory.allTypeDefsContents = allTypescriptFilesForTypedefs
+            .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
-                const content = this.removeCommentsFromCode((await this.loadFileContents(filePath)) || "");
+                const content = this.removeCommentsFromCode((this.loadFileContents(filePath)) || "");
                 if (content && content.length > 75) {
                     return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                 }
@@ -296,14 +314,16 @@ Please return a JSON string array of the relevant files:`;
             .filter(Boolean)
             .join("\n");
         this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
+        const analyzeAgent = new PsEngineerInitialAnalyzer(this.agent, this.memory, 0, 100);
+        await analyzeAgent.analyzeAndSetup();
         // If there are any likely-relevant npm package dependencies, search for .d.ts files.
         if (this.memory.likelyRelevantNpmPackageDependencies &&
             this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
             const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
-                    .map(async (filePath) => {
-                    const content = this.removeCommentsFromCode((await this.loadFileContents(filePath)) || "");
+                    .map((filePath) => {
+                    const content = this.removeCommentsFromCode((this.loadFileContents(filePath)) || "");
                     if (content && content.length > 75) {
                         return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                     }
@@ -328,34 +348,61 @@ Please return a JSON string array of the relevant files:`;
         }
         // Finally, call the programming agent to implement the task.
         const programmer = new PsEngineerProgrammingAgent(this.agent, this.memory, 0, 100);
+        this.logger.info(`Starting to implement task`);
         await programmer.implementTask();
         await this.setCompleted("Task Completed");
     }
+    static configurationQuestions = [
+        {
+            uniqueId: "taskInstructions",
+            type: "textAreaLong",
+            value: "",
+            maxLength: 75000,
+            required: false,
+            rows: 7,
+            charCounter: true,
+            text: "Task description for the Engineer Agent",
+        },
+        {
+            uniqueId: "codeLocalPath",
+            type: "textField",
+            value: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
+            maxLength: 512,
+            required: true,
+            text: "Local path to the code that should be worked on",
+        },
+        {
+            uniqueId: "outsideTypedefPath",
+            type: "textField",
+            value: "",
+            maxLength: 512,
+            required: false,
+            text: "Outside TypeScript file path (optional)",
+        },
+        {
+            uniqueId: "githubIssueUrl",
+            type: "textField",
+            value: "",
+            maxLength: 512,
+            required: false,
+            text: "GitHub issue URL (optional)",
+        },
+        {
+            uniqueId: "docsSitesToScan",
+            type: "textAreaLong",
+            value: "",
+            maxLength: 5000,
+            required: false,
+            rows: 3,
+            text: "Documentation sites to scan",
+        },
+    ];
     /**
      * Returns configuration questions for the Engineer Agent.
      * Here we include a long text area for the task and a field for the local code path.
      */
     static getConfigurationQuestions() {
-        return [
-            {
-                uniqueId: "task",
-                type: "textAreaLong",
-                value: "",
-                maxLength: 75000,
-                required: true,
-                rows: 5,
-                charCounter: true,
-                text: "Task description for the Engineer Agent",
-            },
-            {
-                uniqueId: "codeLocalPath",
-                type: "textField",
-                value: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-                maxLength: 512,
-                required: true,
-                text: "Local path to the code that should be worked on",
-            },
-        ];
+        return this.configurationQuestions;
     }
     /**
      * Returns the metadata used to register this agent class.
@@ -376,27 +423,12 @@ Please return a JSON string array of the relevant files:`;
                 imageUrl: "https://aoi-storage-production.citizens.is/dl/d3693387415227931c57bfb63fa2e1ed--retina-1.png",
                 iconName: "engineering",
                 capabilities: ["analysis", "web research", "programming"],
-                requestedAiModelSizes: [],
-                defaultStructuredQuestions: [
-                    {
-                        uniqueId: "task",
-                        type: "textAreaLong",
-                        value: "",
-                        maxLength: 75000,
-                        required: true,
-                        rows: 7,
-                        charCounter: true,
-                        text: "Task description for the Engineer Agent",
-                    },
-                    {
-                        uniqueId: "codeLocalPath",
-                        type: "textField",
-                        value: "/home/robert/Scratch/policy-synth-engineer-tests/agents",
-                        maxLength: 255,
-                        required: true,
-                        text: "Local path to the code that should be worked on",
-                    },
+                requestedAiModelSizes: [
+                    PsAiModelSize.Small,
+                    PsAiModelSize.Medium,
+                    PsAiModelSize.Large,
                 ],
+                defaultStructuredQuestions: this.configurationQuestions,
                 questions: PsEngineerAgent.getConfigurationQuestions(),
                 supportedConnectors: [],
             },

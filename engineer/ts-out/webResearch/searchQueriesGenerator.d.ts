@@ -1,5 +1,5 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export declare class SearchQueriesGenerator extends PolicySynthAgent {
     systemPrompt: string;
     userPrompt: string;

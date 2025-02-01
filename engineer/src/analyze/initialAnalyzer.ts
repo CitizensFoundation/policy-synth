@@ -9,14 +9,19 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent";
 export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
   declare memory: PsEngineerMemoryData;
 
-  /**
-   * Adapted constructor:
-   *   - If you don’t need a PsAgent object, you can pass a dummy object or adjust
-   *     your base class constructor so it only needs memory.
-   */
+  override get maxModelTokensOut(): number {
+    return 100000;
+  }
+
+  override get modelTemperature(): number {
+    return 0.0;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
+
   constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number) {
-    // This uses a dummy object for "agent" since the base class typically expects (agent, memory, ...).
-    // Adjust as needed if you actually have a PsAgent instance to pass in.
     super(agent, memory, startProgress, endProgress);
     this.memory = memory;
   }
@@ -32,7 +37,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     return `Your are an expert software engineering analyzer.
 
       Instructions:
-      1. Review the task name, description and instructions.
+      1. Review the task name, description and instructions. You might just see the task instructions.
       2. You will see a list of all existing typescript files, output ones likely to change to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext for files likely to be relevant.
       3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
       4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
@@ -40,7 +45,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
       6. Always output the full path into all the JSON string arrays.
       7. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields
       8. Never add new files to add to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptFilesToKeepInContext JSON fields add them to newLikelyFilesToAdd.
-      9. Important: If the programming task is likely to benefit documentation or examples from online sources, set needsDocumentionsAndExamples to true.
+      9. Important: If the programming task is needs examples from online sources, if some specific library is being used or something new added set needsDocumentionsAndExamples to true.
 
       JSON Output Schema:
       {
@@ -55,18 +60,21 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
   }
 
   analyzeUserPrompt(allNpmPackageDependencies: string[], allDocumentationFiles: string[]) {
-    return `All npm package.json dependencies:
+    return `<AllNpmPackageDependencies>
     ${JSON.stringify(allNpmPackageDependencies, null, 2)}
+    </AllNpmPackageDependencies>
 
-    All documentation files in workspace:
+    <AllDocumentationFiles>
     ${allDocumentationFiles.join("\n")}
+    </AllDocumentationFiles>
 
-    All already existing typescript files in workspace:
+    <AllTypescriptFiles>
     ${this.memory.allTypescriptSrcFiles?.join("\n")}
+    </AllTypescriptFiles>
 
-    Task title: ${this.memory.taskTitle}
-    Task description: ${this.memory.taskDescription}
-    Task instructions: ${this.memory.taskInstructions}
+    ${this.memory.taskTitle ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>` : ""}
+    ${this.memory.taskDescription ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>` : ""}
+    ${this.memory.taskInstructions ? `\n<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>\n` : ""}
 
     Your JSON Output:
     `;
@@ -97,8 +105,8 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
 
     // Use the new callModel approach
     const analysisResponse = await this.callModel(
-      PsAiModelType.TextReasoning, // pick your type
-      PsAiModelSize.Medium,        // pick your size
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Medium,
       [
         this.createSystemMessage(this.analyzeSystemPrompt),
         this.createHumanMessage(

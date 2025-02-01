@@ -1,20 +1,14 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-/**
- * The new Engineer Agent.
- * It now extends PolicySynthAgent and supports configuration for:
- *  - A long-form task description (“Task”)
- *  - A local file system path (the code directory to work on)
- *
- * All previous functionality (GitHub issue fetching, web research,
- * TypeScript file scanning, filtering, etc.) is preserved.
- */
 export declare class PsEngineerAgent extends PolicySynthAgent {
     memory: PsEngineerMemoryData;
     githubIssueUrl?: string;
+    get maxModelTokensOut(): number;
+    get modelTemperature(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
     private static readonly ENGINEER_AGENT_CLASS_BASE_ID;
     private static readonly ENGINEER_AGENT_CLASS_VERSION;
-    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number, githubIssueUrl?: string);
+    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number);
     /**
      * If a GitHub issue URL was provided, fetch the issue and extract the
      * task title, description, and instructions.
@@ -69,14 +63,42 @@ export declare class PsEngineerAgent extends PolicySynthAgent {
     /**
      * Loads the content of a file given its path.
      */
-    loadFileContents(fileName: string): Promise<string | null>;
+    loadFileContents(fileName: string): string | null;
     /**
      * Main processing method.
      * This method initializes the agent (including GitHub issue parsing),
      * scans TypeScript source and declaration files, performs web research if needed,
      * and finally calls the programming agent to implement the task.
      */
-    run(): Promise<void>;
+    process(): Promise<void>;
+    static configurationQuestions: ({
+        uniqueId: string;
+        type: string;
+        value: string;
+        maxLength: number;
+        required: boolean;
+        rows: number;
+        charCounter: boolean;
+        text: string;
+    } | {
+        uniqueId: string;
+        type: string;
+        value: string;
+        maxLength: number;
+        required: boolean;
+        text: string;
+        rows?: undefined;
+        charCounter?: undefined;
+    } | {
+        uniqueId: string;
+        type: string;
+        value: string;
+        maxLength: number;
+        required: boolean;
+        rows: number;
+        text: string;
+        charCounter?: undefined;
+    })[];
     /**
      * Returns configuration questions for the Engineer Agent.
      * Here we include a long text area for the task and a field for the local code path.
