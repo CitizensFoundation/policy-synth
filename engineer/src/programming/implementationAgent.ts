@@ -235,7 +235,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       try {
         newCode = await this.callModel(
           PsAiModelType.TextReasoning,
-          PsAiModelSize.Medium,
+          PsAiModelSize.Small,
           messagesForCoding,
           false
         );

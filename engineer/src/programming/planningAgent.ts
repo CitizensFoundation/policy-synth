@@ -135,7 +135,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       {
         "fullPathToNewOrUpdatedFile": string,
         "codingTaskTitle": string,
-        "codingTaskFullDescription": string,
+        "codingTaskStepsWithDetailedDescription": string[],
         "fileAction": "add" | "change" | "delete"
       }
     ]
@@ -271,7 +271,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       const actionPlanResponse = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Medium,
+        PsAiModelSize.Small,
         [
           this.createSystemMessage(this.getActionPlanSystemPrompt()),
           this.createHumanMessage(
@@ -304,7 +304,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
           // Review the action plan
           const actionPlanReviewResponse = await this.callModel(
             PsAiModelType.TextReasoning,
-            PsAiModelSize.Medium,
+            PsAiModelSize.Small,
             [
               this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
               this.createHumanMessage(

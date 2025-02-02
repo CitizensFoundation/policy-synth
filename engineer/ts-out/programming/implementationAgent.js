@@ -18,6 +18,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       4. You will see a list of actions you should be completing at this point in the action plan, you will also see completed and future actions for your information.
       5. Always output the full new or changed typescript file, do not leave anything out, otherwise code will get lost.
       6. Never remove any logging from the code except if that is a part of the task explicitly, even when refactoring.
+      7. Only output code no comments or explanations before or after the code.
       ${currentErrors
             ? `11. You have already build the project and now you need to fix errors provided in <ErrorsOnYourLastAttemptAtCreatingCode>.
              12. If you are changing a file pay attention to <OriginalCodefilesBeforeYourChanges> where you can see the original for reference.`
@@ -61,7 +62,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     ${this.renderCodingRules()}
 
-    Output the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in full in typescript:
+    Output only the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in full in typescript:
     `;
     }
     reviewSystemPrompt() {
@@ -122,7 +123,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
                 this.createHumanMessage(this.codingUserPrompt(fileName, fileAction, currentActions, currentFileToUpdateContents, completedActions, futureActions, retryCount, reviewLog)),
             ];
             try {
-                newCode = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messagesForCoding, false);
+                newCode = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messagesForCoding, false);
             }
             catch (error) {
                 console.error("Error calling the model for new code:", error.message);

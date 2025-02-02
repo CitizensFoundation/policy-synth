@@ -23,14 +23,14 @@ export class PsEngineerAgentQueue extends PolicySynthAgentQueue {
     ];
   }
 
-  forceMemoryRestart = false;
+  forceMemoryRestart = true;
 
   async setupMemoryIfNeeded(agentId: number) {
     const psAgent = await this.getOrCreatePsAgent(agentId);
     this.logger.info(`Setting up memory for agent ${psAgent.id}`);
 
     let agentMemory = this.agentMemoryMap.get(agentId);
-    if (!agentMemory) {
+    if (this.forceMemoryRestart || !agentMemory) {
       agentMemory = { agentId: psAgent.id } as PsEngineerMemoryData;
       this.agentMemoryMap.set(agentId, agentMemory);
     } else {

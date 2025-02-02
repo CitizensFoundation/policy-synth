@@ -310,7 +310,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       // This calls the LLM using the new approach.
       const response = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Medium,
+        PsAiModelSize.Small,
         messages,
         true // can stream or not based on your preference
       );

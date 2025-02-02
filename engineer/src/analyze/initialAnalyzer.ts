@@ -117,6 +117,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     );
 
     let analyzisResults: PsEngineerPlanningResults;
+
     if (typeof analysisResponse === "string") {
       analyzisResults = JSON.parse(analysisResponse);
     } else {

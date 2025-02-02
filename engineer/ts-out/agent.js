@@ -218,15 +218,15 @@ Instructions:
 2. Always output the d.ts file paths again that are possibly relevant for the upcoming user task.
 3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
 ${addInstruction
-            ? "4. Always output at least one d.ts file, the best one to help with the task at hand."
+            ? "4. Always output at least one d.ts file, the best ones to help with the task at hand."
             : ""}
 
 Only output a JSON array with possibly relevant d.ts files, no explanations before or after the JSON string[].
 
 <UpcomingUserTask>
-  Task title: ${this.memory.taskTitle}
-  Task description: ${this.memory.taskDescription}
-  Task instructions: ${this.memory.taskInstructions}
+  ${this.memory.taskTitle ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>` : ""}
+  ${this.memory.taskDescription ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>` : ""}
+  ${this.memory.taskInstructions ? `<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>` : ""}
 </UpcomingUserTask>
 `;
         const userPrompt = `List of .d.ts files to analyze for relevance to the task:
@@ -283,22 +283,20 @@ Please return a JSON string array of the relevant files:`;
         if (this.githubIssueUrl) {
             await this.initializeFromGitHubIssue();
         }
+        await this.saveMemory();
+        await this.updateRangedProgress(undefined, "Analyzing code...");
         // Read all TypeScript source file names from the configured workspace.
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
-        let allTypescriptFilesForTypedefs;
         if (this.memory.outsideTypedefPath) {
             const files = await this.readAllTypescriptFileNames(this.memory.outsideTypedefPath);
-            allTypescriptFilesForTypedefs = [
+            this.memory.allTypescriptSrcFiles = [
                 ...this.memory.allTypescriptSrcFiles,
                 ...files,
             ];
         }
-        else {
-            allTypescriptFilesForTypedefs = this.memory.allTypescriptSrcFiles;
-        }
-        this.logger.debug(`All typescript files for typedefs: ${JSON.stringify(allTypescriptFilesForTypedefs, null, 2)}`);
+        this.logger.debug(`All typescript files for typedefs: ${JSON.stringify(this.memory.allTypescriptSrcFiles, null, 2)}`);
         // Assemble all .d.ts files from the source files.
-        this.memory.allTypeDefsContents = allTypescriptFilesForTypedefs
+        this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
                 const content = this.removeCommentsFromCode((this.loadFileContents(filePath)) || "");
@@ -316,6 +314,7 @@ Please return a JSON string array of the relevant files:`;
         this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
         const analyzeAgent = new PsEngineerInitialAnalyzer(this.agent, this.memory, 0, 100);
         await analyzeAgent.analyzeAndSetup();
+        await this.updateRangedProgress(undefined, "Analyzing code completed");
         // If there are any likely-relevant npm package dependencies, search for .d.ts files.
         if (this.memory.likelyRelevantNpmPackageDependencies &&
             this.memory.likelyRelevantNpmPackageDependencies.length > 0) {

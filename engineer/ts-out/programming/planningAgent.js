@@ -113,7 +113,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       {
         "fullPathToNewOrUpdatedFile": string,
         "codingTaskTitle": string,
-        "codingTaskFullDescription": string,
+        "codingTaskStepsWithDetailedDescription": string[],
         "fileAction": "add" | "change" | "delete"
       }
     ]
@@ -224,7 +224,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         }
         while (!planReady && planRetries < this.maxRetries) {
             console.log(`Getting action plan attempt ${planRetries + 1}`);
-            const actionPlanResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+            const actionPlanResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                 this.createSystemMessage(this.getActionPlanSystemPrompt()),
                 this.createHumanMessage(this.getUserActionPlanPrompt(codingPlan, reviewLog)),
             ], false // can be true if you prefer streaming
@@ -247,7 +247,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 if (actionPlan) {
                     console.log(`Action plan received: ${JSON.stringify(actionPlan, null, 2)}`);
                     // Review the action plan
-                    const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                    const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                         this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
                         this.createHumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
                     ], false);

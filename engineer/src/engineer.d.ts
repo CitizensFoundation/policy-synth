@@ -41,7 +41,6 @@ interface PsEngineerContextItem {
 }
 
 interface PsEngineerPlanningResults {
-
   existingTypeScriptFilesLikelyToChange: string[];
   existingOtherTypescriptFilesToKeepInContext: string[];
   documentationFilesToKeepInContext: string[];
@@ -81,7 +80,7 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   currentTask?: {
     filesCompleted?: PsEngineerFileData[];
     originalFiles?: PsEngineerFileData[];
-  }
+  };
   solutionsToErrorsSearchResults?: string;
   allTypescriptSrcFiles?: string[];
   currentFilesBeingAdded?: string[];
@@ -100,12 +99,15 @@ type PsEngineerFileActions = "add" | "change" | "delete";
 interface PsEngineerCodingActionPlanItem {
   fullPathToNewOrUpdatedFile: string;
   codingTaskTitle: string;
-  codingTaskFullDescription: string;
+  codingTaskStepsWithDetailedDescription: string[];
   status?: "completed" | "inProgress" | "notStarted" | "error";
   fileAction: PsEngineerFileActions;
 }
 
-type PsEngineerWebResearchTypes = "documentation" | "codeExamples" | "solutionsForErrors";
+type PsEngineerWebResearchTypes =
+  | "documentation"
+  | "codeExamples"
+  | "solutionsForErrors";
 
 interface PsTsMorphNewOrUpdatedFunction {
   name: string;
