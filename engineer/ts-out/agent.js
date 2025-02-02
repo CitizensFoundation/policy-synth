@@ -211,17 +211,18 @@ export class PsEngineerAgent extends PolicySynthAgent {
      */
     async filterRelevantDtsFiles(dtsFiles, addMinOneFileInstructions = false) {
         dtsFiles = dtsFiles.map((filePath) => this.removeWorkspacePathFromFileIfNeeded(filePath));
-        const getSystemPrompt = (addInstruction) => `You are an expert software engineering analyzer.
-
-Instructions:
+        const getSystemPrompt = (addInstruction) => `<Instructions>
 1. You will receive a list of .d.ts file paths from the user to analyze.
 2. Always output the d.ts file paths again that are possibly relevant for the upcoming user task.
 3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
 ${addInstruction
             ? "4. Always output at least one d.ts file, the best ones to help with the task at hand."
             : ""}
+</Instructions>
 
+<OutputFormat>
 Only output a JSON array with possibly relevant d.ts files, no explanations before or after the JSON string[].
+</OutputFormat>
 
 <UpcomingUserTask>
   ${this.memory.taskTitle ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>` : ""}
@@ -322,6 +323,17 @@ Please return a JSON string array of the relevant files:`;
             this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
             await this.updateRangedProgress(undefined, "Searching for .d.ts files in node_modules...");
             const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+            this.memory.allTypescriptSrcFiles = [
+                ...this.memory.allTypescriptSrcFiles,
+                ...nodeModuleTypeDefs,
+            ];
+            if (!this.memory.usefulTypescriptDefinitionFilesToKeepInContext) {
+                this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
+            }
+            this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
+                ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
+                ...nodeModuleTypeDefs,
+            ];
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
                     .map((filePath) => {
@@ -344,11 +356,13 @@ Please return a JSON string array of the relevant files:`;
         else {
             this.logger.warn("No npm packages to search for .d.ts files");
         }
+        await this.saveMemory();
         //this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
         if (this.memory.needsDocumentationAndExamples === true) {
             await this.updateRangedProgress(undefined, "Doing web research...");
             await this.doWebResearch();
         }
+        await this.saveMemory();
         // Finally, call the programming agent to implement the task.
         const programmer = new PsEngineerProgrammingAgent(this.agent, this.memory, 0, 100);
         this.logger.info(`Starting to implement task`);

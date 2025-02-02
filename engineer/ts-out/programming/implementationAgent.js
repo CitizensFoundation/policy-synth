@@ -45,7 +45,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     </YourCurrentTask>
 
     ${currentFileToUpdateContents
-            ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</<CurrentFileYouAreChanging>`
+            ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</CurrentFileYouAreChanging>`
             : ``}
 
     ${this.renderCurrentErrorsAndOriginalFiles()}
@@ -66,9 +66,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     `;
     }
     reviewSystemPrompt() {
-        return `You are an expert software engineering code analyzer.
-
-    Instructions:
+        return `<Instructions>
     1. Review the proposed code for the given task.
     2. Assess its feasibility, correctness, and completeness.
     3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes.
@@ -76,10 +74,12 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     5. You will see previous reviews, we are in a loop until the code is good.
     6. There should never be any explanations or comments before or after the code.
     7. If you have gone over 3 reviews of the code already make sure only to comment on the most critical issues otherwise just output: Code looks good.
-
+    </Instructions>
     ${this.renderCodingRules()}
 
-    If there are no critical issues with the code only output: Code looks good.
+    <OutputFormat>
+      If there are no critical issues with the code only output: Code looks good.
+    </OutputFormat>
     `;
     }
     getUserReviewPrompt(codeToReview, fileName, currentActions, currentFileToUpdateContents, completedActions, futureActions, reviewCount, reviewLog) {

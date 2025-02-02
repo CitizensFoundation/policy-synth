@@ -41,7 +41,10 @@ export declare class WebPageScanner extends GetWebPagesBaseAgent {
     /**
      * Main scanning method — uses concurrency with p-limit (like your first snippet).
      */
-    scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes): Promise<{
+    scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes, currentCountStatus: {
+        currentCount: number;
+        totalCount: number;
+    }): Promise<{
         fromUrl: string;
         analysis: string;
     }[]>;

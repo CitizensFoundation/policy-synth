@@ -9,17 +9,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
   havePrintedDebugPrompt = false;
 
   planSystemPrompt() {
-    return `You are an expert software engineering analyzer.
-
-    ${
-      this.memory.allTypescriptSrcFiles
-        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
-            "\n"
-          )}</AllTypescriptFilesInProject>`
-        : ""
-    }
-
-    <ImportantInstructions>
+    return `<ImportantInstructions>
     1. Review the provided <Context> and <Task> information.
     2. Consider the overall task title, description, and instructions.
     3. Create a detailed, step-by-step explaination of a coding plan that specifies the code changes needed in text to accomplish the overall task.
@@ -34,6 +24,14 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
            10. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
         : ``
     }</ImportantInstructions>
+
+    ${
+      this.memory.allTypescriptSrcFiles
+        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
+            "\n"
+          )}</AllTypescriptFilesInProject>`
+        : ""
+    }
     `;
   }
 
@@ -52,24 +50,18 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
     Do not output actual code just a detailed plan of the changes needed to the code.
 
-    Let's think step by step.
+     ${
+      this.currentErrors
+        ? `TASK: Focus on fixing the errors in the files you've been changing do not plan anything else.`
+        : ``
+    }
 
     Your coding plan:
     `;
   }
 
   reviewSystemPrompt() {
-    return `You are an expert software engineering analyzer.
-
-    ${
-      this.memory.allTypescriptSrcFiles
-        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
-            "\n"
-          )}</AllTypescriptFilesInProject>`
-        : ""
-    }
-
-    Instructions:
+    return `<Instructions>
     1. Review the proposed coding plan.
     2. Assess its feasibility, correctness, and completeness.
     3. Provide feedback if you find critical issues or approve the plan if it meets the criteria with the words "Coding plan looks good".
@@ -84,8 +76,19 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
            10. Don't fix or change anything else if not required.`
         : ``
     }
+    </Instructions>
 
-    Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
+     ${
+      this.memory.allTypescriptSrcFiles
+        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
+            "\n"
+          )}</AllTypescriptFilesInProject>`
+        : ""
+    }
+
+    <OutputFormat>
+      Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
+    </OutputFormat>
     `;
   }
 
@@ -102,9 +105,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
   }
 
   actionPlanReviewSystemPrompt() {
-    return `You are an expert software engineering planner.
-
-    Instructions:
+    return `<Instructions>
     1. Review the proposed action plan.
     2. Assess its feasibility, correctness, and completeness.
     3. Provide detailed feedback if you find issues or approve the plan if it meets the criteria with the words "Action plan looks good".
@@ -117,6 +118,16 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         ? `8.  You have already built the project, but it's not compiling due to recent changes. Focus the plan on fixing the known errors.`
         : ``
     }
+    </Instructions>
+
+    ${
+      this.memory.allTypescriptSrcFiles
+        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
+            "\n"
+          )}</AllTypescriptFilesInProject>`
+        : ""
+    }
+
     Important: If the action plan is good, with no major issues, only output "Action plan looks good", nothing else.
     `;
   }
@@ -132,9 +143,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
   }
 
   getActionPlanSystemPrompt() {
-    return `You are an expert software engineering planner that specialises in creating coding action plans.
-
-    Instructions:
+    return `<Instructions>
     1. Review the provided <Context> and <Task> information.
     2. Review the coding plan and create a detailed coding action plan in JSON for implementing the changes.
     3. We always create and modify typescript .ts files no .js files in the plan.
@@ -147,7 +156,9 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         ? `8.  Since you already tried building and have errors, for files you recently created, maintain "add" action only if truly new. If it's an existing file, use "change".`
         : ``
     }
-    Expected JSON Array Output:
+    </Instructions>
+
+    <JsonOutputFormat>
     [
       {
         "fullPathToNewOrUpdatedFile": string,
@@ -156,6 +167,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         "fileAction": "add" | "change" | "delete"
       }
     ]
+    </JsonOutputFormat>
     `;
   }
 
@@ -170,8 +182,6 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       Coding plan to use for your Coding Action Plan:
       ${codingPlan}
-
-      Let's think step by step.
 
       Your action plan in JSON array:
     `;
@@ -219,6 +229,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       if (codingPlan) {
         console.log(`Coding plan received:\n${codingPlan}`);
+        this.memory.latestCodingPlan = codingPlan;
+        await this.saveMemory();
 
         // Now we review the coding plan
         if (reviewRetries < maxReviewsRetries) {
@@ -317,6 +329,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
           console.log(
             `Action plan received: ${JSON.stringify(actionPlan, null, 2)}`
           );
+
+          this.memory.latestActionItemPlan = actionPlan;
+
+          await this.saveMemory();
 
           // Review the action plan
           const actionPlanReviewResponse = await this.callModel(

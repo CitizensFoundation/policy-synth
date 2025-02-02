@@ -52,7 +52,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
         let systemMessageText = "";
         if (this.scanType === "documentation") {
             systemMessageText = `
-You are an expert at extracting relevant documentation from web pages for a given task and NPM modules.
+You are an expert at extracting relevant documentation from web pages for a given task.
 
 Important instructions:
 1. Examine the <TextContext> and copy all documentation *highly relevant* to the task provided by the user.
@@ -63,7 +63,7 @@ Important instructions:
         }
         else if (this.scanType === "codeExamples") {
             systemMessageText = `
-You are an expert at extracting source code examples from web pages for a given task and NPM modules.
+You are an expert at extracting source code examples from web pages for a given task.
 
 Important instructions:
 1. Examine the <TextContext> and output all source code examples highly relevant to the user's task.
@@ -74,7 +74,7 @@ Important instructions:
         }
         else if (this.scanType === "solutionsForErrors") {
             systemMessageText = `
-You are an expert at extracting solutions to errors from web pages for a given task and NPM modules.
+You are an expert at extracting solutions to errors from web pages for a given task.
 
 Important instructions:
 1. Examine the <TextContext> and the user's potential errors, then copy solutions from the <TextContext> that address those errors.
@@ -179,26 +179,23 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
     /**
      * Main scanning method — uses concurrency with p-limit (like your first snippet).
      */
-    async scan(listOfUrls, scanType) {
+    async scan(listOfUrls, scanType, currentCountStatus) {
         this.scanType = scanType;
         // Deduplicate
         listOfUrls = Array.from(new Set(listOfUrls));
-        const total = listOfUrls.length;
         this.logger.info(`Starting WebPageScanner for ${listOfUrls.length} URLs.`);
         this.collectedWebPages = [];
         this.totalPagesSave = 0;
         // concurrency
         const MAX_URLS_TO_FETCH_PARALLEL = 1;
         const limit = pLimit(MAX_URLS_TO_FETCH_PARALLEL);
-        let completed = 0;
         const tasks = listOfUrls.map((url, i) => limit(async () => {
             // Just a simple progress update
             const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
-            await this.updateRangedProgress((completed + 1) / total, `Scanning (${completed + 1}/${total}) ${url}`);
+            await this.updateRangedProgress((currentCountStatus.currentCount + 1) / currentCountStatus.totalCount, `Scanning (${currentCountStatus.currentCount + 1}/${currentCountStatus.totalCount}) ${url}`);
             this.logger.info(`Scanning ${url}...`);
             await this.analyzeSinglePage(url);
-            completed++;
-            await this.updateRangedProgress(completed / total, `Scanned (${completed}/${total}) ${url}`);
+            await this.updateRangedProgress((currentCountStatus.currentCount + 1) / currentCountStatus.totalCount, `Scanned (${currentCountStatus.currentCount + 1}/${currentCountStatus.totalCount}) ${url}`);
         }));
         await Promise.all(tasks);
         this.logger.info(`Scan completed. Analyzed ${this.totalPagesSave} pages successfully.`);

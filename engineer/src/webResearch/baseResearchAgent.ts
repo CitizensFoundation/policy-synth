@@ -53,7 +53,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
   numberOfQueriesToGenerate = 12;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.3;
-  maxTopContentResultsToUse = 6;
+  maxTopContentResultsToUse = 10;
 
   /**
    * Enables reading/writing a debug cache file from /tmp.
@@ -184,10 +184,12 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
         this.scanningSystemPrompt
       );
 
+      const currentCountStatus = { currentCount: 0, totalCount: searchResultsToScan.length };
+
       // Map each URL into a scanning promise, but limit concurrency
       let allScanResults = await Promise.all(
         searchResultsToScan.map((result) =>
-          limit(() => webPageResearch.scan([result.url], this.scanType))
+          limit(() => webPageResearch.scan([result.url], this.scanType, currentCountStatus))
         )
       );
 
@@ -204,7 +206,10 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
           JSON.stringify(webScanResults, null, 2)
       );
 
-      // 6) Filter out irrelevant content
+      const useFilter = false;
+
+      if (useFilter) {
+        // 6) Filter out irrelevant content
       const filter = new PsEngineerWebContentFilter(
         this.agent,
         this.memory as PsEngineerMemoryData,
@@ -212,7 +217,8 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
         100
       );
 
-      webScanResults = await filter.filterContent(webScanResults);
+        webScanResults = await filter.filterContent(webScanResults);
+      }
 
       // 7) Optionally rank the final web content if we have more than we need
       if (webScanResults.length > maxTopContentResultsToUse) {

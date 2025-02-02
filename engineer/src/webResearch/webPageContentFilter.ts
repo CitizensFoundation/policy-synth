@@ -36,14 +36,16 @@ export class PsEngineerWebContentFilter extends PolicySynthAgent {
    * A short system prompt describing how the model should respond with “Yes” or “No”.
    */
   get filterSystemPrompt(): string {
-    return `
-      You are an expert software engineering analyzer.
-      <Instructions>
+    return `<Instructions>
       1. Review the task name, description, and instructions.
       2. You will see content from the web to decide if it's relevant to the task or not, to help inform the programming of this task.
       3. If the content to evaluate is empty, just answer "No"
       4. Only answer with: "Yes" or "No" indicating if the content is relevant or not to the task.
       </Instructions>
+
+      <OutputFormat>
+        Only answer with: "Yes" or "No" indicating if the content is relevant or not to the task.
+      </OutputFormat>
     `;
   }
 

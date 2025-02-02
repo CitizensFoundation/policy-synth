@@ -17,6 +17,10 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
 
       if (stderr) {
         console.error("Build errors:", stderr);
+        if (!this.memory.latestErrors) {
+          this.memory.latestErrors = [];
+        }
+        this.memory.latestErrors.push(stderr);
         return `${stderr}\n${stdout}`;
       }
 

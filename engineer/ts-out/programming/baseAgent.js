@@ -161,10 +161,14 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
             </ContentOfFilesThatMightChange>`
             : ``}
 
+      ${(false && this.memory.allTypeDefsContents)
+            ? `<AllPossiblyRelevantProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllPossiblyRelevantProjectTypescriptDefs>`
+            : ``}
+
       ${this.typeDefFilesToKeepInContextContent
-            ? `<TypeDefFilesPossiblyRelevant>
+            ? `<TypeDefFilesLikelyRelevant>
                ${this.typeDefFilesToKeepInContextContent}
-             </TypeDefFilesPossiblyRelevant>`
+             </TypeDefFilesLikelyRelevant>`
             : ``}
 
       ${this.codeFilesToKeepInContextContent

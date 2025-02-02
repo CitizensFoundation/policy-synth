@@ -294,9 +294,7 @@ export class PsEngineerAgent extends PolicySynthAgent {
 
     const getSystemPrompt = (
       addInstruction: boolean
-    ) => `You are an expert software engineering analyzer.
-
-Instructions:
+    ) => `<Instructions>
 1. You will receive a list of .d.ts file paths from the user to analyze.
 2. Always output the d.ts file paths again that are possibly relevant for the upcoming user task.
 3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
@@ -305,8 +303,11 @@ ${
     ? "4. Always output at least one d.ts file, the best ones to help with the task at hand."
     : ""
 }
+</Instructions>
 
+<OutputFormat>
 Only output a JSON array with possibly relevant d.ts files, no explanations before or after the JSON string[].
+</OutputFormat>
 
 <UpcomingUserTask>
   ${this.memory.taskTitle ? `<TaskTitle>${ this.memory.taskTitle}</TaskTitle>` : ""}
@@ -459,7 +460,22 @@ Please return a JSON string array of the relevant files:`;
         undefined,
         "Searching for .d.ts files in node_modules..."
       );
+
       const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+
+      this.memory.allTypescriptSrcFiles = [
+        ...this.memory.allTypescriptSrcFiles,
+        ...nodeModuleTypeDefs,
+      ];
+
+      if (!this.memory.usefulTypescriptDefinitionFilesToKeepInContext) {
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
+      }
+
+      this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
+        ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
+        ...nodeModuleTypeDefs,
+      ];
 
       if (nodeModuleTypeDefs.length > 0) {
         this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
@@ -485,6 +501,8 @@ Please return a JSON string array of the relevant files:`;
       this.logger.warn("No npm packages to search for .d.ts files");
     }
 
+    await this.saveMemory();
+
     //this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
 
     if (this.memory.needsDocumentationAndExamples === true) {
@@ -494,6 +512,8 @@ Please return a JSON string array of the relevant files:`;
       );
       await this.doWebResearch();
     }
+
+    await this.saveMemory();
 
     // Finally, call the programming agent to implement the task.
     const programmer = new PsEngineerProgrammingAgent(

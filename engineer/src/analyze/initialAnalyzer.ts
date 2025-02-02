@@ -212,7 +212,13 @@ ${fileContent}
       analyzisResults.existingTypeScriptFilesLikelyToChange;
     this.memory.usefulTypescriptDefinitionFilesToKeepInContext =
       analyzisResults.usefulTypescriptDefinitionFilesToKeepInContext;
-    this.memory.likelyRelevantNpmPackageDependencies =
+
+    this.memory.usefulTypescriptCodeFilesToKeepInContext =
+      analyzisResults.usefulTypescriptCodeFilesToKeepInContext.filter(
+        (file) => !analyzisResults.existingTypeScriptFilesLikelyToChange.includes(file)
+      );
+
+      this.memory.likelyRelevantNpmPackageDependencies =
       analyzisResults.likelyRelevantNpmPackageDependencies;
     this.memory.needsDocumentationAndExamples =
       analyzisResults.needsDocumentationAndExamples;

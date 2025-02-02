@@ -1,9 +1,10 @@
-import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
 export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
     instructions;
     memory;
-    defaultModelSize = PsAiModelSize.Medium;
+    defaultModelSize = PsAiModelSize.Small;
+    defaultModelType = PsAiModelType.TextReasoning;
     updatePrefix = "Ranking Results";
     constructor(agent, memory, startProgress = 0, endProgress = 100) {
         super(agent, memory, startProgress, endProgress);
@@ -15,11 +16,7 @@ export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
         const itemOne = this.allItems[index][itemOneIndex];
         const itemTwo = this.allItems[index][itemTwoIndex];
         const messages = [
-            this.createSystemMessage(`
-<psEngineerWebContentRanker>
-You are an AI expert trained to rank search queries based on their relevance to the user instructions.
-
-${this.memory.taskTitle ? `<OverallTaskTitle>
+            this.createSystemMessage(`${this.memory.taskTitle ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
 </OverallTaskTitle>` : ""}
 
@@ -37,24 +34,28 @@ ${this.memory.likelyRelevantNpmPackageDependencies &&
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
                 : ""}
 
-Instructions:
+<Instructions>
 1. You will see user instructions and two content items.
 2. Analyze, compare, and rank the content items based on their relevance.
 3. Output your decision as "One", "Two" or "Neither". No explanation is required.
-</psEngineerWebContentRanker>
+</Instructions>
       `),
             this.createHumanMessage(`
-User instructions: ${this.instructions}
+<UserInstructions>
+${this.instructions}
+</UserInstructions>
 
-Content Items to Rank:
+<ContentItemsToRank>
+  <One>
+  ${itemOne}
+  </One>
 
-Content Item One:
-${itemOne}
+  <Two>
+  ${itemTwo}
+  </Two>
+</ContentItemsToRank>
 
-Content Item Two:
-${itemTwo}
-
-The Most Relevant Content Item Is:
+The Most Relevant Content Item Is (One, Two or Neither):
       `)
         ];
         return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
@@ -62,7 +63,7 @@ The Most Relevant Content Item Is:
     async rankWebContent(queriesToRank, instructions, maxPrompts = 120) {
         this.instructions = instructions;
         // Set up the prompts for pairwise ranking.
-        this.setupRankingPrompts(-1, queriesToRank, maxPrompts, this.progressFunction);
+        this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 10, this.progressFunction, 3);
         await this.performPairwiseRanking(-1);
         await this.saveMemory();
         return this.getOrderedListOfItems(-1);

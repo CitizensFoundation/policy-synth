@@ -20,7 +20,7 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
     numberOfQueriesToGenerate = 12;
     percentOfQueriesToSearch = 0.25;
     percentOfResultsToScan = 0.3;
-    maxTopContentResultsToUse = 6;
+    maxTopContentResultsToUse = 10;
     /**
      * Enables reading/writing a debug cache file from /tmp.
      */
@@ -95,8 +95,9 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
             // Example concurrency limit usage if you want to parallelize scanning:
             const limit = pLimit(PsEngineerBaseWebResearchAgent.CONCURRENCY_LIMIT);
             const webPageResearch = new WebPageScanner(this.agent, this.memory, 0, 100, this.scanningSystemPrompt);
+            const currentCountStatus = { currentCount: 0, totalCount: searchResultsToScan.length };
             // Map each URL into a scanning promise, but limit concurrency
-            let allScanResults = await Promise.all(searchResultsToScan.map((result) => limit(() => webPageResearch.scan([result.url], this.scanType))));
+            let allScanResults = await Promise.all(searchResultsToScan.map((result) => limit(() => webPageResearch.scan([result.url], this.scanType, currentCountStatus))));
             // Flatten results if each scan() returns an array
             const webScanResultsFlat = allScanResults.flat();
             // Just include a string[] from .analysis
@@ -104,9 +105,12 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
             this.logger.info("Website Scanning Completed.");
             this.logger.debug(`Raw webScanResults: (${webScanResults.length})\n` +
                 JSON.stringify(webScanResults, null, 2));
-            // 6) Filter out irrelevant content
-            const filter = new PsEngineerWebContentFilter(this.agent, this.memory, 0, 100);
-            webScanResults = await filter.filterContent(webScanResults);
+            const useFilter = false;
+            if (useFilter) {
+                // 6) Filter out irrelevant content
+                const filter = new PsEngineerWebContentFilter(this.agent, this.memory, 0, 100);
+                webScanResults = await filter.filterContent(webScanResults);
+            }
             // 7) Optionally rank the final web content if we have more than we need
             if (webScanResults.length > maxTopContentResultsToUse) {
                 this.logger.info("Ranking Web Content to select the top results");
