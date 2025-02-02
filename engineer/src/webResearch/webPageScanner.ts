@@ -168,7 +168,7 @@ ${this.instructions}
 ${text}
 </TextContext>
 
-Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
+Only output text from the <TextContext> if relevant. Do not create new code or try to fix errors. If not relevant, respond with one of the fallback messages above.
     `;
 
     const humanMessage = this.createHumanMessage(userMessageText);
@@ -257,7 +257,7 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
     this.totalPagesSave = 0;
 
     // concurrency
-    const MAX_URLS_TO_FETCH_PARALLEL = 5;
+    const MAX_URLS_TO_FETCH_PARALLEL = 1;
     const limit = pLimit(MAX_URLS_TO_FETCH_PARALLEL);
 
     let completed = 0;

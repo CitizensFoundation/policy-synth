@@ -186,12 +186,12 @@ export class PsEngineerAgent extends PolicySynthAgent {
       100
     );
 
-    const [exampleContextItems, docsContextItems] = await Promise.all([
-      exampleResearcher.doWebResearch() as Promise<string[]>,
+    const [/*exampleContextItems,*/ docsContextItems] = await Promise.all([
+     // exampleResearcher.doWebResearch() as Promise<string[]>,
       docsResearcher.doWebResearch() as Promise<string[]>,
     ]);
 
-    this.memory.exampleContextItems = exampleContextItems;
+    //this.memory.exampleContextItems = exampleContextItems;
     this.memory.docsContextItems = docsContextItems;
 
     this.memory.actionLog.push("Web research completed");

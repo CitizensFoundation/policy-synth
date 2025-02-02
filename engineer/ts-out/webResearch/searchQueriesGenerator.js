@@ -48,7 +48,7 @@ Your JSON array output:
         ];
     }
     async generateSearchQueries() {
-        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderMessages());
+        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderMessages(), true);
     }
 }
 //# sourceMappingURL=searchQueriesGenerator.js.map

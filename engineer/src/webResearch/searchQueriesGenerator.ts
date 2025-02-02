@@ -68,7 +68,8 @@ Your JSON array output:
     return await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Large,
-      await this.renderMessages()
+      await this.renderMessages(),
+      true
     );
   }
 }

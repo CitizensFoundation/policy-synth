@@ -53,23 +53,23 @@ ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
     : ""}
 
 Instructions:
-1. You will see user instructions and two search queries.
-2. Analyze, compare, and rank the queries based on their relevance.
+1. You will see user instructions and two content items.
+2. Analyze, compare, and rank the content items based on their relevance.
 3. Output your decision as "One", "Two" or "Neither". No explanation is required.
 </psEngineerWebContentRanker>
       `),
       this.createHumanMessage(`
 User instructions: ${this.instructions}
 
-Search Queries to Rank:
+Content Items to Rank:
 
-Search Query One:
+Content Item One:
 ${itemOne}
 
-Search Query Two:
+Content Item Two:
 ${itemTwo}
 
-The Most Relevant Search Query Is:
+The Most Relevant Content Item Is:
       `)
     ];
 
