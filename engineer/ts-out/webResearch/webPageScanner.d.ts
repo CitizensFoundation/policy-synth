@@ -14,11 +14,13 @@ export declare class WebPageScanner extends GetWebPagesBaseAgent {
     instructions: string;
     collectedWebPages: any[];
     totalPagesSave: number;
-    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number, instructions: string);
     /**
      * We override the modelTemperature from the base agent if needed
      */
     get modelTemperature(): number;
+    get maxModelTokensOut(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
+    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number, instructions: string);
     /**
      * A helper to sanitize text (kept from your old snippet).
      */

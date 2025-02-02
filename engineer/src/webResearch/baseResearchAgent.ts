@@ -207,6 +207,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
         0,
         100
       );
+
       webScanResults = await filter.filterContent(webScanResults);
 
       // 7) Optionally rank the final web content if we have more than we need

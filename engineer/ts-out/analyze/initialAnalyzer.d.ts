@@ -9,6 +9,7 @@ export declare class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     readNpmDependencies(): any;
     get analyzeSystemPrompt(): string;
     analyzeUserPrompt(allNpmPackageDependencies: string[], allDocumentationFiles: string[]): string;
+    getFilesContents(filePaths: string[]): string;
     analyzeAndSetup(): Promise<void>;
 }
 //# sourceMappingURL=initialAnalyzer.d.ts.map

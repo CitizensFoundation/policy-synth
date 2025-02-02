@@ -6,10 +6,11 @@ import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.
  * but keep all your existing functionality and method logic.
  */
 export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
-    otherFilesToKeepInContextContent;
     documentationFilesInContextContent;
     currentFileContents;
     likelyToChangeFilesContents;
+    typeDefFilesToKeepInContextContent;
+    codeFilesToKeepInContextContent;
     maxRetries = 72;
     currentErrors;
     previousCurrentErrors;
@@ -26,10 +27,13 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */
-    constructor(agent, memory, startProgress = 0, endProgress = 100, otherFilesToKeepInContextContent, documentationFilesInContextContent, likelyToChangeFilesContents, tsMorphProject) {
+    constructor(agent, memory, startProgress = 0, endProgress = 100, typeDefFilesToKeepInContextContent, codeFilesToKeepInContextContent, documentationFilesInContextContent, likelyToChangeFilesContents, tsMorphProject) {
         super(agent, memory, startProgress, endProgress);
-        this.otherFilesToKeepInContextContent = otherFilesToKeepInContextContent;
-        this.documentationFilesInContextContent = documentationFilesInContextContent;
+        this.typeDefFilesToKeepInContextContent =
+            typeDefFilesToKeepInContextContent;
+        this.codeFilesToKeepInContextContent = codeFilesToKeepInContextContent;
+        this.documentationFilesInContextContent =
+            documentationFilesInContextContent;
         this.likelyToChangeFilesContents = likelyToChangeFilesContents;
         this.tsMorphProject = tsMorphProject;
     }
@@ -137,17 +141,19 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
         </ContextFromOnlineSearch>`
             : ``}
     <Context>
-      Typescript files that might have to change:
+      <TypescriptFilesThatAreLikelyToChange>
       ${this.memory.existingTypeScriptFilesLikelyToChange
             ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
             : "(none listed)"}
+      </TypescriptFilesThatAreLikelyToChange>
+
 
       ${this.documentationFilesInContextContent
-            ? `Local documentation:\n${this.documentationFilesInContextContent}`
+            ? `<LocalDocumentation>
+              ${this.documentationFilesInContextContent}
+            </LocalDocumentation>`
             : ``}
 
-      All typedefs:
-      ${this.memory.allTypeDefsContents}
 
       ${!hasCompletedFiles
             ? `<ContentOfFilesThatMightChange>
@@ -155,16 +161,22 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
             </ContentOfFilesThatMightChange>`
             : ``}
 
-      ${this.otherFilesToKeepInContextContent
-            ? `<OtherFilesPossiblyRelevant>
-               ${this.otherFilesToKeepInContextContent}
-             </OtherFilesPossiblyRelevant>`
+      ${this.typeDefFilesToKeepInContextContent
+            ? `<TypeDefFilesPossiblyRelevant>
+               ${this.typeDefFilesToKeepInContextContent}
+             </TypeDefFilesPossiblyRelevant>`
+            : ``}
+
+      ${this.codeFilesToKeepInContextContent
+            ? `<CodeFilesPossiblyRelevant>
+               ${this.codeFilesToKeepInContextContent}
+             </CodeFilesPossiblyRelevant>`
             : ``}
 
       ${hasCompletedFiles
-            ? `<CodeFilesYouHaveAlreadyCompleted>
+            ? `<CodeFilesYouHaveAlreadyCompletedWorkOn>
                ${this.getCompletedFileContent()}
-             </CodeFilesYouHaveAlreadyCompleted>`
+             </CodeFilesYouHaveAlreadyCompletedWorkOn>`
             : ``}
     </Context>
 
@@ -173,15 +185,17 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     }
     renderProjectDescription() {
         return `<ProjectInstructions>
-      Overall project title:
-      ${this.memory.taskTitle}
+        ${this.memory.taskTitle
+            ? `<ProjectTitle>${this.memory.taskTitle}</ProjectTitle>`
+            : ``}
 
-      Overall project description:
-      ${this.memory.taskDescription}
+        ${this.memory.taskDescription
+            ? `<OverallProjectDescription>${this.memory.taskDescription}</OverallProjectDescription>`
+            : ``}
 
-      <OverAllTaskInstructions>
-        ${this.memory.taskInstructions}
-      </OverAllTaskInstructions>
+        ${this.memory.taskInstructions
+            ? `<OverallTaskInstructions>${this.memory.taskInstructions}</OverallTaskInstructions>`
+            : ``}
     </ProjectInstructions>`;
     }
     renderOriginalFiles() {
@@ -208,12 +222,12 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
             return null;
         }
     }
-    getFileContentsWithFileName(fileNames) {
+    getFileContentsWithFileName(fileNames, xmlTagName) {
         return fileNames
             .map((fileName) => {
             const fileContent = this.loadFileContents(fileName);
             if (fileContent) {
-                return `${fileName}\n${fileContent}`;
+                return `<${xmlTagName} filename="${fileName}">\n${fileContent}</${xmlTagName}>`;
             }
             return null;
         })

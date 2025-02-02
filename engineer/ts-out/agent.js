@@ -288,7 +288,9 @@ Please return a JSON string array of the relevant files:`;
         // Read all TypeScript source file names from the configured workspace.
         this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(this.memory.workspaceFolder);
         if (this.memory.outsideTypedefPath) {
-            const files = await this.readAllTypescriptFileNames(this.memory.outsideTypedefPath);
+            let files = await this.readAllTypescriptFileNames(this.memory.outsideTypedefPath);
+            // Filter so only include d.ts. files that are in the outsideTypedefPath
+            files = files.filter((filePath) => filePath.endsWith(".d.ts"));
             this.memory.allTypescriptSrcFiles = [
                 ...this.memory.allTypescriptSrcFiles,
                 ...files,
@@ -318,6 +320,7 @@ Please return a JSON string array of the relevant files:`;
         // If there are any likely-relevant npm package dependencies, search for .d.ts files.
         if (this.memory.likelyRelevantNpmPackageDependencies &&
             this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
+            await this.updateRangedProgress(undefined, "Searching for .d.ts files in node_modules...");
             const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
@@ -341,8 +344,9 @@ Please return a JSON string array of the relevant files:`;
         else {
             this.logger.warn("No npm packages to search for .d.ts files");
         }
-        this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
-        if (this.memory.needsDocumentionsAndExamples === true) {
+        //this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
+        if (this.memory.needsDocumentationAndExamples === true) {
+            await this.updateRangedProgress(undefined, "Doing web research...");
             await this.doWebResearch();
         }
         // Finally, call the programming agent to implement the task.
@@ -350,6 +354,7 @@ Please return a JSON string array of the relevant files:`;
         this.logger.info(`Starting to implement task`);
         await programmer.implementTask();
         await this.setCompleted("Task Completed");
+        await this.saveMemory();
     }
     static configurationQuestions = [
         {

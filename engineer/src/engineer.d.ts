@@ -42,10 +42,10 @@ interface PsEngineerContextItem {
 
 interface PsEngineerPlanningResults {
   existingTypeScriptFilesLikelyToChange: string[];
-  existingOtherTypescriptFilesToKeepInContext: string[];
+  existingOtherTypescriptDefinitionFilesToKeepInContext: string[];
   documentationFilesToKeepInContext: string[];
   likelyRelevantNpmPackageDependencies: string[];
-  needsDocumentionsAndExamples: boolean;
+  needsDocumentationAndExamples: boolean;
 }
 
 interface PsEngineerDocsResearch {
@@ -85,9 +85,11 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   allTypescriptSrcFiles?: string[];
   currentFilesBeingAdded?: string[];
   existingTypeScriptFilesLikelyToChange: string[];
-  existingOtherTypescriptFilesToKeepInContext: string[];
+  existingTypeScriptFilesLikelyToChangeContents?: string;
+  existingOtherTypescriptDefinitionFilesToKeepInContext: string[];
+  existingOtherTypescriptCodeFilesToKeepInContext: string[];
   documentationFilesToKeepInContext: string[];
-  needsDocumentionsAndExamples?: boolean;
+  needsDocumentationAndExamples?: boolean;
   allTypeDefsContents?: string;
   likelyRelevantNpmPackageDependencies: string[];
   docsContextItems?: string[];

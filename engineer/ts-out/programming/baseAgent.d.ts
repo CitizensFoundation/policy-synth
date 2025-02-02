@@ -7,10 +7,11 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  */
 export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     memory: PsEngineerMemoryData;
-    otherFilesToKeepInContextContent: string | undefined | null;
     documentationFilesInContextContent: string | undefined | null;
     currentFileContents: string | undefined | null;
     likelyToChangeFilesContents: string | undefined | null;
+    typeDefFilesToKeepInContextContent: string | undefined | null;
+    codeFilesToKeepInContextContent: string | undefined | null;
     maxRetries: number;
     currentErrors: string | undefined | null;
     previousCurrentErrors: string | undefined | null;
@@ -21,7 +22,7 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */
-    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress?: number, endProgress?: number, otherFilesToKeepInContextContent?: string | null, documentationFilesInContextContent?: string | null, likelyToChangeFilesContents?: string | null, tsMorphProject?: Project);
+    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress?: number, endProgress?: number, typeDefFilesToKeepInContextContent?: string | null, codeFilesToKeepInContextContent?: string | null, documentationFilesInContextContent?: string | null, likelyToChangeFilesContents?: string | null, tsMorphProject?: Project);
     updateMemoryWithFileContents(fileName: string, content: string): void;
     renderCodingRules(): string;
     setOriginalFileIfNeeded(fileName: string, content: string): void;
@@ -33,7 +34,7 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     renderProjectDescription(): string;
     renderOriginalFiles(): string;
     loadFileContents(fileName: string): string | null;
-    getFileContentsWithFileName(fileNames: string[]): string;
+    getFileContentsWithFileName(fileNames: string[], xmlTagName: string): string;
     /**
      * Example usage of the new callModel approach if you need to invoke the LLM:
      */

@@ -399,9 +399,13 @@ Please return a JSON string array of the relevant files:`;
     );
 
     if (this.memory.outsideTypedefPath) {
-      const files = await this.readAllTypescriptFileNames(
+      let files = await this.readAllTypescriptFileNames(
         this.memory.outsideTypedefPath
       );
+
+      // Filter so only include d.ts. files that are in the outsideTypedefPath
+      files = files.filter((filePath) => filePath.endsWith(".d.ts"));
+
       this.memory.allTypescriptSrcFiles = [
         ...this.memory.allTypescriptSrcFiles,
         ...files,
@@ -451,6 +455,10 @@ Please return a JSON string array of the relevant files:`;
       this.memory.likelyRelevantNpmPackageDependencies &&
       this.memory.likelyRelevantNpmPackageDependencies.length > 0
     ) {
+      await this.updateRangedProgress(
+        undefined,
+        "Searching for .d.ts files in node_modules..."
+      );
       const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
 
       if (nodeModuleTypeDefs.length > 0) {
@@ -477,9 +485,13 @@ Please return a JSON string array of the relevant files:`;
       this.logger.warn("No npm packages to search for .d.ts files");
     }
 
-    this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
+    //this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
 
-    if (this.memory.needsDocumentionsAndExamples === true) {
+    if (this.memory.needsDocumentationAndExamples === true) {
+      await this.updateRangedProgress(
+        undefined,
+        "Doing web research..."
+      );
       await this.doWebResearch();
     }
 
@@ -493,6 +505,7 @@ Please return a JSON string array of the relevant files:`;
     this.logger.info(`Starting to implement task`);
     await programmer.implementTask();
     await this.setCompleted("Task Completed");
+    await this.saveMemory();
   }
 
   static configurationQuestions = [

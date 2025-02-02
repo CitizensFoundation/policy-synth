@@ -5,6 +5,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     planSystemPrompt() {
         return `You are an expert software engineering analyzer.
 
+    ${this.memory.allTypescriptSrcFiles
+            ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join("\n")}</AllTypescriptFilesInProject>`
+            : ""}
+
     <ImportantInstructions>
     1. Review the provided <Context> and <Task> information.
     2. Consider the overall task title, description, and instructions.
@@ -41,6 +45,10 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     reviewSystemPrompt() {
         return `You are an expert software engineering analyzer.
 
+    ${this.memory.allTypescriptSrcFiles
+            ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join("\n")}</AllTypescriptFilesInProject>`
+            : ""}
+
     Instructions:
     1. Review the proposed coding plan.
     2. Assess its feasibility, correctness, and completeness.
@@ -54,6 +62,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             ? `9. You have already built the project, but it's not compiling due to errors from recent changes. Focus the plan on only those files with errors.
            10. Don't fix or change anything else if not required.`
             : ``}
+
     Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
     `;
     }

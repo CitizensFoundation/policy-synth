@@ -61,7 +61,8 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       0,
       100,
       this.likelyToChangeFilesContents,
-      this.otherFilesToKeepInContextContent,
+      this.typeDefFilesToKeepInContextContent,
+      this.codeFilesToKeepInContextContent,
       this.documentationFilesInContextContent,
       this.tsMorphProject!
     );
@@ -82,7 +83,8 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         0,
         100,
         this.likelyToChangeFilesContents,
-        this.otherFilesToKeepInContextContent,
+        this.typeDefFilesToKeepInContextContent,
+        this.codeFilesToKeepInContextContent,
         this.documentationFilesInContextContent,
         this.tsMorphProject!
       );
@@ -97,7 +99,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       while (!allCompleted) {
         await this.updateRangedProgress(
           undefined,
-          `Implementing changes... ${actionPlan.filter(action => action.status === "completed").length} / ${actionPlan.length}`
+          `Implementing changes... ${actionPlan.filter(action => action.status === "completed").length+1} / ${actionPlan.length}`
         );
         await implementationAgent.implementCodingActionPlan(
           actionPlan,
@@ -130,16 +132,24 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
 
     this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
 
-    this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(
-      this.memory.existingOtherTypescriptFilesToKeepInContext
+    this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(
+      this.memory.existingOtherTypescriptDefinitionFilesToKeepInContext,
+      "TypeDefForContext"
+    );
+
+    this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(
+      this.memory.existingOtherTypescriptCodeFilesToKeepInContext,
+      "CodeForContext"
     );
 
     this.likelyToChangeFilesContents = this.getFileContentsWithFileName(
-      this.memory.existingTypeScriptFilesLikelyToChange
+      this.memory.existingTypeScriptFilesLikelyToChange,
+      "CodeLikelyToChange"
     );
 
     this.documentationFilesInContextContent = this.getFileContentsWithFileName(
-      this.memory.documentationFilesToKeepInContext
+      this.memory.documentationFilesToKeepInContext,
+      "DocumentationForContext"
     );
 
     await this.updateRangedProgress(

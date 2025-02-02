@@ -33,17 +33,17 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     }
     async createAndRunActionPlan(currentErrors = undefined) {
         await this.updateRangedProgress(undefined, "Creating action plan...");
-        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+        const planningAgent = new PsEngineerProgrammingPlanningAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.typeDefFilesToKeepInContextContent, this.codeFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
         const actionPlan = await planningAgent.getActionPlan(currentErrors);
         await this.updateRangedProgress(undefined, "Creating action plan completed");
         console.log(`Coding plan: ${JSON.stringify(actionPlan, null, 2)}`);
         if (actionPlan) {
-            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.otherFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
+            const implementationAgent = new PsEngineerProgrammingImplementationAgent(this.agent, this.memory, 0, 100, this.likelyToChangeFilesContents, this.typeDefFilesToKeepInContextContent, this.codeFilesToKeepInContextContent, this.documentationFilesInContextContent, this.tsMorphProject);
             await this.updateRangedProgress(undefined, "Implementing changes...");
             // Loop until all actions are completed
             let allCompleted = false;
             while (!allCompleted) {
-                await this.updateRangedProgress(undefined, `Implementing changes... ${actionPlan.filter(action => action.status === "completed").length} / ${actionPlan.length}`);
+                await this.updateRangedProgress(undefined, `Implementing changes... ${actionPlan.filter(action => action.status === "completed").length + 1} / ${actionPlan.length}`);
                 await implementationAgent.implementCodingActionPlan(actionPlan, currentErrors);
                 // Check if all actions are completed
                 allCompleted = actionPlan.every((action) => action.status === "completed");
@@ -65,9 +65,10 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
             tsConfigFilePath: path.join(this.memory.workspaceFolder, "tsconfig.json"),
         });
         this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
-        this.otherFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptFilesToKeepInContext);
-        this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange);
-        this.documentationFilesInContextContent = this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext);
+        this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptDefinitionFilesToKeepInContext, "TypeDefForContext");
+        this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptCodeFilesToKeepInContext, "CodeForContext");
+        this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange, "CodeLikelyToChange");
+        this.documentationFilesInContextContent = this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext, "DocumentationForContext");
         await this.updateRangedProgress(undefined, "Implementing changes...");
         await this.implementChanges();
         await this.updateRangedProgress(undefined, "Implementing changes completed");

@@ -38,6 +38,22 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   collectedWebPages: any[] = [];
   totalPagesSave: number = 0;
 
+  /**
+   * We override the modelTemperature from the base agent if needed
+   */
+  override get modelTemperature(): number {
+    // Force to 0 for more consistent completions
+    return 0.0;
+  }
+
+  override get maxModelTokensOut(): number {
+    return 100000;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
+
   constructor(
     agent: PsAgent,
     memory: PsEngineerMemoryData,
@@ -49,14 +65,6 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
     super(agent, memory, startProgress, endProgress);
 
     this.instructions = instructions;
-  }
-
-  /**
-   * We override the modelTemperature from the base agent if needed
-   */
-  override get modelTemperature(): number {
-    // Force to 0 for more consistent completions
-    return 0.0;
   }
 
   /**
@@ -126,25 +134,41 @@ ${text}
 </TextContext>
 
 ---
-${this.memory.taskTitle ? `<OverallTaskTitle>
+${
+  this.memory.taskTitle
+    ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
-</OverallTaskTitle>` : ""}
+</OverallTaskTitle>`
+    : ""
+}
 
-${this.memory.taskDescription ? `<OverallTaskDescription>
+${
+  this.memory.taskDescription
+    ? `<OverallTaskDescription>
 ${this.memory.taskDescription}
-</OverallTaskDescription>` : ""}
+</OverallTaskDescription>`
+    : ""
+}
 
-${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${
+  this.memory.taskInstructions
+    ? `<OverallTaskInstructions>
 ${this.memory.taskInstructions}
-</OverallTaskInstructions>` : ""}
+</OverallTaskInstructions>`
+    : ""
+}
 
-Likely NPM dependencies:
+<LikelyNPMDependencies>
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
+</LikelyNPMDependencies>
 
-Likely TypeScript files in workspace:
+<LikelyTypeScriptFilesInWorkspace>
 ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
+</LikelyTypeScriptFilesInWorkspace>
 
-Important instructions from user: ${this.instructions}
+<ImportantInstructionsFromUser>
+${this.instructions}
+</ImportantInstructionsFromUser>
 
 Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
     `;
@@ -173,8 +197,8 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
     }
 
     const analysis = await this.callModel(
-      PsAiModelType.Text,
-      PsAiModelSize.Medium,
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
       messages,
       false
     );
@@ -185,7 +209,6 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
 
     return analysis;
   }
-
 
   /**
    * For each page, decide if it's PDF or HTML, fetch text, then do AI analysis
@@ -217,7 +240,6 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
       }
     }
   }
-
 
   /**
    * Main scanning method — uses concurrency with p-limit (like your first snippet).

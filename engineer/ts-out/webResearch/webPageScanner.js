@@ -11,17 +11,23 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
     instructions;
     collectedWebPages = [];
     totalPagesSave = 0;
-    constructor(agent, memory, startProgress, endProgress, instructions) {
-        // call the parent constructor from GetWebPagesBaseAgent
-        super(agent, memory, startProgress, endProgress);
-        this.instructions = instructions;
-    }
     /**
      * We override the modelTemperature from the base agent if needed
      */
     get modelTemperature() {
         // Force to 0 for more consistent completions
         return 0.0;
+    }
+    get maxModelTokensOut() {
+        return 100000;
+    }
+    get reasoningEffort() {
+        return "high";
+    }
+    constructor(agent, memory, startProgress, endProgress, instructions) {
+        // call the parent constructor from GetWebPagesBaseAgent
+        super(agent, memory, startProgress, endProgress);
+        this.instructions = instructions;
     }
     /**
      * A helper to sanitize text (kept from your old snippet).
@@ -90,25 +96,35 @@ ${text}
 </TextContext>
 
 ---
-${this.memory.taskTitle ? `<OverallTaskTitle>
+${this.memory.taskTitle
+            ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
-</OverallTaskTitle>` : ""}
+</OverallTaskTitle>`
+            : ""}
 
-${this.memory.taskDescription ? `<OverallTaskDescription>
+${this.memory.taskDescription
+            ? `<OverallTaskDescription>
 ${this.memory.taskDescription}
-</OverallTaskDescription>` : ""}
+</OverallTaskDescription>`
+            : ""}
 
-${this.memory.taskInstructions ? `<OverallTaskInstructions>
+${this.memory.taskInstructions
+            ? `<OverallTaskInstructions>
 ${this.memory.taskInstructions}
-</OverallTaskInstructions>` : ""}
+</OverallTaskInstructions>`
+            : ""}
 
-Likely NPM dependencies:
+<LikelyNPMDependencies>
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
+</LikelyNPMDependencies>
 
-Likely TypeScript files in workspace:
+<LikelyTypeScriptFilesInWorkspace>
 ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
+</LikelyTypeScriptFilesInWorkspace>
 
-Important instructions from user: ${this.instructions}
+<ImportantInstructionsFromUser>
+${this.instructions}
+</ImportantInstructionsFromUser>
 
 Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
     `;
@@ -128,7 +144,7 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("Messages for AI Analysis:", JSON.stringify(messages, null, 2));
         }
-        const analysis = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false);
+        const analysis = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false);
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("AI Analysis result:", analysis);
         }

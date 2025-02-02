@@ -15,10 +15,11 @@ import {
 export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
   declare memory: PsEngineerMemoryData;
 
-  otherFilesToKeepInContextContent: string | undefined | null;
   documentationFilesInContextContent: string | undefined | null;
   currentFileContents: string | undefined | null;
   likelyToChangeFilesContents: string | undefined | null;
+  typeDefFilesToKeepInContextContent: string | undefined | null;
+  codeFilesToKeepInContextContent: string | undefined | null;
   maxRetries = 72;
   currentErrors: string | undefined | null;
   previousCurrentErrors: string | undefined | null;
@@ -45,15 +46,19 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     memory: PsEngineerMemoryData,
     startProgress = 0,
     endProgress = 100,
-    otherFilesToKeepInContextContent?: string | null,
+    typeDefFilesToKeepInContextContent?: string | null,
+    codeFilesToKeepInContextContent?: string | null,
     documentationFilesInContextContent?: string | null,
     likelyToChangeFilesContents?: string | null,
     tsMorphProject?: Project
   ) {
     super(agent, memory, startProgress, endProgress);
 
-    this.otherFilesToKeepInContextContent = otherFilesToKeepInContextContent;
-    this.documentationFilesInContextContent = documentationFilesInContextContent;
+    this.typeDefFilesToKeepInContextContent =
+      typeDefFilesToKeepInContextContent;
+    this.codeFilesToKeepInContextContent = codeFilesToKeepInContextContent;
+    this.documentationFilesInContextContent =
+      documentationFilesInContextContent;
     this.likelyToChangeFilesContents = likelyToChangeFilesContents;
     this.tsMorphProject = tsMorphProject;
   }
@@ -195,21 +200,23 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
         : ``
     }
     <Context>
-      Typescript files that might have to change:
+      <TypescriptFilesThatAreLikelyToChange>
       ${
         this.memory.existingTypeScriptFilesLikelyToChange
           ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
           : "(none listed)"
       }
+      </TypescriptFilesThatAreLikelyToChange>
+
 
       ${
         this.documentationFilesInContextContent
-          ? `Local documentation:\n${this.documentationFilesInContextContent}`
+          ? `<LocalDocumentation>
+              ${this.documentationFilesInContextContent}
+            </LocalDocumentation>`
           : ``
       }
 
-      All typedefs:
-      ${this.memory.allTypeDefsContents}
 
       ${
         !hasCompletedFiles
@@ -220,18 +227,26 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       }
 
       ${
-        this.otherFilesToKeepInContextContent
-          ? `<OtherFilesPossiblyRelevant>
-               ${this.otherFilesToKeepInContextContent}
-             </OtherFilesPossiblyRelevant>`
+        this.typeDefFilesToKeepInContextContent
+          ? `<TypeDefFilesPossiblyRelevant>
+               ${this.typeDefFilesToKeepInContextContent}
+             </TypeDefFilesPossiblyRelevant>`
+          : ``
+      }
+
+      ${
+        this.codeFilesToKeepInContextContent
+          ? `<CodeFilesPossiblyRelevant>
+               ${this.codeFilesToKeepInContextContent}
+             </CodeFilesPossiblyRelevant>`
           : ``
       }
 
       ${
         hasCompletedFiles
-          ? `<CodeFilesYouHaveAlreadyCompleted>
+          ? `<CodeFilesYouHaveAlreadyCompletedWorkOn>
                ${this.getCompletedFileContent()}
-             </CodeFilesYouHaveAlreadyCompleted>`
+             </CodeFilesYouHaveAlreadyCompletedWorkOn>`
           : ``
       }
     </Context>
@@ -242,15 +257,23 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
 
   renderProjectDescription() {
     return `<ProjectInstructions>
-      Overall project title:
-      ${this.memory.taskTitle}
+        ${
+          this.memory.taskTitle
+            ? `<ProjectTitle>${this.memory.taskTitle}</ProjectTitle>`
+            : ``
+        }
 
-      Overall project description:
-      ${this.memory.taskDescription}
+        ${
+          this.memory.taskDescription
+            ? `<OverallProjectDescription>${this.memory.taskDescription}</OverallProjectDescription>`
+            : ``
+        }
 
-      <OverAllTaskInstructions>
-        ${this.memory.taskInstructions}
-      </OverAllTaskInstructions>
+        ${
+          this.memory.taskInstructions
+            ? `<OverallTaskInstructions>${this.memory.taskInstructions}</OverallTaskInstructions>`
+            : ``
+        }
     </ProjectInstructions>`;
   }
 
@@ -281,12 +304,12 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     }
   }
 
-  getFileContentsWithFileName(fileNames: string[]): string {
+  getFileContentsWithFileName(fileNames: string[], xmlTagName: string): string {
     return fileNames
       .map((fileName) => {
         const fileContent = this.loadFileContents(fileName);
         if (fileContent) {
-          return `${fileName}\n${fileContent}`;
+          return `<${xmlTagName} filename="${fileName}">\n${fileContent}</${xmlTagName}>`;
         }
         return null;
       })

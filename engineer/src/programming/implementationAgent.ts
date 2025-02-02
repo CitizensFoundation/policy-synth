@@ -268,7 +268,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
         try {
           review = await this.callModel(
             PsAiModelType.TextReasoning,
-            PsAiModelSize.Medium,
+            PsAiModelSize.Small,
             messagesForReview,
             false
           );
@@ -306,8 +306,31 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     }
 
     let fullFileName = fileName;
-    if (fullFileName.indexOf(this.memory.workspaceFolder) === -1) {
+    if (
+      !fileName.startsWith(this.memory.workspaceFolder) &&
+      (!this.memory.outsideTypedefPath ||
+        (this.memory.outsideTypedefPath &&
+          !fileName.startsWith(this.memory.outsideTypedefPath)))
+    ) {
       fullFileName = path.join(this.memory.workspaceFolder, fileName);
+    }
+    fullFileName = path.resolve(fullFileName);
+
+    const allowedPaths = [path.resolve(this.memory.workspaceFolder)];
+    if (this.memory.outsideTypedefPath) {
+      allowedPaths.push(path.resolve(this.memory.outsideTypedefPath));
+    }
+
+    const isAllowed = allowedPaths.some(
+      (allowedPath) =>
+        fullFileName === allowedPath ||
+        fullFileName.startsWith(allowedPath + path.sep)
+    );
+
+    if (!isAllowed) {
+      throw new Error(
+        `Attempt to write file outside allowed directories: ${fullFileName}`
+      );
     }
 
     const directory = path.dirname(fullFileName);
