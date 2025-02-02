@@ -101,10 +101,10 @@ export class OpenAiChat extends BaseChatModel {
         }
       }
     } else {
-      this.logger.debug("Calling OpenAI model...");
       if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
-        this.logger.debug(`Messages: ${JSON.stringify(formattedMessages, null, 2)}`);
+        this.logger.debug(`Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`);
       }
+      this.logger.debug("Calling OpenAI model...");
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,

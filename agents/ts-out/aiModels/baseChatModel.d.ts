@@ -10,5 +10,9 @@ export declare abstract class BaseChatModel extends PolicySynthAgentBase {
         content: string;
     } | undefined>;
     abstract getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
+    prettyPrintPromptMessages(messages: {
+        role: string;
+        content: string;
+    }[]): string;
 }
 //# sourceMappingURL=baseChatModel.d.ts.map

@@ -7,5 +7,18 @@ export class BaseChatModel extends PolicySynthAgentBase {
         this.modelName = modelName;
         this.maxTokensOut = maxTokensOut;
     }
+    prettyPrintPromptMessages(messages) {
+        return messages
+            .map((msg, index) => {
+            return [
+                `----- Message ${index + 1} -----`,
+                `Role: ${msg.role}`,
+                `Content:`,
+                msg.content, // content is printed as-is (preserving newlines and markdown)
+                `---------------------------`
+            ].join("\n");
+        })
+            .join("\n\n");
+    }
 }
 //# sourceMappingURL=baseChatModel.js.map
