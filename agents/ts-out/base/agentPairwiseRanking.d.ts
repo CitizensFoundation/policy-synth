@@ -1,9 +1,10 @@
-import { PsAiModelSize } from "../aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthAgent } from "./agent.js";
 export declare abstract class PairwiseRankingAgent extends PolicySynthAgent {
     protected get maxModelTokensOut(): number;
     protected get modelTemperature(): number;
     defaultModelSize: PsAiModelSize;
+    defaultModelType: PsAiModelType;
     prompts: Record<number, number[][]>;
     allItems: Record<number, (PsEloRateable[] | string[]) | undefined>;
     INITIAL_ELO_RATING: number;

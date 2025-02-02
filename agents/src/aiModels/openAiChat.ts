@@ -25,6 +25,7 @@ export class OpenAiChat extends BaseChatModel {
     this.modelConfig = config;
   }
 
+
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,

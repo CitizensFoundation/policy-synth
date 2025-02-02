@@ -1,9 +1,10 @@
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthAgent } from "./agent.js";
 export class PairwiseRankingAgent extends PolicySynthAgent {
-    get maxModelTokensOut() { return 3; }
+    get maxModelTokensOut() { return 3000; }
     get modelTemperature() { return 0.0; }
     defaultModelSize = PsAiModelSize.Medium;
+    defaultModelType = PsAiModelType.Text;
     prompts = {};
     allItems = {};
     INITIAL_ELO_RATING = 1000;
@@ -88,7 +89,7 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
             while (retry && retryCount < maxRetryCount) {
                 try {
                     this.logger.debug(`Calling model`);
-                    const winningItemText = await this.callModel(PsAiModelType.Text, this.defaultModelSize, messages, false);
+                    const winningItemText = await this.callModel(this.defaultModelType, this.defaultModelSize, messages, false);
                     if (!winningItemText) {
                         throw new Error("No winning item text");
                     }

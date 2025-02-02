@@ -2,10 +2,11 @@ import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PolicySynthAgent } from "./agent.js";
 
 export abstract class PairwiseRankingAgent extends PolicySynthAgent {
-  protected get maxModelTokensOut(): number { return 3; }
+  protected get maxModelTokensOut(): number { return 3000; }
   protected get modelTemperature(): number { return 0.0; }
 
   defaultModelSize = PsAiModelSize.Medium;
+  defaultModelType = PsAiModelType.Text;
 
   prompts: Record<number, number[][]> = {};
   allItems: Record<number, (PsEloRateable[] | string[]) | undefined> = {};
@@ -139,7 +140,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
         try {
           this.logger.debug(`Calling model`);
           const winningItemText = await this.callModel(
-            PsAiModelType.Text,
+            this.defaultModelType,
             this.defaultModelSize,
             messages,
             false
