@@ -242,7 +242,7 @@ Please return a JSON string array of the relevant files:`;
                     this.createSystemMessage(systemPrompt),
                     this.createHumanMessage(userPrompt),
                 ];
-                relevantFiles = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, true));
+                relevantFiles = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, true));
                 this.logger.info(JSON.stringify(relevantFiles, null, 2));
                 relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
                 this.logger.info("Filtered relevant files", relevantFiles);

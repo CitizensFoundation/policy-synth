@@ -133,12 +133,12 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
 
     this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(
-      this.memory.existingOtherTypescriptDefinitionFilesToKeepInContext,
+      this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
       "TypeDefForContext"
     );
 
     this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(
-      this.memory.existingOtherTypescriptCodeFilesToKeepInContext,
+      this.memory.usefulTypescriptCodeFilesToKeepInContext,
       "CodeForContext"
     );
 

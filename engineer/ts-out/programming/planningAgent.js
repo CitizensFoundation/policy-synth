@@ -160,7 +160,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 this.havePrintedDebugPrompt = true;
             }
             // -- Call the model with the new approach
-            const planResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+            const planResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                 this.createSystemMessage(this.planSystemPrompt()),
                 this.createHumanMessage(this.getUserPlanPrompt(reviewLog)),
             ], false // not streaming
@@ -179,7 +179,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 console.log(`Coding plan received:\n${codingPlan}`);
                 // Now we review the coding plan
                 if (reviewRetries < maxReviewsRetries) {
-                    const reviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                    const reviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                         this.createSystemMessage(this.reviewSystemPrompt()),
                         this.createHumanMessage(this.getUserReviewPrompt(codingPlan)),
                     ], false // not streaming

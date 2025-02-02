@@ -62,6 +62,10 @@ ${npmDeps ? `<NpmDependencies>
 ${npmDeps}
 </NpmDependencies>` : ""}
 
+${this.memory.existingTypeScriptFilesLikelyToChangeContents ? `<ExistingTypeScriptFilesLikelyToChangeContents>
+  ${this.memory.existingTypeScriptFilesLikelyToChangeContents}
+  </ExistingTypeScriptFilesLikelyToChangeContents>` : ""}
+
 <ContentToEvaluateForRelevanceToTheTask>
 ${contentToEvaluate}
 </ContentToEvaluateForRelevanceToTheTask>

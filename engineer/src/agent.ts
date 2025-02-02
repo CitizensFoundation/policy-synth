@@ -334,7 +334,7 @@ Please return a JSON string array of the relevant files:`;
 
         relevantFiles = (await this.callModel(
           PsAiModelType.TextReasoning,
-          PsAiModelSize.Medium,
+          PsAiModelSize.Small,
           messages,
           true
         )) as string[];

@@ -1,4 +1,4 @@
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRanking.js";
 export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
     instructions;
@@ -57,8 +57,7 @@ ${itemTwo}
 The Most Relevant Content Item Is:
       `)
         ];
-        // callModel is our new unified method that replaces getResultsFromLLM.
-        return await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true);
+        return await this.getResultsFromLLM(index, messages, itemOneIndex, itemTwoIndex);
     }
     async rankWebContent(queriesToRank, instructions, maxPrompts = 120) {
         this.instructions = instructions;

@@ -73,12 +73,11 @@ The Most Relevant Content Item Is:
       `)
     ];
 
-    // callModel is our new unified method that replaces getResultsFromLLM.
-    return await this.callModel(
-      PsAiModelType.Text,
-      PsAiModelSize.Medium,
+    return await this.getResultsFromLLM(
+      index,
       messages,
-      true
+      itemOneIndex,
+      itemTwoIndex
     );
   }
 

@@ -199,7 +199,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       // -- Call the model with the new approach
       const planResponse = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Medium,
+        PsAiModelSize.Small,
         [
           this.createSystemMessage(this.planSystemPrompt()),
           this.createHumanMessage(this.getUserPlanPrompt(reviewLog)),
@@ -224,7 +224,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         if (reviewRetries < maxReviewsRetries) {
           const reviewResponse = await this.callModel(
             PsAiModelType.TextReasoning,
-            PsAiModelSize.Medium,
+            PsAiModelSize.Small,
             [
               this.createSystemMessage(this.reviewSystemPrompt()),
               this.createHumanMessage(this.getUserReviewPrompt(codingPlan)),

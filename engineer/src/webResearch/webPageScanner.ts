@@ -251,6 +251,7 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
 
     // Deduplicate
     listOfUrls = Array.from(new Set(listOfUrls));
+    const total = listOfUrls.length;
 
     this.logger.info(`Starting WebPageScanner for ${listOfUrls.length} URLs.`);
     this.collectedWebPages = [];
@@ -266,17 +267,19 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
         // Just a simple progress update
         const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
         await this.updateRangedProgress(
-          progress,
-          `Scanning (${i + 1}/${listOfUrls.length}) ${url}`
+          (completed + 1) / total,
+          `Scanning (${completed + 1}/${total}) ${url}`
         );
+
 
         this.logger.info(`Scanning ${url}...`);
         await this.analyzeSinglePage(url);
 
         completed++;
+
         await this.updateRangedProgress(
-          progress,
-          `Scanned (${completed}/${listOfUrls.length}) ${url}`
+          completed / total,
+          `Scanned (${completed}/${total}) ${url}`
         );
       })
     );

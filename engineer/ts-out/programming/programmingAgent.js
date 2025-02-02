@@ -65,8 +65,8 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
             tsConfigFilePath: path.join(this.memory.workspaceFolder, "tsconfig.json"),
         });
         this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
-        this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptDefinitionFilesToKeepInContext, "TypeDefForContext");
-        this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.existingOtherTypescriptCodeFilesToKeepInContext, "CodeForContext");
+        this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, "TypeDefForContext");
+        this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.usefulTypescriptCodeFilesToKeepInContext, "CodeForContext");
         this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange, "CodeLikelyToChange");
         this.documentationFilesInContextContent = this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext, "DocumentationForContext");
         await this.updateRangedProgress(undefined, "Implementing changes...");

@@ -183,6 +183,7 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
         this.scanType = scanType;
         // Deduplicate
         listOfUrls = Array.from(new Set(listOfUrls));
+        const total = listOfUrls.length;
         this.logger.info(`Starting WebPageScanner for ${listOfUrls.length} URLs.`);
         this.collectedWebPages = [];
         this.totalPagesSave = 0;
@@ -193,11 +194,11 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
         const tasks = listOfUrls.map((url, i) => limit(async () => {
             // Just a simple progress update
             const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
-            await this.updateRangedProgress(progress, `Scanning (${i + 1}/${listOfUrls.length}) ${url}`);
+            await this.updateRangedProgress((completed + 1) / total, `Scanning (${completed + 1}/${total}) ${url}`);
             this.logger.info(`Scanning ${url}...`);
             await this.analyzeSinglePage(url);
             completed++;
-            await this.updateRangedProgress(progress, `Scanned (${completed}/${listOfUrls.length}) ${url}`);
+            await this.updateRangedProgress(completed / total, `Scanned (${completed}/${total}) ${url}`);
         }));
         await Promise.all(tasks);
         this.logger.info(`Scan completed. Analyzed ${this.totalPagesSave} pages successfully.`);
