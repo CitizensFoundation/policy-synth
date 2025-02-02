@@ -14,6 +14,19 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export class PsEngineerWebContentFilter extends PolicySynthAgent {
   override memory: PsEngineerMemoryData;
 
+  override get modelTemperature(): number {
+    // Force to 0 for more consistent completions
+    return 0.0;
+  }
+
+  override get maxModelTokensOut(): number {
+    return 70000;
+  }
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
+
   constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number) {
     super(agent, memory, startProgress, endProgress);
     this.memory = memory;
@@ -25,11 +38,12 @@ export class PsEngineerWebContentFilter extends PolicySynthAgent {
   get filterSystemPrompt(): string {
     return `
       You are an expert software engineering analyzer.
-      Instructions:
+      <Instructions>
       1. Review the task name, description, and instructions.
       2. You will see content from the web to decide if it's relevant to the task or not, to help inform the programming of this task.
       3. If the content to evaluate is empty, just answer "No"
       4. Only answer with: "Yes" or "No" indicating if the content is relevant or not to the task.
+      </Instructions>
     `;
   }
 
@@ -39,7 +53,7 @@ export class PsEngineerWebContentFilter extends PolicySynthAgent {
   filterUserPrompt(contentToEvaluate: string): string {
     // Add references to npm dependencies if present
     const npmDeps = this.memory.likelyRelevantNpmPackageDependencies?.length
-      ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
+      ? `<LikelyRelevantNpmDependencies>\n${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}</LikelyRelevantNpmDependencies>`
       : "";
 
     return `
@@ -55,10 +69,13 @@ ${this.memory.taskInstructions ? `<OverallTaskInstructions>
 ${this.memory.taskInstructions}
 </OverallTaskInstructions>` : ""}
 
+${npmDeps ? `<NpmDependencies>
 ${npmDeps}
+</NpmDependencies>` : ""}
 
-Content to evaluate for relevance to the task:
+<ContentToEvaluateForRelevanceToTheTask>
 ${contentToEvaluate}
+</ContentToEvaluateForRelevanceToTheTask>
 
 Is the content relevant to the task? Yes or No:
     `;

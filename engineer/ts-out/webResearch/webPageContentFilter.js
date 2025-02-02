@@ -9,6 +9,16 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
  */
 export class PsEngineerWebContentFilter extends PolicySynthAgent {
     memory;
+    get modelTemperature() {
+        // Force to 0 for more consistent completions
+        return 0.0;
+    }
+    get maxModelTokensOut() {
+        return 70000;
+    }
+    get reasoningEffort() {
+        return "high";
+    }
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         this.memory = memory;
@@ -19,11 +29,12 @@ export class PsEngineerWebContentFilter extends PolicySynthAgent {
     get filterSystemPrompt() {
         return `
       You are an expert software engineering analyzer.
-      Instructions:
+      <Instructions>
       1. Review the task name, description, and instructions.
       2. You will see content from the web to decide if it's relevant to the task or not, to help inform the programming of this task.
       3. If the content to evaluate is empty, just answer "No"
       4. Only answer with: "Yes" or "No" indicating if the content is relevant or not to the task.
+      </Instructions>
     `;
     }
     /**
@@ -32,7 +43,7 @@ export class PsEngineerWebContentFilter extends PolicySynthAgent {
     filterUserPrompt(contentToEvaluate) {
         // Add references to npm dependencies if present
         const npmDeps = this.memory.likelyRelevantNpmPackageDependencies?.length
-            ? `Likely relevant npm dependencies:\n${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}`
+            ? `<LikelyRelevantNpmDependencies>\n${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}</LikelyRelevantNpmDependencies>`
             : "";
         return `
 ${this.memory.taskTitle ? `<OverallTaskTitle>
@@ -47,10 +58,13 @@ ${this.memory.taskInstructions ? `<OverallTaskInstructions>
 ${this.memory.taskInstructions}
 </OverallTaskInstructions>` : ""}
 
+${npmDeps ? `<NpmDependencies>
 ${npmDeps}
+</NpmDependencies>` : ""}
 
-Content to evaluate for relevance to the task:
+<ContentToEvaluateForRelevanceToTheTask>
 ${contentToEvaluate}
+</ContentToEvaluateForRelevanceToTheTask>
 
 Is the content relevant to the task? Yes or No:
     `;

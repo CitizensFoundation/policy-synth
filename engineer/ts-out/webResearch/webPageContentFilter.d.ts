@@ -8,6 +8,9 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  */
 export declare class PsEngineerWebContentFilter extends PolicySynthAgent {
     memory: PsEngineerMemoryData;
+    get modelTemperature(): number;
+    get maxModelTokensOut(): number;
+    get reasoningEffort(): "low" | "medium" | "high";
     constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number);
     /**
      * A short system prompt describing how the model should respond with “Yes” or “No”.

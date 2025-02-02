@@ -11,5 +11,5 @@ export class PsEngineerErrorWebResearchAgent extends PsEngineerBaseWebResearchAg
   Only extract information that is highly relevant to the task.";
   scanType: PsEngineerWebResearchTypes = "solutionsForErrors";
   rankingInstructions = "Rank the documentation based on relevance to the task.";
-  scanningSystemPrompt = "Extract relevant potential solutions typescript documentation from web pages for a given task and typescript/javascript npm modules.";
+  scanningSystemPrompt = "Extract relevant potential solutions typescript documentation from <TextContext> for a given task.";
 }

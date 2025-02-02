@@ -192,7 +192,11 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
       );
 
       // Flatten results if each scan() returns an array
-      let webScanResults = allScanResults.flat();
+      const webScanResultsFlat = allScanResults.flat();
+
+      // Just include a string[] from .analysis
+      let webScanResults = webScanResultsFlat.map((result) => result.analysis);
+
       this.logger.info("Website Scanning Completed.");
 
       this.logger.debug(

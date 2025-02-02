@@ -50,7 +50,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
   2. You will see a list of all existing typescript files in <AllTypescriptFiles>, output ones likely to change to existingTypeScriptFilesLikelyToChange and existingOtherTypescriptDefinitionFilesToKeepInContext for files likely to be relevant.
   3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
   4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
-  5. Look in <AllDefinitionTypescriptFiles> and add all possibly relevant *.d.ts files to the existingOtherTypescriptDefinitionFilesToKeepInContext JSON field, only exclude *.d.ts files that are clearly 100% not relevant.
+  5. Look in <AllDefinitionTypescriptFiles> and add all possibly relevant *.d.ts files to the existingOtherTypescriptDefinitionFilesToKeepInContext JSON array, look at the name of the file, if it is relevant add it to the JSON array. The main shared *.d.ts files are often stored in the webApp..
   6. Look in <AllCodeTypescriptFiles> and add all typescripts code files that are very likely to be relevant, but might not need changing in existingTypeScriptFilesLikelyToChange.
   7. Always output the full file path into all the JSON string arrays.
   8. Only add files that already exist in existingTypeScriptFilesLikelyToChange and existingOtherTypescriptDefinitionFilesToKeepInContext JSON fields
@@ -123,7 +123,7 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
         : ""
     }
 
-    TASK: Analyze the TheUserCodingTaskInstructions and the provided context output the JSON output as per the schema.
+    TASK: Analyze the TheUserCodingTaskInstructions and the provided context, then output the JSON output as per the schema.
 
     Your JSON Output:
     `;

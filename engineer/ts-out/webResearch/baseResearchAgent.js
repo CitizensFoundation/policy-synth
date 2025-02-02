@@ -98,7 +98,9 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
             // Map each URL into a scanning promise, but limit concurrency
             let allScanResults = await Promise.all(searchResultsToScan.map((result) => limit(() => webPageResearch.scan([result.url], this.scanType))));
             // Flatten results if each scan() returns an array
-            let webScanResults = allScanResults.flat();
+            const webScanResultsFlat = allScanResults.flat();
+            // Just include a string[] from .analysis
+            let webScanResults = webScanResultsFlat.map((result) => result.analysis);
             this.logger.info("Website Scanning Completed.");
             this.logger.debug(`Raw webScanResults: (${webScanResults.length})\n` +
                 JSON.stringify(webScanResults, null, 2));

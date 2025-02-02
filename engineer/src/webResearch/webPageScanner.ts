@@ -47,7 +47,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   }
 
   override get maxModelTokensOut(): number {
-    return 100000;
+    return 70000;
   }
 
   override get reasoningEffort(): "low" | "medium" | "high" {
@@ -128,13 +128,7 @@ Important instructions:
     const systemMessage = this.createSystemMessage(systemMessageText);
 
     // You can embed additional context about your memory or instructions here:
-    const userMessageText = `
-<TextContext>:
-${text}
-</TextContext>
-
----
-${
+    const userMessageText = `${
   this.memory.taskTitle
     ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
@@ -158,9 +152,9 @@ ${this.memory.taskInstructions}
     : ""
 }
 
-<LikelyNPMDependencies>
+${ this.memory.likelyRelevantNpmPackageDependencies ? `<LikelyNPMDependencies>
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
-</LikelyNPMDependencies>
+</LikelyNPMDependencies>` : ""}
 
 <LikelyTypeScriptFilesInWorkspace>
 ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
@@ -169,6 +163,10 @@ ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
 <ImportantInstructionsFromUser>
 ${this.instructions}
 </ImportantInstructionsFromUser>
+
+<TextContext>
+${text}
+</TextContext>
 
 Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
     `;
@@ -200,7 +198,8 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
       PsAiModelType.TextReasoning,
       PsAiModelSize.Small,
       messages,
-      false
+      false,
+      true
     );
 
     if (process.env.PS_DEBUG_AI_MESSAGES) {
@@ -244,7 +243,10 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
   /**
    * Main scanning method — uses concurrency with p-limit (like your first snippet).
    */
-  async scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes) {
+  async scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes): Promise<{
+    fromUrl: string;
+    analysis: string;
+  }[]> {
     this.scanType = scanType;
 
     // Deduplicate

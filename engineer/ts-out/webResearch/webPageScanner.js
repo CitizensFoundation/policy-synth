@@ -19,7 +19,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
         return 0.0;
     }
     get maxModelTokensOut() {
-        return 100000;
+        return 70000;
     }
     get reasoningEffort() {
         return "high";
@@ -90,13 +90,7 @@ Important instructions:
         // Create the final system message
         const systemMessage = this.createSystemMessage(systemMessageText);
         // You can embed additional context about your memory or instructions here:
-        const userMessageText = `
-<TextContext>:
-${text}
-</TextContext>
-
----
-${this.memory.taskTitle
+        const userMessageText = `${this.memory.taskTitle
             ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
 </OverallTaskTitle>`
@@ -114,9 +108,9 @@ ${this.memory.taskInstructions}
 </OverallTaskInstructions>`
             : ""}
 
-<LikelyNPMDependencies>
+${this.memory.likelyRelevantNpmPackageDependencies ? `<LikelyNPMDependencies>
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
-</LikelyNPMDependencies>
+</LikelyNPMDependencies>` : ""}
 
 <LikelyTypeScriptFilesInWorkspace>
 ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
@@ -125,6 +119,10 @@ ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
 <ImportantInstructionsFromUser>
 ${this.instructions}
 </ImportantInstructionsFromUser>
+
+<TextContext>
+${text}
+</TextContext>
 
 Only output Markdown if relevant. If not relevant, respond with one of the fallback messages above.
     `;
@@ -144,7 +142,7 @@ Only output Markdown if relevant. If not relevant, respond with one of the fallb
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("Messages for AI Analysis:", JSON.stringify(messages, null, 2));
         }
-        const analysis = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false);
+        const analysis = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false, true);
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("AI Analysis result:", analysis);
         }
