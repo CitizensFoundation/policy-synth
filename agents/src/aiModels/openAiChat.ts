@@ -104,7 +104,8 @@ export class OpenAiChat extends BaseChatModel {
       if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
         this.logger.debug(`Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`);
       }
-      this.logger.debug("Calling OpenAI model...");
+      const timeNow = new Date();
+      this.logger.info(`Calling OpenAI model... ${timeNow.toISOString()}`);
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
@@ -126,6 +127,9 @@ export class OpenAiChat extends BaseChatModel {
             ? this.modelConfig.maxTokensOut
             : undefined,
       });
+
+      const timeNow2 = new Date();
+      this.logger.info(`OpenAI model call completed in ${(timeNow2.getTime() - timeNow.getTime())/1000} seconds`);
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
