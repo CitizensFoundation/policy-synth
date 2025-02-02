@@ -316,8 +316,9 @@ Only output a JSON array with possibly relevant d.ts files, no explanations befo
 </UpcomingUserTask>
 `;
 
-    const userPrompt = `List of .d.ts files to analyze for relevance to the task:
+    const userPrompt = `<ListOfDtsFilesToAnalyzeForRelevanceToTheTask>
 ${JSON.stringify(dtsFiles, null, 2)}
+</ListOfDtsFilesToAnalyzeForRelevanceToTheTask>
 
 Please return a JSON string array of the relevant files:`;
 

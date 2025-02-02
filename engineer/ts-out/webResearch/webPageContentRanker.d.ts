@@ -6,6 +6,7 @@ export declare class PsEngineerWebContentRanker extends PairwiseRankingAgent {
     memory: PsEngineerMemoryData;
     defaultModelSize: PsAiModelSize;
     defaultModelType: PsAiModelType;
+    get maxModelTokensOut(): number;
     updatePrefix: string;
     constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress?: number, endProgress?: number);
     voteOnPromptPair(index: number, promptPair: number[]): Promise<PsPairWiseVoteResults>;

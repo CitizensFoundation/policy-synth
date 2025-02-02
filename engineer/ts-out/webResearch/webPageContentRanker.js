@@ -3,8 +3,11 @@ import { PairwiseRankingAgent } from "@policysynth/agents/base/agentPairwiseRank
 export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
     instructions;
     memory;
-    defaultModelSize = PsAiModelSize.Small;
-    defaultModelType = PsAiModelType.TextReasoning;
+    defaultModelSize = PsAiModelSize.Large;
+    defaultModelType = PsAiModelType.Text;
+    get maxModelTokensOut() {
+        return 30000;
+    }
     updatePrefix = "Ranking Results";
     constructor(agent, memory, startProgress = 0, endProgress = 100) {
         super(agent, memory, startProgress, endProgress);
@@ -63,7 +66,7 @@ The Most Relevant Content Item Is (One, Two or Neither):
     async rankWebContent(queriesToRank, instructions, maxPrompts = 120) {
         this.instructions = instructions;
         // Set up the prompts for pairwise ranking.
-        this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 10, this.progressFunction, 3);
+        this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 10, this.progressFunction, 12);
         await this.performPairwiseRanking(-1);
         await this.saveMemory();
         return this.getOrderedListOfItems(-1);

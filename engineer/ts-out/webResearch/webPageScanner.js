@@ -139,9 +139,6 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
             return "No relevant content found (page text too short).";
         }
         const messages = this.renderScanningPrompt(text);
-        if (process.env.PS_DEBUG_AI_MESSAGES) {
-            console.log("Messages for AI Analysis:", JSON.stringify(messages, null, 2));
-        }
         const analysis = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false, true);
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("AI Analysis result:", analysis);

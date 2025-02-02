@@ -7,8 +7,12 @@ export class PsEngineerWebContentRanker extends PairwiseRankingAgent {
   instructions: string | undefined;
   override memory: PsEngineerMemoryData;
 
-  defaultModelSize = PsAiModelSize.Small;
-  defaultModelType = PsAiModelType.TextReasoning;
+  defaultModelSize = PsAiModelSize.Large;
+  defaultModelType = PsAiModelType.Text;
+
+  override get maxModelTokensOut(): number {
+    return 30000;
+  }
 
   updatePrefix = "Ranking Results";
 
@@ -97,7 +101,7 @@ The Most Relevant Content Item Is (One, Two or Neither):
       queriesToRank,
       queriesToRank.length * 10,
       this.progressFunction,
-      3
+      12
     );
     await this.performPairwiseRanking(-1);
     await this.saveMemory();
