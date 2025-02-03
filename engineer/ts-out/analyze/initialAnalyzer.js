@@ -71,7 +71,6 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     ${allTypescriptCodeFiles.join("\n")}
     </AllCodeTypescriptFiles>`
             : ""}
-
     ${this.memory.taskTitle
             ? `<TheUserCodingTaskTitle>${this.memory.taskTitle}</TheUserCodingTaskTitle>`
             : ""}

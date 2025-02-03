@@ -12,16 +12,16 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
             console.log("Build output:", stdout);
             if (stderr) {
                 console.error("Build errors:", stderr);
-                if (!this.memory.allErrorsInThisTask) {
-                    this.memory.allErrorsInThisTask = [];
-                }
-                this.memory.allErrorsInThisTask.push(stderr);
+                this.memory.allBuildErrors.push(stderr);
+                await this.saveMemory();
                 return `${stderr}\n${stdout}`;
             }
             return undefined;
         }
         catch (error) {
             console.error("Error during the build process:", error);
+            this.memory.allBuildErrors.push(error.message);
+            await this.saveMemory();
             return `Error during the build process: ${error.message}\nAttempted build output:\n${error.stdout}`;
         }
     }

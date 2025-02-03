@@ -27,7 +27,7 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */
-    constructor(agent, memory, startProgress = 0, endProgress = 100, typeDefFilesToKeepInContextContent, codeFilesToKeepInContextContent, documentationFilesInContextContent, likelyToChangeFilesContents, tsMorphProject) {
+    constructor(agent, memory, startProgress = 0, endProgress = 100, { typeDefFilesToKeepInContextContent, codeFilesToKeepInContextContent, documentationFilesInContextContent, likelyToChangeFilesContents, tsMorphProject, }) {
         super(agent, memory, startProgress, endProgress);
         this.typeDefFilesToKeepInContextContent =
             typeDefFilesToKeepInContextContent;
@@ -141,28 +141,12 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
                 : ``}
         </ContextFromOnlineSearch>`
             : ``}
-      <TypescriptFilesThatAreLikelyToChange>
-      ${this.memory.existingTypeScriptFilesLikelyToChange
-            ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
-            : "(none listed)"}
-      </TypescriptFilesThatAreLikelyToChange>
 
-
-      ${this.documentationFilesInContextContent
+      ${(this.documentationFilesInContextContent &&
+            this.documentationFilesInContextContent.length > 0)
             ? `<LocalDocumentation>
               ${this.documentationFilesInContextContent}
             </LocalDocumentation>`
-            : ``}
-
-
-      ${!hasCompletedFiles
-            ? `<ContentOfFilesThatMightChange>
-              ${this.likelyToChangeFilesContents || ""}
-            </ContentOfFilesThatMightChange>`
-            : ``}
-
-      ${(false && this.memory.allTypeDefsContents)
-            ? `<AllPossiblyRelevantProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllPossiblyRelevantProjectTypescriptDefs>`
             : ``}
 
       ${this.typeDefFilesToKeepInContextContent
@@ -175,6 +159,18 @@ export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
             ? `<CodeFilesPossiblyRelevant>
                ${this.codeFilesToKeepInContextContent}
              </CodeFilesPossiblyRelevant>`
+            : ``}
+
+      <TypescriptFilesThatAreLikelyToChange>
+      ${this.memory.existingTypeScriptFilesLikelyToChange
+            ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
+            : "(none listed)"}
+      </TypescriptFilesThatAreLikelyToChange>
+
+      ${!hasCompletedFiles
+            ? `<ContentOfFilesThatMightChange>
+              ${this.likelyToChangeFilesContents || ""}
+            </ContentOfFilesThatMightChange>`
             : ``}
 
       ${hasCompletedFiles

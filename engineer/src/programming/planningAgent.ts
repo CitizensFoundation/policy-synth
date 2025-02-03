@@ -8,41 +8,37 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
 
-  planningModelSize = PsAiModelSize.Small;
+  planningModelSize = PsAiModelSize.Medium;
 
   planSystemPrompt() {
     return `<ImportantInstructions>
-    1. Create a detailed, step-by-step explaination of a coding plan that specifies the code changes needed in text to accomplish the overall task.
+    1. Create a detailed, step-by-step coding plan that specifies the code changes needed in text to accomplish the overall task.
     2. Do not write code in the plan rather focus on the programming strategy, a high-level plan for the changes needed for each file.
     3. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
     4. We always create or modify typescript .ts files no other file types.
     5. Prefer classes rather than exported functions in files.
     6. Never suggesting importing typedefs those are always automatically imported from the d.ts files
+    7. Keep your plan for code changes as simple as possible.
     ${
       this.currentErrors
-        ? `7. You have already built the project, but it's not compiling due to errors from recent changes. The coding plan should focus on fixing those errors in the files you've been changing.
-           8. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
+        ? `8. You have already built the project, but it's not compiling due to errors from recent changes. The coding plan should focus on fixing those errors in the files you've been changing.
+           9. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
         : ``
     }</ImportantInstructions>
 
-    ${
-      this.currentErrors
-        ? `<CurrentErrors>${this.currentErrors}</CurrentErrors>`
-        : ``
-    }
+    `;
+  }
 
-    ${
+  getUserPlanPrompt(reviewLog: string) {
+    return `${
       this.memory.allTypescriptSrcFiles
         ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
             "\n"
           )}</AllTypescriptFilesInProject>`
         : ""
     }
-    `;
-  }
 
-  getUserPlanPrompt(reviewLog: string) {
-    return `${this.renderDefaultTaskAndContext()}
+    ${this.renderDefaultTaskAndContext()}
 
     ${this.renderCurrentErrorsAndOriginalFiles()}
 
@@ -249,7 +245,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
       if (codingPlan) {
         console.log(`Coding plan received:\n${codingPlan}`);
-        this.memory.latestCodingPlan = codingPlan;
+        this.memory.allCodingPlans.push(codingPlan);
         await this.saveMemory();
 
         // Now we review the coding plan

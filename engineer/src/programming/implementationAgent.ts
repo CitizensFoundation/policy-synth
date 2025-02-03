@@ -76,7 +76,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     ${
       currentFileToUpdateContents
-        ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</CurrentFileYouAreChanging>`
+        ? `<CurrentFileYouAreChanging filename="${fileName}">\n${currentFileToUpdateContents}\n</CurrentFileYouAreChanging>`
         : ``
     }
 

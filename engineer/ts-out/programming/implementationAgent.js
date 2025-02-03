@@ -45,7 +45,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     </YourCurrentTask>
 
     ${currentFileToUpdateContents
-            ? `<CurrentFileYouAreChanging>:\n${fileName}:\n${currentFileToUpdateContents}</CurrentFileYouAreChanging>`
+            ? `<CurrentFileYouAreChanging filename="${fileName}">\n${currentFileToUpdateContents}\n</CurrentFileYouAreChanging>`
             : ``}
 
     ${this.renderCurrentErrorsAndOriginalFiles()}

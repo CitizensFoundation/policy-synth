@@ -16,18 +16,23 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     let hasCompleted = false;
     let currentErrors: string | undefined = undefined;
 
-    const buildAgent = new PsEngineerProgrammingBuildAgent(this.agent, this.memory, 0, 100);
-
+    const buildAgent = new PsEngineerProgrammingBuildAgent(
+      this.agent,
+      this.memory,
+      0,
+      100,
+      {
+        likelyToChangeFilesContents: this.likelyToChangeFilesContents,
+        typeDefFilesToKeepInContextContent: this.typeDefFilesToKeepInContextContent,
+        documentationFilesInContextContent: this.documentationFilesInContextContent,
+        codeFilesToKeepInContextContent: this.codeFilesToKeepInContextContent,
+        tsMorphProject: this.tsMorphProject!,
+      }
+    );
     while (!hasCompleted && retryCount < this.maxRetries) {
-      await this.updateRangedProgress(
-        undefined,
-        "Creating action plan..."
-      );
+      await this.updateRangedProgress(undefined, "Creating action plan...");
       await this.createAndRunActionPlan(currentErrors);
-      await this.updateRangedProgress(
-        undefined,
-        "Building code..."
-      );
+      await this.updateRangedProgress(undefined, "Building code...");
       currentErrors = await buildAgent.build();
       if (currentErrors && retryCount >= retriesUntilWebResearch) {
         await this.updateRangedProgress(
@@ -47,24 +52,28 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
   }
 
   async searchForSolutionsToErrors(currentErrors: string) {
-    const docsResearcher = new PsEngineerErrorWebResearchAgent(this.agent, this.memory, 0, 100);
+    const docsResearcher = new PsEngineerErrorWebResearchAgent(
+      this.agent,
+      this.memory,
+      0,
+      100
+    );
   }
 
   async createAndRunActionPlan(currentErrors: string | undefined = undefined) {
-    await this.updateRangedProgress(
-      undefined,
-      "Creating action plan..."
-    );
+    await this.updateRangedProgress(undefined, "Creating action plan...");
     const planningAgent = new PsEngineerProgrammingPlanningAgent(
       this.agent,
       this.memory,
       0,
       100,
-      this.likelyToChangeFilesContents,
-      this.typeDefFilesToKeepInContextContent,
-      this.codeFilesToKeepInContextContent,
-      this.documentationFilesInContextContent,
-      this.tsMorphProject!
+      {
+        likelyToChangeFilesContents: this.likelyToChangeFilesContents,
+        typeDefFilesToKeepInContextContent: this.typeDefFilesToKeepInContextContent,
+        documentationFilesInContextContent: this.documentationFilesInContextContent,
+        codeFilesToKeepInContextContent: this.codeFilesToKeepInContextContent,
+        tsMorphProject: this.tsMorphProject!,
+      }
     );
 
     const actionPlan = await planningAgent.getActionPlan(currentErrors);
@@ -82,24 +91,28 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         this.memory,
         0,
         100,
-        this.likelyToChangeFilesContents,
-        this.typeDefFilesToKeepInContextContent,
-        this.codeFilesToKeepInContextContent,
-        this.documentationFilesInContextContent,
-        this.tsMorphProject!
+        {
+          likelyToChangeFilesContents: this.likelyToChangeFilesContents,
+          typeDefFilesToKeepInContextContent:
+            this.typeDefFilesToKeepInContextContent,
+          documentationFilesInContextContent:
+            this.documentationFilesInContextContent,
+          codeFilesToKeepInContextContent: this.codeFilesToKeepInContextContent,
+          tsMorphProject: this.tsMorphProject!,
+        }
       );
 
-      await this.updateRangedProgress(
-        undefined,
-        "Implementing changes..."
-      );
+      await this.updateRangedProgress(undefined, "Implementing changes...");
 
       // Loop until all actions are completed
       let allCompleted = false;
       while (!allCompleted) {
         await this.updateRangedProgress(
           undefined,
-          `Implementing changes... ${actionPlan.filter(action => action.status === "completed").length+1} / ${actionPlan.length}`
+          `Implementing changes... ${
+            actionPlan.filter((action) => action.status === "completed")
+              .length + 1
+          } / ${actionPlan.length}`
         );
         await implementationAgent.implementCodingActionPlan(
           actionPlan,
@@ -147,15 +160,17 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       "CodeLikelyToChange"
     );
 
-    this.documentationFilesInContextContent = this.getFileContentsWithFileName(
-      this.memory.documentationFilesToKeepInContext,
-      "DocumentationForContext"
-    );
+    if (this.memory.documentationFilesToKeepInContext) {
+      this.documentationFilesInContextContent =
+        this.getFileContentsWithFileName(
+          this.memory.documentationFilesToKeepInContext,
+          "DocumentationForContext"
+        );
+    }
 
-    await this.updateRangedProgress(
-      undefined,
-      "Implementing changes..."
-    );
+    await this.updateRangedProgress(undefined, "Implementing changes...");
+
+    await this.saveMemory();
 
     await this.implementChanges();
 

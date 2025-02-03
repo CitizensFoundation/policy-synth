@@ -22,7 +22,13 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */
-    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress?: number, endProgress?: number, typeDefFilesToKeepInContextContent?: string | null, codeFilesToKeepInContextContent?: string | null, documentationFilesInContextContent?: string | null, likelyToChangeFilesContents?: string | null, tsMorphProject?: Project);
+    constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number | undefined, endProgress: number | undefined, { typeDefFilesToKeepInContextContent, codeFilesToKeepInContextContent, documentationFilesInContextContent, likelyToChangeFilesContents, tsMorphProject, }: {
+        typeDefFilesToKeepInContextContent?: string | null;
+        codeFilesToKeepInContextContent?: string | null;
+        documentationFilesInContextContent?: string | null;
+        likelyToChangeFilesContents?: string | null;
+        tsMorphProject?: Project;
+    });
     updateMemoryWithFileContents(fileName: string, content: string): void;
     renderCodingRules(): string;
     setOriginalFileIfNeeded(fileName: string, content: string): void;

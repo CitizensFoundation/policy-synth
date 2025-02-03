@@ -285,7 +285,8 @@ Please return a JSON string array of the relevant files:`;
         if (this.githubIssueUrl) {
             await this.initializeFromGitHubIssue();
         }
-        this.memory.allErrorsInThisTask = [];
+        this.memory.allBuildErrors = [];
+        this.memory.allCodingPlans = [];
         await this.saveMemory();
         await this.updateRangedProgress(undefined, "Analyzing code...");
         // Read all TypeScript source file names from the configured workspace.
@@ -366,7 +367,7 @@ Please return a JSON string array of the relevant files:`;
         }
         await this.saveMemory();
         // Finally, call the programming agent to implement the task.
-        const programmer = new PsEngineerProgrammingAgent(this.agent, this.memory, 0, 100);
+        const programmer = new PsEngineerProgrammingAgent(this.agent, this.memory, 0, 100, {});
         this.logger.info(`Starting to implement task`);
         await programmer.implementTask();
         await this.setCompleted("Task Completed");

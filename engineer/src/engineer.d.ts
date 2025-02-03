@@ -95,9 +95,9 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   likelyRelevantNpmPackageDependencies: string[];
   docsContextItems?: string[];
   exampleContextItems?: string[];
-  latestCodingPlan: string;
+  allCodingPlans: string[];
   latestActionItemPlan: PsEngineerCodingActionPlanItem[];
-  allErrorsInThisTask: string[];
+  allBuildErrors: string[];
 }
 
 type PsEngineerFileActions = "add" | "change" | "delete";

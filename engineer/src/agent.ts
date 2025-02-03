@@ -388,7 +388,8 @@ Please return a JSON string array of the relevant files:`;
       await this.initializeFromGitHubIssue();
     }
 
-    this.memory.allErrorsInThisTask = [];
+    this.memory.allBuildErrors = [];
+    this.memory.allCodingPlans = [];
 
     await this.saveMemory();
 
@@ -523,7 +524,8 @@ Please return a JSON string array of the relevant files:`;
       this.agent,
       this.memory,
       0,
-      100
+      100,
+      {}
     );
     this.logger.info(`Starting to implement task`);
     await programmer.implementTask();
