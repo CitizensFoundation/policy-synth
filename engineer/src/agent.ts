@@ -21,7 +21,7 @@ export class PsEngineerAgent extends PolicySynthAgent {
   githubIssueUrl?: string;
 
   override get maxModelTokensOut(): number {
-    return 100000;
+    return 80000;
   }
 
   override get modelTemperature(): number {
@@ -387,6 +387,8 @@ Please return a JSON string array of the relevant files:`;
     if (this.githubIssueUrl) {
       await this.initializeFromGitHubIssue();
     }
+
+    this.memory.allErrorsInThisTask = [];
 
     await this.saveMemory();
 

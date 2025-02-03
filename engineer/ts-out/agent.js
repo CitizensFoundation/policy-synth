@@ -12,7 +12,7 @@ import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.
 export class PsEngineerAgent extends PolicySynthAgent {
     githubIssueUrl;
     get maxModelTokensOut() {
-        return 100000;
+        return 80000;
     }
     get modelTemperature() {
         return 0.0;
@@ -285,6 +285,7 @@ Please return a JSON string array of the relevant files:`;
         if (this.githubIssueUrl) {
             await this.initializeFromGitHubIssue();
         }
+        this.memory.allErrorsInThisTask = [];
         await this.saveMemory();
         await this.updateRangedProgress(undefined, "Analyzing code...");
         // Read all TypeScript source file names from the configured workspace.

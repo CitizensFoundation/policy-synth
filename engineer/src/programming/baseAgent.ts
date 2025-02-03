@@ -20,14 +20,14 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
   likelyToChangeFilesContents: string | undefined | null;
   typeDefFilesToKeepInContextContent: string | undefined | null;
   codeFilesToKeepInContextContent: string | undefined | null;
-  maxRetries = 72;
+  maxRetries = 20;
   currentErrors: string | undefined | null;
   previousCurrentErrors: string | undefined | null;
 
   tsMorphProject: Project | undefined;
 
   override get maxModelTokensOut(): number {
-    return 100000;
+    return 80000;
   }
 
   override get modelTemperature(): number {
@@ -100,6 +100,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
       Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
       Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
+      Always output the full new or changed typescript file, if you are changing a file do not leave anything out from the original file, otherwise code will get lost.
     </ImportantCodingRulesForYourCodeGeneration>`;
   }
 
@@ -199,7 +200,6 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
         </ContextFromOnlineSearch>`
         : ``
     }
-    <Context>
       <TypescriptFilesThatAreLikelyToChange>
       ${
         this.memory.existingTypeScriptFilesLikelyToChange
@@ -255,7 +255,6 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
              </CodeFilesYouHaveAlreadyCompletedWorkOn>`
           : ``
       }
-    </Context>
 
     ${this.renderProjectDescription()}
 `;

@@ -8,22 +8,28 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
 
+  planningModelSize = PsAiModelSize.Small;
+
   planSystemPrompt() {
     return `<ImportantInstructions>
-    1. Review the provided <Context> and <Task> information.
-    2. Consider the overall task title, description, and instructions.
-    3. Create a detailed, step-by-step explaination of a coding plan that specifies the code changes needed in text to accomplish the overall task.
-    4. Do not write code in the plan rather focus on the programming strategy, a high-level plan for the changes needed for each file.
-    5. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
-    6. We always create or modify typescript .ts files no other file types.
-    7. Prefer classes rather than exported functions in files.
-    8. Never suggesting importing typedefs those are always automatically imported from the d.ts files
+    1. Create a detailed, step-by-step explaination of a coding plan that specifies the code changes needed in text to accomplish the overall task.
+    2. Do not write code in the plan rather focus on the programming strategy, a high-level plan for the changes needed for each file.
+    3. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
+    4. We always create or modify typescript .ts files no other file types.
+    5. Prefer classes rather than exported functions in files.
+    6. Never suggesting importing typedefs those are always automatically imported from the d.ts files
     ${
       this.currentErrors
-        ? `9. You have already built the project, but it's not compiling due to errors from recent changes. The coding plan should focus on fixing those errors in the files you've been changing.
-           10. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
+        ? `7. You have already built the project, but it's not compiling due to errors from recent changes. The coding plan should focus on fixing those errors in the files you've been changing.
+           8. Do not attempt to refactor or fix unrelated files; keep the plan focused on the known errors.`
         : ``
     }</ImportantInstructions>
+
+    ${
+      this.currentErrors
+        ? `<CurrentErrors>${this.currentErrors}</CurrentErrors>`
+        : ``
+    }
 
     ${
       this.memory.allTypescriptSrcFiles
@@ -51,10 +57,11 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     Do not output actual code just a detailed plan of the changes needed to the code.
 
      ${
-      this.currentErrors
-        ? `TASK: Focus on fixing the errors in the files you've been changing do not plan anything else.`
-        : ``
-    }
+       this.currentErrors
+         ? `<KeyFocusForThisTask>Focus on fixing the errors in the files you've been changing do not plan anything else.
+           Make the fixes the simple as possible and only focus on the file or files that cause the error. Try to change as few files are possible</KeyFocusForThisTask>`
+         : ``
+     }
 
     Your coding plan:
     `;
@@ -79,12 +86,18 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     </Instructions>
 
      ${
-      this.memory.allTypescriptSrcFiles
-        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
-            "\n"
-          )}</AllTypescriptFilesInProject>`
-        : ""
-    }
+       this.currentErrors
+         ? `<CurrentErrors>${this.currentErrors}</CurrentErrors>`
+         : ``
+     }
+
+     ${
+       this.memory.allTypescriptSrcFiles
+         ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
+             "\n"
+           )}</AllTypescriptFilesInProject>`
+         : ""
+     }
 
     <OutputFormat>
       Important: If the plan is good only output "Coding plan looks good" or "No changes needed to this code".
@@ -96,6 +109,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     return `${this.renderDefaultTaskAndContext()}
 
     ${this.renderCurrentErrorsAndOriginalFiles()}
+
+         ${
+           this.currentErrors
+             ? `IMPORTANT: The plan should focus on fixing the errors, do not plan anything else. Make the fixes the simple as possible and only focus on the file or files that cause the error.`
+             : ``
+         }
+
 
   Proposed coding plan:
   ${codingPlan}
@@ -209,12 +229,12 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
       // -- Call the model with the new approach
       const planResponse = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Small,
+        this.planningModelSize,
         [
           this.createSystemMessage(this.planSystemPrompt()),
           this.createHumanMessage(this.getUserPlanPrompt(reviewLog)),
         ],
-        false // not streaming
+        false
       );
 
       // Convert the plan response into a string if needed
@@ -236,12 +256,12 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         if (reviewRetries < maxReviewsRetries) {
           const reviewResponse = await this.callModel(
             PsAiModelType.TextReasoning,
-            PsAiModelSize.Small,
+            this.planningModelSize,
             [
               this.createSystemMessage(this.reviewSystemPrompt()),
               this.createHumanMessage(this.getUserReviewPrompt(codingPlan)),
             ],
-            false // not streaming
+            false
           );
 
           let review = "";

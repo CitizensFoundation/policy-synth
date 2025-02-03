@@ -94,10 +94,9 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
 You are an expert at extracting relevant documentation from web pages for a given task.
 
 Important instructions:
-1. Examine the <TextContext> and copy all documentation *highly relevant* to the task provided by the user.
-2. Just copy relevant documentation word-for-word (maintaining basic formatting).
-3. If nothing relevant is found, output: "No relevant documentation found."
-4. Output in Markdown format.
+1. Examine the <TextContext> and extract all documentation relevant to the <OverallTaskInstructions> provided by the user.
+2. If nothing relevant is found, output: "No relevant documentation is found."
+3. Output in Markdown format.
       `;
     } else if (this.scanType === "codeExamples") {
       systemMessageText = `
@@ -129,12 +128,12 @@ Important instructions:
 
     // You can embed additional context about your memory or instructions here:
     const userMessageText = `${
-  this.memory.taskTitle
-    ? `<OverallTaskTitle>
+      this.memory.taskTitle
+        ? `<OverallTaskTitle>
 ${this.memory.taskTitle}
 </OverallTaskTitle>`
-    : ""
-}
+        : ""
+    }
 
 ${
   this.memory.taskDescription
@@ -152,9 +151,13 @@ ${this.memory.taskInstructions}
     : ""
 }
 
-${ this.memory.likelyRelevantNpmPackageDependencies ? `<LikelyNPMDependencies>
+${
+  this.memory.likelyRelevantNpmPackageDependencies
+    ? `<LikelyNPMDependencies>
 ${this.memory.likelyRelevantNpmPackageDependencies.join("\n")}
-</LikelyNPMDependencies>` : ""}
+</LikelyNPMDependencies>`
+    : ""
+}
 
 <LikelyTypeScriptFilesInWorkspace>
 ${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}
@@ -237,10 +240,16 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
   /**
    * Main scanning method — uses concurrency with p-limit (like your first snippet).
    */
-  async scan(listOfUrls: string[], scanType: PsEngineerWebResearchTypes, currentCountStatus: { currentCount: number, totalCount: number }): Promise<{
-    fromUrl: string;
-    analysis: string;
-  }[]> {
+  async scan(
+    listOfUrls: string[],
+    scanType: PsEngineerWebResearchTypes,
+    currentCountStatus: { currentCount: number; totalCount: number }
+  ): Promise<
+    {
+      fromUrl: string;
+      analysis: string;
+    }[]
+  > {
     this.scanType = scanType;
 
     // Deduplicate
@@ -260,16 +269,21 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
         const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
         await this.updateRangedProgress(
           (currentCountStatus.currentCount + 1) / currentCountStatus.totalCount,
-          `Scanning (${currentCountStatus.currentCount + 1}/${currentCountStatus.totalCount}) ${url}`
+          `Scanning (${currentCountStatus.currentCount + 1}/${
+            currentCountStatus.totalCount
+          }) ${url}`
         );
-
 
         this.logger.info(`Scanning ${url}...`);
         await this.analyzeSinglePage(url);
 
+        currentCountStatus.currentCount++;
+
         await this.updateRangedProgress(
           (currentCountStatus.currentCount + 1) / currentCountStatus.totalCount,
-          `Scanned (${currentCountStatus.currentCount + 1}/${currentCountStatus.totalCount}) ${url}`
+          `Scanned (${currentCountStatus.currentCount + 1}/${
+            currentCountStatus.totalCount
+          }) ${url}`
         );
       })
     );

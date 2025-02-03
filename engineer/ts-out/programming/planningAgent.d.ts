@@ -1,6 +1,8 @@
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export declare class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt: boolean;
+    planningModelSize: PsAiModelSize;
     planSystemPrompt(): string;
     getUserPlanPrompt(reviewLog: string): string;
     reviewSystemPrompt(): string;

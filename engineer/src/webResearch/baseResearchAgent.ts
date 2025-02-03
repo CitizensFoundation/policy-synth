@@ -53,7 +53,7 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
   numberOfQueriesToGenerate = 12;
   percentOfQueriesToSearch = 0.25;
   percentOfResultsToScan = 0.3;
-  maxTopContentResultsToUse = 7;
+  maxTopContentResultsToUse = 3;
 
   /**
    * Enables reading/writing a debug cache file from /tmp.
