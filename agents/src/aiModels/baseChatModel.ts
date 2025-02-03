@@ -47,7 +47,7 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
         const truncatedCount = innerText.length - maxChars;
         const truncated =
           innerText.slice(0, maxChars) +
-          `... [TRUNCATED: ${truncatedCount} chars]`;
+          `... \n[TRUNCATED: ${truncatedCount} chars]\n`;
         return `<${tagName}${tagAttrs}>${truncated}</${tagName}>`;
       }
       return match;
