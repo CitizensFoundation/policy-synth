@@ -272,18 +272,24 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                     console.log(`Action plan received: ${JSON.stringify(actionPlan, null, 2)}`);
                     this.memory.latestActionItemPlan = actionPlan;
                     await this.saveMemory();
-                    // Review the action plan
-                    const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
-                        this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
-                        this.createHumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
-                    ], false);
+                    const skipReview = true;
                     let review = "";
-                    if (actionPlanReviewResponse) {
-                        if (typeof actionPlanReviewResponse === "string") {
-                            review = actionPlanReviewResponse;
-                        }
-                        else {
-                            review = JSON.stringify(actionPlanReviewResponse, null, 2);
+                    if (skipReview) {
+                        review = "Action plan looks good";
+                    }
+                    else {
+                        // Review the action plan
+                        const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
+                            this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
+                            this.createHumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
+                        ], false);
+                        if (actionPlanReviewResponse) {
+                            if (typeof actionPlanReviewResponse === "string") {
+                                review = actionPlanReviewResponse;
+                            }
+                            else {
+                                review = JSON.stringify(actionPlanReviewResponse, null, 2);
+                            }
                         }
                     }
                     console.log(`\n\nCoding Action Plan Review received: ${review}\n\n`);

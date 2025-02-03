@@ -25,14 +25,14 @@ export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     get analyzeSystemPrompt() {
         return `<ImportantInstructions>
   1. Review the task name, description and instructions. You might just see the task instructions.
-  2. You will see a list of all existing typescript files in <AllTypescriptFiles>, output ones likely to change to existingTypeScriptFilesLikelyToChange and usefulTypescriptDefinitionFilesToKeepInContext for files likely to be relevant.
+  2. You will see a list of all existing typescript files in <AllTypescriptFiles>, output ones likely to change to existingTypeScriptFilesLikelyToChange.
   3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
   4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
   5. Instructions on how to use <AllDefinitionTypescriptFiles>:
   5.1. Look in <AllDefinitionTypescriptFiles> and add all possibly relevant *.d.ts files to the "usefulTypescriptDefinitionFilesToKeepInContext" JSON array.
-  5.2. Look at the name of the file d.ts file, if it is relevant add it to the JSON array.
+  5.2. Look at the name of the file d.ts file, if it is possibly relevant add it to the JSON array.
   5.3. VERY IMPORTANT: The main shared *.d.ts typedef files are often stored in the webApps/ folder structure so consider adding these to the usefulTypescriptDefinitionFilesToKeepInContext JSON array.
-  6. Look in <AllCodeTypescriptFiles> and add all typescripts code files that are very likely to be relevant, but might not need changing in usefulTypescriptCodeFilesToKeepInContext.
+  6. Look in <AllCodeTypescriptFiles> and add all typescripts code files that are could be relevant, but might not need changing in usefulTypescriptCodeFilesToKeepInContext.
   7. Always output the full file path into all the JSON string arrays.
   8. Important: If the programming task is needs examples from online sources, if some specific library is being used or something new added set needsDocumentationAndExamples to true.
 </ImportantInstructions>

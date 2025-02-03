@@ -85,7 +85,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         });
         this.tsMorphProject.addSourceFilesAtPaths("src/**/*.ts");
         this.typeDefFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, "TypeDefForContext");
-        this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.usefulTypescriptCodeFilesToKeepInContext, "CodeForContext");
+        this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(this.memory.usefulTypescriptCodeFilesToKeepInContext, "UsefulCodeForContext");
         this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange, "CodeLikelyToChange");
         if (this.memory.documentationFilesToKeepInContext) {
             this.documentationFilesInContextContent =

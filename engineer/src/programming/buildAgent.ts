@@ -27,7 +27,9 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
       return undefined;
     } catch (error: any) {
       console.error("Error during the build process:", error);
-      this.memory.allBuildErrors.push(error.message);
+      this.memory.allBuildErrors.push(
+        `${error.message}\nAttempted build output:\n${error.stdout}`
+      );
       await this.saveMemory();
       return `Error during the build process: ${error.message}\nAttempted build output:\n${error.stdout}`;
     }

@@ -135,7 +135,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     if (!this.currentErrors) {
       return this.memory
         .currentTask!.filesCompleted!.map(
-          (f) => `${f.fileName}:\n${f.content}\n`
+          (f) => `<FileYouHaveCompletedWorkOn filename="${f.fileName}">\n${f.content}\n</FileYouHaveCompletedWorkOn>`
         )
         .join("\n");
     } else {
@@ -174,7 +174,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     return filePath.replace(this.memory.workspaceFolder, "");
   }
 
-  renderDefaultTaskAndContext() {
+  renderDefaultTaskAndContext(limited=false) {
     const hasContextFromSearch =
       (this.memory.exampleContextItems &&
         this.memory.exampleContextItems.length > 0) ||
@@ -190,65 +190,53 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     }
 
     return `${
-      hasContextFromSearch
+      false && hasContextFromSearch //TODO: Make examples work the other way
         ? `<ContextFromOnlineSearch>${
             this.memory.exampleContextItems &&
-            this.memory.exampleContextItems.length > 0
+            this.memory.exampleContextItems!.length > 0
               ? `Potentially relevant code examples from web search:
-          ${this.memory.exampleContextItems.join("\n")}`
+          ${this.memory.exampleContextItems!.join("\n")}`
               : ``
           }
           ${
             this.memory.docsContextItems &&
-            this.memory.docsContextItems.length > 0
+            this.memory.docsContextItems!.length > 0
               ? `\nPotentially relevant documentation from a web search:
-          ${this.memory.docsContextItems.join("\n")}`
+          ${this.memory.docsContextItems!.join("\n")}`
               : ``
           }
         </ContextFromOnlineSearch>`
         : ``
-      }
+    }
 
       ${
-        (this.documentationFilesInContextContent &&
-          this.documentationFilesInContextContent.length > 0)
-          ? `<LocalDocumentation>
-              ${this.documentationFilesInContextContent}
-            </LocalDocumentation>`
+        this.documentationFilesInContextContent &&
+        this.documentationFilesInContextContent.length > 0 && !limited
+          ? `${this.documentationFilesInContextContent}`
           : ``
       }
 
       ${
         this.typeDefFilesToKeepInContextContent
-          ? `<TypeDefFilesLikelyRelevant>
-               ${this.typeDefFilesToKeepInContextContent}
-             </TypeDefFilesLikelyRelevant>`
+          ? `${this.typeDefFilesToKeepInContextContent}`
           : ``
       }
 
       ${
         this.codeFilesToKeepInContextContent
-          ? `<CodeFilesPossiblyRelevant>
-               ${this.codeFilesToKeepInContextContent}
-             </CodeFilesPossiblyRelevant>`
+          ? `${this.codeFilesToKeepInContextContent}`
           : ``
       }
 
       <TypescriptFilesThatAreLikelyToChange>
       ${
-        this.memory.existingTypeScriptFilesLikelyToChange
+        this.memory.existingTypeScriptFilesLikelyToChange && !limited
           ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
           : "(none listed)"
       }
       </TypescriptFilesThatAreLikelyToChange>
 
-      ${
-        !hasCompletedFiles
-          ? `<ContentOfFilesThatMightChange>
-              ${this.likelyToChangeFilesContents || ""}
-            </ContentOfFilesThatMightChange>`
-          : ``
-      }
+      ${!hasCompletedFiles && !limited ? ` ${this.likelyToChangeFilesContents || ""}` : ``}
 
       ${
         hasCompletedFiles
@@ -295,7 +283,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     return `
     <OriginalCodefilesBeforeYourChanges>
       ${this.memory.currentTask.originalFiles
-        .map((f) => `${f.fileName}:\n${f.content}\n`)
+        .map((f) => `<OriginalFile filename="${f.fileName}">\n${f.content}\n</OriginalFile>`)
         .join("\n")}
     </OriginalCodefilesBeforeYourChanges>
     `;
@@ -322,38 +310,5 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       })
       .filter(Boolean)
       .join("\n");
-  }
-
-  /**
-   * Example usage of the new callModel approach if you need to invoke the LLM:
-   */
-  async exampleModelCall(sampleUserInput: string): Promise<string> {
-    const systemPrompt = "You are a helpful assistant that writes code.";
-    const userPrompt = `User's question or request: ${sampleUserInput}`;
-
-    const messages = [
-      this.createSystemMessage(systemPrompt),
-      this.createHumanMessage(userPrompt),
-    ];
-
-    try {
-      // This calls the LLM using the new approach.
-      const response = await this.callModel(
-        PsAiModelType.TextReasoning,
-        PsAiModelSize.Small,
-        messages,
-        true // can stream or not based on your preference
-      );
-
-      if (typeof response === "string") {
-        return response;
-      } else {
-        // If you parse JSON or arrays, handle that here.
-        return JSON.stringify(response, null, 2);
-      }
-    } catch (error: any) {
-      console.error(`Error calling the model: ${error.message}`);
-      return "Error in LLM call.";
-    }
   }
 }

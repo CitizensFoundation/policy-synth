@@ -152,7 +152,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
 
     this.codeFilesToKeepInContextContent = this.getFileContentsWithFileName(
       this.memory.usefulTypescriptCodeFilesToKeepInContext,
-      "CodeForContext"
+      "UsefulCodeForContext"
     );
 
     this.likelyToChangeFilesContents = this.getFileContentsWithFileName(

@@ -36,14 +36,10 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PolicySynth
     setCurrentErrors(errors: string | undefined): void;
     renderCurrentErrorsAndOriginalFiles(): string;
     removeWorkspacePathFromFileIfNeeded(filePath: string): string;
-    renderDefaultTaskAndContext(): string;
+    renderDefaultTaskAndContext(limited?: boolean): string;
     renderProjectDescription(): string;
     renderOriginalFiles(): string;
     loadFileContents(fileName: string): string | null;
     getFileContentsWithFileName(fileNames: string[], xmlTagName: string): string;
-    /**
-     * Example usage of the new callModel approach if you need to invoke the LLM:
-     */
-    exampleModelCall(sampleUserInput: string): Promise<string>;
 }
 //# sourceMappingURL=baseAgent.d.ts.map
