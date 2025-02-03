@@ -23,22 +23,34 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
     messages: PsModelMessage[]
   ): Promise<number>;
 
-  private truncateXmlTags(text: string, maxChars = 500): string {
+  /**
+   * Truncate the text inside XML-like tags to a certain length.
+   * For example:
+   *   <systemMessage>This text is extremely long ...</systemMessage>
+   * becomes
+   *   <systemMessage>This text is extr... [TRUNCATED: 1234 chars]</systemMessage>
+   *
+   * @param text - The original text that may contain XML-like tags
+   * @param maxChars - The maximum number of characters to allow inside the tag
+   * @returns The text with tag contents truncated.
+   */
+  truncateXmlTags(text: string, maxChars = 500): string {
     // This regex captures:
-    //   1. The tag name (or any wordish string after '<'), along with optional attributes
-    //   2. The text inside the tag
-    // And ensures matching end tag like </tagName>.
-    // Note: Not bulletproof for real XML parsing, but works for debug/truncation.
+    //   (1) The tag name (or any wordish string after '<'), plus optional attributes
+    //   (2) The text inside the tag
+    //   (3) Ensures a matching end tag like </tagName>
+    // Note: Not bulletproof for real XML but sufficient for debug/log truncation.
     const xmlTagRegex = /<(\w[\w\d-]*)([^>]*)>([\s\S]*?)<\/\1>/g;
 
     return text.replace(xmlTagRegex, (match, tagName, tagAttrs, innerText) => {
-      // If the inner text is longer than `maxChars`, truncate it.
       if (innerText.length > maxChars) {
-        const truncated = innerText.slice(0, maxChars) + "... [TRUNCATED]";
+        const truncatedCount = innerText.length - maxChars;
+        const truncated =
+          innerText.slice(0, maxChars) +
+          `... [TRUNCATED: ${truncatedCount} chars]`;
         return `<${tagName}${tagAttrs}>${truncated}</${tagName}>`;
-      } else {
-        return match; // Otherwise, leave as-is.
       }
+      return match;
     });
   }
 
