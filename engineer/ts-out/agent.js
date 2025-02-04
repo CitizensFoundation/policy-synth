@@ -287,6 +287,12 @@ Please return a JSON string array of the relevant files:`;
         }
         this.memory.allBuildErrors = [];
         this.memory.allCodingPlans = [];
+        this.memory.allTypescriptSrcFiles = [];
+        this.memory.existingTypeScriptFilesLikelyToChange = [];
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
+        this.memory.usefulTypescriptCodeFilesToKeepInContext = [];
+        this.memory.documentationFilesToKeepInContext = [];
+        this.memory.likelyRelevantNpmPackageDependencies = [];
         await this.saveMemory();
         await this.updateRangedProgress(undefined, "Analyzing code...");
         // Read all TypeScript source file names from the configured workspace.

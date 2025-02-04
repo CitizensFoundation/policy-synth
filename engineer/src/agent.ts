@@ -8,8 +8,8 @@ import strip from "strip-comments";
 
 // These are your helper agents – assumed to be defined elsewhere
 import { PsEngineerInitialAnalyzer } from "./analyze/initialAnalyzer.js";
-import { PsEngineerExamplesWebResearchAgent } from "./webResearch/examplesWebResearch.js";
-import { PsEngineerDocsWebResearchAgent } from "./webResearch/documentationWebResearch.js";
+import { PsEngineerExamplesWebResearchAgent } from "./deepResearch/examplesWebResearch.js";
+import { PsEngineerDocsWebResearchAgent } from "./deepResearch/documentationWebResearch.js";
 import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import {
   PsAiModelSize,

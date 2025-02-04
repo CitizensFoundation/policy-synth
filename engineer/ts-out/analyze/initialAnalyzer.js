@@ -2,34 +2,6 @@ import fs from "fs";
 import path from "path";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js"; // or your new base agent
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
-/**
- * Declare the interface(s) you might need. Example:
- * interface PsEngineerMemoryData {
- *   workspaceFolder: string;
- *   allTypescriptSrcFiles?: string[];
- *   existingTypeScriptFilesLikelyToChange: string[];
- *   existingTypeScriptFilesLikelyToChangeContents: string;
- *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
- *   usefulTypescriptCodeFilesToKeepInContext: string[];
- *   documentationFilesToKeepInContext: string[];
- *   likelyRelevantNpmPackageDependencies: string[];
- *   needsDocumentationAndExamples: boolean;
- *   taskTitle?: string;
- *   taskDescription?: string;
- *   taskInstructions?: string;
- *   actionLog: string[];
- * }
- *
- * interface PsEngineerPlanningResults {
- *   newLikelyFilesToAdd: string[];
- *   existingTypeScriptFilesLikelyToChange: string[];
- *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
- *   usefulTypescriptCodeFilesToKeepInContext: string[];
- *   documentationFilesToKeepInContext: string[];
- *   likelyRelevantNpmPackageDependencies: string[];
- *   needsDocumentationAndExamples: boolean;
- * }
- */
 export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     get maxModelTokensOut() {
         return 80000;
@@ -157,8 +129,7 @@ ${fileContent}
         }
         const relevantFiles = [];
         // Base system prompt
-        const defaultSystemPrompt = `
-<ImportantInstructions>
+        const defaultSystemPrompt = `<ImportantInstructions>
 You are a specialized file relevance analyzer for coding tasks. You will receive:
 1. The user's coding task instructions.
 2. The content of a single file (like documentation, type definitions, or code).

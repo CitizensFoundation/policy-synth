@@ -1,33 +1,5 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent";
-/**
- * Declare the interface(s) you might need. Example:
- * interface PsEngineerMemoryData {
- *   workspaceFolder: string;
- *   allTypescriptSrcFiles?: string[];
- *   existingTypeScriptFilesLikelyToChange: string[];
- *   existingTypeScriptFilesLikelyToChangeContents: string;
- *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
- *   usefulTypescriptCodeFilesToKeepInContext: string[];
- *   documentationFilesToKeepInContext: string[];
- *   likelyRelevantNpmPackageDependencies: string[];
- *   needsDocumentationAndExamples: boolean;
- *   taskTitle?: string;
- *   taskDescription?: string;
- *   taskInstructions?: string;
- *   actionLog: string[];
- * }
- *
- * interface PsEngineerPlanningResults {
- *   newLikelyFilesToAdd: string[];
- *   existingTypeScriptFilesLikelyToChange: string[];
- *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
- *   usefulTypescriptCodeFilesToKeepInContext: string[];
- *   documentationFilesToKeepInContext: string[];
- *   likelyRelevantNpmPackageDependencies: string[];
- *   needsDocumentationAndExamples: boolean;
- * }
- */
 export declare class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     memory: PsEngineerMemoryData;
     get maxModelTokensOut(): number;
