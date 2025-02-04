@@ -2,10 +2,10 @@ import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
-    planningModelSize = PsAiModelSize.Medium;
+    planningModelSize = PsAiModelSize.Small;
     planSystemPrompt() {
         return `<ImportantInstructions>
-    1. Create a detailed, step-by-step coding plan that specifies the code changes needed in text to accomplish the overall task.
+    1. Create a detailed, step-by-step coding plan for an AI agent programmer that specifies the code changes needed in text to accomplish the overall task.
     2. Do not write code in the plan rather focus on the programming strategy, a high-level plan for the changes needed for each file.
     3. Do not include test or documentation tasks, we do that seperatly, focus on the programming changes.
     4. We always create or modify typescript .ts files no other file types.
@@ -122,7 +122,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     getActionPlanSystemPrompt() {
         return `<Instructions>
     1. Review the provided <Context> and <Task> information.
-    2. Review the coding plan and create a detailed coding action plan in JSON for implementing the changes.
+    2. Review the coding plan for an automated AI agent programmer and create a detailed coding action plan in JSON for implementing the changes.
     3. We always create and modify typescript .ts files no .js files in the plan.
     4. For new files you are adding or have created, output "add" in the fileAction field.
     5. For files you are changing output "change" in the fileAction JSON field.

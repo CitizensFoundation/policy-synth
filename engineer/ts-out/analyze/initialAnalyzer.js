@@ -2,6 +2,34 @@ import fs from "fs";
 import path from "path";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js"; // or your new base agent
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
+/**
+ * Declare the interface(s) you might need. Example:
+ * interface PsEngineerMemoryData {
+ *   workspaceFolder: string;
+ *   allTypescriptSrcFiles?: string[];
+ *   existingTypeScriptFilesLikelyToChange: string[];
+ *   existingTypeScriptFilesLikelyToChangeContents: string;
+ *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
+ *   usefulTypescriptCodeFilesToKeepInContext: string[];
+ *   documentationFilesToKeepInContext: string[];
+ *   likelyRelevantNpmPackageDependencies: string[];
+ *   needsDocumentationAndExamples: boolean;
+ *   taskTitle?: string;
+ *   taskDescription?: string;
+ *   taskInstructions?: string;
+ *   actionLog: string[];
+ * }
+ *
+ * interface PsEngineerPlanningResults {
+ *   newLikelyFilesToAdd: string[];
+ *   existingTypeScriptFilesLikelyToChange: string[];
+ *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
+ *   usefulTypescriptCodeFilesToKeepInContext: string[];
+ *   documentationFilesToKeepInContext: string[];
+ *   likelyRelevantNpmPackageDependencies: string[];
+ *   needsDocumentationAndExamples: boolean;
+ * }
+ */
 export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     get maxModelTokensOut() {
         return 80000;
@@ -108,6 +136,108 @@ ${fileContent}
         });
         return contentsStr;
     }
+    /**
+     * A generalized method that filters a list of files by relevance
+     * using an LLM. By default, if the LLM output does not explicitly
+     * say "Not Relevant", the file is retained ("err on the side of including").
+     *
+     * @param filePaths - The files to be evaluated
+     * @param userTaskInstructions - The high-level instructions / context for relevance
+     * @param typeLabel - A label to include in logs or prompts (e.g. "documentation", "type definitions", "code")
+     * @param systemPromptOverload - Optional system prompt override
+     * @param userPromptOverload - Optional user prompt override
+     * @returns A Promise resolving to an array of relevant file paths
+     */
+    async filterFilesByRelevance(filePaths, userTaskInstructions, typeLabel, systemPromptOverload, userPromptOverload) {
+        this.logger.info(`Analyzing relevance for ${typeLabel}...`);
+        await this.updateRangedProgress(undefined, `Analyzing relevance for ${typeLabel}...`);
+        if (!filePaths || filePaths.length === 0) {
+            this.logger.info(`No files to analyze for ${typeLabel}.`);
+            return [];
+        }
+        const relevantFiles = [];
+        // Base system prompt
+        const defaultSystemPrompt = `
+<ImportantInstructions>
+You are a specialized file relevance analyzer for coding tasks. You will receive:
+1. The user's coding task instructions.
+2. The content of a single file (like documentation, type definitions, or code).
+Based on the provided content and task instructions, decide if the file is "Relevant" or "Not Relevant".
+</ImportantInstructions>
+    `;
+        // Base user prompt
+        const defaultUserPrompt = `<CodeLikelyToChangeInTheCodingTask>
+${this.memory.existingTypeScriptFilesLikelyToChangeContents}
+</CodeLikelyToChangeInTheCodingTask>
+
+<TheUserCodingTaskInstructions>
+${userTaskInstructions || "No user instructions provided."}
+</TheUserCodingTaskInstructions>
+
+<FileToCheck type="${typeLabel}">
+CONTENT_PLACEHOLDER
+</FileToCheck>
+
+TASK:
+Output just a single word: either "Relevant" or "Not Relevant".
+    `;
+        const systemPrompt = systemPromptOverload || defaultSystemPrompt;
+        const userPromptTemplate = userPromptOverload || defaultUserPrompt;
+        for (const filePath of filePaths) {
+            let fileContent = "";
+            try {
+                if (fs.existsSync(filePath)) {
+                    fileContent = fs.readFileSync(filePath, "utf8");
+                }
+                else {
+                    this.logger.warn(`File not found: ${filePath}`);
+                    // We'll skip if file not found
+                    continue;
+                }
+            }
+            catch (error) {
+                this.logger.error(`Error reading file ${filePath}:`, error);
+                continue;
+            }
+            // Insert the file content into the user prompt
+            const userPrompt = userPromptTemplate.replace("CONTENT_PLACEHOLDER", fileContent);
+            let rawResponse;
+            try {
+                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)], false);
+            }
+            catch (err) {
+                this.logger.error(`Error calling model for file ${filePath}:`, err);
+                // If there's an error with the model, we keep the file by default
+                relevantFiles.push(filePath);
+                continue;
+            }
+            let relevance;
+            if (typeof rawResponse === "string") {
+                const trimmedResponse = rawResponse.trim().toLowerCase();
+                if (trimmedResponse.includes("not relevant")) {
+                    relevance = "Not Relevant";
+                }
+                else if (trimmedResponse.includes("relevant")) {
+                    relevance = "Relevant";
+                }
+                else {
+                    // If the model doesn't strictly say "Not Relevant", err on "Relevant"
+                    relevance = "Relevant";
+                }
+            }
+            else {
+                // If we got a non-string response, default to relevant
+                relevance = "Relevant";
+            }
+            this.logger.info(`File ${filePath} evaluated as: ${relevance}`);
+            if (relevance !== "Not Relevant") {
+                relevantFiles.push(filePath);
+            }
+        }
+        const removedCount = filePaths.length - relevantFiles.length;
+        this.logger.info(`For ${typeLabel}, removed ${removedCount} files as "Not Relevant".`);
+        return relevantFiles;
+    }
     async analyzeAndSetup() {
         this.logger.info(`Analyzing and setting up task`);
         // Read dependencies from package.json
@@ -135,7 +265,7 @@ ${fileContent}
         const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
             this.createSystemMessage(this.analyzeSystemPrompt),
             this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
-        ], false // not streaming, set to true if you want streamed responses
+        ], false // not streaming
         );
         let analyzisResults;
         if (typeof analysisResponse === "string") {
@@ -159,107 +289,21 @@ ${fileContent}
             analyzisResults.needsDocumentationAndExamples;
         this.memory.documentationFilesToKeepInContext =
             analyzisResults.documentationFilesToKeepInContext;
-        this.memory.existingTypeScriptFilesLikelyToChangeContents =
-            this.getFilesContents(analyzisResults.existingTypeScriptFilesLikelyToChange);
+        this.memory.existingTypeScriptFilesLikelyToChangeContents = this.getFilesContents(analyzisResults.existingTypeScriptFilesLikelyToChange);
         this.memory.actionLog.push(`Have done initial analysis${analyzisResults.needsDocumentationAndExamples
             ? " and we need to search for context"
             : ""}`);
-        await this.analyzeDocumentationRelevance();
+        // -- Apply the new general relevance filtering function --
+        // Filter out documentation files that are not relevant
+        this.memory.documentationFilesToKeepInContext = await this.filterFilesByRelevance(this.memory.documentationFilesToKeepInContext, this.memory.taskInstructions || "", "documentation");
+        // Filter out definitions that are not relevant
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext =
+            await this.filterFilesByRelevance(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, this.memory.taskInstructions || "", "type definitions");
+        // Filter out code files that are not relevant
+        this.memory.usefulTypescriptCodeFilesToKeepInContext =
+            await this.filterFilesByRelevance(this.memory.usefulTypescriptCodeFilesToKeepInContext, this.memory.taskInstructions || "", "typescript code");
+        this.memory.actionLog.push("Filtered documentation, definition files, and code files by relevance.");
         await this.saveMemory();
-    }
-    /**
-     * Reads the contents of each .md file in memory.documentationFilesToKeepInContext
-     * and checks if they are relevant to the user’s coding task.
-     *
-     * The LLM is asked to:
-     *  - Summarize each document.
-     *  - Assess whether it is relevant or not relevant to the task.
-     *
-     * The method then updates `memory` with a new property like
-     * `relevantDocumentationSummaries` which can be used in subsequent steps.
-     */
-    async analyzeDocumentationRelevance() {
-        this.logger.info("Analyzing documentation relevance...");
-        await this.updateRangedProgress(undefined, "Analyzing documentation relevance...");
-        // Get the list of documentation files to check
-        const docsToCheck = this.memory.documentationFilesToKeepInContext || [];
-        const relevantDocs = [];
-        for (const docPath of docsToCheck) {
-            let content = "";
-            try {
-                if (fs.existsSync(docPath)) {
-                    content = fs.readFileSync(docPath, "utf8");
-                }
-                else {
-                    this.logger.warn(`Documentation file not found: ${docPath}`);
-                    continue;
-                }
-            }
-            catch (error) {
-                this.logger.error(`Error reading documentation file ${docPath}:`, error);
-                continue;
-            }
-            // Build a system prompt that instructs the LLM on what to do for this document
-            const systemPrompt = `
-  <ImportantInstructions>
-  You are a specialized documentation relevance analyzer. You will receive:
-  1. The user's coding task instructions.
-  2. The content of a single documentation file.
-  Based on the provided content and task instructions, decide if the document is Relevant or Not Relevant.
-  </ImportantInstructions>
-      `;
-            // Build the human prompt with the task instructions and the document content
-            const userPrompt = `
-  <TheUserCodingTaskInstructions>
-  ${this.memory.taskInstructions || "No user instructions provided."}
-  </TheUserCodingTaskInstructions>
-
-  <Document fullDocPath="${docPath}">
-  ${content}
-  </Document>
-
-  TASK:
-  Output just a single word: either "Relevant" or "Not Relevant".
-      `;
-            // Call the LLM for the current document
-            let rawResponse;
-            try {
-                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
-                    this.createSystemMessage(systemPrompt),
-                    this.createHumanMessage(userPrompt),
-                ], false);
-            }
-            catch (err) {
-                this.logger.error(`Error calling model for document ${docPath}:`, err);
-                continue;
-            }
-            // Parse the response (expecting just "Relevant" or "Not Relevant")
-            let relevance;
-            if (typeof rawResponse === "string") {
-                const trimmedResponse = rawResponse.trim();
-                if (trimmedResponse.includes("Not Relevant")) {
-                    relevance = "Not Relevant";
-                }
-                else if (trimmedResponse.includes("Relevant")) {
-                    relevance = "Relevant";
-                }
-                else {
-                    this.logger.error(`Unrecognized response for document ${docPath}: ${trimmedResponse}`);
-                }
-            }
-            else {
-                this.logger.error(`Non-string response for document ${docPath}:`, rawResponse);
-            }
-            this.logger.info(`Document ${docPath} evaluated as: ${relevance}`);
-            if (relevance === "Relevant") {
-                relevantDocs.push(docPath);
-            }
-        }
-        const removedCount = docsToCheck.length - relevantDocs.length;
-        this.logger.info(`Removed ${removedCount} non-relevant documentation files.`);
-        // Update memory to only keep the relevant documentation files
-        this.memory.documentationFilesToKeepInContext = relevantDocs;
-        this.memory.actionLog.push("Documentation relevance analysis completed. Non-relevant docs filtered out.");
     }
 }
 //# sourceMappingURL=initialAnalyzer.js.map

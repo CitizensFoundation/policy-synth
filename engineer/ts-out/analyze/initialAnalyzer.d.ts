@@ -1,5 +1,33 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent";
+/**
+ * Declare the interface(s) you might need. Example:
+ * interface PsEngineerMemoryData {
+ *   workspaceFolder: string;
+ *   allTypescriptSrcFiles?: string[];
+ *   existingTypeScriptFilesLikelyToChange: string[];
+ *   existingTypeScriptFilesLikelyToChangeContents: string;
+ *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
+ *   usefulTypescriptCodeFilesToKeepInContext: string[];
+ *   documentationFilesToKeepInContext: string[];
+ *   likelyRelevantNpmPackageDependencies: string[];
+ *   needsDocumentationAndExamples: boolean;
+ *   taskTitle?: string;
+ *   taskDescription?: string;
+ *   taskInstructions?: string;
+ *   actionLog: string[];
+ * }
+ *
+ * interface PsEngineerPlanningResults {
+ *   newLikelyFilesToAdd: string[];
+ *   existingTypeScriptFilesLikelyToChange: string[];
+ *   usefulTypescriptDefinitionFilesToKeepInContext: string[];
+ *   usefulTypescriptCodeFilesToKeepInContext: string[];
+ *   documentationFilesToKeepInContext: string[];
+ *   likelyRelevantNpmPackageDependencies: string[];
+ *   needsDocumentationAndExamples: boolean;
+ * }
+ */
 export declare class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     memory: PsEngineerMemoryData;
     get maxModelTokensOut(): number;
@@ -10,18 +38,19 @@ export declare class PsEngineerInitialAnalyzer extends PolicySynthAgent {
     get analyzeSystemPrompt(): string;
     analyzeUserPrompt(allNpmPackageDependencies: string[], allDocumentationFiles: string[]): string;
     getFilesContents(filePaths: string[]): string;
-    analyzeAndSetup(): Promise<void>;
     /**
-     * Reads the contents of each .md file in memory.documentationFilesToKeepInContext
-     * and checks if they are relevant to the user’s coding task.
+     * A generalized method that filters a list of files by relevance
+     * using an LLM. By default, if the LLM output does not explicitly
+     * say "Not Relevant", the file is retained ("err on the side of including").
      *
-     * The LLM is asked to:
-     *  - Summarize each document.
-     *  - Assess whether it is relevant or not relevant to the task.
-     *
-     * The method then updates `memory` with a new property like
-     * `relevantDocumentationSummaries` which can be used in subsequent steps.
+     * @param filePaths - The files to be evaluated
+     * @param userTaskInstructions - The high-level instructions / context for relevance
+     * @param typeLabel - A label to include in logs or prompts (e.g. "documentation", "type definitions", "code")
+     * @param systemPromptOverload - Optional system prompt override
+     * @param userPromptOverload - Optional user prompt override
+     * @returns A Promise resolving to an array of relevant file paths
      */
-    analyzeDocumentationRelevance(): Promise<void>;
+    filterFilesByRelevance(filePaths: string[], userTaskInstructions: string, typeLabel: string, systemPromptOverload?: string, userPromptOverload?: string): Promise<string[]>;
+    analyzeAndSetup(): Promise<void>;
 }
 //# sourceMappingURL=initialAnalyzer.d.ts.map
