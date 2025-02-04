@@ -50,9 +50,9 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
   /**
    * Default numeric parameters for your approach.
    */
-  numberOfQueriesToGenerate = 12;
-  percentOfQueriesToSearch = 0.25;
-  percentOfResultsToScan = 0.3;
+  numberOfQueriesToGenerate = 10;
+  percentOfQueriesToSearch = 0.2;
+  percentOfResultsToScan = 0.2;
   maxTopContentResultsToUse = 3;
 
   /**

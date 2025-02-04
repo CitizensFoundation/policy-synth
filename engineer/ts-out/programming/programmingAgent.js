@@ -4,7 +4,7 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 import { PsEngineerProgrammingPlanningAgent } from "./planningAgent.js";
 import { PsEngineerProgrammingImplementationAgent } from "./implementationAgent.js";
 import { PsEngineerProgrammingBuildAgent } from "./buildAgent.js";
-import { PsEngineerErrorWebResearchAgent } from "../webResearch/errorsWebResearch.js";
+import { PsEngineerErrorWebResearchAgent } from "../deepResearch/errorsWebResearch.js";
 export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     async implementChanges() {
         console.log(`Implementing changes `);

@@ -236,8 +236,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
         const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
             this.createSystemMessage(this.analyzeSystemPrompt),
             this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
-        ], false // not streaming
-        );
+        ], false);
         let analyzisResults;
         if (typeof analysisResponse === "string") {
             analyzisResults = JSON.parse(analysisResponse);
@@ -246,6 +245,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
             // if the LLM returned an object (already parsed)
             analyzisResults = analysisResponse;
         }
+        this.memory.analysisResults = analyzisResults;
         console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
         // Store the results into memory
         this.memory.existingTypeScriptFilesLikelyToChange =

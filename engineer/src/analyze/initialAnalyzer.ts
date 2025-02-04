@@ -316,7 +316,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
           this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)
         ),
       ],
-      false // not streaming
+      false
     );
 
     let analyzisResults: PsEngineerPlanningResults;
@@ -327,6 +327,10 @@ Output just a single word: either "Relevant" or "Not Relevant".
       // if the LLM returned an object (already parsed)
       analyzisResults = analysisResponse as PsEngineerPlanningResults;
     }
+
+    this.memory.analysisResults = analyzisResults;
+
+    await this.saveMemory();
 
     console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
 
@@ -375,7 +379,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
       await this.filterFilesByRelevance(
         this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
         this.memory.taskInstructions || "",
-        "type definitions"
+        "possibly relevant type definitions"
       );
 
     // Filter out code files that are not relevant
@@ -383,7 +387,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
       await this.filterFilesByRelevance(
         this.memory.usefulTypescriptCodeFilesToKeepInContext,
         this.memory.taskInstructions || "",
-        "typescript code"
+        "possibly relevant typescript code"
       );
 
     this.memory.actionLog.push(
