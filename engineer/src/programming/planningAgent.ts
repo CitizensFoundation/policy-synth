@@ -222,6 +222,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         this.havePrintedDebugPrompt = true;
       }
 
+      this.startTiming();
+
       // -- Call the model with the new approach
       const planResponse = await this.callModel(
         PsAiModelType.TextReasoning,
@@ -232,6 +234,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         ],
         false
       );
+
+      await this.addTimingResult("PlanningAgent Plan");
 
       // Convert the plan response into a string if needed
       if (planResponse) {
@@ -250,6 +254,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
 
         // Now we review the coding plan
         if (reviewRetries < maxReviewsRetries) {
+          this.startTiming();
           const reviewResponse = await this.callModel(
             PsAiModelType.TextReasoning,
             this.planningModelSize,
@@ -259,6 +264,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             ],
             false
           );
+
+          await this.addTimingResult("PlanningAgent Review");
 
           let review = "";
           if (reviewResponse) {
@@ -314,6 +321,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     while (!planReady && planRetries < this.maxRetries) {
       console.log(`Getting action plan attempt ${planRetries + 1}`);
 
+      this.startTiming();
+
       const actionPlanResponse = await this.callModel(
         PsAiModelType.TextReasoning,
         PsAiModelSize.Small,
@@ -325,6 +334,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         ],
         false // can be true if you prefer streaming
       );
+
+      await this.addTimingResult("PlanningAgent Action Plan");
 
       // Parse the action plan response into PsEngineerCodingActionPlanItem[]
       if (actionPlanResponse) {
@@ -358,6 +369,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
             review = "Action plan looks good";
           } else {
             // Review the action plan
+            this.startTiming();
             const actionPlanReviewResponse = await this.callModel(
               PsAiModelType.TextReasoning,
               PsAiModelSize.Small,
@@ -369,6 +381,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
               ],
               false
             );
+
+            await this.addTimingResult("PlanningAgent Action Plan Review");
 
             if (actionPlanReviewResponse) {
               if (typeof actionPlanReviewResponse === "string") {

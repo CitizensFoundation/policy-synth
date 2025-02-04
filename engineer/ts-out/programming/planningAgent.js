@@ -174,11 +174,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 console.log(`PLANNING PROMPT: ${this.getUserPlanPrompt(reviewLog)}`);
                 this.havePrintedDebugPrompt = true;
             }
+            this.startTiming();
             // -- Call the model with the new approach
             const planResponse = await this.callModel(PsAiModelType.TextReasoning, this.planningModelSize, [
                 this.createSystemMessage(this.planSystemPrompt()),
                 this.createHumanMessage(this.getUserPlanPrompt(reviewLog)),
             ], false);
+            await this.addTimingResult("PlanningAgent Plan");
             // Convert the plan response into a string if needed
             if (planResponse) {
                 if (typeof planResponse === "string") {
@@ -195,10 +197,12 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                 await this.saveMemory();
                 // Now we review the coding plan
                 if (reviewRetries < maxReviewsRetries) {
+                    this.startTiming();
                     const reviewResponse = await this.callModel(PsAiModelType.TextReasoning, this.planningModelSize, [
                         this.createSystemMessage(this.reviewSystemPrompt()),
                         this.createHumanMessage(this.getUserReviewPrompt(codingPlan)),
                     ], false);
+                    await this.addTimingResult("PlanningAgent Review");
                     let review = "";
                     if (reviewResponse) {
                         if (typeof reviewResponse === "string") {
@@ -248,11 +252,13 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
         }
         while (!planReady && planRetries < this.maxRetries) {
             console.log(`Getting action plan attempt ${planRetries + 1}`);
+            this.startTiming();
             const actionPlanResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                 this.createSystemMessage(this.getActionPlanSystemPrompt()),
                 this.createHumanMessage(this.getUserActionPlanPrompt(codingPlan, reviewLog)),
             ], false // can be true if you prefer streaming
             );
+            await this.addTimingResult("PlanningAgent Action Plan");
             // Parse the action plan response into PsEngineerCodingActionPlanItem[]
             if (actionPlanResponse) {
                 let planStr = "";
@@ -279,10 +285,12 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
                     }
                     else {
                         // Review the action plan
+                        this.startTiming();
                         const actionPlanReviewResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                             this.createSystemMessage(this.actionPlanReviewSystemPrompt()),
                             this.createHumanMessage(this.getUserActionPlanReviewPrompt(actionPlan)),
                         ], false);
+                        await this.addTimingResult("PlanningAgent Action Plan Review");
                         if (actionPlanReviewResponse) {
                             if (typeof actionPlanReviewResponse === "string") {
                                 review = actionPlanReviewResponse;

@@ -1,15 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-import { PsConstants } from "@policysynth/agents/constants.js";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js"; // or your new base agent
 import {
   PsAiModelType,
   PsAiModelSize,
 } from "@policysynth/agents/aiModelTypes.js";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
 
-export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
+export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
   declare memory: PsEngineerMemoryData;
 
   override get maxModelTokensOut(): number {
@@ -232,6 +231,8 @@ Output just a single word: either "Relevant" or "Not Relevant".
         fileContent
       );
 
+      this.startTiming();
+
       let rawResponse: string | object;
       try {
         rawResponse = await this.callModel(
@@ -240,6 +241,8 @@ Output just a single word: either "Relevant" or "Not Relevant".
           [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)],
           false
         );
+
+        await this.addTimingResult("FilterFilesByRelevance");
       } catch (err) {
         this.logger.error(`Error calling model for file ${filePath}:`, err);
         // If there's an error with the model, we keep the file by default
@@ -266,6 +269,9 @@ Output just a single word: either "Relevant" or "Not Relevant".
       this.logger.info(`File ${filePath} evaluated as: ${relevance}`);
       if (relevance !== "Not Relevant") {
         relevantFiles.push(filePath);
+        this.memory.acceptedFilesForRelevance.push(filePath);
+      } else {
+        this.memory.rejectedFilesForRelevance.push(filePath);
       }
     }
 
@@ -306,6 +312,8 @@ Output just a single word: either "Relevant" or "Not Relevant".
       this.memory.workspaceFolder
     );
 
+    this.startTiming();
+
     // Use the new callModel approach
     const analysisResponse = await this.callModel(
       PsAiModelType.TextReasoning,
@@ -318,6 +326,8 @@ Output just a single word: either "Relevant" or "Not Relevant".
       ],
       false
     );
+
+    await this.addTimingResult("Analyzer Agent");
 
     let analyzisResults: PsEngineerPlanningResults;
 

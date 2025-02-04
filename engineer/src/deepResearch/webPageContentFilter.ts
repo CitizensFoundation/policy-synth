@@ -2,8 +2,8 @@ import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.j
 
 import pLimit from "p-limit";
 
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
 
 /**
  * Upgraded PsEngineerWebContentFilter class to use:
@@ -11,7 +11,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  * - `callModel` in place of direct ChatOpenAI usage
  * - optional concurrency using `p-limit` for filtering large arrays
  */
-export class PsEngineerWebContentFilter extends PolicySynthAgent {
+export class PsEngineerWebContentFilter extends PsEngineerAgentBase {
   override memory: PsEngineerMemoryData;
 
   override get modelTemperature(): number {
@@ -115,6 +115,8 @@ Is the content relevant to the task? Yes or No:
           this.createHumanMessage(this.filterUserPrompt(content)),
         ];
 
+        this.startTiming();
+
         // Call model using the new callModel style
         const analysisResults = (await this.callModel(
           PsAiModelType.TextReasoning,
@@ -122,6 +124,8 @@ Is the content relevant to the task? Yes or No:
           messages,
           false
         )) as string;
+
+        await this.addTimingResult("WebPageContentFilter");
 
         const trimmedResponse = analysisResults.trim();
         if (trimmedResponse === "Yes") {

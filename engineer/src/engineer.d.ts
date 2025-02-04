@@ -99,6 +99,14 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   latestActionItemPlan: PsEngineerCodingActionPlanItem[];
   allBuildErrors: string[];
   analysisResults: PsEngineerPlanningResults;
+  timingResults: PsEngineerTimingResults[];
+  rejectedFilesForRelevance: string[];
+  acceptedFilesForRelevance: string[];
+}
+
+interface PsEngineerTimingResults {
+  agentName: string;
+  totalTimeInSeconds: number;
 }
 
 type PsEngineerFileActions = "add" | "change" | "delete";

@@ -1,4 +1,3 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import axios from "axios";
 import fs from "fs";
 import path from "path";
@@ -9,7 +8,8 @@ import { PsEngineerExamplesWebResearchAgent } from "./deepResearch/examplesWebRe
 import { PsEngineerDocsWebResearchAgent } from "./deepResearch/documentationWebResearch.js";
 import { PsEngineerProgrammingAgent } from "./programming/programmingAgent.js";
 import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
-export class PsEngineerAgent extends PolicySynthAgent {
+import { PsEngineerAgentBase } from "./agentBase.js";
+export class PsEngineerAgent extends PsEngineerAgentBase {
     githubIssueUrl;
     get maxModelTokensOut() {
         return 80000;
@@ -244,7 +244,9 @@ Please return a JSON string array of the relevant files:`;
                     this.createSystemMessage(systemPrompt),
                     this.createHumanMessage(userPrompt),
                 ];
+                this.startTiming();
                 relevantFiles = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, true));
+                await this.addTimingResult("FilterRelevantDtsFiles");
                 this.logger.info(JSON.stringify(relevantFiles, null, 2));
                 relevantFiles = relevantFiles.map((filePath) => this.addWorkspacePathToFileIfNeeded(filePath));
                 this.logger.info("Filtered relevant files", relevantFiles);
@@ -293,6 +295,9 @@ Please return a JSON string array of the relevant files:`;
         this.memory.usefulTypescriptCodeFilesToKeepInContext = [];
         this.memory.documentationFilesToKeepInContext = [];
         this.memory.likelyRelevantNpmPackageDependencies = [];
+        this.memory.timingResults = [];
+        this.memory.rejectedFilesForRelevance = [];
+        this.memory.acceptedFilesForRelevance = [];
         await this.saveMemory();
         await this.updateRangedProgress(undefined, "Analyzing code...");
         // Read all TypeScript source file names from the configured workspace.

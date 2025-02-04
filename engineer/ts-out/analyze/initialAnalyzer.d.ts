@@ -1,6 +1,6 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
-export declare class PsEngineerInitialAnalyzer extends PolicySynthAgent {
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
+export declare class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
     memory: PsEngineerMemoryData;
     get maxModelTokensOut(): number;
     get modelTemperature(): number;

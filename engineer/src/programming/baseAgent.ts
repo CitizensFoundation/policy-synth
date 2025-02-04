@@ -3,16 +3,13 @@ import { Project, ReturnTypedNode } from "ts-morph";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
-import {
-  PsAiModelType,
-  PsAiModelSize,
-} from "@policysynth/agents/aiModelTypes.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
 
 /**
  * Extend PolicySynthAgent instead of the older PolicySynthScAgentBase,
  * but keep all your existing functionality and method logic.
  */
-export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
+export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
   declare memory: PsEngineerMemoryData;
 
   documentationFilesInContextContent: string | undefined | null;
@@ -108,6 +105,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
       Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
       Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
+      Avoid using the typescript defintion "any", use Typescript types whereever possible.
       Always output the full new or changed typescript file, if you are changing a file do not leave anything out from the original file, otherwise code will get lost.
     </ImportantCodingRulesForYourCodeGeneration>`;
   }
@@ -135,7 +133,8 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     if (!this.currentErrors) {
       return this.memory
         .currentTask!.filesCompleted!.map(
-          (f) => `<FileYouHaveCompletedWorkOn filename="${f.fileName}">\n${f.content}\n</FileYouHaveCompletedWorkOn>`
+          (f) =>
+            `<FileYouHaveCompletedWorkOn filename="${f.fileName}">\n${f.content}\n</FileYouHaveCompletedWorkOn>`
         )
         .join("\n");
     } else {
@@ -157,9 +156,18 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
   }
 
   renderCurrentErrorsAndOriginalFiles() {
+    const originalPlan =
+      this.memory.allCodingPlans && this.memory.allCodingPlans.length > 0
+        ? this.memory.allCodingPlans[0]
+        : undefined;
     return `${
       this.currentErrors
-        ? `${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${
+        ? `${
+            originalPlan
+              ? `<YourOriginalPlan>${originalPlan}</YourOriginalPlan>`
+              : ``
+          }
+        ${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${
             this.currentErrors
           }</CurrentErrorsToFixInYourPlan>`
         : ``
@@ -174,7 +182,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     return filePath.replace(this.memory.workspaceFolder, "");
   }
 
-  renderDefaultTaskAndContext(limited=false) {
+  renderDefaultTaskAndContext(limited = false) {
     const hasContextFromSearch =
       (this.memory.exampleContextItems &&
         this.memory.exampleContextItems.length > 0) ||
@@ -211,7 +219,8 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
 
       ${
         this.documentationFilesInContextContent &&
-        this.documentationFilesInContextContent.length > 0 && !limited
+        this.documentationFilesInContextContent.length > 0 &&
+        !limited
           ? `${this.documentationFilesInContextContent}`
           : ``
       }
@@ -236,7 +245,11 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
       }
       </TypescriptFilesThatAreLikelyToChange>
 
-      ${!hasCompletedFiles && !limited ? ` ${this.likelyToChangeFilesContents || ""}` : ``}
+      ${
+        !hasCompletedFiles && !limited
+          ? ` ${this.likelyToChangeFilesContents || ""}`
+          : ``
+      }
 
       ${
         hasCompletedFiles
@@ -283,7 +296,10 @@ export abstract class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
     return `
     <OriginalCodefilesBeforeYourChanges>
       ${this.memory.currentTask.originalFiles
-        .map((f) => `<OriginalFile filename="${f.fileName}">\n${f.content}\n</OriginalFile>`)
+        .map(
+          (f) =>
+            `<OriginalFile filename="${f.fileName}">\n${f.content}\n</OriginalFile>`
+        )
         .join("\n")}
     </OriginalCodefilesBeforeYourChanges>
     `;

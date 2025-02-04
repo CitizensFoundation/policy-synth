@@ -1,8 +1,8 @@
 import { PsAiModelType, PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
 
-export class SearchQueriesGenerator extends PolicySynthAgent {
+export class SearchQueriesGenerator extends PsEngineerAgentBase {
   systemPrompt: string;
   userPrompt: string;
   override memory: PsEngineerMemoryData;
@@ -65,11 +65,16 @@ Your JSON array output:
   }
 
   async generateSearchQueries(): Promise<string[]> {
-    return await this.callModel(
+    this.startTiming();
+    const response = await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Large,
       await this.renderMessages(),
       true
     );
+
+    await this.addTimingResult("SearchQueriesGenerator");
+
+    return response as string[];
   }
 }

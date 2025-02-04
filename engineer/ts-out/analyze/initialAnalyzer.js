@@ -1,8 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js"; // or your new base agent
 import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
-export class PsEngineerInitialAnalyzer extends PolicySynthAgent {
+import { PsEngineerAgentBase } from "../agentBase.js";
+export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
     get maxModelTokensOut() {
         return 80000;
     }
@@ -172,9 +172,11 @@ Output just a single word: either "Relevant" or "Not Relevant".
             }
             // Insert the file content into the user prompt
             const userPrompt = userPromptTemplate.replace("CONTENT_PLACEHOLDER", fileContent);
+            this.startTiming();
             let rawResponse;
             try {
                 rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)], false);
+                await this.addTimingResult("FilterFilesByRelevance");
             }
             catch (err) {
                 this.logger.error(`Error calling model for file ${filePath}:`, err);
@@ -203,6 +205,10 @@ Output just a single word: either "Relevant" or "Not Relevant".
             this.logger.info(`File ${filePath} evaluated as: ${relevance}`);
             if (relevance !== "Not Relevant") {
                 relevantFiles.push(filePath);
+                this.memory.acceptedFilesForRelevance.push(filePath);
+            }
+            else {
+                this.memory.rejectedFilesForRelevance.push(filePath);
             }
         }
         const removedCount = filePaths.length - relevantFiles.length;
@@ -232,11 +238,13 @@ Output just a single word: either "Relevant" or "Not Relevant".
             return files;
         };
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
+        this.startTiming();
         // Use the new callModel approach
         const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
             this.createSystemMessage(this.analyzeSystemPrompt),
             this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], false);
+        await this.addTimingResult("Analyzer Agent");
         let analyzisResults;
         if (typeof analysisResponse === "string") {
             analyzisResults = JSON.parse(analysisResponse);
@@ -246,6 +254,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
             analyzisResults = analysisResponse;
         }
         this.memory.analysisResults = analyzisResults;
+        await this.saveMemory();
         console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
         // Store the results into memory
         this.memory.existingTypeScriptFilesLikelyToChange =
@@ -269,10 +278,10 @@ Output just a single word: either "Relevant" or "Not Relevant".
         this.memory.documentationFilesToKeepInContext = await this.filterFilesByRelevance(this.memory.documentationFilesToKeepInContext, this.memory.taskInstructions || "", "documentation");
         // Filter out definitions that are not relevant
         this.memory.usefulTypescriptDefinitionFilesToKeepInContext =
-            await this.filterFilesByRelevance(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, this.memory.taskInstructions || "", "type definitions");
+            await this.filterFilesByRelevance(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, this.memory.taskInstructions || "", "possibly relevant type definitions");
         // Filter out code files that are not relevant
         this.memory.usefulTypescriptCodeFilesToKeepInContext =
-            await this.filterFilesByRelevance(this.memory.usefulTypescriptCodeFilesToKeepInContext, this.memory.taskInstructions || "", "typescript code");
+            await this.filterFilesByRelevance(this.memory.usefulTypescriptCodeFilesToKeepInContext, this.memory.taskInstructions || "", "possibly relevant typescript code");
         this.memory.actionLog.push("Filtered documentation, definition files, and code files by relevance.");
         await this.saveMemory();
     }

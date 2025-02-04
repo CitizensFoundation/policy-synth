@@ -15,8 +15,9 @@ import {
   PsAiModelSize,
   PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
+import { PsEngineerAgentBase } from "./agentBase.js";
 
-export class PsEngineerAgent extends PolicySynthAgent {
+export class PsEngineerAgent extends PsEngineerAgentBase {
   declare memory: PsEngineerMemoryData;
   githubIssueUrl?: string;
 
@@ -334,12 +335,16 @@ Please return a JSON string array of the relevant files:`;
           this.createHumanMessage(userPrompt),
         ];
 
+        this.startTiming();
+
         relevantFiles = (await this.callModel(
           PsAiModelType.TextReasoning,
           PsAiModelSize.Small,
           messages,
           true
         )) as string[];
+
+        await this.addTimingResult("FilterRelevantDtsFiles");
 
         this.logger.info(JSON.stringify(relevantFiles, null, 2));
         relevantFiles = relevantFiles.map((filePath) =>
@@ -396,6 +401,9 @@ Please return a JSON string array of the relevant files:`;
     this.memory.usefulTypescriptCodeFilesToKeepInContext = [];
     this.memory.documentationFilesToKeepInContext = [];
     this.memory.likelyRelevantNpmPackageDependencies = [];
+    this.memory.timingResults = [];
+    this.memory.rejectedFilesForRelevance = [];
+    this.memory.acceptedFilesForRelevance = [];
 
     await this.saveMemory();
 

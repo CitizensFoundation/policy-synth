@@ -233,12 +233,14 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       ];
 
       try {
+        this.startTiming();
         newCode = await this.callModel(
           PsAiModelType.TextReasoning,
           PsAiModelSize.Small,
           messagesForCoding,
           false
         );
+        await this.addTimingResult("ImplementationAgent");
       } catch (error: any) {
         console.error("Error calling the model for new code:", error.message);
         retryCount++;
@@ -271,12 +273,14 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
           review = "Code looks good";
         } else {
           try {
+            this.startTiming();
             review = await this.callModel(
             PsAiModelType.TextReasoning,
             PsAiModelSize.Small,
             messagesForReview,
               false
             );
+            await this.addTimingResult("ImplementationAgentReview");
           } catch (error: any) {
             console.error("Error calling the model for review:", error.message);
             retryCount++;

@@ -54,6 +54,24 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
     return "high";
   }
 
+  currentStartTime: Date | undefined;
+
+  startTiming() {
+    this.currentStartTime = new Date();
+  }
+
+  async addTimingResult(agentName: string) {
+    const timeEnd = new Date();
+    const timeTakenInSeconds = (timeEnd.getTime() - this.currentStartTime!.getTime()) / 1000;
+
+    this.memory.timingResults.push({
+      agentName,
+      totalTimeInSeconds: timeTakenInSeconds,
+    });
+
+    await this.saveMemory();
+  }
+
   constructor(
     agent: PsAgent,
     memory: PsEngineerMemoryData,
@@ -191,6 +209,8 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
 
     const messages = this.renderScanningPrompt(text);
 
+    this.startTiming();
+
     const analysis = await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Small,
@@ -198,6 +218,8 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
       false,
       true
     );
+
+    await this.addTimingResult("WebPageScanner");
 
     if (process.env.PS_DEBUG_AI_MESSAGES) {
       console.log("AI Analysis result:", analysis);

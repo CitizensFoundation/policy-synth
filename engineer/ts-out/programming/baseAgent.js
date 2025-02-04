@@ -1,10 +1,10 @@
 import fs from "fs";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsEngineerAgentBase } from "../agentBase.js";
 /**
  * Extend PolicySynthAgent instead of the older PolicySynthScAgentBase,
  * but keep all your existing functionality and method logic.
  */
-export class PsEngineerBaseProgrammingAgent extends PolicySynthAgent {
+export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
     documentationFilesInContextContent;
     currentFileContents;
     likelyToChangeFilesContents;
