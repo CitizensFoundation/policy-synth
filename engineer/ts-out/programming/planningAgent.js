@@ -2,7 +2,7 @@ import { PsAiModelType, PsAiModelSize, } from "@policysynth/agents/aiModelTypes.
 import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
-    planningModelSize = PsAiModelSize.Small;
+    planningModelSize = PsAiModelSize.Medium;
     planSystemPrompt() {
         return `<ImportantInstructions>
     1. Create a detailed, step-by-step coding plan for an AI agent programmer that specifies the code changes needed in text to accomplish the overall task.

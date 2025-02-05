@@ -175,7 +175,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
             this.startTiming();
             let rawResponse;
             try {
-                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)], false);
+                rawResponse = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)], false);
                 await this.addTimingResult("FilterFilesByRelevance");
             }
             catch (err) {
@@ -240,7 +240,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
         this.startTiming();
         // Use the new callModel approach
-        const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
+        const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
             this.createSystemMessage(this.analyzeSystemPrompt),
             this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], false);

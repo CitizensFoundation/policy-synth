@@ -225,9 +225,15 @@ Only output a JSON array with possibly relevant d.ts files, no explanations befo
 </OutputFormat>
 
 <UpcomingUserTask>
-  ${this.memory.taskTitle ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>` : ""}
-  ${this.memory.taskDescription ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>` : ""}
-  ${this.memory.taskInstructions ? `<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>` : ""}
+  ${this.memory.taskTitle
+            ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>`
+            : ""}
+  ${this.memory.taskDescription
+            ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>`
+            : ""}
+  ${this.memory.taskInstructions
+            ? `<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>`
+            : ""}
 </UpcomingUserTask>
 `;
         const userPrompt = `<ListOfDtsFilesToAnalyzeForRelevanceToTheTask>
@@ -316,7 +322,7 @@ Please return a JSON string array of the relevant files:`;
         this.memory.allTypeDefsContents = this.memory.allTypescriptSrcFiles
             .map((filePath) => {
             if (filePath.endsWith(".d.ts")) {
-                const content = this.removeCommentsFromCode((this.loadFileContents(filePath)) || "");
+                const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
                 if (content && content.length > 75) {
                     return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                 }
@@ -336,14 +342,14 @@ Please return a JSON string array of the relevant files:`;
         if (this.memory.likelyRelevantNpmPackageDependencies &&
             this.memory.likelyRelevantNpmPackageDependencies.length > 0) {
             await this.updateRangedProgress(undefined, "Searching for .d.ts files in node_modules...");
-            const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+            let nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
             this.memory.allTypescriptSrcFiles = [
                 ...this.memory.allTypescriptSrcFiles,
                 ...nodeModuleTypeDefs,
             ];
-            if (!this.memory.usefulTypescriptDefinitionFilesToKeepInContext) {
-                this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
-            }
+            this.logger.debug(`nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} before`);
+            nodeModuleTypeDefs = await analyzeAgent.filterFilesByRelevance(nodeModuleTypeDefs, this.memory.taskInstructions, "potentially relevant node_modules .d.ts files");
+            this.logger.debug(`nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} after`);
             this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
                 ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
                 ...nodeModuleTypeDefs,
@@ -351,7 +357,7 @@ Please return a JSON string array of the relevant files:`;
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
                     .map((filePath) => {
-                    const content = this.removeCommentsFromCode((this.loadFileContents(filePath)) || "");
+                    const content = this.removeCommentsFromCode(this.loadFileContents(filePath) || "");
                     if (content && content.length > 75) {
                         return `\n${this.removeWorkspacePathFromFileIfNeeded(filePath)}:\n${content}`;
                     }
@@ -364,7 +370,6 @@ Please return a JSON string array of the relevant files:`;
             }
             else {
                 this.logger.warn("No .d.ts files found in node_modules");
-                process.exit(1);
             }
         }
         else {

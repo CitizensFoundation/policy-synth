@@ -105,8 +105,10 @@ export class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
             this.logger.info("Website Scanning Completed.");
             this.logger.debug(`Raw webScanResults: (${webScanResults.length})\n` +
                 JSON.stringify(webScanResults, null, 2));
-            const useFilter = false;
-            if (useFilter) {
+            webScanResults = webScanResults.filter((result) => result.length > 250);
+            this.logger.debug(`Filtered webScanResults length after length check: (${webScanResults.length})\n`);
+            const useContentFilter = false;
+            if (useContentFilter) {
                 // 6) Filter out irrelevant content
                 const filter = new PsEngineerWebContentFilter(this.agent, this.memory, 0, 100);
                 webScanResults = await filter.filterContent(webScanResults);

@@ -206,9 +206,15 @@ export abstract class PsEngineerBaseWebResearchAgent extends PolicySynthAgent {
           JSON.stringify(webScanResults, null, 2)
       );
 
-      const useFilter = false;
+      webScanResults = webScanResults.filter((result) => result.length > 250);
 
-      if (useFilter) {
+      this.logger.debug(
+        `Filtered webScanResults length after length check: (${webScanResults.length})\n`
+      );
+
+      const useContentFilter = false;
+
+      if (useContentFilter) {
         // 6) Filter out irrelevant content
       const filter = new PsEngineerWebContentFilter(
         this.agent,

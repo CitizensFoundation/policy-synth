@@ -188,7 +188,7 @@ export class PsEngineerAgent extends PsEngineerAgentBase {
     );
 
     const [/*exampleContextItems,*/ docsContextItems] = await Promise.all([
-     // exampleResearcher.doWebResearch() as Promise<string[]>,
+      // exampleResearcher.doWebResearch() as Promise<string[]>,
       docsResearcher.doWebResearch() as Promise<string[]>,
     ]);
 
@@ -293,9 +293,7 @@ export class PsEngineerAgent extends PsEngineerAgentBase {
       this.removeWorkspacePathFromFileIfNeeded(filePath)
     );
 
-    const getSystemPrompt = (
-      addInstruction: boolean
-    ) => `<Instructions>
+    const getSystemPrompt = (addInstruction: boolean) => `<Instructions>
 1. You will receive a list of .d.ts file paths from the user to analyze.
 2. Always output the d.ts file paths again that are possibly relevant for the upcoming user task.
 3. Sometimes the relevant file might be called index.d.ts so look at the whole paths of the files.
@@ -311,9 +309,21 @@ Only output a JSON array with possibly relevant d.ts files, no explanations befo
 </OutputFormat>
 
 <UpcomingUserTask>
-  ${this.memory.taskTitle ? `<TaskTitle>${ this.memory.taskTitle}</TaskTitle>` : ""}
-  ${this.memory.taskDescription ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>` : ""}
-  ${this.memory.taskInstructions ? `<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>` : ""}
+  ${
+    this.memory.taskTitle
+      ? `<TaskTitle>${this.memory.taskTitle}</TaskTitle>`
+      : ""
+  }
+  ${
+    this.memory.taskDescription
+      ? `<TaskDescription>${this.memory.taskDescription}</TaskDescription>`
+      : ""
+  }
+  ${
+    this.memory.taskInstructions
+      ? `<TaskInstructions>${this.memory.taskInstructions}</TaskInstructions>`
+      : ""
+  }
 </UpcomingUserTask>
 `;
 
@@ -407,10 +417,7 @@ Please return a JSON string array of the relevant files:`;
 
     await this.saveMemory();
 
-    await this.updateRangedProgress(
-      undefined,
-      "Analyzing code..."
-    );
+    await this.updateRangedProgress(undefined, "Analyzing code...");
 
     // Read all TypeScript source file names from the configured workspace.
     this.memory.allTypescriptSrcFiles = await this.readAllTypescriptFileNames(
@@ -444,7 +451,7 @@ Please return a JSON string array of the relevant files:`;
       .map((filePath) => {
         if (filePath.endsWith(".d.ts")) {
           const content = this.removeCommentsFromCode(
-            (this.loadFileContents(filePath)) || ""
+            this.loadFileContents(filePath) || ""
           );
           if (content && content.length > 75) {
             return `\n${this.removeWorkspacePathFromFileIfNeeded(
@@ -461,13 +468,15 @@ Please return a JSON string array of the relevant files:`;
 
     this.memory.allTypeDefsContents = `<AllProjectTypescriptDefs>\n${this.memory.allTypeDefsContents}\n</AllProjectTypescriptDefs>`;
 
-    const analyzeAgent = new PsEngineerInitialAnalyzer(this.agent, this.memory, 0, 100);
+    const analyzeAgent = new PsEngineerInitialAnalyzer(
+      this.agent,
+      this.memory,
+      0,
+      100
+    );
     await analyzeAgent.analyzeAndSetup();
 
-    await this.updateRangedProgress(
-      undefined,
-      "Analyzing code completed"
-    );
+    await this.updateRangedProgress(undefined, "Analyzing code completed");
 
     // If there are any likely-relevant npm package dependencies, search for .d.ts files.
     if (
@@ -479,16 +488,26 @@ Please return a JSON string array of the relevant files:`;
         "Searching for .d.ts files in node_modules..."
       );
 
-      const nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
+      let nodeModuleTypeDefs = await this.searchDtsFilesInNodeModules();
 
       this.memory.allTypescriptSrcFiles = [
         ...this.memory.allTypescriptSrcFiles,
         ...nodeModuleTypeDefs,
       ];
 
-      if (!this.memory.usefulTypescriptDefinitionFilesToKeepInContext) {
-        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
-      }
+      this.logger.debug(
+        `nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} before`
+      );
+
+      nodeModuleTypeDefs = await analyzeAgent.filterFilesByRelevance(
+        nodeModuleTypeDefs,
+        this.memory.taskInstructions,
+        "potentially relevant node_modules .d.ts files"
+      );
+
+      this.logger.debug(
+        `nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} after`
+      );
 
       this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
         ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
@@ -499,7 +518,7 @@ Please return a JSON string array of the relevant files:`;
         this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs
           .map((filePath) => {
             const content = this.removeCommentsFromCode(
-              (this.loadFileContents(filePath)) || ""
+              this.loadFileContents(filePath) || ""
             );
             if (content && content.length > 75) {
               return `\n${this.removeWorkspacePathFromFileIfNeeded(
@@ -513,7 +532,6 @@ Please return a JSON string array of the relevant files:`;
           .join("\n")}\n</AllRelevantNodeModuleTypescriptDefs>`;
       } else {
         this.logger.warn("No .d.ts files found in node_modules");
-        process.exit(1);
       }
     } else {
       this.logger.warn("No npm packages to search for .d.ts files");
@@ -524,10 +542,7 @@ Please return a JSON string array of the relevant files:`;
     //this.logger.info(`All TYPEDEFS: ${this.memory.allTypeDefsContents}`);
 
     if (this.memory.needsDocumentationAndExamples === true) {
-      await this.updateRangedProgress(
-        undefined,
-        "Doing web research..."
-      );
+      await this.updateRangedProgress(undefined, "Doing web research...");
       await this.doWebResearch();
     }
 

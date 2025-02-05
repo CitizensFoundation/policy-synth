@@ -236,8 +236,8 @@ Output just a single word: either "Relevant" or "Not Relevant".
       let rawResponse: string | object;
       try {
         rawResponse = await this.callModel(
-          PsAiModelType.TextReasoning,
-          PsAiModelSize.Small,
+          PsAiModelType.Text,
+          PsAiModelSize.Large,
           [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)],
           false
         );
@@ -317,7 +317,7 @@ Output just a single word: either "Relevant" or "Not Relevant".
     // Use the new callModel approach
     const analysisResponse = await this.callModel(
       PsAiModelType.TextReasoning,
-      PsAiModelSize.Small,
+      PsAiModelSize.Medium,
       [
         this.createSystemMessage(this.analyzeSystemPrompt),
         this.createHumanMessage(

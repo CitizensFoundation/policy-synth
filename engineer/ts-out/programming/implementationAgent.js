@@ -60,8 +60,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
 
     ${this.renderTaskContext(fileName, currentActions, completedActions, futureActions, currentFileToUpdateContents, reviewCount, reviewLog)}
 
-    ${this.renderCodingRules()}
-
     Output only the ${fileAction == "change" ? "changed" : "new"} file ${fileAction == "change" ? "again " : ""}in full in typescript:
     `;
     }

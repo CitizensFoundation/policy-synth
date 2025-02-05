@@ -114,8 +114,6 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
       reviewLog
     )}
 
-    ${this.renderCodingRules()}
-
     Output only the ${fileAction == "change" ? "changed" : "new"} file ${
       fileAction == "change" ? "again " : ""
     }in full in typescript:

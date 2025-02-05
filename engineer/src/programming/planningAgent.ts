@@ -8,7 +8,7 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
 
-  planningModelSize = PsAiModelSize.Small;
+  planningModelSize = PsAiModelSize.Medium;
 
   planSystemPrompt() {
     return `<ImportantInstructions>

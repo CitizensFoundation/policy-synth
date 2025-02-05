@@ -106,6 +106,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
       Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
       Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
       Avoid using the typescript defintion "any", use Typescript types whereever possible.
+      Change the code as little as possible, use existing code and functions whenever possible.
       Always output the full new or changed typescript file, if you are changing a file do not leave anything out from the original file, otherwise code will get lost.
     </ImportantCodingRulesForYourCodeGeneration>`;
   }
@@ -237,13 +238,13 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
           : ``
       }
 
-      <TypescriptFilesThatAreLikelyToChange>
+
       ${
         this.memory.existingTypeScriptFilesLikelyToChange && !limited
-          ? this.memory.existingTypeScriptFilesLikelyToChange.join("\n")
-          : "(none listed)"
+          ? `<TypescriptFilesThatAreLikelyToChange>${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}</TypescriptFilesThatAreLikelyToChange>`
+          : ""
       }
-      </TypescriptFilesThatAreLikelyToChange>
+
 
       ${
         !hasCompletedFiles && !limited
