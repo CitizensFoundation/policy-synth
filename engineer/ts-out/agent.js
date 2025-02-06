@@ -348,11 +348,11 @@ Please return a JSON string array of the relevant files:`;
                 ...nodeModuleTypeDefs,
             ];
             this.logger.debug(`nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} before`);
-            nodeModuleTypeDefs = await analyzeAgent.filterFilesByRelevance(nodeModuleTypeDefs, this.memory.taskInstructions, "potentially relevant node_modules .d.ts files");
+            const nodeModuleTypeDefsAnalysis = await analyzeAgent.analyzeFilesForRelevanceAndReasons(nodeModuleTypeDefs, this.memory.taskInstructions, "potentially relevant node_modules .d.ts files");
             this.logger.debug(`nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} after`);
             this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
                 ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
-                ...nodeModuleTypeDefs,
+                ...nodeModuleTypeDefsAnalysis,
             ];
             if (nodeModuleTypeDefs.length > 0) {
                 this.memory.allTypeDefsContents += `<AllRelevantNodeModuleTypescriptDefs>\n${nodeModuleTypeDefs

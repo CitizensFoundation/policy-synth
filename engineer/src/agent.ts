@@ -499,7 +499,7 @@ Please return a JSON string array of the relevant files:`;
         `nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} before`
       );
 
-      nodeModuleTypeDefs = await analyzeAgent.filterFilesByRelevance(
+      const nodeModuleTypeDefsAnalysis = await analyzeAgent.analyzeFilesForRelevanceAndReasons(
         nodeModuleTypeDefs,
         this.memory.taskInstructions,
         "potentially relevant node_modules .d.ts files"
@@ -511,7 +511,7 @@ Please return a JSON string array of the relevant files:`;
 
       this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
         ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
-        ...nodeModuleTypeDefs,
+        ...nodeModuleTypeDefsAnalysis,
       ];
 
       if (nodeModuleTypeDefs.length > 0) {

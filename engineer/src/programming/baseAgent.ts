@@ -241,7 +241,9 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
 
       ${
         this.memory.existingTypeScriptFilesLikelyToChange && !limited
-          ? `<TypescriptFilesThatAreLikelyToChange>${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}</TypescriptFilesThatAreLikelyToChange>`
+          ? `<TypescriptFilesThatAreLikelyToChange>${this.memory.existingTypeScriptFilesLikelyToChange.join(
+              "\n"
+            )}</TypescriptFilesThatAreLikelyToChange>`
           : ""
       }
 
@@ -316,12 +318,18 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
     }
   }
 
-  getFileContentsWithFileName(fileNames: string[], xmlTagName: string): string {
-    return fileNames
-      .map((fileName) => {
-        const fileContent = this.loadFileContents(fileName);
+  getFileContentsWithFileName(
+    results: PsCodeAnalyzeResults[],
+    xmlTagName: string
+  ): string {
+    return results
+      .map((result) => {
+        const fileContent = this.loadFileContents(result.filePath);
         if (fileContent) {
-          return `<${xmlTagName} filename="${fileName}">\n${fileContent}</${xmlTagName}>`;
+          return `<${xmlTagName} filename="${result.filePath}">\n
+            <AnalysisOnHowItMightBeRelevant>${result.detailedCodeAnalysisForRelevanceToTask}</AnalysisOnHowItMightBeRelevant>
+            <Code>${fileContent}</Code>
+          </${xmlTagName}>`;
         }
         return null;
       })

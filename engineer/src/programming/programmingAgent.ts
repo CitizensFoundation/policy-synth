@@ -23,8 +23,10 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       100,
       {
         likelyToChangeFilesContents: this.likelyToChangeFilesContents,
-        typeDefFilesToKeepInContextContent: this.typeDefFilesToKeepInContextContent,
-        documentationFilesInContextContent: this.documentationFilesInContextContent,
+        typeDefFilesToKeepInContextContent:
+          this.typeDefFilesToKeepInContextContent,
+        documentationFilesInContextContent:
+          this.documentationFilesInContextContent,
         codeFilesToKeepInContextContent: this.codeFilesToKeepInContextContent,
         tsMorphProject: this.tsMorphProject!,
       }
@@ -69,8 +71,10 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
       100,
       {
         likelyToChangeFilesContents: this.likelyToChangeFilesContents,
-        typeDefFilesToKeepInContextContent: this.typeDefFilesToKeepInContextContent,
-        documentationFilesInContextContent: this.documentationFilesInContextContent,
+        typeDefFilesToKeepInContextContent:
+          this.typeDefFilesToKeepInContextContent,
+        documentationFilesInContextContent:
+          this.documentationFilesInContextContent,
         codeFilesToKeepInContextContent: this.codeFilesToKeepInContextContent,
         tsMorphProject: this.tsMorphProject!,
       }
@@ -163,7 +167,14 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     if (this.memory.documentationFilesToKeepInContext) {
       this.documentationFilesInContextContent =
         this.getFileContentsWithFileName(
-          this.memory.documentationFilesToKeepInContext,
+          this.memory.documentationFilesToKeepInContext.map((result) => {
+            return {
+              filePath: result,
+              relevantFor: "goodReferenceDocumentation",
+              detailedCodeAnalysisForRelevanceToTask:
+                "This file is possibly relevant to the task because it is a documentation file.",
+            };
+          }),
           "DocumentationForContext"
         );
     }

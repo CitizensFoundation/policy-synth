@@ -40,6 +40,6 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PsEngineerA
     renderProjectDescription(): string;
     renderOriginalFiles(): string;
     loadFileContents(fileName: string): string | null;
-    getFileContentsWithFileName(fileNames: string[], xmlTagName: string): string;
+    getFileContentsWithFileName(results: PsCodeAnalyzeResults[], xmlTagName: string): string;
 }
 //# sourceMappingURL=baseAgent.d.ts.map

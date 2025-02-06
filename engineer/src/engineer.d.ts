@@ -41,10 +41,10 @@ interface PsEngineerContextItem {
 }
 
 interface PsEngineerPlanningResults {
-  existingTypeScriptFilesLikelyToChange: string[];
-  usefulTypescriptDefinitionFilesToKeepInContext: string[];
-  usefulTypescriptCodeFilesToKeepInContext: string[];
-  documentationFilesToKeepInContext: string[];
+  existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation: string[];
+  otherUsefulTypescriptCodeFilesThatCouldBeRelevant: string[];
+  usefulTypescriptDefinitionFilesThatCouldBeRelevant: string[];
+  documentationFilesThatCouldBeRelevant: string[];
   likelyRelevantNpmPackageDependencies: string[];
   needsDocumentationAndExamples: boolean;
 }
@@ -70,6 +70,17 @@ interface PsEngineerFileData {
   content: string;
 }
 
+interface PsCodeAnalyzeResults {
+  filePath: string;
+  relevantFor:
+    | "likelyToChangeToImplementTask"
+    | "goodReferenceCodeForTask"
+    | "goodReferenceTypeDefinition"
+    | "goodReferenceDocumentation"
+    | "notRelevant";
+  detailedCodeAnalysisForRelevanceToTask: string;
+}
+
 interface PsEngineerMemoryData extends PsAgentMemoryData {
   workspaceFolder: string;
   taskDescription: string;
@@ -85,10 +96,10 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   solutionsToErrorsSearchResults?: string;
   allTypescriptSrcFiles?: string[];
   currentFilesBeingAdded?: string[];
-  existingTypeScriptFilesLikelyToChange: string[];
+  existingTypeScriptFilesLikelyToChange: PsCodeAnalyzeResults[];
   existingTypeScriptFilesLikelyToChangeContents?: string;
-  usefulTypescriptDefinitionFilesToKeepInContext: string[];
-  usefulTypescriptCodeFilesToKeepInContext: string[];
+  usefulTypescriptDefinitionFilesToKeepInContext: PsCodeAnalyzeResults[];
+  usefulTypescriptCodeFilesToKeepInContext: PsCodeAnalyzeResults[];
   documentationFilesToKeepInContext: string[];
   needsDocumentationAndExamples?: boolean;
   allTypeDefsContents?: string;

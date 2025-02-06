@@ -22,138 +22,119 @@ export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
         const packageJsonObj = JSON.parse(packageJsonData);
         return packageJsonObj.dependencies;
     }
+    ///////////////////////////////////
+    // 1) Less Restrictive Prompt
+    ///////////////////////////////////
     get analyzeSystemPrompt() {
-        return `<ImportantInstructions>
-  1. Review the task name, description and instructions. You might just see the task instructions.
-  2. You will see a list of all existing typescript files in <AllTypescriptFiles>, output ones likely to change to existingTypeScriptFilesLikelyToChange.
-  3. You will see a list of all npm module dependencies, you should output likely to be relevant to likelyRelevantNpmPackageDependencies.
-  4. You will see a list of all possible documentation files, you should output likely to be relevant to documentationFilesToKeepInContext.
-  5. Instructions on how to use <AllDefinitionTypescriptFiles>:
-  5.1. Look in <AllDefinitionTypescriptFiles> and add all possibly relevant *.d.ts files to the "usefulTypescriptDefinitionFilesToKeepInContext" JSON array.
-  5.2. Look at the name of the file d.ts file, if it is possibly relevant add it to the JSON array.
-  5.3. VERY IMPORTANT: The main shared *.d.ts typedef files are often stored in the webApps/ folder structure so consider adding these to the usefulTypescriptDefinitionFilesToKeepInContext JSON array.
-  6. Look in <AllCodeTypescriptFiles> and add all typescripts code files that are could be relevant, but might not need changing in usefulTypescriptCodeFilesToKeepInContext.
-  7. Always output the full file path into all the JSON string arrays.
-  8. Important: If the programming task is needs examples from online sources, if some specific library is being used or something new added set needsDocumentationAndExamples to true.
+        return `
+<ImportantInstructions>
+  1. You will receive the user’s coding task title, description, and instructions.
+  2. You will see all existing TypeScript files. Output any that could possibly relate to or be impacted by the user's task.
+     - This does NOT mean you are sure they will be changed; only that they could plausibly need changes or referencing.
+  3. You will see a list of all npm dependencies. Output which are likely relevant.
+  4. You will see all possible documentation files. Output which might be helpful.
+  5. You will also see all possible TypeScript definition files.
+     - If they could conceivably be relevant, list them.
+  6. Output a JSON object matching the schema below (be flexible and inclusive rather than exclusive):
+     {
+       "existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation": string[];
+       "otherUsefulTypescriptCodeFilesThatCouldBeRelevant": string[];
+       "usefulTypescriptDefinitionFilesThatCouldBeRelevant": string[];
+       "documentationFilesThatCouldBeRelevant": string[];
+       "likelyRelevantNpmPackageDependencies": string[];
+       "needsDocumentationAndExamples": boolean;
+     }
 </ImportantInstructions>
-<OutputJsonSchema>
-{
-  newLikelyFilesToAdd: string[];
-  existingTypeScriptFilesLikelyToChange: string[];
-  usefulTypescriptDefinitionFilesToKeepInContext: string[];
-  usefulTypescriptCodeFilesToKeepInContext: string[];
-  documentationFilesToKeepInContext: string[];
-  likelyRelevantNpmPackageDependencies: string[];
-  needsDocumentationAndExamples: boolean;
-}
-</OutputJsonSchema>
-    `;
+`;
     }
     analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles) {
         const allTypescriptDefFiles = this.memory.allTypescriptSrcFiles?.filter((file) => file.endsWith(".d.ts"));
         const allTypescriptCodeFiles = this.memory.allTypescriptSrcFiles?.filter((file) => file.endsWith(".ts") && !file.endsWith(".d.ts"));
-        return `<AllNpmPackageDependencies>
-    ${JSON.stringify(allNpmPackageDependencies, null, 2)}
-    </AllNpmPackageDependencies>
+        return `
+<AllNpmPackageDependencies>
+${JSON.stringify(allNpmPackageDependencies, null, 2)}
+</AllNpmPackageDependencies>
 
-    <AllDocumentationFiles>
-    ${allDocumentationFiles.join("\n")}
-    </AllDocumentationFiles>
+<AllDocumentationFiles>
+${allDocumentationFiles.join("\n")}
+</AllDocumentationFiles>
 
-    ${allTypescriptDefFiles
+${allTypescriptDefFiles
             ? `<AllDefinitionTypescriptFiles>
-    ${allTypescriptDefFiles.join("\n")}
-    </AllDefinitionTypescriptFiles>`
+${allTypescriptDefFiles.join("\n")}
+</AllDefinitionTypescriptFiles>`
             : ""}
 
-    ${allTypescriptCodeFiles
+${allTypescriptCodeFiles
             ? `<AllCodeTypescriptFiles>
-    ${allTypescriptCodeFiles.join("\n")}
-    </AllCodeTypescriptFiles>`
+${allTypescriptCodeFiles.join("\n")}
+</AllCodeTypescriptFiles>`
             : ""}
-    ${this.memory.taskTitle
+
+${this.memory.taskTitle
             ? `<TheUserCodingTaskTitle>${this.memory.taskTitle}</TheUserCodingTaskTitle>`
             : ""}
-    ${this.memory.taskDescription
+${this.memory.taskDescription
             ? `<TheUserCodingTaskDescription>${this.memory.taskDescription}</TheUserCodingTaskDescription>`
             : ""}
-    ${this.memory.taskInstructions
-            ? `\n<TheUserCodingTaskInstructions>${this.memory.taskInstructions}</TheUserCodingTaskInstructions>\n`
+${this.memory.taskInstructions
+            ? `<TheUserCodingTaskInstructions>${this.memory.taskInstructions}</TheUserCodingTaskInstructions>`
             : ""}
 
-    TASK: Analyze the TheUserCodingTaskInstructions and the provided context, then output the JSON output as per the schema.
+TASK: Identify any possibly relevant files and dependencies for further investigation. Then output the JSON according to the schema described above.
 
-    Your JSON Output:
-    `;
-    }
-    getFilesContents(filePaths) {
-        let contentsStr = "";
-        filePaths.forEach((filePath) => {
-            let fileContent = "";
-            try {
-                if (fs.existsSync(filePath)) {
-                    fileContent = fs.readFileSync(filePath, "utf8");
-                }
-                else {
-                    this.logger.warn(`File not found: ${filePath}`);
-                }
-            }
-            catch (err) {
-                this.logger.error(`Error reading file ${filePath}:`, err);
-            }
-            contentsStr += `<CodeLikelyToChange filename="${filePath}">
-${fileContent}
-</CodeLikelyToChange>
+Your JSON Output (no extra text, only valid JSON):
 `;
-        });
-        return contentsStr;
     }
+    ///////////////////////////////////
+    // 2) Step to analyze each file’s relevance & store reasons
+    ///////////////////////////////////
     /**
-     * A generalized method that filters a list of files by relevance
-     * using an LLM. By default, if the LLM output does not explicitly
-     * say "Not Relevant", the file is retained ("err on the side of including").
-     *
-     * @param filePaths - The files to be evaluated
-     * @param userTaskInstructions - The high-level instructions / context for relevance
-     * @param typeLabel - A label to include in logs or prompts (e.g. "documentation", "type definitions", "code")
-     * @param systemPromptOverload - Optional system prompt override
-     * @param userPromptOverload - Optional user prompt override
-     * @returns A Promise resolving to an array of relevant file paths
+     * Analyze multiple files for how/why they might be relevant to the task.
+     * Returns an array of PsCodeAnalyzeResults with a short "why" statement.
      */
-    async filterFilesByRelevance(filePaths, userTaskInstructions, typeLabel, systemPromptOverload, userPromptOverload) {
-        this.logger.info(`Analyzing relevance for ${typeLabel}...`);
-        await this.updateRangedProgress(undefined, `Analyzing relevance for ${typeLabel}...`);
+    async analyzeFilesForRelevanceAndReasons(filePaths, userTaskInstructions, typeLabel) {
+        this.logger.info(`Analyzing relevance/reason for ${typeLabel}...`);
+        await this.updateRangedProgress(undefined, `Analyzing relevance reasons for ${typeLabel}...`);
         if (!filePaths || filePaths.length === 0) {
             this.logger.info(`No files to analyze for ${typeLabel}.`);
             return [];
         }
-        const relevantFiles = [];
-        // Base system prompt
-        const defaultSystemPrompt = `<ImportantInstructions>
-You are a specialized file relevance analyzer for coding tasks. You will receive:
-1. The user's coding task instructions.
-2. The content of a single file (like documentation, type definitions, or code).
-Based on the provided content and task instructions, decide if the file is "Relevant" or "Not Relevant".
-</ImportantInstructions>
-    `;
-        // Base user prompt
-        const defaultUserPrompt = `<CodeLikelyToChangeInTheCodingTask>
-${this.memory.existingTypeScriptFilesLikelyToChangeContents}
-</CodeLikelyToChangeInTheCodingTask>
+        if (!userTaskInstructions) {
+            throw new Error("No user task instructions provided for file analysis.");
+        }
+        const results = [];
+        // A system prompt that sets the context
+        const systemPrompt = `<ImportantInstructions>
+You are a specialized coding assistant.
+You'll receive:
+1. The user's high-level coding task instructions.
+2. The content of a single file (documentation, .d.ts, or .ts code).
 
+Return a detailed analysis on how/why this file could be relevant (or not) to the user's task.
+If it is "Not relevant", say so. If it is relevant.
+</ImportantInstructions>
+
+
+<OutputFormat>:
+{
+   "filePath": string;
+   "relevantFor": "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant";
+   "detailedCodeAnalysisForRelevanceToTask": string;
+}
+</OutputFormat>`;
+        // A user prompt template for each file
+        const userPromptTemplate = `
 <TheUserCodingTaskInstructions>
-${userTaskInstructions || "No user instructions provided."}
+${userTaskInstructions}
 </TheUserCodingTaskInstructions>
 
-<FileToCheck type="${typeLabel}">
+<File type="${typeLabel}">
 CONTENT_PLACEHOLDER
-</FileToCheck>
+</File>
 
-TASK:
-Output just a single word: either "Relevant" or "Not Relevant".
-    `;
-        const systemPrompt = systemPromptOverload || defaultSystemPrompt;
-        const userPromptTemplate = userPromptOverload || defaultUserPrompt;
+Your JSON output:
+`;
         for (const filePath of filePaths) {
             let fileContent = "";
             try {
@@ -162,7 +143,6 @@ Output just a single word: either "Relevant" or "Not Relevant".
                 }
                 else {
                     this.logger.warn(`File not found: ${filePath}`);
-                    // We'll skip if file not found
                     continue;
                 }
             }
@@ -170,65 +150,71 @@ Output just a single word: either "Relevant" or "Not Relevant".
                 this.logger.error(`Error reading file ${filePath}:`, error);
                 continue;
             }
-            // Insert the file content into the user prompt
             const userPrompt = userPromptTemplate.replace("CONTENT_PLACEHOLDER", fileContent);
             this.startTiming();
             let rawResponse;
             try {
-                rawResponse = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, [this.createSystemMessage(systemPrompt), this.createHumanMessage(userPrompt)], false);
-                await this.addTimingResult("FilterFilesByRelevance");
+                rawResponse = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, [
+                    this.createSystemMessage(systemPrompt),
+                    this.createHumanMessage(userPrompt),
+                ], true);
+                await this.addTimingResult("FileRelevanceAnalysis");
             }
             catch (err) {
                 this.logger.error(`Error calling model for file ${filePath}:`, err);
-                // If there's an error with the model, we keep the file by default
-                relevantFiles.push(filePath);
                 continue;
             }
-            let relevance;
-            if (typeof rawResponse === "string") {
-                const trimmedResponse = rawResponse.trim().toLowerCase();
-                if (trimmedResponse.includes("not relevant")) {
-                    relevance = "Not Relevant";
-                }
-                else if (trimmedResponse.includes("relevant")) {
-                    relevance = "Relevant";
+            const finalObj = rawResponse;
+            // Make sure filePath is correct
+            finalObj.filePath = filePath;
+            results.push(finalObj);
+        }
+        // Filter out any results that are not relevant
+        return results.filter((result) => result.detailedCodeAnalysisForRelevanceToTask.trim().toLowerCase() !==
+            "not relevant" && result.relevantFor !== "notRelevant");
+    }
+    /**
+     * Reads the specified list of file paths from disk, returning a combined string
+     * of the contents for reference. (Used for assembling context in memory.)
+     */
+    getFilesContents(analysisResults) {
+        let contentsStr = "";
+        analysisResults.forEach((result) => {
+            let fileContent = "";
+            try {
+                if (fs.existsSync(result.filePath)) {
+                    fileContent = fs.readFileSync(result.filePath, "utf8");
                 }
                 else {
-                    // If the model doesn't strictly say "Not Relevant", err on "Relevant"
-                    relevance = "Relevant";
+                    this.logger.warn(`File not found: ${result.filePath}`);
                 }
             }
-            else {
-                // If we got a non-string response, default to relevant
-                relevance = "Relevant";
+            catch (err) {
+                this.logger.error(`Error reading file ${result.filePath}:`, err);
             }
-            this.logger.info(`File ${filePath} evaluated as: ${relevance}`);
-            if (relevance !== "Not Relevant") {
-                relevantFiles.push(filePath);
-                this.memory.acceptedFilesForRelevance.push(filePath);
-            }
-            else {
-                this.memory.rejectedFilesForRelevance.push(filePath);
-            }
-        }
-        const removedCount = filePaths.length - relevantFiles.length;
-        this.logger.info(`For ${typeLabel}, removed ${removedCount} files as "Not Relevant".`);
-        return relevantFiles;
+            contentsStr += `<CodePossiblyRelevant filename="${result.filePath}">
+  <AnalysisOnHowItMightBeRelevant>${result.detailedCodeAnalysisForRelevanceToTask}</AnalysisOnHowItMightBeRelevant>
+  <Code>${fileContent}</Code>
+</CodePossiblyRelevant>
+`;
+        });
+        return contentsStr;
     }
+    ///////////////////////////////////
+    // MAIN ENTRY POINT
+    ///////////////////////////////////
     async analyzeAndSetup() {
-        this.logger.info(`Analyzing and setting up task`);
-        // Read dependencies from package.json
+        this.logger.info(`Analyzing and setting up task...`);
+        // 1) Gather package deps
         const allNpmPackageDependencies = this.readNpmDependencies();
-        // Utility to find all .md docs recursively
+        // 2) Gather all .md docs
         const getAllDocumentationFiles = (folderPath) => {
             const files = [];
             const items = fs.readdirSync(folderPath);
             for (const item of items) {
                 const itemPath = path.join(folderPath, item);
                 const stat = fs.statSync(itemPath);
-                if (stat.isDirectory() &&
-                    item !== "ts-out" &&
-                    item !== "node_modules") {
+                if (stat.isDirectory() && item !== "ts-out" && item !== "node_modules") {
                     files.push(...getAllDocumentationFiles(itemPath));
                 }
                 else if (path.extname(item) === ".md") {
@@ -238,52 +224,62 @@ Output just a single word: either "Relevant" or "Not Relevant".
             return files;
         };
         const allDocumentationFiles = getAllDocumentationFiles(this.memory.workspaceFolder);
+        // 3) Ask the LLM which files could *possibly* be relevant.
         this.startTiming();
-        // Use the new callModel approach
         const analysisResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
             this.createSystemMessage(this.analyzeSystemPrompt),
             this.createHumanMessage(this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)),
         ], false);
         await this.addTimingResult("Analyzer Agent");
-        let analyzisResults;
+        // 4) Parse the planning results
+        let analysisResults;
         if (typeof analysisResponse === "string") {
-            analyzisResults = JSON.parse(analysisResponse);
+            analysisResults = JSON.parse(analysisResponse);
         }
         else {
-            // if the LLM returned an object (already parsed)
-            analyzisResults = analysisResponse;
+            analysisResults = analysisResponse;
         }
-        this.memory.analysisResults = analyzisResults;
-        await this.saveMemory();
-        console.log(`Results: ${JSON.stringify(analyzisResults, null, 2)}`);
-        // Store the results into memory
-        this.memory.existingTypeScriptFilesLikelyToChange =
-            analyzisResults.existingTypeScriptFilesLikelyToChange;
-        this.memory.usefulTypescriptDefinitionFilesToKeepInContext =
-            analyzisResults.usefulTypescriptDefinitionFilesToKeepInContext;
-        this.memory.usefulTypescriptCodeFilesToKeepInContext =
-            analyzisResults.usefulTypescriptCodeFilesToKeepInContext.filter((file) => !analyzisResults.existingTypeScriptFilesLikelyToChange.includes(file));
-        this.memory.likelyRelevantNpmPackageDependencies =
-            analyzisResults.likelyRelevantNpmPackageDependencies;
-        this.memory.needsDocumentationAndExamples =
-            analyzisResults.needsDocumentationAndExamples;
+        // 5) Store the raw results (string[] placeholders)
+        this.memory.analysisResults = analysisResults;
+        // Initialize memory arrays
+        this.memory.existingTypeScriptFilesLikelyToChange = [];
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
+        this.memory.usefulTypescriptCodeFilesToKeepInContext = [];
+        // 6) Combine the possibly-change and useful-code arrays into one.
+        const possiblyChangeFiles = analysisResults.existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation || [];
+        const couldBeRelevantFiles = analysisResults.otherUsefulTypescriptCodeFilesThatCouldBeRelevant || [];
+        // Merge and deduplicate
+        const allCandidateFiles = [
+            ...new Set([...possiblyChangeFiles, ...couldBeRelevantFiles]),
+        ];
+        // 7) Analyze that combined list in a single pass
+        const codeAnalysis = await this.analyzeFilesForRelevanceAndReasons(allCandidateFiles, this.memory.taskInstructions || "", "code-files");
+        // Filter them into the two memory buckets by their `relevantFor` property
+        // (Note: you can expand this logic if needed, e.g. if some files are also type definitions, etc.)
+        this.memory.existingTypeScriptFilesLikelyToChange = codeAnalysis.filter((res) => res.relevantFor === "likelyToChangeToImplementTask");
+        this.memory.usefulTypescriptCodeFilesToKeepInContext = codeAnalysis.filter((res) => res.relevantFor === "goodReferenceCodeForTask");
+        // 8) Analyze the definition files for short reasons
+        const defFilesThatCouldBeRelevant = analysisResults.usefulTypescriptDefinitionFilesThatCouldBeRelevant || [];
+        const defFilesAnalysis = await this.analyzeFilesForRelevanceAndReasons(defFilesThatCouldBeRelevant, this.memory.taskInstructions || "", "type-definition");
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = defFilesAnalysis;
+        // 9) Documentation files (just store them, or analyze further if needed)
         this.memory.documentationFilesToKeepInContext =
-            analyzisResults.documentationFilesToKeepInContext;
-        this.memory.existingTypeScriptFilesLikelyToChangeContents = this.getFilesContents(analyzisResults.existingTypeScriptFilesLikelyToChange);
-        this.memory.actionLog.push(`Have done initial analysis${analyzisResults.needsDocumentationAndExamples
-            ? " and we need to search for context"
-            : ""}`);
-        // -- Apply the new general relevance filtering function --
-        // Filter out documentation files that are not relevant
-        this.memory.documentationFilesToKeepInContext = await this.filterFilesByRelevance(this.memory.documentationFilesToKeepInContext, this.memory.taskInstructions || "", "documentation");
-        // Filter out definitions that are not relevant
-        this.memory.usefulTypescriptDefinitionFilesToKeepInContext =
-            await this.filterFilesByRelevance(this.memory.usefulTypescriptDefinitionFilesToKeepInContext, this.memory.taskInstructions || "", "possibly relevant type definitions");
-        // Filter out code files that are not relevant
-        this.memory.usefulTypescriptCodeFilesToKeepInContext =
-            await this.filterFilesByRelevance(this.memory.usefulTypescriptCodeFilesToKeepInContext, this.memory.taskInstructions || "", "possibly relevant typescript code");
-        this.memory.actionLog.push("Filtered documentation, definition files, and code files by relevance.");
+            analysisResults.documentationFilesThatCouldBeRelevant;
+        // 10) Mark whether we need docs/examples
+        this.memory.needsDocumentationAndExamples =
+            analysisResults.needsDocumentationAndExamples;
+        // 11) Optionally gather combined contents for the "likelyToChange" set
+        this.memory.existingTypeScriptFilesLikelyToChangeContents = this.getFilesContents(this.memory.existingTypeScriptFilesLikelyToChange);
+        // 12) Save relevant npm deps
+        this.memory.likelyRelevantNpmPackageDependencies =
+            analysisResults.likelyRelevantNpmPackageDependencies;
+        // Log action
+        this.memory.actionLog.push(`Have done initial analysis.
+       Possibly relevant code changed: ${this.memory.existingTypeScriptFilesLikelyToChange.length}
+       Possibly relevant code references: ${this.memory.usefulTypescriptCodeFilesToKeepInContext.length}
+       Possibly relevant definitions: ${defFilesAnalysis.length}.`);
         await this.saveMemory();
+        this.logger.info(`Finished analysis and stored results with reasons in memory.`);
     }
 }
 //# sourceMappingURL=initialAnalyzer.js.map

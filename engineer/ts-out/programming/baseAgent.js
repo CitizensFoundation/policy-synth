@@ -221,12 +221,15 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
             return null;
         }
     }
-    getFileContentsWithFileName(fileNames, xmlTagName) {
-        return fileNames
-            .map((fileName) => {
-            const fileContent = this.loadFileContents(fileName);
+    getFileContentsWithFileName(results, xmlTagName) {
+        return results
+            .map((result) => {
+            const fileContent = this.loadFileContents(result.filePath);
             if (fileContent) {
-                return `<${xmlTagName} filename="${fileName}">\n${fileContent}</${xmlTagName}>`;
+                return `<${xmlTagName} filename="${result.filePath}">\n
+            <AnalysisOnHowItMightBeRelevant>${result.detailedCodeAnalysisForRelevanceToTask}</AnalysisOnHowItMightBeRelevant>
+            <Code>${fileContent}</Code>
+          </${xmlTagName}>`;
             }
             return null;
         })

@@ -9,20 +9,16 @@ export declare class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
     readNpmDependencies(): any;
     get analyzeSystemPrompt(): string;
     analyzeUserPrompt(allNpmPackageDependencies: string[], allDocumentationFiles: string[]): string;
-    getFilesContents(filePaths: string[]): string;
     /**
-     * A generalized method that filters a list of files by relevance
-     * using an LLM. By default, if the LLM output does not explicitly
-     * say "Not Relevant", the file is retained ("err on the side of including").
-     *
-     * @param filePaths - The files to be evaluated
-     * @param userTaskInstructions - The high-level instructions / context for relevance
-     * @param typeLabel - A label to include in logs or prompts (e.g. "documentation", "type definitions", "code")
-     * @param systemPromptOverload - Optional system prompt override
-     * @param userPromptOverload - Optional user prompt override
-     * @returns A Promise resolving to an array of relevant file paths
+     * Analyze multiple files for how/why they might be relevant to the task.
+     * Returns an array of PsCodeAnalyzeResults with a short "why" statement.
      */
-    filterFilesByRelevance(filePaths: string[], userTaskInstructions: string, typeLabel: string, systemPromptOverload?: string, userPromptOverload?: string): Promise<string[]>;
+    analyzeFilesForRelevanceAndReasons(filePaths: string[], userTaskInstructions: string, typeLabel: string): Promise<PsCodeAnalyzeResults[]>;
+    /**
+     * Reads the specified list of file paths from disk, returning a combined string
+     * of the contents for reference. (Used for assembling context in memory.)
+     */
+    getFilesContents(analysisResults: PsCodeAnalyzeResults[]): string;
     analyzeAndSetup(): Promise<void>;
 }
 //# sourceMappingURL=initialAnalyzer.d.ts.map
