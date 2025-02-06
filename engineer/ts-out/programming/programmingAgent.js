@@ -89,13 +89,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
         this.likelyToChangeFilesContents = this.getFileContentsWithFileName(this.memory.existingTypeScriptFilesLikelyToChange, "CodeLikelyToChange");
         if (this.memory.documentationFilesToKeepInContext) {
             this.documentationFilesInContextContent =
-                this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext.map((result) => {
-                    return {
-                        filePath: result,
-                        relevantFor: "goodReferenceDocumentation",
-                        detailedCodeAnalysisForRelevanceToTask: "This file is possibly relevant to the task because it is a documentation file.",
-                    };
-                }), "DocumentationForContext");
+                this.getFileContentsWithFileName(this.memory.documentationFilesToKeepInContext, "DocumentationForContext");
         }
         await this.updateRangedProgress(undefined, "Implementing changes...");
         await this.saveMemory();

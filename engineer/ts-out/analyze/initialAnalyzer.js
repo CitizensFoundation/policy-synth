@@ -86,55 +86,34 @@ TASK: Identify any possibly relevant files and dependencies for further investig
 Your JSON Output (no extra text, only valid JSON):
 `;
     }
-    ///////////////////////////////////
-    // 2) Step to analyze each file’s relevance & store reasons
-    ///////////////////////////////////
-    /**
-     * Analyze multiple files for how/why they might be relevant to the task.
-     * Returns an array of PsCodeAnalyzeResults with a short "why" statement.
-     */
-    async analyzeFilesForRelevanceAndReasons(filePaths, userTaskInstructions, typeLabel) {
-        this.logger.info(`Analyzing relevance/reason for ${typeLabel}...`);
-        await this.updateRangedProgress(undefined, `Analyzing relevance reasons for ${typeLabel}...`);
+    async analyzeFilesForInitialTextReview(filePaths, fileType) {
+        this.logger.info(`Performing initial text review for ${fileType} files...`);
+        await this.updateRangedProgress(undefined, `Initial text review for ${fileType} files...`);
+        const reviews = [];
         if (!filePaths || filePaths.length === 0) {
-            this.logger.info(`No files to analyze for ${typeLabel}.`);
-            return [];
+            this.logger.info(`No files to review for ${fileType}.`);
+            return reviews;
         }
-        if (!userTaskInstructions) {
-            throw new Error("No user task instructions provided for file analysis.");
-        }
-        const results = [];
-        // A system prompt that sets the context
-        const systemPrompt = `<ImportantInstructions>
+        const promptSystem = `
+<ImportantInstructions>
 You are a specialized coding assistant.
-You'll receive:
-1. The user's high-level coding task instructions.
-2. The content of a single file (documentation, .d.ts, or .ts code).
-
-Return a detailed analysis on how/why this file could be relevant (or not) to the user's task.
-If it is "Not relevant", say so. If it is relevant.
+For each file provided, analyze its content in the context of the user's coding task.
+Provide either a detailed explanation of why the file is relevant to the task, or "Not relevant" if it is not.
 </ImportantInstructions>
-
-
-<OutputFormat>:
-{
-   "filePath": string;
-   "relevantFor": "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant";
-   "detailedCodeAnalysisForRelevanceToTask": string;
-}
-</OutputFormat>`;
-        // A user prompt template for each file
-        const userPromptTemplate = `
+`;
+        const userPromptTemplate = (fileContent, fileName) => {
+            return `
 <TheUserCodingTaskInstructions>
-${userTaskInstructions}
+${this.memory.taskInstructions || ""}
 </TheUserCodingTaskInstructions>
 
-<File type="${typeLabel}">
-CONTENT_PLACEHOLDER
-</File>
+<FileReview filename="${fileName}">
+${fileContent}
+</FileReview>
 
-Your JSON output:
+Your analysis:
 `;
+        };
         for (const filePath of filePaths) {
             let fileContent = "";
             try {
@@ -150,28 +129,107 @@ Your JSON output:
                 this.logger.error(`Error reading file ${filePath}:`, error);
                 continue;
             }
-            const userPrompt = userPromptTemplate.replace("CONTENT_PLACEHOLDER", fileContent);
+            const userPrompt = userPromptTemplate(fileContent, filePath);
             this.startTiming();
             let rawResponse;
             try {
-                rawResponse = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, [
-                    this.createSystemMessage(systemPrompt),
+                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
+                    this.createSystemMessage(promptSystem),
                     this.createHumanMessage(userPrompt),
-                ], true);
-                await this.addTimingResult("FileRelevanceAnalysis");
+                ], false);
+                await this.addTimingResult("InitialTextReview");
             }
             catch (err) {
-                this.logger.error(`Error calling model for file ${filePath}:`, err);
+                this.logger.error(`Error calling model for initial review of file ${filePath}:`, err);
                 continue;
             }
-            const finalObj = rawResponse;
-            // Make sure filePath is correct
-            finalObj.filePath = filePath;
-            results.push(finalObj);
+            const review = {
+                fileName: filePath,
+                initialCodeAnalysisForTask: rawResponse,
+            };
+            if (rawResponse.trim().toLowerCase().includes("not relevant")) {
+                this.memory.rejectedFilesForRelevance.push(review);
+            }
+            else {
+                this.memory.acceptedFilesForRelevance.push(review);
+            }
+            reviews.push(review);
         }
-        // Filter out any results that are not relevant
-        return results.filter((result) => result.detailedCodeAnalysisForRelevanceToTask.trim().toLowerCase() !==
-            "not relevant" && result.relevantFor !== "notRelevant");
+        return reviews;
+    }
+    ///////////////////////////////////
+    // 4) NEW: Second pass – merge XML review and finalize analysis
+    ///////////////////////////////////
+    async finalizeFileAnalysis(textReviews, fileType) {
+        this.logger.info(`Finalizing analysis for ${fileType} files...`);
+        await this.updateRangedProgress(undefined, `Finalizing analysis for ${fileType} files...`);
+        if (!textReviews || textReviews.length === 0) {
+            this.logger.info(`No text reviews to finalize for ${fileType}.`);
+            return [];
+        }
+        // Format the text reviews as XML tags.
+        let xmlContent = `<InitialTextReviews>\n`;
+        for (const review of textReviews) {
+            xmlContent += `<Review fileName="${review.fileName}">\n`;
+            xmlContent += `  <Analysis>${review.initialCodeAnalysisForTask}</Analysis>\n`;
+            xmlContent += `</Review>\n`;
+        }
+        xmlContent += `</InitialTextReviews>`;
+        const promptSystem = `
+<ImportantInstructions>
+You are a specialized coding assistant.
+Given the XML formatted initial text reviews for files, produce a JSON array of objects.
+Each object must have:
+  "filePath": string (taken from the fileName),
+  "relevantFor": "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant",
+  "detailedCodeAnalysisForRelevanceToTask": string.
+Only include files that are relevant (i.e. where the Analysis is not "Not relevant").
+</ImportantInstructions>
+
+<OutputFormat>:
+[
+  {
+    filePath: string;
+    relevantFor: "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant";
+    detailedCodeAnalysisForRelevanceToTask: string;
+  }
+]
+</OutputFormat>
+`;
+        const userPrompt = `
+<FileReviews>
+${xmlContent}
+</FileReviews>
+
+Your JSON output:
+`;
+        let rawResponse;
+        try {
+            rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                this.createSystemMessage(promptSystem),
+                this.createHumanMessage(userPrompt),
+            ], true);
+            await this.addTimingResult("FinalizeFileAnalysis");
+        }
+        catch (err) {
+            this.logger.error(`Error finalizing file analysis for ${fileType}:`, err);
+            return [];
+        }
+        let finalResults;
+        try {
+            finalResults =
+                typeof rawResponse === "string" ? JSON.parse(rawResponse) : rawResponse;
+        }
+        catch (parseError) {
+            this.logger.error(`Error parsing final analysis response for ${fileType}:`, parseError);
+            return [];
+        }
+        // Ensure each result has a filePath.
+        finalResults = finalResults.map((result) => {
+            result.filePath = result.filePath || "";
+            return result;
+        });
+        return finalResults;
     }
     /**
      * Reads the specified list of file paths from disk, returning a combined string
@@ -204,7 +262,7 @@ Your JSON output:
     // MAIN ENTRY POINT
     ///////////////////////////////////
     async analyzeAndSetup() {
-        this.logger.info(`Analyzing and setting up task...`);
+        this.logger.info("Analyzing and setting up task...");
         // 1) Gather package deps
         const allNpmPackageDependencies = this.readNpmDependencies();
         // 2) Gather all .md docs
@@ -239,47 +297,47 @@ Your JSON output:
         else {
             analysisResults = analysisResponse;
         }
-        // 5) Store the raw results (string[] placeholders)
+        // Store the raw results
         this.memory.analysisResults = analysisResults;
-        // Initialize memory arrays
-        this.memory.existingTypeScriptFilesLikelyToChange = [];
-        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [];
-        this.memory.usefulTypescriptCodeFilesToKeepInContext = [];
-        // 6) Combine the possibly-change and useful-code arrays into one.
-        const possiblyChangeFiles = analysisResults.existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation || [];
-        const couldBeRelevantFiles = analysisResults.otherUsefulTypescriptCodeFilesThatCouldBeRelevant || [];
-        // Merge and deduplicate
-        const allCandidateFiles = [
-            ...new Set([...possiblyChangeFiles, ...couldBeRelevantFiles]),
+        await this.saveMemory();
+        const codeFilesMerged = [
+            ...new Set([
+                ...(analysisResults.existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation ||
+                    []),
+                ...(analysisResults.otherUsefulTypescriptCodeFilesThatCouldBeRelevant || []),
+            ]),
         ];
-        // 7) Analyze that combined list in a single pass
-        const codeAnalysis = await this.analyzeFilesForRelevanceAndReasons(allCandidateFiles, this.memory.taskInstructions || "", "code-files");
-        // Filter them into the two memory buckets by their `relevantFor` property
-        // (Note: you can expand this logic if needed, e.g. if some files are also type definitions, etc.)
-        this.memory.existingTypeScriptFilesLikelyToChange = codeAnalysis.filter((res) => res.relevantFor === "likelyToChangeToImplementTask");
-        this.memory.usefulTypescriptCodeFilesToKeepInContext = codeAnalysis.filter((res) => res.relevantFor === "goodReferenceCodeForTask");
-        // 8) Analyze the definition files for short reasons
-        const defFilesThatCouldBeRelevant = analysisResults.usefulTypescriptDefinitionFilesThatCouldBeRelevant || [];
-        const defFilesAnalysis = await this.analyzeFilesForRelevanceAndReasons(defFilesThatCouldBeRelevant, this.memory.taskInstructions || "", "type-definition");
-        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = defFilesAnalysis;
-        // 9) Documentation files (just store them, or analyze further if needed)
-        this.memory.documentationFilesToKeepInContext =
-            analysisResults.documentationFilesThatCouldBeRelevant;
-        // 10) Mark whether we need docs/examples
+        const codeInitialTextReviews = await this.analyzeFilesForInitialTextReview(codeFilesMerged, "code-files");
+        const finalizedCodeAnalysis = await this.finalizeFileAnalysis(codeInitialTextReviews, "code-files");
+        // Separate final results by their relevance type as needed.
+        this.memory.existingTypeScriptFilesLikelyToChange = finalizedCodeAnalysis.filter((res) => res.relevantFor === "likelyToChangeToImplementTask");
+        this.memory.usefulTypescriptCodeFilesToKeepInContext = finalizedCodeAnalysis.filter((res) => res.relevantFor === "goodReferenceCodeForTask");
+        // (b) For TypeScript definition files.
+        const defFiles = analysisResults.usefulTypescriptDefinitionFilesThatCouldBeRelevant || [];
+        const defInitialTextReviews = await this.analyzeFilesForInitialTextReview(defFiles, "type-definition");
+        const finalizedDefAnalysis = await this.finalizeFileAnalysis(defInitialTextReviews, "type-definition");
+        this.memory.usefulTypescriptDefinitionFilesToKeepInContext = finalizedDefAnalysis;
+        // (c) For documentation files.
+        const docFiles = analysisResults.documentationFilesThatCouldBeRelevant || [];
+        const docInitialTextReviews = await this.analyzeFilesForInitialTextReview(docFiles, "documentation");
+        const finalizedDocAnalysis = await this.finalizeFileAnalysis(docInitialTextReviews, "documentation");
+        this.memory.documentationFilesToKeepInContext = finalizedDocAnalysis;
+        // 5) Mark whether we need docs/examples (from initial analysis)
         this.memory.needsDocumentationAndExamples =
             analysisResults.needsDocumentationAndExamples;
-        // 11) Optionally gather combined contents for the "likelyToChange" set
+        // 6) Optionally gather combined contents for the "likelyToChange" set
         this.memory.existingTypeScriptFilesLikelyToChangeContents = this.getFilesContents(this.memory.existingTypeScriptFilesLikelyToChange);
-        // 12) Save relevant npm deps
+        // 7) Save relevant npm deps
         this.memory.likelyRelevantNpmPackageDependencies =
             analysisResults.likelyRelevantNpmPackageDependencies;
         // Log action
         this.memory.actionLog.push(`Have done initial analysis.
        Possibly relevant code changed: ${this.memory.existingTypeScriptFilesLikelyToChange.length}
        Possibly relevant code references: ${this.memory.usefulTypescriptCodeFilesToKeepInContext.length}
-       Possibly relevant definitions: ${defFilesAnalysis.length}.`);
+       Possibly relevant definitions: ${finalizedDefAnalysis.length}.
+      `);
         await this.saveMemory();
-        this.logger.info(`Finished analysis and stored results with reasons in memory.`);
+        this.logger.info("Finished analysis and stored results with reasons in memory.");
     }
 }
 //# sourceMappingURL=initialAnalyzer.js.map

@@ -81,6 +81,12 @@ interface PsCodeAnalyzeResults {
   detailedCodeAnalysisForRelevanceToTask: string;
 }
 
+
+interface PsInitialCodeAnalysisTextReview {
+  fileName: string;
+  initialCodeAnalysisForTask: string;
+}
+
 interface PsEngineerMemoryData extends PsAgentMemoryData {
   workspaceFolder: string;
   taskDescription: string;
@@ -100,7 +106,7 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   existingTypeScriptFilesLikelyToChangeContents?: string;
   usefulTypescriptDefinitionFilesToKeepInContext: PsCodeAnalyzeResults[];
   usefulTypescriptCodeFilesToKeepInContext: PsCodeAnalyzeResults[];
-  documentationFilesToKeepInContext: string[];
+  documentationFilesToKeepInContext: PsCodeAnalyzeResults[];
   needsDocumentationAndExamples?: boolean;
   allTypeDefsContents?: string;
   likelyRelevantNpmPackageDependencies: string[];
@@ -111,8 +117,8 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   allBuildErrors: string[];
   analysisResults: PsEngineerPlanningResults;
   timingResults: PsEngineerTimingResults[];
-  rejectedFilesForRelevance: string[];
-  acceptedFilesForRelevance: string[];
+  rejectedFilesForRelevance: PsInitialCodeAnalysisTextReview[];
+  acceptedFilesForRelevance: PsInitialCodeAnalysisTextReview[];
 }
 
 interface PsEngineerTimingResults {

@@ -499,9 +499,13 @@ Please return a JSON string array of the relevant files:`;
         `nodeModuleTypeDefs: ${nodeModuleTypeDefs.length} before`
       );
 
-      const nodeModuleTypeDefsAnalysis = await analyzeAgent.analyzeFilesForRelevanceAndReasons(
+      const nodeModuleTypeDefsAnalysis = await analyzeAgent.analyzeFilesForInitialTextReview(
         nodeModuleTypeDefs,
-        this.memory.taskInstructions,
+        "potentially relevant node_modules .d.ts files"
+      );
+
+      const nodeModuleTypeDefsAnalysisResults = await analyzeAgent.finalizeFileAnalysis(
+        nodeModuleTypeDefsAnalysis,
         "potentially relevant node_modules .d.ts files"
       );
 
@@ -511,7 +515,7 @@ Please return a JSON string array of the relevant files:`;
 
       this.memory.usefulTypescriptDefinitionFilesToKeepInContext = [
         ...this.memory.usefulTypescriptDefinitionFilesToKeepInContext,
-        ...nodeModuleTypeDefsAnalysis,
+        ...nodeModuleTypeDefsAnalysisResults,
       ];
 
       if (nodeModuleTypeDefs.length > 0) {

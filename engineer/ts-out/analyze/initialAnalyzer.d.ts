@@ -9,11 +9,11 @@ export declare class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
     readNpmDependencies(): any;
     get analyzeSystemPrompt(): string;
     analyzeUserPrompt(allNpmPackageDependencies: string[], allDocumentationFiles: string[]): string;
-    /**
-     * Analyze multiple files for how/why they might be relevant to the task.
-     * Returns an array of PsCodeAnalyzeResults with a short "why" statement.
-     */
-    analyzeFilesForRelevanceAndReasons(filePaths: string[], userTaskInstructions: string, typeLabel: string): Promise<PsCodeAnalyzeResults[]>;
+    analyzeFilesForInitialTextReview(filePaths: string[], fileType: string): Promise<PsInitialCodeAnalysisTextReview[]>;
+    finalizeFileAnalysis(textReviews: {
+        fileName: string;
+        initialCodeAnalysisForTask: string;
+    }[], fileType: string): Promise<PsCodeAnalyzeResults[]>;
     /**
      * Reads the specified list of file paths from disk, returning a combined string
      * of the contents for reference. (Used for assembling context in memory.)

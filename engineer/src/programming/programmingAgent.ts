@@ -167,14 +167,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
     if (this.memory.documentationFilesToKeepInContext) {
       this.documentationFilesInContextContent =
         this.getFileContentsWithFileName(
-          this.memory.documentationFilesToKeepInContext.map((result) => {
-            return {
-              filePath: result,
-              relevantFor: "goodReferenceDocumentation",
-              detailedCodeAnalysisForRelevanceToTask:
-                "This file is possibly relevant to the task because it is a documentation file.",
-            };
-          }),
+          this.memory.documentationFilesToKeepInContext,
           "DocumentationForContext"
         );
     }
