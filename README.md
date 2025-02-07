@@ -129,7 +129,7 @@ Policy Synth’s framework allows you to define and manage AI agent queues tailo
 ---
 
 ## First Large-Scale Test Run (June 2023): Democracy in Distress
-Our initial large-scale test focused on public policy, but the methodology easily extends to **corporate strategy or organizational challenges**. The test run demonstrates how:
+Our initial large-scale test focused on public policy. The test run demonstrates how:
 1. A **core problem** is defined (e.g., “Democracy in Distress”).
 2. **AI Agents** break the problem into sub-problems and propose solutions.
 3. **Human and AI collaboration** refines and ranks those solutions, aided by:
