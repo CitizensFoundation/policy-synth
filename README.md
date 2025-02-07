@@ -143,5 +143,3 @@ This example demonstrates how Policy Synth automates the exploration of sub-prob
 ---
 
 **Policy Synth** empowers leaders—whether in government, nonprofits, or businesses—to blend the collective intelligence of people with the analytical horsepower of AI. By orchestrating specialized agents, we can navigate complex challenges more effectively, paving the way for informed, impactful decisions.
-
-For more information or to get involved, visit [policy-synth.ai](https://policy-synth.ai).
