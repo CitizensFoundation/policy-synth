@@ -128,12 +128,7 @@ Policy Synth’s framework allows you to define and manage AI agent queues tailo
 
 ---
 
-## Draft Developer Guide
-For deeper technical integration details, check out our evolving [**Draft Policy Synth Developer Guide**](https://docs.google.com/document/d/19ymUR8W3Hsf--PiBEEwnX9siK4lqjHpGWQlGZl_uJeU).
-
----
-
-## First Test Run: Democracy in Distress
+## First Large-Scale Test Run (June 2023): Democracy in Distress
 Our initial large-scale test focused on public policy, but the methodology easily extends to **corporate strategy or organizational challenges**. The test run demonstrates how:
 1. A **core problem** is defined (e.g., “Democracy in Distress”).
 2. **AI Agents** break the problem into sub-problems and propose solutions.
