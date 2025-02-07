@@ -4,29 +4,29 @@ The `PsProgressTracker` class is responsible for tracking the progress of an age
 
 ## Properties
 
-| Name            | Type          | Description                                                                 |
-|-----------------|---------------|-----------------------------------------------------------------------------|
-| redis           | Redis         | An instance of the Redis client used to interact with the Redis database.   |
-| redisStatusKey  | string        | The key used to store and retrieve the agent's status in Redis.             |
-| status          | PsAgentStatus | The current status of the agent, including progress, state, and messages.   |
-| startProgress   | number        | The starting point of the progress range.                                   |
-| endProgress     | number        | The ending point of the progress range.                                     |
+| Name            | Type       | Description                                                                 |
+|-----------------|------------|-----------------------------------------------------------------------------|
+| redis           | Redis      | An instance of the Redis client used to interact with the Redis database.   |
+| redisStatusKey  | string     | The key used to store and retrieve the agent's status in Redis.             |
+| status          | PsAgentStatus | The current status of the agent, including state, progress, and messages. |
+| startProgress   | number     | The starting point of the progress range.                                   |
+| endProgress     | number     | The ending point of the progress range.                                     |
 
 ## Methods
 
-| Name                   | Parameters                                      | Return Type | Description                                                                 |
-|------------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| constructor            | redisStatusKey: string, startProgress: number, endProgress: number, redisUrl?: string | void        | Initializes a new instance of the `PsProgressTracker` class.                |
-| loadStatusFromRedis    | -                                               | Promise<void> | Loads the agent's status from Redis.                                        |
-| updateRangedProgress   | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress within a specified range and saves it to Redis.|
-| updateProgress         | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress and saves it to Redis.                         |
-| saveRedisStatus        | -                                               | Promise<void> | Saves the current status of the agent to Redis.                             |
-| getProgress            | -                                               | number       | Returns the current progress of the agent.                                  |
-| getMessages            | -                                               | string[]     | Returns the messages associated with the agent's status.                    |
-| getState               | -                                               | string       | Returns the current state of the agent.                                     |
-| setCompleted           | message: string                                 | Promise<void> | Sets the agent's status to "completed" and updates the progress to 100%.    |
-| setError               | errorMessage: string                            | Promise<void> | Sets the agent's status to "error" and logs the error message.              |
-| formatNumber           | number: number, fractions?: number              | string       | Formats a number with a specified number of decimal places.                 |
+| Name                  | Parameters                                      | Return Type | Description                                                                 |
+|-----------------------|-------------------------------------------------|-------------|-----------------------------------------------------------------------------|
+| constructor           | redisStatusKey: string, startProgress: number, endProgress: number, redisUrl?: string | void        | Initializes a new instance of the `PsProgressTracker` class.                |
+| loadStatusFromRedis   | -                                               | Promise<void> | Loads the agent's status from Redis.                                        |
+| updateRangedProgress  | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress within a specified range and saves it to Redis.|
+| updateProgress        | progress: number \| undefined, message: string  | Promise<void> | Updates the agent's progress and saves it to Redis.                         |
+| saveRedisStatus       | -                                               | Promise<void> | Saves the current status of the agent to Redis.                             |
+| getProgress           | -                                               | number       | Returns the current progress of the agent.                                  |
+| getMessages           | -                                               | string[]     | Returns the messages associated with the agent's status.                    |
+| getState              | -                                               | string       | Returns the current state of the agent.                                     |
+| setCompleted          | message: string                                 | Promise<void> | Sets the agent's status to "completed" and updates the progress to 100%.    |
+| setError              | errorMessage: string                            | Promise<void> | Sets the agent's status to "error" and logs the error message.              |
+| formatNumber          | number: number, fractions?: number              | string       | Formats a number with a specified number of decimal places.                 |
 
 ## Example
 

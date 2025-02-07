@@ -1,16 +1,17 @@
 # PsConnectorClassTypes
 
-Enumeration representing different types of connector classes.
+The `PsConnectorClassTypes` is an enumeration that defines various types of connector classes. These connector classes represent different functionalities or services that can be integrated into a system.
 
 ## Enum Values
 
-| Name                    | Value                  | Description                                      |
-|-------------------------|------------------------|--------------------------------------------------|
-| Document                | "docs"                 | Represents a document connector class.           |
-| Spreadsheet             | "sheets"               | Represents a spreadsheet connector class.        |
-| NotificationsAndChat    | "notificationsAndChat" | Represents a notifications and chat connector class. |
-| IdeasCollaboration      | "ideasCollaboration"   | Represents an ideas collaboration connector class. |
-| VotingCollaboration     | "votingCollaboration"  | Represents a voting collaboration connector class. |
+| Name                   | Value                  | Description                                      |
+|------------------------|------------------------|--------------------------------------------------|
+| Document               | "docs"                 | Represents a connector for document-related services. |
+| Spreadsheet            | "sheets"               | Represents a connector for spreadsheet-related services. |
+| NotificationsAndChat   | "notificationsAndChat" | Represents a connector for notifications and chat services. |
+| IdeasCollaboration     | "ideasCollaboration"   | Represents a connector for ideas collaboration services. |
+| VotingCollaboration    | "votingCollaboration"  | Represents a connector for voting collaboration services. |
+| Drive                  | "drive"                | Represents a connector for drive-related services. |
 
 ## Example
 
@@ -23,4 +24,4 @@ const connectorType: PsConnectorClassTypes = PsConnectorClassTypes.Document;
 console.log(connectorType); // Output: "docs"
 ```
 
-This enum is used to categorize different types of connectors in the system, such as document connectors, spreadsheet connectors, and more. Each type is represented by a string value.
+This enumeration is useful for categorizing and managing different types of connectors within a system, allowing for more organized and efficient integration of various services.

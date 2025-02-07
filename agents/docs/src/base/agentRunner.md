@@ -1,49 +1,42 @@
 # PsBaseAgentRunner
 
-The `PsBaseAgentRunner` class is an abstract class that extends the `PolicySynthAgent` class. It is designed to manage the setup and execution of agents and connectors within a registry. This class ensures that agents and connectors are properly registered, initialized, and run within the system.
+The `PsBaseAgentRunner` is an abstract class responsible for managing the lifecycle of agents and connectors within a system. It handles the setup, registration, and execution of agents and connectors, ensuring they are properly initialized and running.
 
 ## Properties
 
-| Name                      | Type                                | Description                                                                 |
-|---------------------------|-------------------------------------|-----------------------------------------------------------------------------|
-| `agentsToRun`             | `PolicySynthAgentQueue[]`           | An array of agent queues to be run.                                         |
-| `agentRegistry`           | `PsAgentRegistry \| null`           | The registry for agents and connectors.                                     |
-| `registeredAgentClasses`  | `PsAgentClass[]`                    | An array of registered agent classes.                                       |
-| `registeredConnectorClasses` | `PsAgentConnectorClass[]`        | An array of registered connector classes.                                   |
-| `agentClasses`            | `PsAgentClassCreationAttributes[]`  | An abstract property for agent class attributes.                            |
-| `connectorClasses`        | `PsAgentConnectorClassCreationAttributes[]` | An abstract property for connector class attributes.                        |
+| Name                      | Type                              | Description                                                                 |
+|---------------------------|-----------------------------------|-----------------------------------------------------------------------------|
+| agentsToRun               | `PolicySynthAgentQueue[]`         | An array of agent queues to be executed.                                    |
+| agentRegistry             | `PsAgentRegistry \| null`         | The registry for managing agents and connectors.                            |
+| registeredAgentClasses    | `PsAgentClass[]`                  | A list of registered agent classes.                                         |
+| registeredConnectorClasses| `PsAgentConnectorClass[]`         | A list of registered connector classes.                                     |
+| agentClasses              | `PsAgentClassCreationAttributes[]`| Abstract property for defining agent classes to be created.                 |
+| connectorClasses          | `PsAgentConnectorClassCreationAttributes[]` | Abstract property for defining connector classes to be created.             |
 
 ## Methods
 
-| Name                        | Parameters                          | Return Type            | Description                                                                 |
-|-----------------------------|-------------------------------------|------------------------|-----------------------------------------------------------------------------|
-| `constructor`               | -                                   | -                      | Initializes the `PsBaseAgentRunner` instance.                               |
-| `setupAgents`               | -                                   | `Promise<void>`        | An abstract method to be implemented by subclasses for setting up agents.   |
-| `setupAndRunAgents`         | -                                   | `Promise<void>`        | Sets up and runs agents and connectors.                                     |
-| `inspectDynamicMethods`     | `obj: any, className: string`       | `void`                 | Inspects and logs dynamic methods of a given object.                        |
-| `registerAgent`             | `agentQueue: PolicySynthAgentQueue` | `Promise<void>`        | Registers an agent in the agent registry.                                   |
-| `registerConnectors`        | -                                   | `Promise<void>`        | Registers connectors in the agent registry.                                 |
-| `getOrCreateAgentRegistry`  | -                                   | `Promise<PsAgentRegistry>` | Retrieves or creates an agent registry.                                     |
-| `createAgentClassesIfNeeded`| -                                   | `Promise<void>`        | Creates agent classes if they do not already exist in the database.         |
-| `createConnectorClassesIfNeeded` | -                             | `Promise<void>`        | Creates connector classes if they do not already exist in the database.     |
-| `run`                       | -                                   | `Promise<void>`        | Runs the setup and execution of agents and connectors.                      |
-| `setupGracefulShutdown`     | -                                   | `void`                 | Sets up graceful shutdown for the agent runner.                             |
+| Name                        | Parameters                          | Return Type          | Description                                                                 |
+|-----------------------------|-------------------------------------|----------------------|-----------------------------------------------------------------------------|
+| constructor                 | -                                   | -                    | Initializes the agent runner and checks for necessary environment variables.|
+| setupAgents                 | -                                   | `Promise<void>`      | Abstract method to be implemented for setting up agents.                    |
+| setupAndRunAgents           | -                                   | `Promise<void>`      | Sets up and runs agents and connectors.                                     |
+| inspectDynamicMethods       | `obj: any, className: string`       | `void`               | Logs the dynamic methods of a given object.                                 |
+| registerAgent               | `agentQueue: PolicySynthAgentQueue` | `Promise<void>`      | Registers an agent with the agent registry.                                 |
+| registerConnectors          | -                                   | `Promise<void>`      | Registers connectors with the agent registry.                               |
+| getOrCreateAgentRegistry    | -                                   | `Promise<PsAgentRegistry>` | Retrieves or creates an agent registry.                                     |
+| createAgentClassesIfNeeded  | -                                   | `Promise<void>`      | Creates agent classes if they do not already exist.                         |
+| createConnectorClassesIfNeeded | -                                | `Promise<void>`      | Creates connector classes if they do not already exist.                     |
+| run                         | -                                   | `Promise<void>`      | Runs the agent runner, setting up and executing agents and connectors.      |
+| setupGracefulShutdown       | -                                   | `void`               | Sets up a graceful shutdown process for the agent runner.                   |
 
 ## Example
 
 ```typescript
 import { PsBaseAgentRunner } from '@policysynth/agents/base/agentRunner.js';
-import { PolicySynthAgentQueue } from './agentQueue.js';
-import { PsAgentClassCreationAttributes, PsAgentConnectorClassCreationAttributes } from '../dbModels/agentClass.js';
 
 class MyAgentRunner extends PsBaseAgentRunner {
-  protected agentClasses: PsAgentClassCreationAttributes[] = [
-    // Define your agent classes here
-  ];
-
-  protected connectorClasses: PsAgentConnectorClassCreationAttributes[] = [
-    // Define your connector classes here
-  ];
+  protected agentClasses = [...]; // Define your agent classes
+  protected connectorClasses = [...]; // Define your connector classes
 
   async setupAgents() {
     // Implement your agent setup logic here
@@ -54,4 +47,4 @@ const runner = new MyAgentRunner();
 runner.run();
 ```
 
-This example demonstrates how to extend the `PsBaseAgentRunner` class to create a custom agent runner. The `MyAgentRunner` class defines the agent and connector classes and implements the `setupAgents` method to set up the agents. The `runner.run()` method is called to start the setup and execution process.
+This class is designed to be extended, allowing for the implementation of specific agent and connector setup logic in the `setupAgents` method. It provides a robust framework for managing the lifecycle of agents and connectors, ensuring they are properly initialized, registered, and executed.

@@ -1,13 +1,13 @@
 # BaseChatModel
 
-The `BaseChatModel` is an abstract class that extends the `PolicySynthAgentBase`. It serves as a foundational class for chat models, providing basic properties and abstract methods that need to be implemented by subclasses.
+The `BaseChatModel` is an abstract class that extends the `PolicySynthAgentBase`. It provides a foundation for implementing chat models with functionalities such as message generation, token estimation, and XML content processing.
 
 ## Properties
 
-| Name         | Type                      | Description                                                                 |
-|--------------|---------------------------|-----------------------------------------------------------------------------|
-| modelName    | `string \| TiktokenModel` | The name of the model or a TiktokenModel instance used for tokenization.    |
-| maxTokensOut | `number`                  | The maximum number of tokens that can be output by the model. Default is 4096. |
+| Name         | Type                  | Description                                                                 |
+|--------------|-----------------------|-----------------------------------------------------------------------------|
+| modelName    | string \| TiktokenModel | The name or model type used for tokenization and processing.                |
+| maxTokensOut | number                | The maximum number of tokens that can be output by the model. Default is 4096. |
 
 ## Constructor
 
@@ -17,34 +17,37 @@ The constructor initializes a new instance of the `BaseChatModel` class.
 
 #### Parameters
 
-- `modelName: string | TiktokenModel` - The name of the model or a TiktokenModel instance.
-- `maxTokensOut: number` (optional) - The maximum number of tokens that can be output by the model. Defaults to 4096.
+- `modelName: string | TiktokenModel` - The name or type of the model.
+- `maxTokensOut: number` (optional) - The maximum number of tokens for output. Defaults to 4096.
 
 ## Methods
 
 | Name                                 | Parameters                                                                 | Return Type                                                                 | Description                                                                 |
 |--------------------------------------|----------------------------------------------------------------------------|------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
-| `generate`                           | `messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function` | `Promise<{tokensIn: number, tokensOut: number, content: string} \| undefined>` | Abstract method to generate a response based on input messages.             |
-| `getEstimatedNumTokensFromMessages`  | `messages: PsModelMessage[]`                                               | `Promise<number>`                                                           | Abstract method to estimate the number of tokens from a list of messages.   |
+| `generate`                           | `messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function` | `Promise<{ tokensIn: number; tokensOut: number; content: string } | undefined>` | Abstract method to generate content based on input messages.               |
+| `getEstimatedNumTokensFromMessages`  | `messages: PsModelMessage[]`                                               | `Promise<number>`                                                           | Abstract method to estimate the number of tokens from input messages.       |
+| `truncateXmlTags`                    | `text: string, maxChars: number = 500`                                     | `string`                                                                    | Truncates XML tags in the text to a specified maximum number of characters. |
+| `prettyPrintPromptMessages`          | `messages: { role: string; content: string }[]`                            | `string`                                                                    | Formats and color-codes prompt messages for display.                        |
+| `colorCodeXml`                       | `text: string`                                                             | `string`                                                                    | Color-codes XML tags in the text using `chalk`.                             |
 
 ## Example
 
 ```typescript
 import { BaseChatModel } from '@policysynth/agents/aiModels/baseChatModel.js';
 
-class CustomChatModel extends BaseChatModel {
+class MyChatModel extends BaseChatModel {
   constructor(modelName: string | TiktokenModel) {
     super(modelName);
   }
 
-  async generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<{tokensIn: number, tokensOut: number, content: string} | undefined> {
+  async generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function) {
     // Implementation of the generate method
   }
 
-  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number> {
+  async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]) {
     // Implementation of the token estimation method
   }
 }
-```
 
-In this example, `CustomChatModel` extends `BaseChatModel` and provides implementations for the abstract methods `generate` and `getEstimatedNumTokensFromMessages`.
+const myModel = new MyChatModel("myModelName");
+```

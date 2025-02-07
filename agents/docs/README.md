@@ -18,6 +18,7 @@
   - [agentQueue](src/base/agentQueue.md)
   - [agentRateLimiter](src/base/agentRateLimiter.md)
   - [agentRunner](src/base/agentRunner.md)
+  - [redisClient](src/base/redisClient.md)
   - [simpleAgent](src/base/simpleAgent.md)
   - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
 - [connectorTypes](src/connectorTypes.md)
@@ -26,6 +27,7 @@
     - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
     - [baseConnector](src/connectors/base/baseConnector.md)
     - [baseDocumentConnector](src/connectors/base/baseDocumentConnector.md)
+    - [baseDriveConnector](src/connectors/base/baseDriveConnector.md)
     - [baseIdeasCollaborationConnector](src/connectors/base/baseIdeasCollaborationConnector.md)
     - [baseNotificationsConnector](src/connectors/base/baseNotificationsConnector.md)
     - [baseSheetConnector](src/connectors/base/baseSheetConnector.md)
@@ -36,6 +38,8 @@
     - [yourPrioritiesConnector](src/connectors/collaboration/yourPrioritiesConnector.md)
   - documents
     - [googleDocsConnector](src/connectors/documents/googleDocsConnector.md)
+  - drive
+    - [googleDrive](src/connectors/drive/googleDrive.md)
   - notifications
     - [discordConnector](src/connectors/notifications/discordConnector.md)
   - sheets
@@ -58,6 +62,10 @@
   - [ypGroup](src/dbModels/ypGroup.md)
   - [ypOrganization](src/dbModels/ypOrganization.md)
   - [ypUser](src/dbModels/ypUser.md)
+- deepResearch
+  - [fireCrawlApi](src/deepResearch/fireCrawlApi.md)
+  - [getWebPagesBase](src/deepResearch/getWebPagesBase.md)
+  - [webScraper](src/deepResearch/webScraper.md)
 - operations
   - [agentConnectorManager](src/operations/agentConnectorManager.md)
   - [agentCostsManager](src/operations/agentCostsManager.md)

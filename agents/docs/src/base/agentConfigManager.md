@@ -4,26 +4,25 @@ The `PsConfigManager` class is an extension of the `PolicySynthAgentBase` class,
 
 ## Properties
 
-| Name          | Type                    | Description                                      |
-|---------------|-------------------------|--------------------------------------------------|
-| configuration | PsBaseNodeConfiguration | The configuration object for the agent.          |
-| memory        | PsAgentMemoryData       | The memory data associated with the agent.       |
+| Name          | Type                    | Description                                   |
+|---------------|-------------------------|-----------------------------------------------|
+| configuration | PsBaseNodeConfiguration | The configuration settings for the agent node.|
+| memory        | PsAgentMemoryData       | The memory data associated with the agent.    |
 
 ## Methods
 
 | Name                      | Parameters                                      | Return Type                        | Description                                                                 |
 |---------------------------|-------------------------------------------------|------------------------------------|-----------------------------------------------------------------------------|
-| constructor               | configuration: PsBaseNodeConfiguration, memory: PsAgentMemoryData | void                               | Initializes a new instance of the `PsConfigManager` class.                  |
-| getValueFromOverride      | uniqueId: string                                | string \| number \| boolean \| undefined | Retrieves a value from the memory's structured answers overrides.           |
-| getConfig                 | uniqueId: string, defaultValue: T               | T                                  | Retrieves a configuration value, with intelligent parsing of string values. |
-| getConfigOld              | uniqueId: string, defaultValue: T               | T                                  | Retrieves a configuration value using the old method.                       |
-| setConfig                 | uniqueId: string, value: T                      | void                               | Sets a configuration value.                                                 |
-| getAllConfig              |                                                 | PsBaseNodeConfiguration            | Returns the entire configuration object.                                    |
-| getModelUsageEstimates    |                                                 | PsAgentModelUsageEstimate[] \| undefined | Retrieves model usage estimates from the configuration.                     |
-| getApiUsageEstimates      |                                                 | PsAgentApiUsageEstimate[] \| undefined | Retrieves API usage estimates from the configuration.                       |
-| getMaxTokensOut           |                                                 | number \| undefined                | Retrieves the maximum tokens out value from the configuration.              |
-| getTemperature            |                                                 | number \| undefined                | Retrieves the temperature value from the configuration.                     |
-| getAnswers                |                                                 | YpStructuredAnswer[] \| undefined  | Retrieves the structured answers from the configuration.                    |
+| `getValueFromOverride`    | `uniqueId: string`                              | `string \| number \| boolean \| undefined` | Retrieves a value from memory overrides based on a unique identifier.       |
+| `getConfig`               | `uniqueId: string, defaultValue: T`             | `T`                               | Retrieves a configuration value, with intelligent parsing and default fallback. |
+| `getConfigOld`            | `uniqueId: string, defaultValue: T`             | `T`                               | Retrieves a configuration value using an older method, with type conversion. |
+| `setConfig`               | `uniqueId: string, value: T`                    | `void`                            | Sets a configuration value for a given unique identifier.                   |
+| `getAllConfig`            |                                                 | `PsBaseNodeConfiguration`         | Returns all configuration settings.                                         |
+| `getModelUsageEstimates`  |                                                 | `PsAgentModelUsageEstimate[] \| undefined` | Retrieves model usage estimates from the configuration.                     |
+| `getApiUsageEstimates`    |                                                 | `PsAgentApiUsageEstimate[] \| undefined` | Retrieves API usage estimates from the configuration.                       |
+| `getMaxTokensOut`         |                                                 | `number \| undefined`             | Retrieves the maximum number of tokens that can be output.                  |
+| `getTemperature`          |                                                 | `number \| undefined`             | Retrieves the temperature setting from the configuration.                   |
+| `getAnswers`              |                                                 | `YpStructuredAnswer[] \| undefined` | Retrieves structured answers from the configuration.                        |
 
 ## Example
 
@@ -33,18 +32,22 @@ import { PsConfigManager } from '@policysynth/agents/base/agentConfigManager.js'
 const configuration: PsBaseNodeConfiguration = {
   graphPosX: 0,
   graphPosY: 0,
-  name: "Example Configuration"
+  name: "ExampleConfig",
+  // other configuration properties...
 };
 
 const memory: PsAgentMemoryData = {
-  agentId: 1,
-  structuredAnswersOverrides: [
-    { uniqueId: "exampleId", value: "exampleValue" }
-  ]
+  agentId: 123,
+  // other memory properties...
 };
 
 const configManager = new PsConfigManager(configuration, memory);
 
-const value = configManager.getConfig("exampleId", "defaultValue");
-console.log(value); // Output: "exampleValue"
+const maxTokens = configManager.getMaxTokensOut();
+console.log(`Max Tokens Out: ${maxTokens}`);
+
+const temperature = configManager.getTemperature();
+console.log(`Temperature: ${temperature}`);
 ```
+
+This class provides a structured way to manage and access configuration and memory data for agents, with methods to handle overrides, defaults, and type conversions.

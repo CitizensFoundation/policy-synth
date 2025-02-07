@@ -1,6 +1,6 @@
 # GoogleGeminiChat
 
-The `GoogleGeminiChat` class is a specialized chat model that extends the `BaseChatModel`. It utilizes the Google Generative AI to facilitate chat interactions, supporting both standard and streaming message generation.
+The `GoogleGeminiChat` class is a specialized chat model that extends the `BaseChatModel`. It utilizes the Google Generative AI to generate responses based on a series of messages. This class is designed to handle both streaming and non-streaming chat interactions.
 
 ## Properties
 
@@ -13,32 +13,34 @@ The `GoogleGeminiChat` class is a specialized chat model that extends the `BaseC
 
 ### GoogleGeminiChat(config: PsAiModelConfig)
 
-Creates an instance of `GoogleGeminiChat`.
+Creates an instance of the `GoogleGeminiChat` class.
 
 - **Parameters:**
-  - `config`: `PsAiModelConfig` - Configuration object for the AI model, including API key and model settings.
+  - `config`: `PsAiModelConfig` - Configuration object for the AI model, including API key, model name, and maximum tokens.
 
 ## Methods
 
-### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function)
+### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: (chunk: string) => void)
 
-Generates a response based on the provided messages.
+Generates a response based on the provided messages. Supports both streaming and non-streaming modes.
 
 - **Parameters:**
-  - `messages`: `PsModelMessage[]` - An array of messages to be processed by the chat model.
-  - `streaming`: `boolean` (optional) - Indicates if the response should be streamed.
-  - `streamingCallback`: `Function` (optional) - Callback function to handle streaming chunks.
+  - `messages`: `PsModelMessage[]` - An array of messages to process.
+  - `streaming`: `boolean` (optional) - If true, enables streaming mode.
+  - `streamingCallback`: `(chunk: string) => void` (optional) - Callback function for handling streamed chunks.
 
-- **Returns:** `Promise<object>` - An object containing token usage and generated content.
+- **Returns:** 
+  - An object containing `tokensIn`, `tokensOut`, and `content`.
 
 ### getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>
 
-Estimates the number of tokens required for the provided messages.
+Estimates the number of tokens required for the provided messages using the library's built-in token counting feature.
 
 - **Parameters:**
-  - `messages`: `PsModelMessage[]` - An array of messages for which to estimate token usage.
+  - `messages`: `PsModelMessage[]` - An array of messages to estimate token count for.
 
-- **Returns:** `Promise<number>` - The estimated number of tokens.
+- **Returns:** 
+  - A promise that resolves to the estimated number of tokens.
 
 ## Example
 
@@ -54,13 +56,15 @@ const config = {
 const chatModel = new GoogleGeminiChat(config);
 
 const messages = [
+  { role: 'system', message: 'This is a system message.' },
   { role: 'user', message: 'Hello, how are you?' },
-  { role: 'assistant', message: 'I am fine, thank you!' },
 ];
 
-chatModel.generate(messages).then(response => {
-  console.log(response.content);
+chatModel.generate(messages, true, (chunk) => {
+  console.log('Received chunk:', chunk);
+}).then(response => {
+  console.log('Final response:', response.content);
 });
 ```
 
-This class provides a structured way to interact with Google's generative AI, allowing for both synchronous and asynchronous message handling.
+This example demonstrates how to create an instance of `GoogleGeminiChat`, send a series of messages, and handle the response in streaming mode.

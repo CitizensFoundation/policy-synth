@@ -1,16 +1,16 @@
 # PsGoogleDocsConnector
 
-The `PsGoogleDocsConnector` class is a connector for Google Docs, allowing interaction with Google Docs documents through the Google Docs API. It extends the `PsBaseDocumentConnector` class and provides methods to retrieve and update Google Docs documents.
+The `PsGoogleDocsConnector` class is a connector for Google Docs, allowing interaction with Google Docs documents through the Google Docs API. It extends the `PsBaseDocumentConnector` class and provides methods to retrieve, update, and manipulate Google Docs documents.
 
 ## Properties
 
-| Name                          | Type                        | Description                                                                 |
-|-------------------------------|-----------------------------|-----------------------------------------------------------------------------|
-| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID | string                      | Static constant representing the base ID for the Google Docs connector class. |
-| GOOGLE_DOCS_CONNECTOR_VERSION | number                      | Static constant representing the version of the Google Docs connector.       |
-| getConnectorClass            | PsAgentConnectorClassCreationAttributes | Static property defining the connector class attributes.                     |
-| client                       | JWT                          | JWT client for authenticating with Google APIs.                              |
-| docs                         | docs_v1.Docs                 | Google Docs API instance for interacting with documents.                     |
+| Name                          | Type                              | Description                                                                 |
+|-------------------------------|-----------------------------------|-----------------------------------------------------------------------------|
+| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID | string                            | A static constant representing the base ID for the Google Docs connector class. |
+| GOOGLE_DOCS_CONNECTOR_VERSION | number                            | A static constant representing the version of the Google Docs connector.    |
+| getConnectorClass             | PsAgentConnectorClassCreationAttributes | Static property defining the connector class attributes for Google Docs.    |
+| client                        | JWT                               | An instance of the JWT client for authentication with Google APIs.          |
+| docs                          | docs_v1.Docs                      | An instance of the Google Docs API client.                                  |
 
 ## Methods
 
@@ -37,18 +37,20 @@ const agent = { /* ... */ };
 
 const googleDocsConnector = new PsGoogleDocsConnector(connectorAttributes, connectorClassAttributes, agent);
 
-googleDocsConnector.getDocument().then((content) => {
-  console.log("Document Content:", content);
-}).catch((error) => {
-  console.error("Error fetching document:", error);
-});
+async function updateGoogleDoc() {
+  try {
+    const documentContent = await googleDocsConnector.getDocument();
+    console.log("Document Content:", documentContent);
 
-const markdownContent = "# Title\n\nThis is a sample document.";
-googleDocsConnector.updateDocumentFromMarkdown(markdownContent).then(() => {
-  console.log("Document updated successfully.");
-}).catch((error) => {
-  console.error("Error updating document:", error);
-});
+    const newContent = "Updated content for the document.";
+    await googleDocsConnector.updateDocument(newContent);
+    console.log("Document updated successfully.");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+updateGoogleDoc();
 ```
 
-This class provides a robust interface for interacting with Google Docs, including methods for retrieving and updating document content, as well as converting Markdown to Google Docs format.
+This class provides a robust interface for interacting with Google Docs, including methods for retrieving and updating document content, as well as converting Markdown to Google Docs format. It handles authentication using a Google Service Account and manages API requests to Google Docs.
