@@ -212,8 +212,8 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
     this.startTiming();
 
     const analysis = await this.callModel(
-      PsAiModelType.TextReasoning,
-      PsAiModelSize.Small,
+      PsAiModelType.Text,
+      PsAiModelSize.Medium,
       messages,
       false,
       true

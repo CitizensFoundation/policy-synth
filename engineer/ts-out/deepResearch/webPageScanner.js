@@ -154,7 +154,7 @@ Only output text from the <TextContext> if relevant. Do not create new code or t
         }
         const messages = this.renderScanningPrompt(text);
         this.startTiming();
-        const analysis = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false, true);
+        const analysis = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false, true);
         await this.addTimingResult("WebPageScanner");
         if (process.env.PS_DEBUG_AI_MESSAGES) {
             console.log("AI Analysis result:", analysis);

@@ -205,7 +205,7 @@ Your JSON output:
 `;
         let rawResponse;
         try {
-            rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+            rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                 this.createSystemMessage(promptSystem),
                 this.createHumanMessage(userPrompt),
             ], true);

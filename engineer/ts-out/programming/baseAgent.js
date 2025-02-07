@@ -165,7 +165,7 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
 
 
       ${this.memory.existingTypeScriptFilesLikelyToChange && !limited
-            ? `<TypescriptFilesThatAreLikelyToChange>${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}</TypescriptFilesThatAreLikelyToChange>`
+            ? `<TypescriptFilesThatCouldChangeIfNeeded>${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}</TypescriptFilesThatCouldChangeIfNeeded>`
             : ""}
 
 

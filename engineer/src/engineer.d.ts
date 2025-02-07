@@ -115,6 +115,7 @@ interface PsEngineerMemoryData extends PsAgentMemoryData {
   allCodingPlans: string[];
   latestActionItemPlan: PsEngineerCodingActionPlanItem[];
   allBuildErrors: string[];
+  allBuildWarnings: string[];
   analysisResults: PsEngineerPlanningResults;
   timingResults: PsEngineerTimingResults[];
   rejectedFilesForRelevance: PsInitialCodeAnalysisTextReview[];

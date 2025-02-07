@@ -8,7 +8,7 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
   havePrintedDebugPrompt = false;
 
-  planningModelSize = PsAiModelSize.Medium;
+  planningModelSize = PsAiModelSize.Small;
 
   planSystemPrompt() {
     return `<ImportantInstructions>
@@ -30,14 +30,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
   }
 
   getUserPlanPrompt(reviewLog: string) {
-    return `${
-      this.memory.allTypescriptSrcFiles
-        ? `<AllTypescriptFilesInProject>${this.memory.allTypescriptSrcFiles.join(
-            "\n"
-          )}</AllTypescriptFilesInProject>`
-        : ""
-    }
-
+    return `
     ${this.renderDefaultTaskAndContext()}
 
     ${this.renderCurrentErrorsAndOriginalFiles()}
@@ -58,6 +51,8 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
            Make the fixes the simple as possible and only focus on the file or files that cause the error. Try to change as few files are possible</KeyFocusForThisTask>`
          : ``
      }
+
+    TASK: Use all the available context to create a detailed plan of the changes needed to the code. Use your judgement on what files need changing.
 
     Your coding plan:
     `;

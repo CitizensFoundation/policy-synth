@@ -273,7 +273,7 @@ Your JSON output:
     try {
       rawResponse = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Medium,
+        PsAiModelSize.Small,
         [
           this.createSystemMessage(promptSystem),
           this.createHumanMessage(userPrompt),

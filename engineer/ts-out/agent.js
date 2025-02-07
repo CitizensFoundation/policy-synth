@@ -294,6 +294,7 @@ Please return a JSON string array of the relevant files:`;
             await this.initializeFromGitHubIssue();
         }
         this.memory.allBuildErrors = [];
+        this.memory.allBuildWarnings = [];
         this.memory.allCodingPlans = [];
         this.memory.allTypescriptSrcFiles = [];
         this.memory.existingTypeScriptFilesLikelyToChange = [];

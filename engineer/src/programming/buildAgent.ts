@@ -15,18 +15,20 @@ export class PsEngineerProgrammingBuildAgent extends PsEngineerBaseProgrammingAg
 
       console.log("Build output:", stdout);
 
+      // Check stderr even if exit code is 0; these might be warnings.
       if (stderr) {
-        console.error("Build errors:", stderr);
-
-        this.memory.allBuildErrors.push(stderr);
+        // You might want to add additional logic here to decide if these are critical warnings.
+        console.warn("Build warnings (non-fatal):", stderr);
+        this.memory.allBuildWarnings = this.memory.allBuildWarnings || [];
+        this.memory.allBuildWarnings.push(stderr);
         await this.saveMemory();
-
-        return `${stderr}\n${stdout}`;
       }
 
+      // Return undefined to indicate the build succeeded.
       return undefined;
     } catch (error: any) {
       console.error("Error during the build process:", error);
+      // Log the actual build error.
       this.memory.allBuildErrors.push(
         `${error.message}\nAttempted build output:\n${error.stdout}`
       );

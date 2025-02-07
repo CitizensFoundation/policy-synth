@@ -404,6 +404,7 @@ Please return a JSON string array of the relevant files:`;
     }
 
     this.memory.allBuildErrors = [];
+    this.memory.allBuildWarnings = [];
     this.memory.allCodingPlans = [];
     this.memory.allTypescriptSrcFiles = [];
     this.memory.existingTypeScriptFilesLikelyToChange = [];

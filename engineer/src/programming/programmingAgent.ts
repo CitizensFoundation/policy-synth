@@ -161,7 +161,7 @@ export class PsEngineerProgrammingAgent extends PsEngineerBaseProgrammingAgent {
 
     this.likelyToChangeFilesContents = this.getFileContentsWithFileName(
       this.memory.existingTypeScriptFilesLikelyToChange,
-      "CodeLikelyToChange"
+      "CodeYouMightHaveToChange"
     );
 
     if (this.memory.documentationFilesToKeepInContext) {
