@@ -62,7 +62,7 @@ Optimized for TypeScript, it seamlessly adapts to both **public policy platforms
 ---
 
 ### 3. RAG Chatbot
-A retrieval-augmented generation (RAG) chatbot that sources hundreds of documents to provide data-rich, context-sensitive answers. Originally designed for the **Rebooting Democracy** initiative, it also offers businesses powerful customer support, research assistance, and employee knowledge-base solutions.
+A retrieval-augmented generation (RAG) chatbot that sources hundreds of documents to provide data-rich, context-sensitive answers. Originally designed for the **Rebooting Democracy** initiative.
 
 ![PS - Rebooting Democracy Chatbot-1](https://github.com/CitizensFoundation/policy-synth/assets/43699/40ac60f8-a52c-4732-8f53-68cd78ba67f4)
 
