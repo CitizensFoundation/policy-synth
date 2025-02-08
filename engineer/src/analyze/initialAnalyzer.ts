@@ -47,8 +47,7 @@ export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
   // 1) Less Restrictive Prompt
   ///////////////////////////////////
   get analyzeSystemPrompt() {
-    return `
-<ImportantInstructions>
+    return `<ImportantInstructions>
   1. You will receive the user’s coding task title, description, and instructions.
   2. You will see all existing TypeScript files. Output any that could possibly relate to or be impacted by the user's task.
      - This does NOT mean you are sure they will be changed; only that they could plausibly need changes or referencing.
@@ -239,8 +238,7 @@ Your analysis:
     }
     xmlContent += `</InitialTextReviews>`;
 
-    const promptSystem = `
-<ImportantInstructions>
+    const promptSystem = `<ImportantInstructions>
 You are a specialized coding assistant.
 Given the XML formatted initial text reviews for files, produce a JSON array of objects.
 Each object must have:
