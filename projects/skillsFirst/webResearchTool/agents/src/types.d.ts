@@ -161,22 +161,7 @@ type JobDegreeClassification =
   | "Master's degree" // "master's degree", etc.
   | "Doctoral degree"; // "doctoral degree", "Ph.D.", etc.
 
-/**
- * Represents the requirement of a professional license for the job.
- */
-interface ProfessionalLicenseRequirement {
-  isLicenseRequired: boolean;
-  // From question 4a: Determines if applicants can be hired only if they have obtained a professional license specified in the job description.
 
-  licenseDescription?: string;
-  // From question 4b: Quotes the language describing any professional license requirement in the job description.
-
-  issuingAuthority?: string;
-  // From question 4c: States the name of the entity that issues the professional license, if included or known based on expertise.
-
-  includesDegreeRequirement?: boolean;
-  // From question 4d: Determines if the professional license requirement includes a requirement to obtain one of the degrees or credentials listed in 1c, 1d, 1e, and 1f.
-}
 
 /**
  * Represents an occupational category.
@@ -305,6 +290,8 @@ type JobDegreeClassification =
 interface ProfessionalLicenseRequirement {
   isLicenseRequired: boolean;
   // From question 4a: Determines if applicants can be hired only if they have obtained a professional license specified in the job description.
+
+  licenseType?: string;
 
   licenseDescription?: string;
   // From question 4b: Quotes the language describing any professional license requirement in the job description.

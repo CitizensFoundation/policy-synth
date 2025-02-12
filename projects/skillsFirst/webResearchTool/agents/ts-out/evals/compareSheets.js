@@ -102,6 +102,7 @@ export class SheetsComparisonAgent extends PolicySynthAgent {
         "degreeAnalysis.degreeRequirementStatus.isDegreeAbsolutelyRequired",
         "degreeAnalysis.degreeRequirementStatus.substitutionPossible",
         "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
+        "degreeAnalysis.professionalLicenseRequirement.licenseType",
         "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
         "readingLevelGradeAnalysis.readabilityLevel",
     ];

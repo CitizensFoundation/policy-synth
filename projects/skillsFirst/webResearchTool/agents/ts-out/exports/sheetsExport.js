@@ -86,6 +86,7 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
             "degreeAnalysis.mandatoryStatusExplanations.bothFalseExplanation",
             // Professional License Requirement
             "degreeAnalysis.professionalLicenseRequirement.isLicenseRequired",
+            "degreeAnalysis.professionalLicenseRequirement.licenseType",
             "degreeAnalysis.professionalLicenseRequirement.licenseDescription",
             "degreeAnalysis.professionalLicenseRequirement.issuingAuthority",
             "degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement",
@@ -190,6 +191,7 @@ export class SheetsJobDescriptionExportAgent extends PolicySynthAgent {
             // professionalLicenseRequirement
             const plr = da.professionalLicenseRequirement || {};
             row.push(String(plr.isLicenseRequired ?? ""));
+            row.push(this.safeString(plr.licenseType));
             row.push(this.safeString(plr.licenseDescription));
             row.push(this.safeString(plr.issuingAuthority));
             row.push(String(plr.includesDegreeRequirement ?? ""));

@@ -137,6 +137,7 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
                 },
                 professionalLicenseRequirement: {
                     isLicenseRequired: this.parseBooleanIfPossible(getValue("degreeAnalysis.professionalLicenseRequirement.isLicenseRequired")) || false,
+                    licenseType: getValue("degreeAnalysis.professionalLicenseRequirement.licenseType"),
                     licenseDescription: getValue("degreeAnalysis.professionalLicenseRequirement.licenseDescription"),
                     issuingAuthority: getValue("degreeAnalysis.professionalLicenseRequirement.issuingAuthority"),
                     includesDegreeRequirement: this.parseBooleanIfPossible(getValue("degreeAnalysis.professionalLicenseRequirement.includesDegreeRequirement")) || false,
