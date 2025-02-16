@@ -9,7 +9,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.2.8"
+    "@policysynth/api": "^1.2.9"
   },
   "scripts": {
     "start": "nodemon -e ts ts-out/server.js",
