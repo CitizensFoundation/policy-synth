@@ -64,7 +64,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       true
     );
 
-    if (!rerunExistingInMemory) {
+    if (false && !rerunExistingInMemory) {
       // Load jobDescriptions.json (adjust path for your environment)
       const jobDescriptionsData = fs.readFileSync(
         path.join(__dirname, "data", "jobDescriptions.json"),
@@ -75,7 +75,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     } else {
       allJobDescriptions = this.memory.jobDescriptions;
     }
-    this.logger.debug(JSON.stringify(this.memory, null, 2));
+    //this.logger.debug(JSON.stringify(this.memory, null, 2));
 
     // 1) Retrieve config values via this.getConfig(...)
     const numJobDescriptions = this.getConfig<number>("numJobDescriptions", 10);
@@ -87,7 +87,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     let selectedJobDescriptions;
 
-    if (useRandomJobDescriptions) {
+    if (false && useRandomJobDescriptions) {
       selectedJobDescriptions = this.selectRandomJobDescriptions(
         allJobDescriptions,
         numJobDescriptions
@@ -100,7 +100,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
 
     // 3) Process each job description
-    const concurrency = 10;
+    const concurrency = 7;
 
     for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
       const chunk = selectedJobDescriptions.slice(i, i + concurrency);
@@ -115,7 +115,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
             return;
           }
 
-          if (jobDescription.processed===true) {
+          if (false && jobDescription.processed===true) {
             this.logger.info(
               `Skipping '${jobDescription.titleCode}' as it has already been processed`
             );
@@ -229,8 +229,10 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       this.memory.llmErrors = [];
     }
 
+    this.logger.debug(`Progress: ${processCounter} of ${totalProcesses}`);
+
     // STEP 1: Determine if the JobDescription includes college/higher ed requirement
-    if (enableDetermineCollegeDegreeStatus) {
+    if (false && enableDetermineCollegeDegreeStatus) {
       const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(
         this.agent,
         this.memory,
@@ -243,7 +245,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
-    if (
+    if (jobDescription.degreeAnalysis &&
       jobDescription.degreeAnalysis
         .includesMultipleJobLevelsWithDifferentEducationalRequirements
     ) {
@@ -266,7 +268,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 3: Determine if degree requirement is mandatory or permissive
-    if (enableDetermineMandatoryStatus) {
+    if (false && enableDetermineMandatoryStatus) {
       const determineMandatoryStatusAgent = new DetermineMandatoryStatusAgent(
         this.agent,
         this.memory,
@@ -280,7 +282,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 4: Determine if a professional license is required
-    if (enableDetermineProfessionalLicense) {
+    if (true || enableDetermineProfessionalLicense) {
       const determineProfessionalLicenseAgent =
         new DetermineProfessionalLicenseRequirementAgent(
           this.agent,
@@ -295,7 +297,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 5: Identify barriers for non-degree applicants
-    if (enableIdentifyBarriers) {
+    if (false && enableIdentifyBarriers) {
       const identifyBarriersAgent = new IdentifyBarriersAgent(
         this.agent,
         this.memory,
@@ -320,7 +322,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 7: Analyze readability via Flesch-Kincaid
-    if (enableReadabilityScore) {
+    if (false && enableReadabilityScore) {
       const readabilityAgent = new ReadabilityFleshKncaidJobDescriptionAgent(
         this.agent,
         this.memory,
@@ -332,7 +334,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 8: Analyze reading level & extract difficult passages
-    if (enableReadingLevelAnalysis) {
+    if (false && enableReadingLevelAnalysis) {
       const readingLevelAgent = new ReadingLevelAnalysisAgent(
         this.agent,
         this.memory,

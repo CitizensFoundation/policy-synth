@@ -31,14 +31,14 @@ Your task is to determine whether any professional license is required that migh
 Please answer the following questions:
 
 - ProfessionalLicenseRequirement.isLicenseRequired:
-  Is a specified professional license mandatory to be hired?
+  Is a specified professional license required that might include a college or university degree requirement?
   Answer: true/false
 
 - ProfessionalLicenseRequirement.licenseDescription:
-  Quote the language describing the professional license requirement.
+  Quote the language describing the professional license requirement. Output this only if a professional license is required otherwise leave this field empty.
 
 - ProfessionalLicenseRequirement.issuingAuthority:
-  State the issuing entity of the professional license if known from the job description or your expertise.
+  State the issuing entity of the professional license if known from the job description or your expertise. Output this only if a professional license is required otherwise leave this field empty.
 
 - ProfessionalLicenseRequirement.includesDegreeRequirement:
   Does the professional license requirement include obtaining one of the specified degrees?
@@ -89,56 +89,54 @@ Do not include any explanations or comments before or after the JSON output.
         await this.updateRangedProgress(0, `Determining license type for ${jobDescription.name}`);
         // Prepare a prompt that includes the current list of discovered license types.
         const existingLicenceTypes = DetermineProfessionalLicenseRequirementAgent.allLicenceTypes;
+        const licenceDescription = jobDescription.degreeAnalysis.professionalLicenseRequirement?.licenseDescription;
         const systemPrompt = `<JobDescription>
 ${jobDescription.text}
 </JobDescription>
 
-You are an expert in analyzing job descriptions for license requirements.
+Your task is to determine whether waht professional license is required that might include a college or university degree requirement.
 
-Given the job description below, determine a standardized and simple license type that covers wide areas of professional or other types of licenses.
-If the job description suggests a license type similar to one already in the existing list, please use that same license type.
+Output a simple licence types like Medical Licence, Pilot Licence, Law Licence, Certified Public Accountant, etc.
+Do not include details in the licence type like who it is issued by or what the requirements are, never include two options in the same licence type.
 
 ${existingLicenceTypes.length > 0
-            ? `<ExistingLicenseTypes>
+            ? `Use the already discovered license types and only add a new license type if it is not already in the list.`
+            : ""}
+
+<ProfessionalLicenseDescriptionFoundInJobDescription>
+${licenceDescription}
+</ProfessionalLicenseDescriptionFoundInJobDescription>
+
+${existingLicenceTypes.length > 0
+            ? `<ExistingLicenseTypesWeHaveAlreadyDiscoveredUseThoseWhereEverPossible>
 ${existingLicenceTypes.join("\n")}
-</ExistingLicenseTypes>
+</ExistingLicenseTypesWeHaveAlreadyDiscoveredUseThoseWhereEverPossible>
 `
             : ""}
 
-
 Please provide the license type in the following JSON format:
-
-\\\json
 {
   "licenseType": "string"
 }
-\\\
 
 Do not include any explanations or comments before or after the JSON output.
 `;
+        this.logger.debug(systemPrompt);
         const messages = [this.createSystemMessage(systemPrompt)];
-        let resultText;
+        let result;
         try {
-            resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+            result = await this.callModel(this.modelType, this.modelSize, messages, true);
         }
         catch (error) {
             this.logger.error(error);
             this.memory.llmErrors.push(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
         }
-        if (!resultText) {
+        if (!result) {
             this.memory.llmErrors.push(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model
-            resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
-        }
-        let result;
-        try {
-            result = JSON.parse(resultText);
-        }
-        catch (e) {
-            this.logger.error("Error parsing JSON from LLM result in processLicenseTypes", e);
-            result = { licenseType: "" };
+            result = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
         }
         // Ensure jobDescription.degreeAnalysis exists and update licenseTypes.
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
@@ -152,6 +150,7 @@ Do not include any explanations or comments before or after the JSON output.
         if (result.licenseType &&
             !DetermineProfessionalLicenseRequirementAgent.allLicenceTypes.includes(result.licenseType)) {
             DetermineProfessionalLicenseRequirementAgent.allLicenceTypes.push(result.licenseType);
+            this.logger.debug(JSON.stringify(DetermineProfessionalLicenseRequirementAgent.allLicenceTypes, null, 2));
         }
         await this.updateRangedProgress(100, "License type determined");
     }
