@@ -47,7 +47,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   ) {
     super();
     this.agent = agent;
-    this.logger.debug(`Agent ${agent.id} constructor`);
+    this.logger.debug(`Agent ${agent?.id} constructor ${process.env.PS_AI_MODEL_NAME}`);
 
     if (
       !this.agent &&
@@ -66,7 +66,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
     if (!this.skipAiModels) {
       this.modelManager = new PsAiModelManager(
-        agent.AiModels || [],
+        agent?.AiModels || [],
         agent
           ? agent.Group?.private_access_configuration || []
           : [] /*this.getAccessConfigFromEnv()*/,
@@ -100,7 +100,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     } else {
       this.loadAgentMemoryFromRedis();
     }
-    this.configManager = new PsConfigManager(agent.configuration, this.memory);
+    this.configManager = new PsConfigManager(agent?.configuration, this.memory);
   }
 
   async process() {
@@ -119,7 +119,10 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   }
 
   async loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData> {
-    if (!this.agent.redisMemoryKey) {
+    if (!this.agent) {
+      this.logger.error("Agent not found");
+      return {} as PsAgentMemoryData;
+    } else if (!this.agent.redisMemoryKey) {
       this.logger.error("Agent memory key not set");
       this.logger.error(JSON.stringify(this.agent, null, 2));
       throw new Error("Agent memory key not set");

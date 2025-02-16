@@ -30,7 +30,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     constructor(agent, memory = undefined, startProgress, endProgress) {
         super();
         this.agent = agent;
-        this.logger.debug(`Agent ${agent.id} constructor`);
+        this.logger.debug(`Agent ${agent?.id} constructor ${process.env.PS_AI_MODEL_NAME}`);
         if (!this.agent &&
             (!process.env.PS_AGENT_MAX_MODEL_TOKENS_OUT ||
                 !process.env.PS_AGENT_MODEL_TEMPERATURE ||
@@ -42,7 +42,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
             throw new Error("Agent not found and required environment variables not set");
         }
         if (!this.skipAiModels) {
-            this.modelManager = new PsAiModelManager(agent.AiModels || [], agent
+            this.modelManager = new PsAiModelManager(agent?.AiModels || [], agent
                 ? agent.Group?.private_access_configuration || []
                 : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
@@ -63,7 +63,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         else {
             this.loadAgentMemoryFromRedis();
         }
-        this.configManager = new PsConfigManager(agent.configuration, this.memory);
+        this.configManager = new PsConfigManager(agent?.configuration, this.memory);
     }
     async process() {
         if (!this.memory) {
@@ -75,7 +75,11 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         // Subclasses would override this method to implement specific agent behaviors.
     }
     async loadAgentMemoryFromRedis() {
-        if (!this.agent.redisMemoryKey) {
+        if (!this.agent) {
+            this.logger.error("Agent not found");
+            return {};
+        }
+        else if (!this.agent.redisMemoryKey) {
             this.logger.error("Agent memory key not set");
             this.logger.error(JSON.stringify(this.agent, null, 2));
             throw new Error("Agent memory key not set");

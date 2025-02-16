@@ -2,11 +2,11 @@ import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
-import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
-import { sequelize } from "../dbModels/sequelize.js";
 import { encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
+let cachedPsModelUsage;
+let cachedSequelize;
 export class PsAiModelManager extends PolicySynthAgentBase {
     models = new Map();
     modelsByType = new Map();
@@ -43,7 +43,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 apiKey = process.env.ANTHROPIC_API_KEY;
                 break;
             case "google":
-                apiKey = process.env.GOOGLE_API_KEY;
+                apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
                 break;
             case "azure":
                 apiKey = process.env.AZURE_API_KEY;
@@ -350,7 +350,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         return null;
     }
     async saveTokenUsage(modelType, modelSize, tokensIn, tokensOut) {
-        this.logger.debug(`Saving token usage for model ${modelType} tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
+        // Check for disable usage flag via environment variable.
+        const disableUsageTracking = process.env.DISABLE_DB_USAGE_TRACKING === "true";
+        if (disableUsageTracking) {
+            this.logger.info(`(Usage Tracking Disabled) Skipping token usage update for model ${modelType} (${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`);
+            return;
+        }
+        // Keep this in: Ensure the model is initialized.
         const modelKey = `${modelType}_${modelSize}`;
         const model = this.models.get(modelKey);
         const modelId = this.modelIds.get(modelKey);
@@ -360,45 +366,45 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             this.logger.debug("Available modelIds:", Array.from(this.modelIds.keys()));
             throw new Error(`Model of type ${modelType} and size ${modelSize} not initialized`);
         }
-        this.logger.debug(`Model: ${model.modelName}`);
-        if (!this.agentId && process.env.PS_AI_MODEL_TYPE) {
-            console.log(`Token usage for model ${model.modelName}: tokensIn: ${tokensIn} tokensOut: ${tokensOut}`);
+        // Cache the dynamic import if not already cached.
+        if (!cachedPsModelUsage) {
+            const module = await import("../dbModels/modelUsage.js");
+            cachedPsModelUsage = module.PsModelUsage;
+            const { sequelize } = await import("../dbModels/sequelize.js");
+            cachedSequelize = sequelize;
         }
-        else {
-            try {
-                // Use a transaction to ensure data consistency
-                await sequelize.transaction(async (t) => {
-                    const [usage, created] = await PsModelUsage.findOrCreate({
-                        where: {
-                            model_id: modelId,
-                            agent_id: this.agentId,
-                        },
-                        defaults: {
-                            token_in_count: tokensIn,
-                            token_out_count: tokensOut,
-                            token_in_cached_context_count: 0,
-                            model_id: modelId,
-                            agent_id: this.agentId,
-                            user_id: this.userId,
-                        },
-                        transaction: t,
-                    });
-                    if (!created) {
-                        // Use increment to safely update the counters only if the record wasn't just created
-                        await usage.increment({
-                            token_in_count: tokensIn,
-                            token_out_count: tokensOut,
-                        }, { transaction: t });
-                    }
-                    this.logger.debug("Usage after update: ", usage.get({ plain: true }));
+        const PsModelUsage = cachedPsModelUsage;
+        const sequelize = cachedSequelize;
+        try {
+            await sequelize.transaction(async (t) => {
+                const [usage, created] = await PsModelUsage.findOrCreate({
+                    where: {
+                        model_id: modelId,
+                        agent_id: this.agentId,
+                    },
+                    defaults: {
+                        token_in_count: tokensIn,
+                        token_out_count: tokensOut,
+                        token_in_cached_context_count: 0,
+                        model_id: modelId,
+                        agent_id: this.agentId,
+                        user_id: this.userId,
+                    },
+                    transaction: t,
                 });
-                this.logger.info(`Token usage updated for agent ${this.agentId} and model ${model.modelName}`);
-            }
-            catch (error) {
-                this.logger.error("Error saving or updating token usage in database");
-                this.logger.error(error);
-                throw error;
-            }
+                if (!created) {
+                    await usage.increment({
+                        token_in_count: tokensIn,
+                        token_out_count: tokensOut,
+                    }, { transaction: t });
+                }
+            });
+            this.logger.info(`Token usage updated for agent ${this.agentId} and model ${model.modelName}`);
+        }
+        catch (error) {
+            this.logger.error("Error saving or updating token usage in database");
+            this.logger.error(error);
+            throw error;
         }
     }
     async getTokensFromMessages(messages) {
