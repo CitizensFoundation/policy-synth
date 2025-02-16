@@ -5,10 +5,11 @@ import { PsConnectorClassTypes } from "../../connectorTypes.js";
 import fs from "fs";
 import FormData from "form-data";
 import { EventEmitter } from "events";
+import path from "path";
 // Increase max event listeners to reduce the warning
 EventEmitter.defaultMaxListeners = 60;
-const MAX_CONNECTION_RETRIES = 10; // For ECONNREFUSED, ECONNRESET, etc.
-const MAX_5XX_RETRIES = 10; // For 5xx server errors
+const MAX_CONNECTION_RETRIES = 3; // For ECONNREFUSED, ECONNRESET, etc.
+const MAX_5XX_RETRIES = 3; // For 5xx server errors
 const RETRY_DELAY = 10000;
 const AI_IMAGE_GENERATION_TIMEOUT_MS = 2 * 60 * 1000; // 2 minutes
 /** Simple helper for waiting */
@@ -287,7 +288,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         if (imageLocalPath) {
             // If we have a local image path, upload it using the /api/images endpoint
             const imageForm = new FormData();
-            imageForm.append("file", fs.createReadStream(imageLocalPath), "image.png");
+            const filename = path.basename(imageLocalPath); // This will use the actual filename (e.g., "photo.jpg")
+            imageForm.append("file", fs.createReadStream(imageLocalPath), filename);
             try {
                 const imageUploadResponse = await requestWithRetry(() => axios.post(`${this.serverBaseUrl}/images${this.agentFabricUserId
                     ? `?agentFabricUserId=${this.agentFabricUserId}`

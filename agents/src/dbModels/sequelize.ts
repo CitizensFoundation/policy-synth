@@ -42,12 +42,12 @@ if (process.env.NODE_ENV === "production") {
   }
 } else {
   // For non-production environments
-  if (process.env.PSQL_DB_NAME) {
+  if (process.env.PSQL_DB_NAME || process.env.YP_DEV_DATABASE_NAME) {
     // Use individual environment variables if PSQL_DB_NAME is set
     sequelize = new Sequelize(
-      process.env.PSQL_DB_NAME!,
-      process.env.PSQL_DB_USER!,
-      process.env.PSQL_DB_PASS!,
+      process.env.PSQL_DB_NAME || process.env.YP_DEV_DATABASE_NAME!,
+      process.env.PSQL_DB_USER || process.env.YP_DEV_DATABASE_USERNAME!,
+      process.env.PSQL_DB_PASS || process.env.YP_DEV_DATABASE_PASSWORD!,
       {
         host: process.env.DB_HOST || "localhost",
         port: parseInt(process.env.DB_PORT!, 10) || 5432,
@@ -66,35 +66,7 @@ if (process.env.NODE_ENV === "production") {
       }
     );
   } else {
-    // Fall back to config file if PSQL_DB_NAME is not set
-    const configPath = join(
-      __dirname,
-      "..",
-      "..",
-      "..",
-      "..",
-      "ts-out",
-      "config",
-      "config.json"
-    );
-    const config = await import(configPath, { assert: { type: "json" } });
-    const dbConfig = config.default[env];
-
-    sequelize = new Sequelize(
-      dbConfig.database,
-      dbConfig.username,
-      dbConfig.password,
-      _.merge({}, dbConfig, {
-        dialect: "postgres", // Ensure dialect is always set
-        minifyAliases: true,
-        dialectOptions: {
-          ssl: false,
-          rejectUnauthorized: false,
-        },
-        logging: process.env.NODE_ENV !== "production" ? logQuery : false,
-        operatorsAliases: {} as any, // You might want to define this properly
-      })
-    );
+    console.error("NO DATABASE FOUND");
   }
 }
 

@@ -34,6 +34,11 @@ const initializeModels = async () => {
                 await models[modelName].associate(models);
             }
         }
+        if (process.env.FORCE_DB_SYNC || process.env.NODE_ENV === "development") {
+            sequelize.sync().then(async () => {
+                console.log("Policy Synth database synced successfully.");
+            });
+        }
         console.log("All models initialized successfully.");
     }
     catch (error) {
