@@ -3,6 +3,7 @@ import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
 import { v4 as uuidv4 } from "uuid";
 import ioredis from "ioredis";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 //TODO: Use tiktoken
 const WORDS_TO_TOKENS_MAGIC_CONSTANT = 1.3;
@@ -15,12 +16,18 @@ const redis = new ioredis.default(
 export class PsBaseChatBot {
   wsClientId: string;
   wsClientSocket: WebSocket;
-  openaiClient: OpenAI;
+
+  // New instance variable to choose the provider ("openai" or "gemini")
+  llmProvider: "openai" | "gemini";
+  openaiClient?: OpenAI;
+  geminiClient?: GoogleGenerativeAI;
+  geminiModel?: any;
+
   memory!: PsChatBotMemoryData;
   static redisMemoryKeyPrefix = "ps-chatbot-memory";
   tempeture = 0.7;
   maxTokens = 4000;
-  llmModel = "gpt-4o";
+  llmModel = "gpt-4o"; // Default OpenAI model (for OpenAI)
   persistMemory = false;
   memoryId: string | undefined = undefined;
 
@@ -31,24 +38,22 @@ export class PsBaseChatBot {
   }
 
   static loadMemoryFromRedis(memoryId: string) {
-    return new Promise<PsChatBotMemoryData | undefined>(
-      async (resolve, reject) => {
-        try {
-          const memoryString = await redis.get(
-            `${PsBaseChatBot.redisMemoryKeyPrefix}-${memoryId}`
-          );
-          if (memoryString) {
-            const memory = JSON.parse(memoryString);
-            resolve(memory);
-          } else {
-            resolve(undefined);
-          }
-        } catch (error) {
-          console.error("Can't load memory from redis", error);
+    return new Promise<PsChatBotMemoryData | undefined>(async (resolve, reject) => {
+      try {
+        const memoryString = await redis.get(
+          `${PsBaseChatBot.redisMemoryKeyPrefix}-${memoryId}`
+        );
+        if (memoryString) {
+          const memory = JSON.parse(memoryString);
+          resolve(memory);
+        } else {
           resolve(undefined);
         }
+      } catch (error) {
+        console.error("Can't load memory from redis", error);
+        resolve(undefined);
       }
-    );
+    });
   }
 
   loadMemory() {
@@ -68,16 +73,30 @@ export class PsBaseChatBot {
     });
   }
 
+  /**
+   * @param llmProvider Choose "openai" (default) or "gemini"
+   */
   constructor(
     wsClientId: string,
     wsClients: Map<string, WebSocket>,
-    memoryId: string | undefined = undefined
+    memoryId: string | undefined = undefined,
+    llmProvider: "openai" | "gemini" = "openai",
+    llmModel: string = "gpt-4o"
   ) {
     this.wsClientId = wsClientId;
     this.wsClientSocket = wsClients.get(this.wsClientId)!;
-    this.openaiClient = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    this.llmProvider = llmProvider;
+    this.llmModel = llmModel;
+    if (llmProvider === "openai") {
+      this.openaiClient = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    } else if (llmProvider === "gemini" && process.env.GEMINI_API_KEY) {
+      this.geminiClient = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+      this.geminiModel = this.geminiClient.getGenerativeModel({
+        model: "gemini-1.5-flash",
+      });
+    }
     if (!this.wsClientSocket) {
       console.error(
         `WS Client ${this.wsClientId} not found in streamWebSocketResponses`
@@ -256,40 +275,88 @@ export class PsBaseChatBot {
 
   async setChatLog(chatLog: PsSimpleChatLog[]) {
     this.memory.chatLog = chatLog;
-
     await this.saveMemoryIfNeeded();
   }
 
   conversation = async (chatLog: PsSimpleChatLog[]) => {
-    this.setChatLog(chatLog);
+    await this.setChatLog(chatLog);
 
-    let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
-      return {
-        role: message.sender,
-        content: message.message,
+    if (this.llmProvider === "openai") {
+      let messages: any[] = chatLog.map((message: PsSimpleChatLog) => {
+        return {
+          role: message.sender,
+          content: message.message,
+        };
+      });
+      const systemMessage = {
+        role: "system",
+        content: this.renderSystemPrompt(),
       };
-    });
-
-    const systemMessage = {
-      role: "system",
-      content: this.renderSystemPrompt(),
-    };
-
-    messages.unshift(systemMessage);
-
-    const stream = await this.openaiClient.chat.completions.create({
-      model: this.llmModel,
-      messages,
-      max_tokens: this.maxTokens,
-      temperature: this.tempeture,
-      stream: true,
-    });
-
-    this.streamWebSocketResponses(stream);
+      messages.unshift(systemMessage);
+      const stream = await this.openaiClient!.chat.completions.create({
+        model: this.llmModel,
+        messages,
+        max_tokens: this.maxTokens,
+        temperature: this.tempeture,
+        stream: true,
+      });
+      this.streamWebSocketResponses(stream);
+    } else if (this.llmProvider === "gemini") {
+      // Convert our chatLog into Gemini's chat history format.
+      let history = chatLog.map((message: PsSimpleChatLog) => {
+        return {
+          role: message.sender,
+          parts: [{ text: message.message }],
+        };
+      });
+      // Prepend a system message using our system prompt.
+      history.unshift({
+        role: "system",
+        parts: [{ text: this.renderSystemPrompt() }],
+      });
+      // Start a Gemini chat session with the history.
+      const chat = this.geminiModel!.startChat({ history });
+      // Assume the last message is the new user query.
+      const lastMessage = chatLog[chatLog.length - 1].message;
+      try {
+        const result = await chat.sendMessageStream(lastMessage);
+        (async () => {
+          let botMessage = "";
+          for await (const chunk of result.stream) {
+            const chunkText = chunk.text();
+            this.sendToClient("bot", chunkText);
+            botMessage += chunkText;
+          }
+          this.memory.chatLog!.push({
+            sender: "bot",
+            message: botMessage,
+          });
+          await this.saveMemoryIfNeeded();
+          this.sendToClient("bot", "", "end");
+        })().catch((error) => {
+          console.error(error);
+          this.sendToClient(
+            "bot",
+            "There has been an error, please retry",
+            "error"
+          );
+          this.sendToClient("bot", "", "end");
+        });
+      } catch (error) {
+        console.error(error);
+        this.sendToClient("bot", "There has been an error, please retry", "error");
+        this.sendToClient("bot", "", "end");
+      }
+    }
   };
 }
 
 interface PsChatBotMemoryData {
   redisKey: string;
   chatLog?: PsSimpleChatLog[];
+}
+
+interface PsSimpleChatLog {
+  sender: string;
+  message: string;
 }

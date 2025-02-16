@@ -1,10 +1,14 @@
 import { OpenAI } from "openai";
 import { Stream } from "openai/streaming.mjs";
 import WebSocket from "ws";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 export declare class PsBaseChatBot {
     wsClientId: string;
     wsClientSocket: WebSocket;
-    openaiClient: OpenAI;
+    llmProvider: "openai" | "gemini";
+    openaiClient?: OpenAI;
+    geminiClient?: GoogleGenerativeAI;
+    geminiModel?: any;
     memory: PsChatBotMemoryData;
     static redisMemoryKeyPrefix: string;
     tempeture: number;
@@ -16,7 +20,10 @@ export declare class PsBaseChatBot {
     get redisKey(): string;
     static loadMemoryFromRedis(memoryId: string): Promise<PsChatBotMemoryData | undefined>;
     loadMemory(): Promise<PsChatBotMemoryData>;
-    constructor(wsClientId: string, wsClients: Map<string, WebSocket>, memoryId?: string | undefined);
+    /**
+     * @param llmProvider Choose "openai" (default) or "gemini"
+     */
+    constructor(wsClientId: string, wsClients: Map<string, WebSocket>, memoryId?: string | undefined, llmProvider?: "openai" | "gemini", llmModel?: string);
     setupMemory(memoryId?: string | undefined): Promise<void>;
     getLoadedMemory(): Promise<PsChatBotMemoryData>;
     sendMemoryId(): void;
@@ -36,6 +43,10 @@ export declare class PsBaseChatBot {
 interface PsChatBotMemoryData {
     redisKey: string;
     chatLog?: PsSimpleChatLog[];
+}
+interface PsSimpleChatLog {
+    sender: string;
+    message: string;
 }
 export {};
 //# sourceMappingURL=baseChatBot.d.ts.map

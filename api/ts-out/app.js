@@ -10,7 +10,6 @@ import { dirname } from "path";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocketServer } from "ws";
 import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
-import { initializeModels } from "./models/index.js";
 export class PolicySynthApiApp {
     app;
     port;
@@ -71,8 +70,11 @@ export class PolicySynthApiApp {
         this.app.use("/solutions*", express.static(path.join(__dirname, "../../webApps/policy-synth/dist")));
     }
     async setupDb() {
-        await connectToDatabase();
-        await initializeModels();
+        if (!process.env.DISABLE_DB_INIT) {
+            const { initializeModels } = await import("./models/index.js");
+            await connectToDatabase();
+            await initializeModels();
+        }
     }
     initializeMiddlewares() {
         this.app.use(bodyParser.json());

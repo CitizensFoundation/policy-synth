@@ -11,7 +11,7 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import WebSocket, { WebSocketServer } from "ws";
 import { connectToDatabase } from "@policysynth/agents/dbModels/sequelize.js";
-import { initializeModels } from "./models/index.js";
+
 
 export class PolicySynthApiApp {
   public app: express.Application;
@@ -105,8 +105,11 @@ export class PolicySynthApiApp {
   }
 
   async setupDb() {
-    await connectToDatabase();
-    await initializeModels();
+    if (!process.env.DISABLE_DB_INIT) {
+      const { initializeModels } = await import("./models/index.js");
+      await connectToDatabase();
+      await initializeModels();
+    }
   }
 
   initializeMiddlewares() {
