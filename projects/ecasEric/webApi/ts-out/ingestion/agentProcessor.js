@@ -6,8 +6,10 @@ import { PsEcasYeaRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 export class EcasYayIngestionAgentProcessor extends BaseIngestionAgent {
     chunkAnalysisAgent;
     constructor() {
-        super();
-        this.chunkAnalysisAgent = new EcasYayChunkAnalyserAgent();
+        //@ts-ignore
+        super(undefined);
+        //@ts-ignore
+        this.chunkAnalysisAgent = new EcasYayChunkAnalyserAgent(undefined);
     }
     async getChunksFromXlsx(filePath) {
         // Convert filePath to absolute if not already
@@ -30,7 +32,7 @@ export class EcasYayIngestionAgentProcessor extends BaseIngestionAgent {
     async ingest(filePath = "src/ingestion/data/ecasYeaData.xlsx") {
         const chunks = await this.getChunksFromXlsx(filePath);
         for (const chunk of chunks) {
-            const vectoreStore = new PsEcasYeaRagChunkVectorStore();
+            const vectoreStore = new PsEcasYeaRagChunkVectorStore(undefined);
             await vectoreStore.postChunk(chunk);
         }
     }

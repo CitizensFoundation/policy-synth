@@ -37,7 +37,7 @@ interface PsRagRoutingResponse {
   userIsAskingForLatestContent: boolean;
   isAskingAboutOneSpecificDetail: string;
   isAskingAboutOneSpecificProject: string;
-  rewrittenUserQuestionVectorDatabaseSearch: string;
+  rewrittenUserQuestionForVectorDatabaseSearch: string;
 }
 
 // Add cache for first the response keyed on the data hashes

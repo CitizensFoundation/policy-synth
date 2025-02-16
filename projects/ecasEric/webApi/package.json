@@ -1,25 +1,22 @@
 {
-  "name": "rebooting-democracy-api",
+  "name": "ecas-eric",
   "version": "1.0.0",
-  "author": "Robert Bjarnason, Stephan Schmidt, Citizens Foundation & The GovLab",
+  "author": "ECAS, Robert Bjarnason, Citizens Foundation",
   "repository": {
     "type": "git",
-    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/sdk/projects/rebootingDemocracy/webApi"
+    "url": "https://github.com/CitizensFoundation/policy-synth/tree/main/sdk/projects/ecasEric/webApi"
   },
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.2.3",
-    "mammoth": "^1.7.0",
-    "puppeteer": "^22.4.0",
-    "xlsx": "^0.18.5"
+    "@policysynth/api": "^1.2.8"
   },
   "scripts": {
     "start": "nodemon -e ts ts-out/server.js",
     "watch-start": "tsc --project ./ --outDir ./ts-out -w & nodemon -q ./ts-out/server.js",
     "dev": "nodemon --config nodemon.json ./ts-out/server.js",
-    "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
-    "copyInLocalApi": "cp -R ../../../../api/ts-out/* ./node_modules/@policysynth/api/;cp ../../../../api/src/*.d.ts ./node_modules/@policysynth/api/;",
+    "copyInLocalAgents": "cp -R ../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
+    "copyInLocalApi": "cp -R ../../../api/ts-out/* ./node_modules/@policysynth/api/;cp ../../../api/src/*.d.ts ./node_modules/@policysynth/api/;",
     "copyInLocalDeps": "npm run copyInLocalAgents;npm run copyInLocalApi;",
     "createWeaviateRagDocument": "npm run build;cp -R src/vectorstore/schemas ts-out/vectorstore/;node ts-out/vectorstore/tools/createRagDocument.js",
     "createWeaviateRagChunk": "npm run build;cp -R src/vectorstore/schemas ts-out/vectorstore/;node ts-out/vectorstore/tools/createRagChunk.js",

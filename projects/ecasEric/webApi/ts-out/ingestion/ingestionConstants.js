@@ -12,27 +12,5 @@ const gpt35_RPM = 10000;
 const gpt4_TPM = 150000 * 3;
 const gpt4_RPM = 10000 * 3;
 export class PsIngestionConstants {
-    static ingestionMainModel = {
-        name: "gpt-4-0125-preview",
-        temperature: 0.0,
-        maxOutputTokens: 4095,
-        tokenLimit: gpt4TotalTokenLimit,
-        inTokenCostUSD: gpt4InTokenPrice,
-        outTokenCostUSD: gpt4OutTokenPrice,
-        limitTPM: gpt4_TPM,
-        limitRPM: gpt4_RPM,
-        verbose: true
-    };
-    static ingestionRankingModel = {
-        name: "gpt-4-0125-preview",
-        temperature: 0.0,
-        maxOutputTokens: 3,
-        tokenLimit: gpt4TotalTokenLimit,
-        inTokenCostUSD: gpt4InTokenPrice,
-        outTokenCostUSD: gpt4OutTokenPrice,
-        limitTPM: gpt4_TPM,
-        limitRPM: gpt4_RPM,
-        verbose: true
-    };
 }
 //# sourceMappingURL=ingestionConstants.js.map

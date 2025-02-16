@@ -1,10 +1,10 @@
 import weaviate from "weaviate-ts-client";
-import { PolicySynthScAgentBase } from "@policysynth/agents//baseAgent.js";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { PolicySynthStandaloneAgent } from "@policysynth/agents/base/agentStandalone.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export class PsEcasYeaRagChunkVectorStore extends PolicySynthScAgentBase {
+export class PsEcasYeaRagChunkVectorStore extends PolicySynthStandaloneAgent {
     static allFieldsToExtract = "question answer isEuWideOrCountrySpecific\
      _additional { id, distance, certainty }";
     static client = weaviate.client({

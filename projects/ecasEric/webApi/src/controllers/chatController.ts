@@ -12,7 +12,7 @@ export class ChatController extends BaseController {
   }
 
   public async initializeRoutes() {
-    this.router.put(this.path + "/", this.rebootDemocracyChat);
+    this.router.put(this.path + "/", this.ecasYeaConversation);
     this.router.get(this.path + "/:memoryId", this.getChatLog);
   }
 
@@ -27,7 +27,7 @@ export class ChatController extends BaseController {
         if (memory) {
           console.log(`memory loaded: ${JSON.stringify(memory, null, 2)}`)
           chatLog = memory.chatLog;
-          totalCosts = EcasYeaChatBot.getFullCostOfMemory(memory);
+          totalCosts = 0;//EcasYeaChatBot.getFullCostOfMemory(memory);
         } else {
           console.log(`memory not found for id ${memoryId}`)
         }
@@ -43,11 +43,13 @@ export class ChatController extends BaseController {
     }
   };
 
-  rebootDemocracyChat = async (req: express.Request, res: express.Response) => {
+  ecasYeaConversation = async (req: express.Request, res: express.Response) => {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
     const memoryId = req.body.memoryId;
     let saveChatLog: PsSimpleChatLog[] | undefined;
+
+    console.log(`ecasYeaConversation chatLog: ${JSON.stringify(chatLog, null, 2)}`);
 
     try {
       const bot = new EcasYeaChatBot(wsClientId, this.wsClients, memoryId);

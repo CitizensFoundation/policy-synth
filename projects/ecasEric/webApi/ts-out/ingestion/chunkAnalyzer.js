@@ -1,8 +1,7 @@
 import { BaseIngestionAgent } from "./baseAgent.js";
-import { PsIngestionConstants } from "./ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 export class EcasYayChunkAnalyserAgent extends BaseIngestionAgent {
-    analysisSystemMessage = new SystemMessage(`You are an expert EU question and answer analyizer.
+    analysisSystemMessage = this.createSystemMessage(`You are an expert EU question and answer analyizer.
 
 Instructions:
 - You will analyze the question answer pair to see if it is euWide or country specific.
@@ -13,15 +12,14 @@ Output:
   isEuWideOrCountrySpecific?: "euWide" | "countrySpecific" | "unknown";
 }
 `);
-    analysisUserMessage = (question, answer) => new HumanMessage(`Question and answer to analyze:
+    analysisUserMessage = (question, answer) => this.createHumanMessage(`Question and answer to analyze:
 Question: ${question}
 Answer: ${answer}
 Your analysis in JSON format:
 `);
     async analyze(question, answer) {
-        this.resetLlmTemperature();
         try {
-            const analyze = (await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.analysisSystemMessage, this.analysisUserMessage(question, answer))));
+            const analyze = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, this.getFirstMessages(this.analysisSystemMessage, this.analysisUserMessage(question, answer))));
             return analyze;
         }
         catch (error) {

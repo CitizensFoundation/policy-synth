@@ -5,21 +5,23 @@ import fetch from "node-fetch";
 import { HTTPResponse, Page, Browser } from "puppeteer";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
-import { PsConstants } from "@policysynth/agents/constants.js";
 import { BaseIngestionAgent } from "./baseAgent.js";
 import { EcasYayChunkAnalyserAgent } from "./chunkAnalyzer.js";
 
 import XLSX from "xlsx";
 import { PsEcasYeaRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 
+
 export class EcasYayIngestionAgentProcessor extends BaseIngestionAgent {
   chunkAnalysisAgent: EcasYayChunkAnalyserAgent;
 
   constructor() {
-    super();
 
-    this.chunkAnalysisAgent = new EcasYayChunkAnalyserAgent();
+    //@ts-ignore
+    super(undefined);
+
+    //@ts-ignore
+    this.chunkAnalysisAgent = new EcasYayChunkAnalyserAgent(undefined);
   }
 
   async getChunksFromXlsx(filePath: string) {
@@ -53,7 +55,7 @@ export class EcasYayIngestionAgentProcessor extends BaseIngestionAgent {
     const chunks = await this.getChunksFromXlsx(filePath);
 
     for (const chunk of chunks) {
-      const vectoreStore = new PsEcasYeaRagChunkVectorStore();
+      const vectoreStore = new PsEcasYeaRagChunkVectorStore(undefined);
       await vectoreStore.postChunk(chunk);
     }
   }

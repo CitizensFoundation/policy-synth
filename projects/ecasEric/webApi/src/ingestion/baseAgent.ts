@@ -1,34 +1,16 @@
 import path from "path";
 import crypto, { createHash } from "crypto";
-import { BaseMessage, SystemMessage } from "@langchain/core/messages";
-import { ChatOpenAI } from "@langchain/openai";
 
-import { PolicySynthScAgentBase } from "@policysynth/agents/baseAgent.js";
 import { PsIngestionConstants } from "./ingestionConstants.js";
+import { PolicySynthStandaloneAgent } from "@policysynth/agents/base/agentStandalone.js";
 
-export abstract class BaseIngestionAgent extends PolicySynthScAgentBase {
+export abstract class BaseIngestionAgent extends PolicySynthStandaloneAgent {
   minChunkTokenLength: number = 1000;
   maxChunkTokenLength: number = 3500;
   maxFileProcessTokenLength: number = 110000;
   roughFastWordTokenRatio: number = 1.25;
 
-  constructor() {
-    super();
-    this.chat = new ChatOpenAI({
-      temperature: PsIngestionConstants.ingestionMainModel.temperature,
-      maxTokens: PsIngestionConstants.ingestionMainModel.maxOutputTokens,
-      modelName: PsIngestionConstants.ingestionMainModel.name,
-      verbose: PsIngestionConstants.ingestionMainModel.verbose,
-    });
-  }
 
-  resetLlmTemperature() {
-    this.chat!.temperature = PsIngestionConstants.ingestionMainModel.temperature;
-  }
-
-  randomizeLlmTemperature() {
-    this.chat!.temperature = Math.random() * (0.55 - 0.01) + 0.01;
-  }
 
   logShortLines(text: string, maxLength = 50) {
     // Split the text into lines
@@ -173,8 +155,8 @@ export abstract class BaseIngestionAgent extends PolicySynthScAgentBase {
     return createHash("sha256").update(data).digest("hex");
   }
 
-  getFirstMessages(systemMessage: SystemMessage, userMessage: BaseMessage) {
-    return [systemMessage, userMessage] as BaseMessage[];
+  getFirstMessages(systemMessage: any, userMessage: any) {
+    return [systemMessage, userMessage] as any[];
   }
 
   getFileName(url: string, isJsonData: boolean): string {

@@ -1,13 +1,18 @@
-import { PsIngestionConstants } from "../ingestion/ingestionConstants.js";
-import { HumanMessage, SystemMessage } from "@langchain/core/messages";
-import { BaseIngestionAgent } from "../ingestion/baseAgent.js";
-export class PsRagRouter extends BaseIngestionAgent {
-    systemMessage = (chatHistory) => new SystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PolicySynthStandaloneAgent } from "@policysynth/agents/base/agentStandalone.js";
+export class PsRagRouter extends PolicySynthStandaloneAgent {
+    get modelTemperature() {
+        return 0.0;
+    }
+    get maxModelTokensOut() {
+        return 1000;
+    }
+    systemMessage = (chatHistory) => this.createSystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
 
 Instructions:
-- Always keep a track of what topic you are discussing with the user from your chat history and include that topic in the "rewrittenUserQuestionVectorDatabaseSearch" JSON field.
+- Always keep a track of what topic you are discussing with the user from your chat history and include that topic in the "rewrittenUserQuestionForVectorDatabaseSearch" JSON field.
 - Still allow the user to change the topic if they want to in a middle of the converstation, when it's clear and in that case do not include the old topic in the new user question.
-- Always rewrite the user question based on your conversation history with the user as needed for the best possible vector search query and include it in "rewrittenUserQuestionVectorDatabaseSearch" JSON field.
+- Always rewrite the user question based on your conversation history with the user as needed for the best possible vector search query and include it in "rewrittenUserQuestionForVectorDatabaseSearch" JSON field.
 
 Your conversation history with the user:
 ${chatHistory}
@@ -30,17 +35,49 @@ The EEA includes EU countries and also Iceland, Liechtenstein and Norway. It all
 
 Switzerland is not an EU or EEA member but is part of the single market. This means Swiss nationals have the same rights to live and work in the UK as other EEA nationals.
 
+Use this list of countries for countryUserIsAskingAbout field, if the country is not in the list, leave the field empty:
+[
+  "austria",
+  "belgium",
+  "croatia",
+  "cyprus",
+  "czech_republic",
+  "denmark",
+  "estonia",
+  "finland",
+  "france",
+  "germany",
+  "greece",
+  "hungary",
+  "ireland",
+  "italy",
+  "latvia",
+  "lithuania",
+  "luxembourg",
+  "malta",
+  "poland",
+  "portugal",
+  "romania",
+  "slovakia",
+  "slovenia",
+  "spain",
+  "sweden",
+  "the_netherlands"
+]
+
+
 JSON Output:
 {
-rewrittenUserQuestionVectorDatabaseSearch: string;
+rewrittenUserQuestionForVectorDatabaseSearch: string;
+countryUserIsAskingAbout?: string;
 }
 `);
-    userMessage = (question) => new HumanMessage(`<LATEST_QUESTION_FROM_USER>${question}</LATEST_QUESTION_FROM_USER>
+    userMessage = (question) => this.createHumanMessage(`<LATEST_QUESTION_FROM_USER>${question}</LATEST_QUESTION_FROM_USER>
 
 Your JSON classification:
 `);
     async getRoutingData(userQuestion, chatHistory) {
-        const routingInformation = await this.callLLM("ingestion-agent", PsIngestionConstants.ingestionMainModel, this.getFirstMessages(this.systemMessage(chatHistory), this.userMessage(userQuestion)));
+        const routingInformation = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, [this.systemMessage(chatHistory), this.userMessage(userQuestion)], true);
         console.log(`Routing information: ${JSON.stringify(routingInformation, null, 2)}`);
         return routingInformation;
     }
