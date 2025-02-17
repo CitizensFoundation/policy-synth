@@ -2,8 +2,8 @@ import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
 import WebSocket from "ws";
 export declare class EcasYeaChatBot extends PsBaseChatBot {
     persistMemory: boolean;
-    mainSreamingSystemPrompt: string;
-    mainStreamingUserPrompt: (latestQuestion: string, context: string, countryLinksInfo: string | undefined, euSignpostsInfo: string | undefined) => string;
+    mainSreamingSystemPrompt: (context: string) => string;
+    mainStreamingUserPrompt: (latestQuestion: string, countryLinksInfo: string | undefined, euSignpostsInfo: string | undefined) => string;
     searchContext?: {
         question: string;
         answer: string;

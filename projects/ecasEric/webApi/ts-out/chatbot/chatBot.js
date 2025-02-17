@@ -8,10 +8,9 @@ const aiModel = "gemini-2.0-pro-exp-02-05";
 export class EcasYeaChatBot extends PsBaseChatBot {
     // Enable persistence
     persistMemory = true;
-    mainSreamingSystemPrompt = `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) – a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
+    mainSreamingSystemPrompt = (context) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) – a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
 
-About this project:
-
+  <ABOUT_THIS_PROJECT>
 Q&A on the theme: EU Residence right of third country nationals who are EU citizen’s family members including the following 5 subtopics:
 - The notion of family member
 - Conditions of the right to stay
@@ -20,17 +19,26 @@ Q&A on the theme: EU Residence right of third country nationals who are EU citiz
 - Equal treatment
 
 The questions in your context are not classified by sub-topic, as questions can (and often do in YEA) cover several sub-topics. They are therefore classified by type of question: legal information, legal advice and legal assistance.
+</ABOUT_THIS_PROJECT>
 
+<BASIC_INFORMATION_ABOUT_EU_COUNTRIES>
 The EU countries are:
 Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Poland, Portugal, Romania, Slovakia, Slovenia, Spain and Sweden.
+</BASIC_INFORMATION_ABOUT_EU_COUNTRIES>
 
+<BASIC_INFORMATION_ABOUT_EU_ECONOMIC_AREA>
 The European Economic Area (EEA):
 The EEA includes EU countries and also Iceland, Liechtenstein and Norway. It allows them to be part of the EU’s single market.
 
 Switzerland is not an EU or EEA member but is part of the single market. This means Swiss nationals have the same rights to live and work in the UK as other EEA nationals.
+</BASIC_INFORMATION_ABOUT_EU_ECONOMIC_AREA>
 
-Instructions:
-- The user will ask a question and we have provided a <CONTEXT_TO_ANSWER_USERS_QUESTION_FROM/>, to provide a thoughtful answer from.
+<QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+${context}
+</QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+
+<IMPORTANT_INSTRUCTIONS>
+- The user will ask a question and we have provided a <QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>, to provide a thoughtful answer from, do not reference those directly as the user will not see them.
 - If not enough information is available, you can ask the user for more information.
 - Never provide information that is not backed by your context.
 - Look carefully at all the question and answers in your context before you present your answer to the user.
@@ -42,14 +50,11 @@ Instructions:
 - Use markdown to format your answers, always use formatting so the response comes alive to the user.
 - If relevant external links are in your context always show those to the user but never show the user links not in the text.
 - Use simple language not legal language.
-- Show the user useful links to the EU websites and other useful links.
+- Show the user useful links in correct markdown format.
 - Refuse politely to answer questions that are not in your context and that are not on the topic of EU Residence right of third country nationals who are EU citizen’s family member.
+</IMPORTANT_INSTRUCTIONS>
 `;
-    mainStreamingUserPrompt = (latestQuestion, context, countryLinksInfo, euSignpostsInfo) => `<CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
-${context}
-</CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
-
-${euSignpostsInfo
+    mainStreamingUserPrompt = (latestQuestion, countryLinksInfo, euSignpostsInfo) => `${euSignpostsInfo
         ? `<POSSIBLY_RELEVANT_EU_SIGNPOSTS_INFO>
 ${euSignpostsInfo}
 </POSSIBLY_RELEVANT_EU_SIGNPOSTS_INFO>`
@@ -74,7 +79,7 @@ Your thoughtful answer in markdown:
         if (this.geminiClient) {
             this.geminiModel = this.geminiClient.getGenerativeModel({
                 model: aiModel,
-                systemInstruction: this.mainSreamingSystemPrompt,
+                systemInstruction: this.mainSreamingSystemPrompt(JSON.stringify(this.searchContext, null, 2)),
             });
         }
         this.setupSearchContext();
@@ -118,7 +123,7 @@ Your thoughtful answer in markdown:
         const chunks = rows
             .filter(([question, answer]) => question && answer) // Checks if both question and answer are not empty or undefined
             .map(([question, answer]) => ({ question, answer }));
-        console.log(JSON.stringify(chunks, null, 2));
+        //console.log(JSON.stringify(chunks, null, 2));
         return chunks;
     }
     async loadCountryLinksInfo(country) {
@@ -166,7 +171,7 @@ Your thoughtful answer in markdown:
         console.log("In ECAS YEA conversation");
         const finalUserQuestionText = userLastMessage;
         // Build the user prompt using the custom user prompt template.
-        const userPrompt = this.mainStreamingUserPrompt(finalUserQuestionText, JSON.stringify(this.searchContext, null, 2), countryLinksInfo, euSignpostsInfo);
+        const userPrompt = this.mainStreamingUserPrompt(finalUserQuestionText, countryLinksInfo, euSignpostsInfo);
         console.log(`userPrompt: ${userPrompt}`);
         // Build Gemini chat history from previous messages.
         // Convert "bot" sender to "model" and "user" remains "user".
