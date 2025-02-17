@@ -5,7 +5,7 @@ import path from "path";
 import XLSX from "xlsx";
 import fs from "fs/promises";
 
-const aiModel = "gemini-2.0-pro-exp-02-05";
+const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.0-pro-exp-02-05";
 //const aiModel = "gemini-2.0-flash";
 
 export class EcasYeaChatBot extends PsBaseChatBot {

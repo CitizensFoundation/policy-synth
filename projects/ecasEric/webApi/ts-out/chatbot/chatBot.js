@@ -3,12 +3,12 @@ import { PsRagRouter } from "./router.js";
 import path from "path";
 import XLSX from "xlsx";
 import fs from "fs/promises";
-const aiModel = "gemini-2.0-pro-exp-02-05";
+const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.0-pro-exp-02-05";
 //const aiModel = "gemini-2.0-flash";
 export class EcasYeaChatBot extends PsBaseChatBot {
     // Enable persistence
     persistMemory = true;
-    mainSreamingSystemPrompt = (context) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) – a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
+    mainSreamingSystemPrompt = (context) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) - a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
 
   <ABOUT_THIS_PROJECT>
 Q&A on the theme: EU Residence right of third country nationals who are EU citizen’s family members including the following 5 subtopics:
@@ -74,7 +74,6 @@ Your thoughtful answer in markdown:
 `;
     searchContext;
     constructor(wsClientId, wsClients, memoryId) {
-        // Force Gemini as the provider by passing "gemini" to the base class
         super(wsClientId, wsClients, memoryId, "gemini", aiModel);
         if (this.geminiClient) {
             this.geminiModel = this.geminiClient.getGenerativeModel({
