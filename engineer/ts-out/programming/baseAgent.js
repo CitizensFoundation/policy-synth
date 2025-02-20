@@ -1,9 +1,8 @@
 import fs from "fs";
 import { PsEngineerAgentBase } from "../agentBase.js";
-/**
- * Extend PolicySynthAgent instead of the older PolicySynthScAgentBase,
- * but keep all your existing functionality and method logic.
- */
+/* ------------------------------------------------------------------------
+   Base Programming Agent
+------------------------------------------------------------------------- */
 export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
     documentationFilesInContextContent;
     currentFileContents;
@@ -36,6 +35,66 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
         this.likelyToChangeFilesContents = likelyToChangeFilesContents;
         this.tsMorphProject = tsMorphProject;
     }
+    /**
+     * A concise set of global constraints and guidelines that apply to all prompts.
+     */
+    renderGlobalConstraints() {
+        return `<GlobalConstraints>
+1. Only create or modify TypeScript (.ts) files. No other file types.
+2. Never generate documentation tasks, those are handled separately.
+3. Keep changes minimal and targeted to known errors or explicit tasks.
+4. Never import .d.ts types; they are automatically accessible.
+</GlobalConstraints>`;
+    }
+    /**
+     * Additional coding guidelines that also appear in the original code.
+     */
+    renderCodingRules() {
+        return `<ImportantCodingRulesForYourCodeGeneration>
+      Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
+      Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
+      Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
+      Avoid using the typescript definition "any", use Typescript types wherever possible.
+      Change the code as little as possible, use existing code and functions whenever possible.
+      Always output the full new or changed typescript file, if you are changing a file do not leave anything out from the original file, otherwise code will get lost.
+    </ImportantCodingRulesForYourCodeGeneration>`;
+    }
+    /**
+     * Success Criteria for different phases of the conversation:
+     *   - plan: A bullet-point plan (no actual code).
+     *   - review: Checking the plan for correctness or needed fixes.
+     *   - actionPlan: Output a JSON array specifying file changes.
+     *   - actionReview: Checking the action plan for correctness or needed fixes.
+     */
+    renderSuccessCriteria(context) {
+        if (context === "plan") {
+            return `<SuccessCriteria>
+1. Provide a concise bullet-point plan for required changes.
+2. Do not include actual code—only a high-level approach.
+3. Focus on any known errors if relevant, do not fix unrelated items.
+</SuccessCriteria>`;
+        }
+        else if (context === "review") {
+            return `<SuccessCriteria>
+1. Check if the plan addresses known errors and follows global constraints.
+2. Output "Coding plan looks good" if acceptable, or provide brief corrections otherwise.
+</SuccessCriteria>`;
+        }
+        else if (context === "actionPlan") {
+            return `<SuccessCriteria>
+1. Output a JSON array specifying the changes (add, change, or delete).
+2. Summarize the plan tasks in each item (codingTaskTitle, codingTaskSteps).
+3. Keep changes minimal and address only known errors or explicit tasks.
+</SuccessCriteria>`;
+        }
+        else if (context === "actionReview") {
+            return `<SuccessCriteria>
+1. Output "Action plan looks good" if it meets constraints, or provide corrections otherwise.
+2. Double-check it addresses known errors and matches the final plan.
+</SuccessCriteria>`;
+        }
+        return `<SuccessCriteria></SuccessCriteria>`;
+    }
     updateMemoryWithFileContents(fileName, content) {
         if (!this.memory.currentTask) {
             this.memory.currentTask = { filesCompleted: [] };
@@ -61,16 +120,6 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
                 ...lastThreeFiles,
             ];
         }
-    }
-    renderCodingRules() {
-        return `<ImportantCodingRulesForYourCodeGeneration>
-      Always export all classes at the front of the file like "export class" or "export abstract class", never at the bottom of the file.
-      Never generate import statements in TypeScript declaration files (*.d.ts) — types there are global by default.
-      Never generate export statements for interfaces in TypeScript declaration files (*.d.ts files).
-      Avoid using the typescript defintion "any", use Typescript types whereever possible.
-      Change the code as little as possible, use existing code and functions whenever possible.
-      Always output the full new or changed typescript file, if you are changing a file do not leave anything out from the original file, otherwise code will get lost.
-    </ImportantCodingRulesForYourCodeGeneration>`;
     }
     setOriginalFileIfNeeded(fileName, content) {
         if (!this.memory.currentTask) {
@@ -117,7 +166,8 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
             ? `${originalPlan
                 ? `<YourOriginalPlan>${originalPlan}</YourOriginalPlan>`
                 : ``}
-        ${this.renderOriginalFiles()}\n<CurrentErrorsToFixInYourPlan>${this.currentErrors}</CurrentErrorsToFixInYourPlan>`
+        ${this.renderOriginalFiles()}
+        <CurrentErrorsToFixInYourPlan>${this.currentErrors}</CurrentErrorsToFixInYourPlan>`
             : ``}${this.previousCurrentErrors
             ? `\n<PreviousErrorsYouWereTryingToFix>${this.previousCurrentErrors}</PreviousErrorsYouWereTryingToFix>`
             : ``}`;
@@ -135,7 +185,8 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
             this.memory.currentTask.filesCompleted.length > 0) {
             hasCompletedFiles = true;
         }
-        return `${false && hasContextFromSearch //TODO: Make examples work the other way
+        return `
+      ${hasContextFromSearch && false // historically set to false
             ? `<ContextFromOnlineSearch>${this.memory.exampleContextItems &&
                 this.memory.exampleContextItems.length > 0
                 ? `Potentially relevant code examples from web search:
@@ -163,11 +214,9 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
             ? `${this.codeFilesToKeepInContextContent}`
             : ``}
 
-
       ${this.memory.existingTypeScriptFilesLikelyToChange && !limited
             ? `<TypescriptFilesThatCouldChangeIfNeeded>${this.memory.existingTypeScriptFilesLikelyToChange.join("\n")}</TypescriptFilesThatCouldChangeIfNeeded>`
             : ""}
-
 
       ${!hasCompletedFiles && !limited
             ? ` ${this.likelyToChangeFilesContents || ""}`
@@ -226,7 +275,7 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
             .map((result) => {
             const fileContent = this.loadFileContents(result.filePath);
             if (fileContent) {
-                return `<${xmlTagName} filename="${result.filePath}">\n
+                return `<${xmlTagName} filename="${result.filePath}">
             <AnalysisOnHowItMightBeRelevant>${result.detailedCodeAnalysisForRelevanceToTask}</AnalysisOnHowItMightBeRelevant>
             <Code>${fileContent}</Code>
           </${xmlTagName}>`;

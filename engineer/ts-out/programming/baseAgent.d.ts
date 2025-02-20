@@ -1,10 +1,6 @@
 import { Project } from "ts-morph";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsEngineerAgentBase } from "../agentBase.js";
-/**
- * Extend PolicySynthAgent instead of the older PolicySynthScAgentBase,
- * but keep all your existing functionality and method logic.
- */
 export declare abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
     memory: PsEngineerMemoryData;
     documentationFilesInContextContent: string | undefined | null;
@@ -29,8 +25,23 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PsEngineerA
         likelyToChangeFilesContents?: string | null;
         tsMorphProject?: Project;
     });
-    updateMemoryWithFileContents(fileName: string, content: string): void;
+    /**
+     * A concise set of global constraints and guidelines that apply to all prompts.
+     */
+    renderGlobalConstraints(): string;
+    /**
+     * Additional coding guidelines that also appear in the original code.
+     */
     renderCodingRules(): string;
+    /**
+     * Success Criteria for different phases of the conversation:
+     *   - plan: A bullet-point plan (no actual code).
+     *   - review: Checking the plan for correctness or needed fixes.
+     *   - actionPlan: Output a JSON array specifying file changes.
+     *   - actionReview: Checking the action plan for correctness or needed fixes.
+     */
+    renderSuccessCriteria(context: "plan" | "review" | "actionPlan" | "actionReview"): string;
+    updateMemoryWithFileContents(fileName: string, content: string): void;
     setOriginalFileIfNeeded(fileName: string, content: string): void;
     getCompletedFileContent(): string | string[];
     setCurrentErrors(errors: string | undefined): void;

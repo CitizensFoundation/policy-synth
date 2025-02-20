@@ -243,8 +243,8 @@ You are a specialized coding assistant.
 Given the XML formatted initial text reviews for files, produce a JSON array of objects.
 Each object must have:
   "filePath": string (taken from the fileName),
-  "relevantFor": "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant",
   "detailedCodeAnalysisForRelevanceToTask": string.
+  "relevantFor": "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant"
 Only include files that are relevant (i.e. where the Analysis is not "Not relevant").
 </ImportantInstructions>
 
@@ -252,8 +252,8 @@ Only include files that are relevant (i.e. where the Analysis is not "Not releva
 [
   {
     filePath: string;
-    relevantFor: "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant";
     detailedCodeAnalysisForRelevanceToTask: string;
+    relevantFor: "likelyToChangeToImplementTask" | "goodReferenceCodeForTask" | "goodReferenceTypeDefinition" | "goodReferenceDocumentation" | "notRelevant";
   }
 ]
 </OutputFormat>
