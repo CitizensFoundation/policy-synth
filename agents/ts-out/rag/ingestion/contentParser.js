@@ -1,7 +1,8 @@
 import { PdfReader } from "pdfreader";
 import { htmlToText } from "html-to-text";
 import mammoth from "mammoth";
-import * as XLSX from "xlsx";
+//TODO: Has a high severity vulnerability 20.2.25
+//import * as XLSX from "xlsx";
 import fs from "fs/promises";
 import path from "path";
 export class IngestionContentParser {
@@ -38,13 +39,14 @@ export class IngestionContentParser {
         return result.value;
     }
     parseXls(filePath) {
-        const workbook = XLSX.readFile(filePath);
+        /*const workbook = XLSX.readFile(filePath);
         let text = '';
         workbook.SheetNames.forEach(sheetName => {
-            const sheet = workbook.Sheets[sheetName];
-            text += XLSX.utils.sheet_to_txt(sheet);
+          const sheet = workbook.Sheets[sheetName];
+          text += XLSX.utils.sheet_to_txt(sheet);
         });
-        return text;
+        return text;*/
+        return '';
     }
     // Example method to determine file type and call appropriate parser
     async parseFile(filePath) {
@@ -58,9 +60,9 @@ export class IngestionContentParser {
                 return this.parseHtml(htmlText);
             case '.docx':
                 return this.parseDocx(filePath);
-            case '.xls':
+            /*case '.xls':
             case '.xlsx':
-                return this.parseXls(filePath);
+              return this.parseXls(filePath);*/
             case '.txt':
             case '.json':
             case '.md':
