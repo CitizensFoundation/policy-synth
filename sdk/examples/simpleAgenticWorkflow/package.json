@@ -8,7 +8,6 @@
     "typescript": "^5.7.3"
   },
   "scripts": {
-    "copyInLocalAgents": "cp -R /home/robert/ps/agents/ts-out/* ./node_modules/@policysynth/agents/;cp /home/robert/ps/agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
     "build": "tsc --project ./ --outDir ./ts-out"
   }
 }
