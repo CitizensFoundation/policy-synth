@@ -351,12 +351,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
      */
     async pauseAllWorkersGracefully() {
         this.logger.info(`Pausing all workers for queue "${this.agentQueueName}"`);
-        for (const worker of this.workers) {
-            // This call ensures:
-            // 1) No new jobs are picked up.
-            // 2) We wait for any in-flight jobs to complete before the promise resolves.
-            await worker.pause(true);
-        }
+        await Promise.all(this.workers.map((worker) => worker.pause(true)));
         this.logger.info(`All workers in queue "${this.agentQueueName}" are paused and have finished in-flight jobs.`);
     }
 }

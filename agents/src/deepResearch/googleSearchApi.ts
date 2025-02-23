@@ -1,6 +1,42 @@
 import axios from "axios";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function googleRequestWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+  let attempt = 1;
+  const maxAttempts = 30;
+
+  // initial backoff in seconds
+  let backoffSec = 1;
+  // maximum wait: 60s
+  const maxBackoffSec = 60;
+
+  while (attempt <= maxAttempts) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (axios.isAxiosError(error) && error.response?.status === 429) {
+        console.warn(
+          `Got 429 on attempt #${attempt}. Will back off for ${backoffSec}s, then retry.`
+        );
+        await sleep(backoffSec * 1000);
+        backoffSec = Math.min(backoffSec * 2, maxBackoffSec);
+        attempt++;
+        continue;
+      }
+
+      // For other errors, throw immediately
+      throw error;
+    }
+  }
+  throw new Error(
+    `Exceeded ${maxAttempts} retries after 429 responses. Aborting.`
+  );
+}
+
 export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
   needsAiModel = false;
 
@@ -28,30 +64,31 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
       }&num=${resultsToFetch}&start=${startIndex}`;
 
       try {
-        const response = await axios.get(url);
+        // Use our custom requestWithRetry wrapper
+        const response = await googleRequestWithRetry(() => axios.get(url));
         const results = response.data.items;
 
         if (results && results.length > 0) {
-          for (let i = 0; i < results.length; i++) {
-            const date = results[i].pagemap?.metatags?.[0]?.date;
+          for (const item of results) {
+            const date = item?.pagemap?.metatags?.[0]?.date;
             let isoDate = "";
+
             if (date) {
               try {
                 isoDate = new Date(date).toISOString();
               } catch (error) {
-                console.error(
-                  `Error converting date ${date} to ISO string:`,
-                  error
-                );
+                console.error(`Error converting date ${date} to ISO string:`, error);
               }
             }
+
             const entry = {
               originalPosition: outResults.length + 1,
-              title: results[i].title,
-              url: results[i].link,
-              description: results[i].snippet,
+              title: item.title,
+              url: item.link,
+              description: item.snippet,
               date: isoDate,
             };
+
             outResults.push(entry);
             console.log(JSON.stringify(entry, null, 2));
 
@@ -76,22 +113,4 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
 
     return outResults;
   }
-}
-
-// TEST_GOOGLE_SEARCH=true GOOGLE_SEARCH_API_KEY= GOOGLE_SEARCH_API_CX_ID= node src/dist/agents/solutions/web/googleSearchApi.js
-if (process.env.TEST_GOOGLE_SEARCH) {
-  async function test() {
-    const googleSearchApi = new GoogleSearchApi();
-    try {
-      const results = await googleSearchApi.search(
-        "liberal democracies: issues and solutions",
-        20
-      );
-      console.log("Search results:", results);
-      process.exit(0);
-    } catch (error) {
-      console.error("Test failed:", error);
-    }
-  }
-  test();
 }
