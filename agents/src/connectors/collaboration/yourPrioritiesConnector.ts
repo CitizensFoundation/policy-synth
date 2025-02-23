@@ -266,7 +266,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     const statusFilter = "open";
 
     while (isMorePosts) {
-      let url = `${this.serverBaseUrl}/groups/${groupId}/posts/${filter}/${categoryId}/${statusFilter}?offset=${offset}`;
+      let url = `${this.serverBaseUrl}/groups/${groupId}/posts/${filter}/${categoryId}/${statusFilter}?offset=${offset}&skipModerationForAgentFabric=true`;
 
       if (this.agentFabricUserId) {
         url += `&agentFabricUserId=${this.agentFabricUserId}`;
