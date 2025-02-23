@@ -8,9 +8,6 @@ export interface PsAgentStartJobData {
     action: "start" | "stop" | "pause";
     structuredAnswersOverrides?: Array<any>;
 }
-/**
- * Abstract queue that can hold multiple agent implementations
- */
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
     protected agentsMap: Map<number, PsAgent>;
     protected agentInstancesMap: Map<number, PolicySynthAgent>;

@@ -18,9 +18,6 @@ export interface PsAgentStartJobData {
   structuredAnswersOverrides?: Array<any>;
 }
 
-/**
- * Abstract queue that can hold multiple agent implementations
- */
 export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
   // Instead of single references, we keep them in maps keyed by agentId
   protected agentsMap: Map<number, PsAgent> = new Map();
@@ -58,6 +55,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       process.env.REDIS_AGENT_URL ||
       process.env.REDIS_URL ||
       "redis://localhost:6379";
+
     // Handle 'redis://h:' case if needed
     if (redisUrl.startsWith("redis://h:")) {
       redisUrl = redisUrl.replace("redis://h:", "redis://:");
@@ -297,104 +295,113 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
 
   async setupAgentQueue() {
     if (this.agentQueueName) {
-      console.log(`Setting up worker for agentQueue ${this.agentQueueName}`);
+      console.log(`Setting up workers for agentQueue ${this.agentQueueName}`);
 
-      // Create a new worker
-      const worker = new Worker(
-        this.agentQueueName,
-        async (job: Job) => {
-          try {
-            console.log(
-              `Processing job ${job.id} for agentQueue ${this.agentQueueName}`
-            );
-            const data = job.data as PsAgentStartJobData;
-            const { agentId, action, structuredAnswersOverrides } = data;
-
-            // 1) Ensure PsAgent is loaded
-            const loadedAgent = await this.getOrCreatePsAgent(agentId);
-
-            // 2) Load memory
-            const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
-            if (structuredAnswersOverrides) {
-              this.structuredAnswersOverrides = structuredAnswersOverrides;
-              agentMemory.structuredAnswersOverrides =
-                structuredAnswersOverrides;
-            }
-
-            // 3) Subclass-specific memory setup
-            await this.setupMemoryIfNeeded(agentId);
-            console.log(
-              `${action} agent ${loadedAgent.id} with structured answers overrides:`,
-              JSON.stringify(structuredAnswersOverrides)
-            );
-
-            // 4) Setup status
-            await this.setupStatusIfNeeded(agentId);
-
-            // 5) Dispatch action
-            switch (action) {
-              case "start":
-                this.logger.info(`Starting agent ${agentId}`);
-                await this.updateAgentStatus(agentId, "running");
-                await this.processAllAgents(agentId);
-                break;
-              case "stop":
-                this.logger.info(`Stopping agent ${agentId}`);
-                await this.updateAgentStatus(agentId, "stopped");
-                throw new Error("StoppedByUser");
-              case "pause":
-                this.logger.info(`Pausing agent ${agentId}`);
-                await this.updateAgentStatus(agentId, "paused");
-                break;
-              default:
-                throw new Error(`Unknown action ${action} for job ${job.id}`);
-            }
-          } catch (error) {
-            console.error(
-              `Error processing job ${job.id} for agentQueue ${this.agentQueueName}`,
-              error
-            );
-            throw error;
-          }
-        },
-        {
-          connection: this.redisClient,
-          concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "20"),
-          maxStalledCount: 0,
-        }
+      // Number of Worker instances to spawn
+      const concurrencyCount = parseInt(
+        process.env.PS_AGENTS_CONCURRENCY || "20"
       );
 
-      // Keep a reference to this worker
-      this.workers.push(worker);
+      for (let i = 0; i < concurrencyCount; i++) {
+        const worker = new Worker(
+          this.agentQueueName,
+          async (job: Job) => {
+            try {
+              console.log(
+                `Processing job ${job.id} on worker #${i} for queue ${this.agentQueueName}`
+              );
+              const data = job.data as PsAgentStartJobData;
+              const { agentId, action, structuredAnswersOverrides } = data;
 
-      // Optional event handlers
-      worker.on("completed", (job: Job) => {
-        this.logger.info(
-          `Job ${job.id} has completed for queue ${this.agentQueueName}`
+              // 1) Ensure PsAgent is loaded
+              const loadedAgent = await this.getOrCreatePsAgent(agentId);
+
+              // 2) Load memory
+              const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
+              if (structuredAnswersOverrides) {
+                this.structuredAnswersOverrides = structuredAnswersOverrides;
+                agentMemory.structuredAnswersOverrides =
+                  structuredAnswersOverrides;
+              }
+
+              // 3) Subclass-specific memory setup
+              await this.setupMemoryIfNeeded(agentId);
+              console.log(
+                `${action} agent ${loadedAgent.id} with structured answers overrides:`,
+                JSON.stringify(structuredAnswersOverrides)
+              );
+
+              // 4) Setup status
+              await this.setupStatusIfNeeded(agentId);
+
+              // 5) Dispatch action
+              switch (action) {
+                case "start":
+                  this.logger.info(`Starting agent ${agentId}`);
+                  await this.updateAgentStatus(agentId, "running");
+                  await this.processAllAgents(agentId);
+                  break;
+                case "stop":
+                  this.logger.info(`Stopping agent ${agentId}`);
+                  await this.updateAgentStatus(agentId, "stopped");
+                  throw new Error("StoppedByUser");
+                case "pause":
+                  this.logger.info(`Pausing agent ${agentId}`);
+                  await this.updateAgentStatus(agentId, "paused");
+                  break;
+                default:
+                  throw new Error(`Unknown action ${action} for job ${job.id}`);
+              }
+            } catch (error) {
+              console.error(
+                `Error processing job ${job.id} for queue ${this.agentQueueName}`,
+                error
+              );
+              throw error;
+            }
+          },
+          {
+            // Each worker processes one job at a time
+            concurrency: 1,
+            connection: this.redisClient,
+            maxStalledCount: 0,
+          }
         );
-      });
-      worker.on("failed", (job: Job | undefined, err: Error) => {
-        this.logger.error(
-          `Job ${job?.id || "unknown"} failed for ${this.agentQueueName}`,
-          err
-        );
-      });
-      worker.on("error", (err: Error) => {
-        this.logger.error(
-          `An error occurred in the worker for ${this.agentQueueName}`,
-          err
-        );
-      });
-      worker.on("active", (job: Job) => {
-        this.logger.info(
-          `Job ${job.id} started processing for ${this.agentQueueName}`
-        );
-      });
-      worker.on("stalled", (jobId: string) => {
-        this.logger.warn(
-          `Job ${jobId} has been stalled for ${this.agentQueueName}`
-        );
-      });
+
+        // Keep a reference to this worker
+        this.workers.push(worker);
+
+        // Optional event handlers
+        worker.on("completed", (job: Job) => {
+          this.logger.info(
+            `Job ${job.id} has completed on worker #${i} for queue ${this.agentQueueName}`
+          );
+        });
+        worker.on("failed", (job: Job | undefined, err: Error) => {
+          this.logger.error(
+            `Job ${job?.id || "unknown"} failed on worker #${i} for queue ${
+              this.agentQueueName
+            }`,
+            err
+          );
+        });
+        worker.on("error", (err: Error) => {
+          this.logger.error(
+            `An error occurred in worker #${i} for queue ${this.agentQueueName}`,
+            err
+          );
+        });
+        worker.on("active", (job: Job) => {
+          this.logger.info(
+            `Job ${job.id} started on worker #${i} for queue ${this.agentQueueName}`
+          );
+        });
+        worker.on("stalled", (jobId: string) => {
+          this.logger.warn(
+            `Job ${jobId} has been stalled on worker #${i} for queue ${this.agentQueueName}`
+          );
+        });
+      }
 
       // Optional: queueEvents for global monitoring
       const queueEvents = new QueueEvents(this.agentQueueName, {
@@ -421,7 +428,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       });
 
       this.logger.info(
-        `Worker set up successfully for agentQueue ${this.agentQueueName}`
+        `Successfully set up ${concurrencyCount} workers for agentQueue ${this.agentQueueName}`
       );
     } else {
       this.logger.error("Top level agent queue name not set");
