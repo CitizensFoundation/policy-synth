@@ -17,7 +17,7 @@ export declare class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     /**
      * Processes a single job description, using config toggles for each step.
      */
-    private processJobDescription;
+    processJobDescription(jobDescription: JobDescription, processCounter: number, totalProcesses: number): Promise<void>;
     /**
      * Selects a subset of job descriptions at random.
      */

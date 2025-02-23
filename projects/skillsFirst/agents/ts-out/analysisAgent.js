@@ -18,9 +18,6 @@ import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistency.js";
 import { ReadabilityFleshKncaidJobDescriptionAgent } from "./reviewAgents/readabilityAnalysisFleshKncaid.js";
 import { ReadingLevelAnalysisAgent } from "./reviewAgents/readingLevelAnalysis.js";
 import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
-// ------------------
-// Type Definitions
-// ------------------
 /**
  * The main agent class for analyzing job descriptions.
  * Reads configuration using `this.getConfig(...)` for toggles and numeric settings.

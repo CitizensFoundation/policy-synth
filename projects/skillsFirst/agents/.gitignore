@@ -9,7 +9,7 @@ src/first_test_memory_validate_241009.json
 src/countCat.py
 src/addOCtoTitleJSON.py
 startWithEnv.sh
-
+ts-out/data
 startAgent.sh
 
 data

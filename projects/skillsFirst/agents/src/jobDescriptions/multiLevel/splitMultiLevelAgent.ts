@@ -6,9 +6,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 
 /**
- * SplitMultiLevelJobDescriptionAgent uses an LLM prompt to detect and split a job description
- * into separate sub-levels (e.g., "Level 1", "Level 2", etc.). The output is a JSON array
- * of objects where each object contains the level number and the corresponding text.
+ * SplitMultiLevelJobDescriptionAgent uses an LLM prompt to first determine how many
+ * levels are present in a job description and then calls the model once per level to extract
+ * the corresponding text. The output is then stored in a JSON structure.
  */
 export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -39,61 +39,93 @@ export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
   }
 
   /**
-   * Processes the provided job description and returns an array of splits.
-   *
-   * The expected output from the LLM is a JSON array of objects, each with:
-   *  - "level": number (e.g., 1, 2, etc.)
-   *  - "text": string (the text for that level)
-   *
-   * If no level markers are found, the agent returns a single object with level 1.
+   * Processes the provided job description by first determining how many levels are present,
+   * then extracting the text for each level individually.
+   * Returns an array of objects with:
+   *  - level: number (e.g., 1, 2, etc.)
+   *  - text: string (the text for that level)
    */
   async processJobDescription(
     jobDescription: JobDescription
   ): Promise<{ level: number; text: string }[]> {
+    // Step 1: Determine the number of levels
     await this.updateRangedProgress(
       0,
-      `Splitting job description for ${jobDescription.titleCode}`
+      `Determining level count for ${jobDescription.titleCode}`
     );
 
-    const systemPrompt = `<JobDescription>
+    const countPrompt = `<JobDescription>
 ${jobDescription.text}
 </JobDescription>
 
-You are an expert in analyzing job descriptions. The text above may contain multiple distinct roles or levels, indicated by headings such as "Level 1", "Level 2", etc.
+You are an expert in analyzing job descriptions. The text above may contain multiple distinct roles or levels (e.g., "Level 1", "Level 2", etc.).
+Determine how many distinct levels are present in this job description.
+If no explicit level markers are found, answer with "1".
+Return only the number (an integer) with no additional commentary.`;
 
-Your task is to split the job description into separate sub-levels. For each detected level, extract the level number and the corresponding text for that level.
-
-Provide your output as a JSON array of objects. Each object must have:
-- "level": a number (e.g., 1, 2, etc.)
-- "text": the whole text of the job description but only for the level specified, just exclude the other levels but keep all the other text in the job description.
-
-If no explicit level markers are found, return a single object with level 1 and the full text.
-
-Do not include any additional commentary.
-`;
-
-    const messages = [this.createSystemMessage(systemPrompt)];
-    let result: { level: number; text: string }[];
-
+    const countMessages = [this.createSystemMessage(countPrompt)];
+    let levelCountOutput: string;
     try {
-      result = await this.callModel(
+      levelCountOutput = await this.callModel(
         this.modelType,
         this.modelSize,
-        messages,
+        countMessages,
         true
       );
     } catch (error) {
       this.logger.error(error);
       this.memory.llmErrors.push(
-        `SplitMultiLevelJobDescriptionAgent error for ${jobDescription.titleCode}: ${error}`
+        `SplitMultiLevelJobDescriptionAgent error in level count for ${jobDescription.titleCode}: ${error}`
       );
-      // Retry with a larger model if needed
-      result = await this.callModel(
-        PsAiModelType.TextReasoning,
-        PsAiModelSize.Large,
-        messages,
-        true
+      // Fallback: assume 1 level if error occurs
+      levelCountOutput = "1";
+    }
+
+    // Parse the output to an integer; default to 1 if parsing fails.
+    let levelCount = parseInt(levelCountOutput.trim(), 10);
+    if (isNaN(levelCount) || levelCount < 1) {
+      levelCount = 1;
+    }
+    this.logger.info(`Determined ${levelCount} level(s) for ${jobDescription.titleCode}`);
+
+    // Step 2: For each level, extract the corresponding text.
+    const result: { level: number; text: string }[] = [];
+    for (let i = 1; i <= levelCount; i++) {
+      await this.updateRangedProgress(
+        (i / levelCount) * 100,
+        `Extracting text for Level ${i} of ${jobDescription.titleCode}`
       );
+
+      const extractPrompt = `<JobDescription>
+${jobDescription.text}
+</JobDescription>
+
+You are an expert in analyzing job descriptions. The text above may contain multiple distinct roles or levels, usually with different education requirements, indicated by headings such as "Level 1", "Level 2", etc..
+Extract and output only the text corresponding to Level ${i}.
+Return only the plain text for that level with no additional commentary`;
+
+      const extractMessages = [this.createSystemMessage(extractPrompt)];
+      let extractedText: string;
+      try {
+        extractedText = await this.callModel(
+          this.modelType,
+          this.modelSize,
+          extractMessages,
+          true
+        );
+      } catch (error) {
+        this.logger.error(error);
+        this.memory.llmErrors.push(
+          `SplitMultiLevelJobDescriptionAgent error extracting level ${i} for ${jobDescription.titleCode}: ${error}`
+        );
+        // Fallback to empty string if error occurs.
+        extractedText = "";
+      }
+
+      result.push({
+        level: i,
+        text: extractedText.trim(),
+      });
     }
 
     await this.updateRangedProgress(

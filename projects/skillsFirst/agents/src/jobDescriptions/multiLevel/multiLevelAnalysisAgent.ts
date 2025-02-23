@@ -1,12 +1,12 @@
 // jobDescriptionMultiLevelAnalysisAgent.ts
 
-import { JobDescriptionAnalysisAgent } from "./analysisAgent.js";
+import { JobDescriptionAnalysisAgent } from "../analysisAgent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
-import { SplitMultiLevelJobDescriptionAgent } from "./multiLevel/splitMultiLevelAgent.js";
+import { SheetsJobDescriptionExportAgent } from "../exports/sheetsExport.js";
+import { SplitMultiLevelJobDescriptionAgent } from "./splitMultiLevelAgent.js";
 import fs from "fs";
 import path from "path";
-
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 /**
  * A specialized subclass that handles multi-level job descriptions.
  * If a JobDescription has .multiLevelJob = true, then we:
@@ -16,15 +16,20 @@ import path from "path";
  *  3) We add those new sub-level JobDescriptions to memory.
  *  4) We export only those sub-level JobDescriptions to Google Sheets.
  */
-export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysisAgent {
+export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
+  private analysisAgent: JobDescriptionAnalysisAgent;
+  declare memory: JobDescriptionMemoryData;
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,
     startProgress: number,
-    endProgress: number
+    endProgress: number,
+    analysisAgent: JobDescriptionAnalysisAgent
   ) {
     super(agent, memory, startProgress, endProgress);
     this.memory = memory;
+    this.analysisAgent = analysisAgent;
   }
 
   private updateMultiLevelJobDataFromJson(): void {
@@ -72,6 +77,7 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
    */
   override async process() {
     await this.updateRangedProgress(0, "Starting Multi-Level Job Description Analysis");
+    this.logger.info("Starting Multi-Level Job Description Analysis");
 
     this.updateMultiLevelJobDataFromJson();
 
@@ -87,6 +93,8 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
       return;
     }
 
+    this.logger.info(`Found ${multiLevelDescriptions.length} multi-level job descriptions`);
+
     const newSubLevelDescriptions: JobDescription[] = [];
 
     // For each multi-level job, split it, then process the resulting sub-levels
@@ -97,33 +105,17 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
       // For each sub-level, run the same chain of analysis. Then collect them in memory.
       for (let i = 0; i < splittedLevels.length; i++) {
         const levelJD = splittedLevels[i];
+        this.logger.info(`Processing sub-level ${i + 1} of ${splittedLevels.length} for ${multiLevelJD.titleCode}`);
 
         // We'll artificially set .processed = false so the parent's logic can run
         // any sub-agents it needs. Or, you can call `processJobDescription` directly:
-        await this.processJobDescription(levelJD, i + 1, splittedLevels.length);
+        await this.analysisAgent.processJobDescription(levelJD, i + 1, splittedLevels.length);
 
         // Add the newly analyzed sub-level job description to memory
         this.memory.jobDescriptions.push(levelJD);
         newSubLevelDescriptions.push(levelJD);
       }
     }
-
-    // Finally, export only the new sub-level job descriptions to Google Sheets
-    const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(
-      this.agent,
-      this.memory,
-      95,
-      100,
-      "MultiLevelSheet"
-    );
-
-    const combinedAllJobDescriptions = [...this.memory.jobDescriptions, ...newSubLevelDescriptions];
-
-    // We'll just pass the new sub-levels, not the entire memory array
-    await googleSheetsReportAgent.processJsonData({
-      agentId: this.agent.id,
-      jobDescriptions: combinedAllJobDescriptions,
-    });
 
     await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");
     await this.setCompleted("Task Completed");

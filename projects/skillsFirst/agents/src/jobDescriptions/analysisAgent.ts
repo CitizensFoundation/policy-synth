@@ -23,6 +23,7 @@ import { ValidateJobDescriptionAgent } from "./reviewAgents/dataConsistency.js";
 import { ReadabilityFleshKncaidJobDescriptionAgent } from "./reviewAgents/readabilityAnalysisFleshKncaid.js";
 import { ReadingLevelAnalysisAgent } from "./reviewAgents/readingLevelAnalysis.js";
 import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
+import { JobDescriptionMultiLevelAnalysisAgent } from "./multiLevel/multiLevelAnalysisAgent.js";
 
 /**
  * The main agent class for analyzing job descriptions.
@@ -95,71 +96,89 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     this.memory.jobDescriptions = selectedJobDescriptions;
 
+    const skipMainProcessing = this.getConfig<boolean>(
+      "skipMainProcessing",
+      true
+    );
 
-    // 3) Process each job description
-    const concurrency = 7;
+    if (!skipMainProcessing) {
+      // 3) Process each job description
+      const concurrency = 7;
 
-    for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
-      const chunk = selectedJobDescriptions.slice(i, i + concurrency);
+      for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
+        const chunk = selectedJobDescriptions.slice(i, i + concurrency);
 
-      await Promise.all(
-        chunk.map(async (jobDescription, indexInChunk) => {
-          // If there's an existing error, skip it
-          if (jobDescription.error && jobDescription.error.trim() !== "") {
-            this.logger.warn(
-              `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
+        await Promise.all(
+          chunk.map(async (jobDescription, indexInChunk) => {
+            // If there's an existing error, skip it
+            if (jobDescription.error && jobDescription.error.trim() !== "") {
+              this.logger.warn(
+                `Skipping '${jobDescription.titleCode}' due to existing error: ${jobDescription.error}`
+              );
+              return;
+            }
+
+            if (false && jobDescription.processed === true) {
+              this.logger.info(
+                `Skipping '${jobDescription.titleCode}' as it has already been processed`
+              );
+              return;
+            }
+
+            const progress =
+              ((i + indexInChunk) / selectedJobDescriptions.length) * 100;
+            await this.updateRangedProgress(
+              progress,
+              `Processing job description ${i + indexInChunk + 1} of ${
+                selectedJobDescriptions.length
+              }`
             );
-            return;
-          }
 
-          if (false && jobDescription.processed===true) {
-            this.logger.info(
-              `Skipping '${jobDescription.titleCode}' as it has already been processed`
+            // Check if we have a matching HTML file
+            const htmlFilePath = path.join(
+              __dirname,
+              "data",
+              "descriptions",
+              `${jobDescription.titleCode}.html`
             );
-            return;
-          }
+            if (!fs.existsSync(htmlFilePath)) {
+              this.logger.error(
+                `HTML file not found for ${jobDescription.titleCode}`
+              );
+              jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
+              return;
+            }
 
-          const progress =
-            ((i + indexInChunk) / selectedJobDescriptions.length) * 100;
-          await this.updateRangedProgress(
-            progress,
-            `Processing job description ${i + indexInChunk + 1} of ${
+            // Read HTML content
+            const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
+            jobDescription.text = this.extractTextFromHtml(htmlContent);
+
+            // Process the job description
+            await this.processJobDescription(
+              jobDescription,
+              i + indexInChunk + 1,
               selectedJobDescriptions.length
-            }`
-          );
-
-          // Check if we have a matching HTML file
-          const htmlFilePath = path.join(
-            __dirname,
-            "data",
-            "descriptions",
-            `${jobDescription.titleCode}.html`
-          );
-          if (!fs.existsSync(htmlFilePath)) {
-            this.logger.error(
-              `HTML file not found for ${jobDescription.titleCode}`
             );
-            jobDescription.error = `HTML file not found for ${jobDescription.titleCode}`;
-            return;
-          }
 
-          // Read HTML content
-          const htmlContent = fs.readFileSync(htmlFilePath, "utf-8");
-          jobDescription.text = this.extractTextFromHtml(htmlContent);
-
-          // Process the job description
-          await this.processJobDescription(
-            jobDescription,
-            i + indexInChunk + 1,
-            selectedJobDescriptions.length
-          );
-
-          // Mark as processed
-          jobDescription.processed = true;
-          await this.saveMemory();
-        })
-      );
+            // Mark as processed
+            jobDescription.processed = true;
+            await this.saveMemory();
+          })
+        );
+      }
+    } else {
+      this.logger.info("Skipping main processing of job descriptions");
     }
+
+    const multiLevelAnalysisAgent = new JobDescriptionMultiLevelAnalysisAgent(
+      this.agent,
+      this.memory,
+      95,
+      100,
+      this
+    );
+
+    await multiLevelAnalysisAgent.process();
 
     const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(
       this.agent,
@@ -229,7 +248,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     this.logger.debug(`Progress: ${processCounter} of ${totalProcesses}`);
 
     // STEP 1: Determine if the JobDescription includes college/higher ed requirement
-    if (false && enableDetermineCollegeDegreeStatus) {
+    if (enableDetermineCollegeDegreeStatus) {
       const determineDegreeStatusAgent = new DetermineCollegeDegreeStatusAgent(
         this.agent,
         this.memory,
@@ -242,7 +261,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
-    if (jobDescription.degreeAnalysis &&
+    if (
+      jobDescription.degreeAnalysis &&
       jobDescription.degreeAnalysis
         .includesMultipleJobLevelsWithDifferentEducationalRequirements
     ) {
@@ -253,7 +273,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     // STEP 2: Review evidence quote for higher education
     // SKIPPED FOR NOW AS NOT SAVED IN MEMORY
-    if (false && enableReviewEvidenceQuote) {
+    if (enableReviewEvidenceQuote) {
       const reviewEvidenceQuoteAgent = new ReviewEvidenceQuoteAgent(
         this.agent,
         this.memory,
@@ -265,7 +285,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 3: Determine if degree requirement is mandatory or permissive
-    if (false && enableDetermineMandatoryStatus) {
+    if (enableDetermineMandatoryStatus) {
       const determineMandatoryStatusAgent = new DetermineMandatoryStatusAgent(
         this.agent,
         this.memory,
@@ -279,7 +299,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 4: Determine if a professional license is required
-    if (true || enableDetermineProfessionalLicense) {
+    if (enableDetermineProfessionalLicense) {
       const determineProfessionalLicenseAgent =
         new DetermineProfessionalLicenseRequirementAgent(
           this.agent,
@@ -294,7 +314,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 5: Identify barriers for non-degree applicants
-    if (false && enableIdentifyBarriers) {
+    if (enableIdentifyBarriers) {
       const identifyBarriersAgent = new IdentifyBarriersAgent(
         this.agent,
         this.memory,
@@ -307,7 +327,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
 
     // STEP 6: Validate data consistency
     // SKIPPED FOR NOW
-    if (false && enableValidateJobDescription) {
+    if (enableValidateJobDescription) {
       const validateJobDescriptionAgent = new ValidateJobDescriptionAgent(
         this.agent,
         this.memory,
@@ -319,7 +339,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 7: Analyze readability via Flesch-Kincaid
-    if (false && enableReadabilityScore) {
+    if (enableReadabilityScore) {
       const readabilityAgent = new ReadabilityFleshKncaidJobDescriptionAgent(
         this.agent,
         this.memory,
@@ -331,7 +351,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     }
 
     // STEP 8: Analyze reading level & extract difficult passages
-    if (false && enableReadingLevelAnalysis) {
+    if (enableReadingLevelAnalysis) {
       const readingLevelAgent = new ReadingLevelAnalysisAgent(
         this.agent,
         this.memory,
