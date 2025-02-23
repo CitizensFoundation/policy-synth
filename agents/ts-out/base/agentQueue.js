@@ -1,4 +1,3 @@
-// agentQueue.ts
 import ioredis from "ioredis";
 import { QueueEvents, Worker } from "bullmq";
 import { PsAgentConnector } from "../dbModels/agentConnector.js";
@@ -13,7 +12,6 @@ import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAgent } from "../dbModels/agent.js";
 /**
  * Abstract queue that can hold multiple agent implementations
- * This class has been refactored to store multiple Agents in maps
  */
 export class PolicySynthAgentQueue extends PolicySynthAgentBase {
     // Instead of single references, we keep them in maps keyed by agentId
@@ -21,12 +19,12 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
     agentInstancesMap = new Map();
     agentStatusMap = new Map();
     agentMemoryMap = new Map();
+    // Store Worker references here
+    workers = [];
     structuredAnswersOverrides;
     skipCheckForProgress = true;
     redisClient;
     constructor() {
-        // We pass a dummy agent to the super since we must call `super()`
-        // The rest of the code is adjusted so we rarely use `this.agent` in this queue class
         super();
         this.initializeRedis();
     }
@@ -124,8 +122,6 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
     }
     /**
      * Retrieve or create the actual PolicySynthAgent instance.
-     * Now we pass the memory from agentMemoryMap to the constructor,
-     * so we always have an object with structuredAnswersOverrides set.
      */
     getOrCreateAgentInstance(agentId) {
         let policySynthAgent = this.agentInstancesMap.get(agentId);
@@ -134,10 +130,9 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
             if (!psAgent) {
                 throw new Error(`PsAgent object not found in agentsMap for agentId=${agentId}`);
             }
-            // We'll take the first processor’s weight as an example, or pass 0/100
+            // We'll take the first processor’s weight as an example
             const startProgress = 0;
             const endProgress = 100;
-            // Ensure we have a memory object for this agent
             let agentMemory = this.agentMemoryMap.get(agentId);
             if (!agentMemory) {
                 agentMemory = { agentId };
@@ -151,33 +146,26 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
         return policySynthAgent;
     }
     /**
-     * Loads agent memory from Redis if we haven't already,
-     * then stores it in this.agentMemoryMap.
+     * Loads agent memory from Redis if we haven't already
      */
     async loadAgentMemoryIfNeeded(agentId) {
         const psAgent = this.agentsMap.get(agentId);
         if (!psAgent) {
             throw new Error(`No PsAgent found for agentId=${agentId}`);
         }
-        // Check if we already have a memory object in memory
         let agentMemory = this.agentMemoryMap.get(agentId);
         if (!agentMemory) {
-            // Try to load from Redis
             const memoryString = await this.redisClient.get(psAgent.redisMemoryKey);
             if (memoryString) {
                 agentMemory = JSON.parse(memoryString);
             }
             if (!agentMemory) {
-                // If nothing in Redis, initialize a blank memory object
                 agentMemory = { agentId };
             }
-            if (agentMemory) {
-                this.agentMemoryMap.set(agentId, agentMemory);
-            }
+            this.agentMemoryMap.set(agentId, agentMemory);
         }
         return agentMemory;
     }
-    // If you want multiple processor steps in sequence:
     async processAllAgents(agentId) {
         let totalProgress = 0;
         for (let i = 0; i < this.processors.length; i++) {
@@ -190,7 +178,6 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
                 if (!psAgent) {
                     throw new Error(`PsAgent not loaded for agentId=${agentId}`);
                 }
-                // Make sure the memory is the same one we've stored
                 const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
                 const policySynthAgent = new AgentClass(psAgent, agentMemory, startProgress, endProgress);
                 this.agentInstancesMap.set(agentId, policySynthAgent);
@@ -253,45 +240,47 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
     async setupAgentQueue() {
         if (this.agentQueueName) {
             console.log(`Setting up worker for agentQueue ${this.agentQueueName}`);
+            // Create a new worker
             const worker = new Worker(this.agentQueueName, async (job) => {
                 try {
                     console.log(`Processing job ${job.id} for agentQueue ${this.agentQueueName}`);
                     const data = job.data;
                     const { agentId, action, structuredAnswersOverrides } = data;
-                    // 1) Ensure PsAgent is loaded from DB
+                    // 1) Ensure PsAgent is loaded
                     const loadedAgent = await this.getOrCreatePsAgent(agentId);
-                    // 2) Make sure we have a memory object for this agent
+                    // 2) Load memory
                     const agentMemory = await this.loadAgentMemoryIfNeeded(agentId);
-                    // 3) If we want to store structuredAnswersOverrides, do so here
                     if (structuredAnswersOverrides) {
                         this.structuredAnswersOverrides = structuredAnswersOverrides;
                         agentMemory.structuredAnswersOverrides =
                             structuredAnswersOverrides;
                     }
-                    this.logger.debug(`Have loaded agent ${loadedAgent.id} ${loadedAgent.redisMemoryKey} ${JSON.stringify(agentMemory, null, 2)}`);
-                    // 4) Run any subclass-specific memory setup
+                    // 3) Subclass-specific memory setup
                     await this.setupMemoryIfNeeded(agentId);
-                    this.logger.debug(`Have loaded memory for agent ${agentId}: ${JSON.stringify(agentMemory, null, 2)}`);
-                    // 5) Setup status
-                    await this.setupStatusIfNeeded(agentId);
-                    // 6) Log the action
                     console.log(`${action} agent ${loadedAgent.id} with structured answers overrides:`, JSON.stringify(structuredAnswersOverrides));
-                    // 7) Actually start/stop/pause
+                    // 4) Setup status
+                    await this.setupStatusIfNeeded(agentId);
+                    // 5) Dispatch action
                     switch (action) {
                         case "start":
-                            await this.startAgent(agentId);
+                            this.logger.info(`Starting agent ${agentId}`);
+                            await this.updateAgentStatus(agentId, "running");
+                            await this.processAllAgents(agentId);
                             break;
                         case "stop":
-                            await this.stopAgent(agentId);
-                            break;
+                            this.logger.info(`Stopping agent ${agentId}`);
+                            await this.updateAgentStatus(agentId, "stopped");
+                            throw new Error("StoppedByUser");
                         case "pause":
-                            await this.pauseAgent(agentId);
+                            this.logger.info(`Pausing agent ${agentId}`);
+                            await this.updateAgentStatus(agentId, "paused");
                             break;
                         default:
                             throw new Error(`Unknown action ${action} for job ${job.id}`);
                     }
                 }
                 catch (error) {
+                    console.error(`Error processing job ${job.id} for agentQueue ${this.agentQueueName}`, error);
                     throw error;
                 }
             }, {
@@ -299,16 +288,17 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
                 concurrency: parseInt(process.env.PS_AGENTS_CONCURRENCY || "20"),
                 maxStalledCount: 0,
             });
+            // Keep a reference to this worker
+            this.workers.push(worker);
+            // Optional event handlers
             worker.on("completed", (job) => {
-                this.logger.info(`Job ${job.id} has been completed for queue ${this.agentQueueName}`);
+                this.logger.info(`Job ${job.id} has completed for queue ${this.agentQueueName}`);
             });
             worker.on("failed", (job, err) => {
                 this.logger.error(`Job ${job?.id || "unknown"} failed for ${this.agentQueueName}`, err);
             });
             worker.on("error", (err) => {
                 this.logger.error(`An error occurred in the worker for ${this.agentQueueName}`, err);
-                // If needed, set status to error:
-                // this.updateAgentStatus(agentId, "error", err.message);
             });
             worker.on("active", (job) => {
                 this.logger.info(`Job ${job.id} started processing for ${this.agentQueueName}`);
@@ -341,22 +331,7 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
             this.logger.error("Top level agent queue name not set");
         }
     }
-    // Below are the methods that change the status of an agent by agentId
-    async startAgent(agentId) {
-        this.logger.info(`Starting agent ${agentId}`);
-        await this.updateAgentStatus(agentId, "running");
-        // Optionally call processAllAgents if you have multiple steps:
-        await this.processAllAgents(agentId);
-    }
-    async stopAgent(agentId) {
-        this.logger.info(`Stopping agent ${agentId}`);
-        await this.updateAgentStatus(agentId, "stopped");
-        throw new Error("StoppedByUser");
-    }
-    async pauseAgent(agentId) {
-        this.logger.info(`Pausing agent ${agentId}`);
-        await this.updateAgentStatus(agentId, "paused");
-    }
+    // Methods that change the status
     async updateAgentStatus(agentId, state, message) {
         const status = this.agentStatusMap.get(agentId);
         if (!status) {
@@ -368,6 +343,20 @@ export class PolicySynthAgentQueue extends PolicySynthAgentBase {
         status.lastUpdated = Date.now();
         this.logger.info(`Agent ${agentId} is now ${state}`);
         await this.saveAgentStatusToRedis(agentId);
+    }
+    /**
+     * Pause all workers in this queue so they don't pick up new jobs,
+     * and let any currently running jobs finish before resolving.
+     */
+    async pauseAllWorkersGracefully() {
+        this.logger.info(`Pausing all workers for queue "${this.agentQueueName}"`);
+        for (const worker of this.workers) {
+            // This call ensures:
+            // 1) No new jobs are picked up.
+            // 2) We wait for any in-flight jobs to complete before the promise resolves.
+            await worker.pause(true);
+        }
+        this.logger.info(`All workers in queue "${this.agentQueueName}" are paused and have finished in-flight jobs.`);
     }
 }
 //# sourceMappingURL=agentQueue.js.map

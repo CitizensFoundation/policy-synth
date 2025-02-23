@@ -1,4 +1,5 @@
 import ioredis from "ioredis";
+import { Worker } from "bullmq";
 import { PolicySynthAgent } from "./agent.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAgent } from "../dbModels/agent.js";
@@ -9,13 +10,13 @@ export interface PsAgentStartJobData {
 }
 /**
  * Abstract queue that can hold multiple agent implementations
- * This class has been refactored to store multiple Agents in maps
  */
 export declare abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
     protected agentsMap: Map<number, PsAgent>;
     protected agentInstancesMap: Map<number, PolicySynthAgent>;
     protected agentStatusMap: Map<number, PsAgentStatus>;
     protected agentMemoryMap: Map<number, PsAgentMemoryData>;
+    protected workers: Worker[];
     structuredAnswersOverrides?: Array<any>;
     skipCheckForProgress: boolean;
     redisClient: ioredis;
@@ -30,13 +31,10 @@ export declare abstract class PolicySynthAgentQueue extends PolicySynthAgentBase
     getOrCreatePsAgent(agentId: number): Promise<PsAgent>;
     /**
      * Retrieve or create the actual PolicySynthAgent instance.
-     * Now we pass the memory from agentMemoryMap to the constructor,
-     * so we always have an object with structuredAnswersOverrides set.
      */
     getOrCreateAgentInstance(agentId: number): PolicySynthAgent;
     /**
-     * Loads agent memory from Redis if we haven't already,
-     * then stores it in this.agentMemoryMap.
+     * Loads agent memory from Redis if we haven't already
      */
     loadAgentMemoryIfNeeded(agentId: number): Promise<PsAgentMemoryData>;
     processAllAgents(agentId: number): Promise<void>;
@@ -44,9 +42,11 @@ export declare abstract class PolicySynthAgentQueue extends PolicySynthAgentBase
     saveAgentStatusToRedis(agentId: number): Promise<void>;
     setupStatusIfNeeded(agentId: number): Promise<void>;
     setupAgentQueue(): Promise<void>;
-    startAgent(agentId: number): Promise<void>;
-    stopAgent(agentId: number): Promise<void>;
-    pauseAgent(agentId: number): Promise<void>;
     updateAgentStatus(agentId: number, state: "running" | "stopped" | "paused" | "error", message?: string): Promise<void>;
+    /**
+     * Pause all workers in this queue so they don't pick up new jobs,
+     * and let any currently running jobs finish before resolving.
+     */
+    pauseAllWorkersGracefully(): Promise<void>;
 }
 //# sourceMappingURL=agentQueue.d.ts.map

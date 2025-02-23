@@ -15,7 +15,7 @@ interface AgentQueueConstructor {
   getAgentClass(): PsAgentClassCreationAttributes;
 }
 
-export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
+export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
   protected agentsToRun: PolicySynthAgentQueue[] = [];
   protected agentRegistry: PsAgentRegistry | null = null;
   protected registeredAgentClasses: PsAgentClass[] = [];
@@ -41,10 +41,8 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
     await initializeModels();
 
     this.agentRegistry = await this.getOrCreateAgentRegistry();
-
     await this.createAgentClassesIfNeeded();
     await this.createConnectorClassesIfNeeded();
-
     await this.setupAgents();
 
     for (const agentQueue of this.agentsToRun) {
@@ -57,7 +55,6 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
     }
 
     await this.registerConnectors();
-
     this.logger.info("All agents and connectors are set up and running");
   }
 
@@ -121,7 +118,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
       const connectorClassInstance = await PsAgentConnectorClass.findOne({
         where: {
           class_base_id: connectorClass.class_base_id,
-          version: connectorClass.version
+          version: connectorClass.version,
         },
       });
 
@@ -208,8 +205,55 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase   {
   }
 
   setupGracefulShutdown() {
+    // Graceful stop if Docker/K8s sends SIGTERM
+    process.on("SIGTERM", async () => {
+      this.logger.info(
+        "[AgentRunner] Received SIGTERM, pausing all workers..."
+      );
+
+      // Pause all the queues so they stop picking up new jobs
+      for (const queue of this.agentsToRun) {
+        this.logger.info(
+          `Pausing agent: ${queue.agentQueueName} and waiting for in-flight jobs to finish...`
+        );
+        await queue.pauseAllWorkersGracefully();
+      }
+
+      this.logger.info(
+        "[AgentRunner] All queues paused and in-flight jobs finished."
+      );
+
+      const removeFromRegistry = false;
+
+      if (removeFromRegistry) {
+        if (this.agentRegistry) {
+          for (const agentClass of this.registeredAgentClasses) {
+            await this.agentRegistry.removeAgent(agentClass);
+            this.logger.info(`Unregistered agent: ${agentClass.name}`);
+          }
+          for (const connectorClass of this.registeredConnectorClasses) {
+            await this.agentRegistry.removeConnector(connectorClass);
+            this.logger.info(`Unregistered connector: ${connectorClass.name}`);
+          }
+        }
+      }
+
+      // Exit the process - Docker Compose or K8s will eventually kill the container
+      this.logger.info("[AgentRunner] Exiting after graceful shutdown.");
+      process.exit(0);
+    });
+
+    // Handle Ctrl+C in development
     process.on("SIGINT", async () => {
-      this.logger.info("Shutting down gracefully...");
+      this.logger.info(
+        "[AgentRunner] Received SIGINT, shutting down gracefully..."
+      );
+      for (const queue of this.agentsToRun) {
+        this.logger.info(
+          `Pausing agent: ${queue.agentQueueName} and waiting for in-flight jobs to finish...`
+        );
+        //await queue.pauseAllWorkersGracefully(true);
+      }
       if (this.agentRegistry) {
         for (const agentClass of this.registeredAgentClasses) {
           await this.agentRegistry.removeAgent(agentClass);
