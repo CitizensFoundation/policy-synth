@@ -4,6 +4,8 @@ import { JobDescriptionAnalysisAgent } from "./analysisAgent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { SheetsJobDescriptionExportAgent } from "./exports/sheetsExport.js";
 import { SplitMultiLevelJobDescriptionAgent } from "./multiLevel/splitMultiLevelAgent.js";
+import fs from "fs";
+import path from "path";
 
 /**
  * A specialized subclass that handles multi-level job descriptions.
@@ -25,6 +27,44 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
     this.memory = memory;
   }
 
+  private updateMultiLevelJobDataFromJson(): void {
+    try {
+      const filePath = path.join(__dirname, "data", "jobDescriptionsWithNewMultiLevelJob.json");
+
+      if (!fs.existsSync(filePath)) {
+        this.logger.warn("No jobDescriptionsWithNewMultiLevelJob.json file found. Skipping multi-level job updates.");
+        return;
+      }
+
+      // Parse the file
+      const jsonString = fs.readFileSync(filePath, "utf-8");
+      const updatedRecords: JobDescription[] = JSON.parse(jsonString);
+
+      // Loop through each record in the new data
+      updatedRecords.forEach((record) => {
+        // Find the matching job description in memory
+        const existing = this.memory.jobDescriptions.find(
+          (jd) => jd.titleCode === record.titleCode && jd.variant === record.variant
+        );
+
+        // If we found a match, update its .multiLevelJob field
+        if (existing) {
+          existing.multiLevelJob = record.multiLevelJob;
+          this.logger.info(
+            `Updated multiLevelJob for ${existing.titleCode} (${existing.variant}) to: ${record.multiLevelJob}`
+          );
+        } else {
+          // Optional: Log or handle any records not found in memory
+          this.logger.warn(
+            `No matching job description found in memory for titleCode: ${record.titleCode}, variant: ${record.variant}`
+          );
+        }
+      });
+    } catch (err) {
+      this.logger.error("Error updating multi-level job data from JSON file:", err);
+    }
+  }
+
   /**
    * Main process method override that first checks for multi-level job descriptions,
    * splits them, runs the analysis for each level, and then exports those newly created
@@ -32,6 +72,8 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
    */
   override async process() {
     await this.updateRangedProgress(0, "Starting Multi-Level Job Description Analysis");
+
+    this.updateMultiLevelJobDataFromJson();
 
     // Filter out the multi-level job descriptions
     const multiLevelDescriptions = this.memory.jobDescriptions.filter(
@@ -75,10 +117,12 @@ export class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysi
       "MultiLevelSheet"
     );
 
+    const combinedAllJobDescriptions = [...this.memory.jobDescriptions, ...newSubLevelDescriptions];
+
     // We'll just pass the new sub-levels, not the entire memory array
     await googleSheetsReportAgent.processJsonData({
       agentId: this.agent.id,
-      jobDescriptions: newSubLevelDescriptions,
+      jobDescriptions: combinedAllJobDescriptions,
     });
 
     await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");
