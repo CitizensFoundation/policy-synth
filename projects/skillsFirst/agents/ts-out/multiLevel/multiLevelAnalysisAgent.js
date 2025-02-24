@@ -74,8 +74,14 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
         }
         this.logger.info(`Found ${multiLevelDescriptions.length} multi-level job descriptions`);
         const newSubLevelDescriptions = [];
+        const useMaxCounter = true;
+        let counter = 1;
         // For each multi-level job, split it, then process the resulting sub-levels
         for (const multiLevelJD of multiLevelDescriptions) {
+            if (useMaxCounter && counter > 15) {
+                this.logger.info(`Processed ${counter} multi-level job descriptions. Exiting.`);
+                break;
+            }
             // Use a sub-agent to parse out sub-levels
             const splittedLevels = await this.splitMultiLevelJobDescription(multiLevelJD);
             // For each sub-level, run the same chain of analysis. Then collect them in memory.
@@ -85,9 +91,12 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
                 // We'll artificially set .processed = false so the parent's logic can run
                 // any sub-agents it needs. Or, you can call `processJobDescription` directly:
                 await this.analysisAgent.processJobDescription(levelJD, i + 1, splittedLevels.length);
+                levelJD.haveProcessedSubLevel = true;
                 // Add the newly analyzed sub-level job description to memory
                 this.memory.jobDescriptions.push(levelJD);
+                await this.saveMemory();
                 newSubLevelDescriptions.push(levelJD);
+                counter++;
             }
         }
         await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");

@@ -25,7 +25,7 @@ export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
   }
 
   override get reasoningEffort(): "low" | "medium" | "high" {
-    return "high";
+    return "medium";
   }
 
   constructor(
@@ -57,7 +57,7 @@ ${jobDescription.text}
 You are an expert in analyzing job descriptions. The text above may contain multiple distinct roles or levels (e.g., "Level 1", "Level 2", etc.).
 Determine how many distinct levels are present in this job description.
 If no explicit level markers are found, answer with "1".
-Return only the number (an integer) with no additional commentary.`;
+Return only the number (an integer) with no additional commentary:`;
 
     const countMessages = [this.createSystemMessage(countPrompt)];
     let levelCountOutput: string;
@@ -66,7 +66,7 @@ Return only the number (an integer) with no additional commentary.`;
         this.modelType,
         this.modelSize,
         countMessages,
-        true
+        false
       );
     } catch (error) {
       this.logger.error(error);
@@ -90,6 +90,8 @@ Return only the number (an integer) with no additional commentary.`;
       `Determined ${levelCount} level(s) for ${jobDescription.titleCode}`
     );
 
+    this.logger.debug(`Full job description: ${jobDescription.text}`);
+
     // Step 2: For each level, extract the corresponding text.
     const result: { level: number; text: string }[] = [];
     for (let i = 1; i <= levelCount; i++) {
@@ -103,7 +105,11 @@ ${jobDescription.text}
 </JobDescription>
 
 You are an expert in analyzing job descriptions. The text above may contain multiple distinct roles or levels, usually with different education requirements, indicated by headings such as "Level 1", "Level 2", etc..
+
 Extract and output only the text corresponding to Level ${i}.
+
+Output the whole job description exactly as it is except only include the text for the level you are currently processing. Do not change any wording otherwise.
+
 Return only the plain text for that level with no additional commentary`;
 
       const extractMessages = [this.createSystemMessage(extractPrompt)];
@@ -113,7 +119,7 @@ Return only the plain text for that level with no additional commentary`;
           this.modelType,
           this.modelSize,
           extractMessages,
-          true
+          false
         );
       } catch (error) {
         this.logger.error(error);

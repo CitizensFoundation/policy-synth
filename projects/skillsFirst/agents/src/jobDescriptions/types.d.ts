@@ -32,6 +32,7 @@ interface JobDescription {
   error?: string;
   processed?: boolean;
   multiLevelJob?: boolean;
+  haveProcessedSubLevel?: boolean;
   cscRevised?: boolean;
   notes?: string;
   readabilityAnalysisTextTSNPM?: {

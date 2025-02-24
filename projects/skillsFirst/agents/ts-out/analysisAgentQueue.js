@@ -23,8 +23,7 @@ export class JobDescriptionAnalysisQueue extends PolicySynthAgentQueue {
             this.agentMemoryMap.set(agentId, agentMemory);
         }
         else {
-            this.logger.info(`Memory already set up for agent ${psAgent.id}: ` +
-                JSON.stringify(agentMemory));
+            this.logger.info(`Memory already set up for agent ${psAgent.id}: `);
         }
     }
 }

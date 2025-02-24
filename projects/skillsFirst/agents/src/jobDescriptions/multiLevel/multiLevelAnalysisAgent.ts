@@ -82,7 +82,6 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
             `No matching job description found in memory for titleCode: ${record.titleCode}, variant: ${record.variant}`
           );
         }
-
       });
       this.logger.info(`Updated ${counter} multi-level job descriptions`);
     } catch (err) {
@@ -125,8 +124,18 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
 
     const newSubLevelDescriptions: JobDescription[] = [];
 
+    const useMaxCounter = true;
+
+    let counter = 1;
+
     // For each multi-level job, split it, then process the resulting sub-levels
     for (const multiLevelJD of multiLevelDescriptions) {
+      if (useMaxCounter && counter > 15) {
+        this.logger.info(
+          `Processed ${counter} multi-level job descriptions. Exiting.`
+        );
+        break;
+      }
       // Use a sub-agent to parse out sub-levels
       const splittedLevels = await this.splitMultiLevelJobDescription(
         multiLevelJD
@@ -149,9 +158,14 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
           splittedLevels.length
         );
 
+        levelJD.haveProcessedSubLevel = true;
         // Add the newly analyzed sub-level job description to memory
         this.memory.jobDescriptions.push(levelJD);
+
+        await this.saveMemory();
         newSubLevelDescriptions.push(levelJD);
+
+        counter++;
       }
     }
 
