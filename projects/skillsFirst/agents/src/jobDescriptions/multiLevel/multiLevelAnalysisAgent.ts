@@ -5,7 +5,12 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { SheetsJobDescriptionExportAgent } from "../exports/sheetsExport.js";
 import { SplitMultiLevelJobDescriptionAgent } from "./splitMultiLevelAgent.js";
 import fs from "fs";
-import path from "path";
+import path, { dirname } from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 /**
  * A specialized subclass that handles multi-level job descriptions.
@@ -34,10 +39,19 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
 
   private updateMultiLevelJobDataFromJson(): void {
     try {
-      const filePath = path.join(__dirname, "data", "jobDescriptionsWithNewMultiLevelJob.json");
+      this.logger.info(
+        "Updating multi-level job data from JSON file: jobDescriptionsWithNewMultiLevelJob.json"
+      );
+      const filePath = path.join(
+        __dirname,
+        "data",
+        "jobDescriptionsWithNewMultiLevelJob.json"
+      );
 
       if (!fs.existsSync(filePath)) {
-        this.logger.warn("No jobDescriptionsWithNewMultiLevelJob.json file found. Skipping multi-level job updates.");
+        this.logger.warn(
+          "No jobDescriptionsWithNewMultiLevelJob.json file found. Skipping multi-level job updates."
+        );
         return;
       }
 
@@ -45,11 +59,14 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
       const jsonString = fs.readFileSync(filePath, "utf-8");
       const updatedRecords: JobDescription[] = JSON.parse(jsonString);
 
+      let counter = 0;
+
       // Loop through each record in the new data
       updatedRecords.forEach((record) => {
         // Find the matching job description in memory
         const existing = this.memory.jobDescriptions.find(
-          (jd) => jd.titleCode === record.titleCode && jd.variant === record.variant
+          (jd) =>
+            jd.titleCode === record.titleCode && jd.variant === record.variant
         );
 
         // If we found a match, update its .multiLevelJob field
@@ -58,15 +75,21 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
           this.logger.info(
             `Updated multiLevelJob for ${existing.titleCode} (${existing.variant}) to: ${record.multiLevelJob}`
           );
+          counter++;
         } else {
           // Optional: Log or handle any records not found in memory
           this.logger.warn(
             `No matching job description found in memory for titleCode: ${record.titleCode}, variant: ${record.variant}`
           );
         }
+
       });
+      this.logger.info(`Updated ${counter} multi-level job descriptions`);
     } catch (err) {
-      this.logger.error("Error updating multi-level job data from JSON file:", err);
+      this.logger.error(
+        "Error updating multi-level job data from JSON file:",
+        err
+      );
     }
   }
 
@@ -76,7 +99,10 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
    * sub-level descriptions to Google Sheets.
    */
   override async process() {
-    await this.updateRangedProgress(0, "Starting Multi-Level Job Description Analysis");
+    await this.updateRangedProgress(
+      0,
+      "Starting Multi-Level Job Description Analysis"
+    );
     this.logger.info("Starting Multi-Level Job Description Analysis");
 
     this.updateMultiLevelJobDataFromJson();
@@ -93,23 +119,35 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
       return;
     }
 
-    this.logger.info(`Found ${multiLevelDescriptions.length} multi-level job descriptions`);
+    this.logger.info(
+      `Found ${multiLevelDescriptions.length} multi-level job descriptions`
+    );
 
     const newSubLevelDescriptions: JobDescription[] = [];
 
     // For each multi-level job, split it, then process the resulting sub-levels
     for (const multiLevelJD of multiLevelDescriptions) {
       // Use a sub-agent to parse out sub-levels
-      const splittedLevels = await this.splitMultiLevelJobDescription(multiLevelJD);
+      const splittedLevels = await this.splitMultiLevelJobDescription(
+        multiLevelJD
+      );
 
       // For each sub-level, run the same chain of analysis. Then collect them in memory.
       for (let i = 0; i < splittedLevels.length; i++) {
         const levelJD = splittedLevels[i];
-        this.logger.info(`Processing sub-level ${i + 1} of ${splittedLevels.length} for ${multiLevelJD.titleCode}`);
+        this.logger.info(
+          `Processing sub-level ${i + 1} of ${splittedLevels.length} for ${
+            multiLevelJD.titleCode
+          }`
+        );
 
         // We'll artificially set .processed = false so the parent's logic can run
         // any sub-agents it needs. Or, you can call `processJobDescription` directly:
-        await this.analysisAgent.processJobDescription(levelJD, i + 1, splittedLevels.length);
+        await this.analysisAgent.processJobDescription(
+          levelJD,
+          i + 1,
+          splittedLevels.length
+        );
 
         // Add the newly analyzed sub-level job description to memory
         this.memory.jobDescriptions.push(levelJD);
@@ -117,11 +155,16 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
       }
     }
 
-    await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");
+    await this.updateRangedProgress(
+      100,
+      "Multi-Level Job Description Analysis Completed"
+    );
     await this.setCompleted("Task Completed");
   }
 
-  private async splitMultiLevelJobDescription(multiLevelJD: JobDescription): Promise<JobDescription[]> {
+  private async splitMultiLevelJobDescription(
+    multiLevelJD: JobDescription
+  ): Promise<JobDescription[]> {
     const splitAgent = new SplitMultiLevelJobDescriptionAgent(
       this.agent,
       this.memory,
@@ -138,6 +181,4 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
       processed: false,
     }));
   }
-
-
 }

@@ -1,6 +1,6 @@
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes";
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 export declare class IdentifyBarriersAgent extends PolicySynthAgent {
     memory: JobDescriptionMemoryData;
     modelSize: PsAiModelSize;

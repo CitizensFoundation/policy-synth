@@ -1,8 +1,8 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
-import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory";
-import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes";
-import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
+import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
 
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened

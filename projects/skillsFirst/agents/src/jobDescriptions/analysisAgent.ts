@@ -105,6 +105,10 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       // 3) Process each job description
       const concurrency = 7;
 
+      this.logger.info(
+        `Processing ${selectedJobDescriptions.length} job descriptions with concurrency of ${concurrency}`
+      );
+
       for (let i = 0; i < selectedJobDescriptions.length; i += concurrency) {
         const chunk = selectedJobDescriptions.slice(i, i + concurrency);
 
@@ -118,7 +122,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
               return;
             }
 
-            if (false && jobDescription.processed === true) {
+            if (jobDescription.processed === true) {
               this.logger.info(
                 `Skipping '${jobDescription.titleCode}' as it has already been processed`
               );

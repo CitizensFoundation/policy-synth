@@ -1,5 +1,5 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
-import { PsAgent } from "@policysynth/agents/dbModels/agent";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
  * version to Google Sheets with the same columns/structure as the CSV version,

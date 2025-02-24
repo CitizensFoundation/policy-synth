@@ -40,10 +40,6 @@ export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
 
   /**
    * Processes the provided job description by first determining how many levels are present,
-   * then extracting the text for each level individually.
-   * Returns an array of objects with:
-   *  - level: number (e.g., 1, 2, etc.)
-   *  - text: string (the text for that level)
    */
   async processJobDescription(
     jobDescription: JobDescription
@@ -81,12 +77,18 @@ Return only the number (an integer) with no additional commentary.`;
       levelCountOutput = "1";
     }
 
+    this.logger.info(
+      `Level count output: ${levelCountOutput} for ${jobDescription.titleCode}`
+    );
+
     // Parse the output to an integer; default to 1 if parsing fails.
     let levelCount = parseInt(levelCountOutput.trim(), 10);
     if (isNaN(levelCount) || levelCount < 1) {
       levelCount = 1;
     }
-    this.logger.info(`Determined ${levelCount} level(s) for ${jobDescription.titleCode}`);
+    this.logger.info(
+      `Determined ${levelCount} level(s) for ${jobDescription.titleCode}`
+    );
 
     // Step 2: For each level, extract the corresponding text.
     const result: { level: number; text: string }[] = [];
@@ -121,6 +123,12 @@ Return only the plain text for that level with no additional commentary`;
         // Fallback to empty string if error occurs.
         extractedText = "";
       }
+
+      this.logger.debug(
+        `Extracted text for Level ${i} of ${
+          jobDescription.titleCode
+        }:\n ${extractedText.trim()}`
+      );
 
       result.push({
         level: i,

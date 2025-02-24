@@ -1,5 +1,6 @@
-import { JobDescriptionAnalysisAgent } from "./analysisAgent.js";
+import { JobDescriptionAnalysisAgent } from "../analysisAgent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 /**
  * A specialized subclass that handles multi-level job descriptions.
  * If a JobDescription has .multiLevelJob = true, then we:
@@ -9,8 +10,10 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
  *  3) We add those new sub-level JobDescriptions to memory.
  *  4) We export only those sub-level JobDescriptions to Google Sheets.
  */
-export declare class JobDescriptionMultiLevelAnalysisAgent extends JobDescriptionAnalysisAgent {
-    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
+export declare class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
+    private analysisAgent;
+    memory: JobDescriptionMemoryData;
+    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number, analysisAgent: JobDescriptionAnalysisAgent);
     private updateMultiLevelJobDataFromJson;
     /**
      * Main process method override that first checks for multi-level job descriptions,

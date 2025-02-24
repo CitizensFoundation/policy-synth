@@ -1,6 +1,6 @@
-import { PolicySynthAgent } from "@policysynth/agents/base/agent";
-import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory";
-import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes";
+import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
+import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 /**
  * Agent to read JSON data (similar to jobDescriptions.json) and push a flattened
  * version to Google Sheets with the same columns/structure as the CSV version,
