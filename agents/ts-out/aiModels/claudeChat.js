@@ -3,9 +3,11 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model } from "tiktoken";
 export class ClaudeChat extends BaseChatModel {
     client;
+    maxThinkingTokens;
     constructor(config) {
         const { apiKey, modelName = "claude-3-opus-20240229", maxTokensOut = 4096, } = config;
         super(modelName, maxTokensOut);
+        this.maxThinkingTokens = config.maxThinkingTokens;
         this.client = new Anthropic({ apiKey });
     }
     async generate(messages, streaming, streamingCallback) {
@@ -26,6 +28,10 @@ export class ClaudeChat extends BaseChatModel {
             max_tokens: this.maxTokensOut,
             messages: formattedMessages,
             model: this.modelName,
+            thinking: this.maxThinkingTokens ? {
+                type: "enabled",
+                budget_tokens: this.maxThinkingTokens,
+            } : undefined,
         };
         if (systemMessage) {
             requestOptions.system = [

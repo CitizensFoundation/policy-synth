@@ -18,13 +18,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     maxModelTokensOut;
     modelTemperature;
     reasoningEffort = "medium";
+    maxThinkingTokens;
     limitedLLMmaxRetryCount = 3;
     mainLLMmaxRetryCount = 40;
-    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = "medium", agentId, userId) {
+    constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = "medium", maxThinkingTokens = 0, agentId, userId) {
         super();
         this.maxModelTokensOut = maxModelTokensOut;
         this.modelTemperature = modelTemperature;
         this.reasoningEffort = reasoningEffort;
+        this.maxThinkingTokens = maxThinkingTokens;
         this.userId = userId;
         this.agentId = agentId;
         this.initializeModels(aiModels, accessConfiguration);
@@ -64,6 +66,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
                 reasoningEffort: this.reasoningEffort,
+                maxThinkingTokens: this.maxThinkingTokens,
                 modelType: modelType,
                 modelSize: modelSize,
             };
@@ -133,6 +136,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 maxTokensOut: this.maxModelTokensOut,
                 temperature: this.modelTemperature,
                 reasoningEffort: this.reasoningEffort,
+                maxThinkingTokens: this.maxThinkingTokens,
                 modelType: modelType,
                 modelSize: modelSize,
             };

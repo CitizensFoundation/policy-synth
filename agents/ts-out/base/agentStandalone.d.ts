@@ -13,6 +13,7 @@ export declare class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
     get reasoningEffort(): "low" | "medium" | "high";
+    get maxThinkingTokens(): number;
     /**
      * Creates a new standalone agent.
      * @param memory Optional initial memory object.

@@ -22,6 +22,7 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     protected get maxModelTokensOut(): number;
     protected get modelTemperature(): number;
     protected get reasoningEffort(): 'low' | 'medium' | 'high';
+    protected get maxThinkingTokens(): number;
     pauseCheckInterval: number;
     pauseTimeout: number;
     private memorySaveTimer;

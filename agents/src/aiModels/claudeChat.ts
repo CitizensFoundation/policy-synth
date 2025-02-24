@@ -4,6 +4,7 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
+  private maxThinkingTokens?: number;
 
   constructor(config: PsAiModelConfig) {
     const {
@@ -12,6 +13,7 @@ export class ClaudeChat extends BaseChatModel {
       maxTokensOut = 4096,
     } = config;
     super(modelName, maxTokensOut);
+    this.maxThinkingTokens = config.maxThinkingTokens;
     this.client = new Anthropic({ apiKey });
   }
 
@@ -38,6 +40,10 @@ export class ClaudeChat extends BaseChatModel {
       max_tokens: this.maxTokensOut,
       messages: formattedMessages,
       model: this.modelName,
+      thinking: this.maxThinkingTokens ? {
+        type: "enabled",
+        budget_tokens: this.maxThinkingTokens!,
+      } : undefined,
     };
 
     if (systemMessage) {

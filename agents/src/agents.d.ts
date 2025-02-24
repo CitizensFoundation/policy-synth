@@ -16,6 +16,7 @@ interface PsAiModelConfig {
   modelSize: import("./aiModelTypes.js").PsAiModelSize;
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
+  maxThinkingTokens?: number;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

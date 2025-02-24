@@ -23,6 +23,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
     get maxModelTokensOut() { return 16384; }
     get modelTemperature() { return 0.7; }
     get reasoningEffort() { return 'medium'; }
+    get maxThinkingTokens() { return 0; }
     pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours
     pauseTimeout = 1000;
     memorySaveTimer = null;
@@ -44,7 +45,7 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         if (!this.skipAiModels) {
             this.modelManager = new PsAiModelManager(agent?.AiModels || [], agent
                 ? agent.Group?.private_access_configuration || []
-                : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, agent ? agent.id : -1, agent ? agent.user_id : -1);
+                : [] /*this.getAccessConfigFromEnv()*/, this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, this.maxThinkingTokens, agent ? agent.id : -1, agent ? agent.user_id : -1);
         }
         if (agent && !agent.redisStatusKey) {
             this.logger.error("Agent status key not set", agent);

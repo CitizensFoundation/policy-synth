@@ -12,9 +12,10 @@ export declare class PsAiModelManager extends PolicySynthAgentBase {
     maxModelTokensOut: number;
     modelTemperature: number;
     reasoningEffort: "low" | "medium" | "high";
+    maxThinkingTokens: number;
     limitedLLMmaxRetryCount: number;
     mainLLMmaxRetryCount: number;
-    constructor(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[], maxModelTokensOut: number | undefined, modelTemperature: number | undefined, reasoningEffort: "low" | "medium" | "high" | undefined, agentId: number, userId: number);
+    constructor(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[], maxModelTokensOut: number | undefined, modelTemperature: number | undefined, reasoningEffort: "low" | "medium" | "high" | undefined, maxThinkingTokens: number | undefined, agentId: number, userId: number);
     initializeOneModelFromEnv(): BaseChatModel | undefined;
     initializeModels(aiModels: PsAiModelAttributes[], accessConfiguration: YpGroupPrivateAccessConfiguration[]): void;
     callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;

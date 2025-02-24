@@ -1,6 +1,7 @@
 import { BaseChatModel } from "./baseChatModel.js";
 export declare class ClaudeChat extends BaseChatModel {
     private client;
+    private maxThinkingTokens?;
     constructor(config: PsAiModelConfig);
     generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<{
         tokensIn: number;

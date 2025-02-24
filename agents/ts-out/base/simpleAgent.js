@@ -86,6 +86,9 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
             apiKey: process.env.AI_MODEL_API_KEY,
             modelName: process.env.AI_MODEL_NAME,
             reasoningEffort: process.env.AI_MODEL_REASONING_EFFORT || 'medium',
+            maxThinkingTokens: (process.env.AI_MODEL_MAX_THINKING_TOKENS
+                ? parseInt(process.env.AI_MODEL_MAX_THINKING_TOKENS)
+                : 0),
             maxTokensOut: this.maxModelTokensOut ??
                 (process.env.AI_MODEL_MAX_TOKENS_OUT
                     ? parseInt(process.env.AI_MODEL_MAX_TOKENS_OUT)

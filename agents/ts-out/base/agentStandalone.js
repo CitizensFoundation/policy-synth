@@ -21,6 +21,9 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
     get reasoningEffort() {
         return "medium";
     }
+    get maxThinkingTokens() {
+        return 0;
+    }
     /**
      * Creates a new standalone agent.
      * @param memory Optional initial memory object.
@@ -32,7 +35,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
         // Pass -1 for both agentId and userId since there is no database.
         this.modelManager = new PsAiModelManager([], // No DB-based AI models.
         [], // No access configuration.
-        this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, -1, -1);
+        this.maxModelTokensOut, this.modelTemperature, this.reasoningEffort, this.maxThinkingTokens, -1, -1);
         // Override the token usage saving to avoid any database calls.
         this.modelManager.saveTokenUsage = async (modelType, modelSize, tokensIn, tokensOut) => {
             console.log(`(Standalone) Token usage for model ${modelType} (${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`);

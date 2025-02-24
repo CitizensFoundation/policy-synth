@@ -67,8 +67,8 @@ export class OpenAiChat extends BaseChatModel {
 
     this.logger.debug(
       `Model config: type=${this.modelConfig.modelType}, size=${this.modelConfig.modelSize}, ` +
-        `effort=${this.modelConfig.reasoningEffort}, temp=${this.modelConfig.temperature}, ` +
-        `maxTokens=${this.modelConfig.maxTokensOut}`
+        `effort=${this.modelConfig.reasoningEffort}, maxtemp=${this.modelConfig.temperature}, ` +
+        `maxTokens=${this.modelConfig.maxTokensOut}, maxThinkingTokens=${this.modelConfig.maxThinkingTokens}`
     );
 
     // 3. Streaming vs. Non-streaming

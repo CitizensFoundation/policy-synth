@@ -25,6 +25,9 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
   get reasoningEffort(): "low" | "medium" | "high" {
     return "medium";
   }
+  get maxThinkingTokens(): number {
+    return 0;
+  }
 
   /**
    * Creates a new standalone agent.
@@ -42,6 +45,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       this.maxModelTokensOut,
       this.modelTemperature,
       this.reasoningEffort,
+      this.maxThinkingTokens,
       -1,
       -1
     );
