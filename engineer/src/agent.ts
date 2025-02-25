@@ -22,7 +22,7 @@ export class PsEngineerAgent extends PsEngineerAgentBase {
   githubIssueUrl?: string;
 
   override get maxModelTokensOut(): number {
-    return 80000;
+    return 64000;
   }
 
   override get modelTemperature(): number {

@@ -49,7 +49,7 @@ Your JSON array output:
     }
     async generateSearchQueries() {
         this.startTiming();
-        const response = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderMessages(), true);
+        const response = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, await this.renderMessages(), true);
         await this.addTimingResult("SearchQueriesGenerator");
         return response;
     }

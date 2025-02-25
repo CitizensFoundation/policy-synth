@@ -68,7 +68,7 @@ Your JSON array output:
     this.startTiming();
     const response = await this.callModel(
       PsAiModelType.Text,
-      PsAiModelSize.Large,
+      PsAiModelSize.Medium,
       await this.renderMessages(),
       true
     );

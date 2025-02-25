@@ -5,6 +5,8 @@ export declare class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
     get reasoningEffort(): "low" | "medium" | "high";
+    get maxThinkingTokens(): number;
+    currentMaxThinkingTokens: number;
     constructor(agent: PsAgent, memory: PsEngineerMemoryData, startProgress: number, endProgress: number);
     readNpmDependencies(): any;
     get analyzeSystemPrompt(): string;

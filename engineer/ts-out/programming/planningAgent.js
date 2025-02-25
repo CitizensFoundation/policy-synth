@@ -6,6 +6,9 @@ import { PsEngineerBaseProgrammingAgent } from "./baseAgent.js";
 export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammingAgent {
     havePrintedDebugPrompt = false;
     planningModelSize = PsAiModelSize.Medium;
+    get maxThinkingTokens() {
+        return 63999;
+    }
     /**
      * System prompt for generating a coding plan (no actual code).
      * Consolidates repeated instructions into global constraints and success criteria.

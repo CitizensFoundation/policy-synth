@@ -12,7 +12,7 @@ import { PsEngineerAgentBase } from "./agentBase.js";
 export class PsEngineerAgent extends PsEngineerAgentBase {
     githubIssueUrl;
     get maxModelTokensOut() {
-        return 80000;
+        return 64000;
     }
     get modelTemperature() {
         return 0.0;

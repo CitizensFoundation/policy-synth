@@ -120,7 +120,7 @@ Is the content relevant to the task? Yes or No:
         // Call model using the new callModel style
         const analysisResults = (await this.callModel(
           PsAiModelType.TextReasoning,
-          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
           messages,
           false
         )) as string;

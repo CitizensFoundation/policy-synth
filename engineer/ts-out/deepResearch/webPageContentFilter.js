@@ -98,7 +98,7 @@ Is the content relevant to the task? Yes or No:
             ];
             this.startTiming();
             // Call model using the new callModel style
-            const analysisResults = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, messages, false));
+            const analysisResults = (await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, messages, false));
             await this.addTimingResult("WebPageContentFilter");
             const trimmedResponse = analysisResults.trim();
             if (trimmedResponse === "Yes") {

@@ -28,7 +28,7 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
   tsMorphProject: Project | undefined;
 
   override get maxModelTokensOut(): number {
-    return 80000;
+    return 64000;
   }
 
   override get modelTemperature(): number {

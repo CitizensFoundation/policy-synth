@@ -12,7 +12,7 @@ export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
   declare memory: PsEngineerMemoryData;
 
   override get maxModelTokensOut(): number {
-    return 80000;
+    return 64000;
   }
 
   override get modelTemperature(): number {
@@ -22,6 +22,12 @@ export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
   override get reasoningEffort(): "low" | "medium" | "high" {
     return "high";
   }
+
+  override get maxThinkingTokens(): number {
+    return 63999;
+  }
+
+  currentMaxThinkingTokens = 63999;
 
   constructor(
     agent: PsAgent,
@@ -55,7 +61,8 @@ export class PsEngineerInitialAnalyzer extends PsEngineerAgentBase {
   4. You will see all possible documentation files. Output which might be helpful.
   5. You will also see all possible TypeScript definition files.
      - If they could conceivably be relevant, list them.
-  6. Output a JSON object matching the schema below (be flexible and inclusive rather than exclusive):
+  6. Always output the full paths of files as provided to you.
+  7. Output a JSON object matching the schema below (be flexible and inclusive rather than exclusive):
      {
        "existingTypeScriptFilesThatCouldPossiblyChangeForFurtherInvestigation": string[];
        "otherUsefulTypescriptCodeFilesThatCouldBeRelevant": string[];
@@ -177,10 +184,11 @@ Your analysis:
       const userPrompt = userPromptTemplate(fileContent, filePath);
       this.startTiming();
       let rawResponse: string;
+      this.currentMaxThinkingTokens = 16000;
       try {
         rawResponse = await this.callModel(
           PsAiModelType.TextReasoning,
-          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
           [
             this.createSystemMessage(promptSystem),
             this.createHumanMessage(userPrompt),
@@ -269,9 +277,11 @@ Your JSON output:
 
     let rawResponse: string | object;
     try {
+      this.currentMaxThinkingTokens = 63000;
+
       rawResponse = await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Small,
+        PsAiModelSize.Medium,
         [
           this.createSystemMessage(promptSystem),
           this.createHumanMessage(userPrompt),
@@ -359,9 +369,11 @@ Your JSON output:
       this.memory.workspaceFolder
     );
 
+    this.currentMaxThinkingTokens = 63000;
+
     // 3) Ask the LLM which files could *possibly* be relevant.
     this.startTiming();
-    const analysisResponse = await this.callModel(
+    const analysisResults = await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Medium,
       [
@@ -370,17 +382,9 @@ Your JSON output:
           this.analyzeUserPrompt(allNpmPackageDependencies, allDocumentationFiles)
         ),
       ],
-      false
-    );
+      true
+    ) as PsEngineerPlanningResults;
     await this.addTimingResult("Analyzer Agent");
-
-    // 4) Parse the planning results
-    let analysisResults: PsEngineerPlanningResults;
-    if (typeof analysisResponse === "string") {
-      analysisResults = JSON.parse(analysisResponse);
-    } else {
-      analysisResults = analysisResponse as PsEngineerPlanningResults;
-    }
 
     // Store the raw results
     this.memory.analysisResults = analysisResults;

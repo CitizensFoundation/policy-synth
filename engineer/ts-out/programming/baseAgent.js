@@ -14,7 +14,7 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
     previousCurrentErrors;
     tsMorphProject;
     get maxModelTokensOut() {
-        return 80000;
+        return 64000;
     }
     get modelTemperature() {
         return 0.0;
