@@ -1,10 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+import { ContentBlock } from "@anthropic-ai/sdk/resources/messages/messages.js";
 
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
   private maxThinkingTokens?: number;
+  private config: PsAiModelConfig;
 
   constructor(config: PsAiModelConfig) {
     const {
@@ -15,6 +17,7 @@ export class ClaudeChat extends BaseChatModel {
     super(modelName, maxTokensOut);
     this.maxThinkingTokens = config.maxThinkingTokens;
     this.client = new Anthropic({ apiKey });
+    this.config = config;
   }
 
   async generate(
@@ -22,6 +25,11 @@ export class ClaudeChat extends BaseChatModel {
     streaming?: boolean,
     streamingCallback?: Function
   ) {
+    this.logger.debug(
+      `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
+        `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
+        `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}`
+    );
     let systemMessage: string | undefined;
     const formattedMessages = messages
       .filter((msg) => {
@@ -66,6 +74,8 @@ export class ClaudeChat extends BaseChatModel {
       }
     }
 
+
+
     if (streaming) {
       const stream = await this.client.messages.create({
         ...requestOptions,
@@ -97,9 +107,20 @@ export class ClaudeChat extends BaseChatModel {
       return {
         tokensIn: Math.round(tokensIn),
         tokensOut: Math.round(tokensOut),
-        content: (response.content[0] as any).text,
+        content: this.getTextTypeFromContent(response.content),
       };
     }
+  }
+
+  getTextTypeFromContent(content: ContentBlock[]): string {
+    for (const block of content) {
+      if (block.type === "text") {
+        return block.text;
+      }
+    }
+
+    this.logger.warn(`Unknown content type: ${JSON.stringify(content, null, 2)}`);
+    return "unknown";
   }
 
   async getEstimatedNumTokensFromMessages(

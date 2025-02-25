@@ -4,13 +4,18 @@ import { encoding_for_model } from "tiktoken";
 export class ClaudeChat extends BaseChatModel {
     client;
     maxThinkingTokens;
+    config;
     constructor(config) {
         const { apiKey, modelName = "claude-3-opus-20240229", maxTokensOut = 4096, } = config;
         super(modelName, maxTokensOut);
         this.maxThinkingTokens = config.maxThinkingTokens;
         this.client = new Anthropic({ apiKey });
+        this.config = config;
     }
     async generate(messages, streaming, streamingCallback) {
+        this.logger.debug(`Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
+            `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
+            `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}`);
         let systemMessage;
         const formattedMessages = messages
             .filter((msg) => {
@@ -74,9 +79,18 @@ export class ClaudeChat extends BaseChatModel {
             return {
                 tokensIn: Math.round(tokensIn),
                 tokensOut: Math.round(tokensOut),
-                content: response.content[0].text,
+                content: this.getTextTypeFromContent(response.content),
             };
         }
+    }
+    getTextTypeFromContent(content) {
+        for (const block of content) {
+            if (block.type === "text") {
+                return block.text;
+            }
+        }
+        this.logger.warn(`Unknown content type: ${JSON.stringify(content, null, 2)}`);
+        return "unknown";
     }
     async getEstimatedNumTokensFromMessages(messages) {
         //TODO: Get the right encoding
