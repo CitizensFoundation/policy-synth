@@ -1,4 +1,4 @@
-import { GetWebPagesBaseAgent } from "@policysynth/agents/webResearch/getWebPagesBase.js";
+import { GetWebPagesBaseAgent } from "@policysynth/agents/deepResearch/getWebPagesBase.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 /**
  * Possible types of web research this agent performs

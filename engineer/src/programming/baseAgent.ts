@@ -39,6 +39,10 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
     return "high";
   }
 
+  override get maxThinkingTokens(): number {
+    return 63999;
+  }
+
   /**
    * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
    */

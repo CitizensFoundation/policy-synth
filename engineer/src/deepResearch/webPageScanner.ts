@@ -9,7 +9,7 @@ import { writeFile, readFile, existsSync } from "fs";
 import { createGzip, gunzipSync, gzipSync } from "zlib";
 
 // Core PolicySynth imports
-import { GetWebPagesBaseAgent } from "@policysynth/agents/webResearch/getWebPagesBase.js";
+import { GetWebPagesBaseAgent } from "@policysynth/agents/deepResearch/getWebPagesBase.js";
 import { PsConstants } from "@policysynth/agents/constants.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import {

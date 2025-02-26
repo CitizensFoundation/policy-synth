@@ -15,6 +15,7 @@ export declare abstract class PsEngineerBaseProgrammingAgent extends PsEngineerA
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
     get reasoningEffort(): "low" | "medium" | "high";
+    get maxThinkingTokens(): number;
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */

@@ -21,6 +21,7 @@ export class PsEngineerProgrammingPlanningAgent extends PsEngineerBaseProgrammin
     return `
 <ImportantInstructions>
 ${this.renderGlobalConstraints()}
+Always output the full paths of files as provided to you.
 
 <Goal>
 Create a clear, high-level coding plan that details which files need changes.
@@ -152,11 +153,17 @@ Review the plan:
 <Instructions>
 ${this.renderGlobalConstraints()}
 
-Review the <Context> and <Task> details. Provide a JSON array describing the code changes:
-- fileAction: "add", "change", or "delete"
-- fullPathToNewOrUpdatedFile
-- codingTaskTitle
-- codingTaskStepsWithDetailedDescription
+Review the <Context> and <Task> details.
+
+Always output the full paths of files as provided to you.
+
+Provide a JSON array describing the code changes:
+{
+  fileAction: "add" | "change" | "delete",
+  fullPathToNewOrUpdatedFile: string,
+  codingTaskTitle: string,
+  codingTaskStepsWithDetailedDescription: string[]
+}
 
 ${
   this.currentErrors

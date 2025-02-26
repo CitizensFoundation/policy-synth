@@ -29,6 +29,10 @@ export class PsEngineerAgent extends PsEngineerAgentBase {
     return 0.0;
   }
 
+  override get maxThinkingTokens(): number {
+    return 63999;
+  }
+
   override get reasoningEffort(): "low" | "medium" | "high" {
     return "high";
   }

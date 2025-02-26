@@ -124,7 +124,7 @@ export class PsEngineerProgrammingImplementationAgent extends PsEngineerBaseProg
     return `<Instructions>
     1. Review the proposed code for the given task.
     2. Assess its feasibility, correctness, and completeness.
-    3. Never ask for documentation, we generate those with GPT-4 seperatly for everything that changes.
+    3. Never ask for documentation, we generate those seperatly for everything that changes.
     4. Provide feedback only if you find critical issues with the code.
     5. You will see previous reviews, we are in a loop until the code is good.
     6. There should never be any explanations or comments before or after the code.

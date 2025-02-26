@@ -17,6 +17,9 @@ export class PsEngineerAgent extends PsEngineerAgentBase {
     get modelTemperature() {
         return 0.0;
     }
+    get maxThinkingTokens() {
+        return 63999;
+    }
     get reasoningEffort() {
         return "high";
     }

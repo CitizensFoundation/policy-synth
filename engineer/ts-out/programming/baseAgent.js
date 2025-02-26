@@ -22,6 +22,9 @@ export class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase {
     get reasoningEffort() {
         return "high";
     }
+    get maxThinkingTokens() {
+        return 63999;
+    }
     /**
      * Adapted constructor: now uses PolicySynthAgent’s constructor signature.
      */

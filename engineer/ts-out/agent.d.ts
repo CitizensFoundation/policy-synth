@@ -5,6 +5,7 @@ export declare class PsEngineerAgent extends PsEngineerAgentBase {
     githubIssueUrl?: string;
     get maxModelTokensOut(): number;
     get modelTemperature(): number;
+    get maxThinkingTokens(): number;
     get reasoningEffort(): "low" | "medium" | "high";
     private static readonly ENGINEER_AGENT_CLASS_BASE_ID;
     private static readonly ENGINEER_AGENT_CLASS_VERSION;

@@ -1,6 +1,6 @@
 import pLimit from "p-limit";
 // Core PolicySynth imports
-import { GetWebPagesBaseAgent } from "@policysynth/agents/webResearch/getWebPagesBase.js";
+import { GetWebPagesBaseAgent } from "@policysynth/agents/deepResearch/getWebPagesBase.js";
 import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
 /**
  * WebPageScanner merges the logic from your older “WebPageScanner” example

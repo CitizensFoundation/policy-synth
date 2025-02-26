@@ -1,4 +1,4 @@
-import { BaseSearchWebAgent } from "@policysynth/agents/webResearch/searchWeb.js";
+import { BaseSearchWebAgent } from "@policysynth/agents/deepResearch/searchWeb.js";
 
 export class ResearchWeb extends BaseSearchWebAgent {
   constructor(memory: PsAgentMemoryData) {
