@@ -138,7 +138,7 @@ Your analysis:
             let rawResponse;
             this.currentMaxThinkingTokens = 16000;
             try {
-                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Medium, [
+                rawResponse = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Small, [
                     this.createSystemMessage(promptSystem),
                     this.createHumanMessage(userPrompt),
                 ], false);

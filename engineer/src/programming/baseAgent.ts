@@ -9,7 +9,6 @@ import {
 
 import { PsEngineerAgentBase } from "../agentBase.js";
 
-
 /* ------------------------------------------------------------------------
    Base Programming Agent
 ------------------------------------------------------------------------- */
@@ -301,8 +300,10 @@ export abstract class PsEngineerBaseProgrammingAgent extends PsEngineerAgentBase
 
       ${
         this.memory.existingTypeScriptFilesLikelyToChange && !limited
-          ? `<TypescriptFilesThatCouldChangeIfNeeded>${this.memory.existingTypeScriptFilesLikelyToChange.join(
-              "\n"
+          ? `<TypescriptFilesThatCouldChangeIfNeeded>${JSON.stringify(
+              this.memory.existingTypeScriptFilesLikelyToChange,
+              null,
+              2
             )}</TypescriptFilesThatCouldChangeIfNeeded>`
           : ""
       }
