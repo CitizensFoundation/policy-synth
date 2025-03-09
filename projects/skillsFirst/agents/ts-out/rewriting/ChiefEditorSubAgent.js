@@ -15,6 +15,7 @@ export class ChiefEditorSubAgent extends PolicySynthAgent {
     }
     async processRewrites(jobDescription, rewrites) {
         await this.updateRangedProgress(0, `ChiefEditorSubAgent started for ${jobDescription.name}`);
+        const readingLevel = jobDescription.degreeAnalysis.maximumDegreeRequirement;
         const systemPrompt = `You are an expert text editor specializing in simplifying job descriptions.
 Job Title: ${jobDescription.name}
 Rewrite Versions:
@@ -22,7 +23,7 @@ Rewrite Versions:
 2. ${rewrites[1]}
 3. ${rewrites[2]}
 Your task is to review these rewrites and merge them into a single, refined version that preserves the original job title.
-Ensure the final text is clear, concise, and written at a high school or GED reading level.
+Ensure the final text is clear, concise, and written at a ${readingLevel} level.
 Return your answer in exactly the following JSON format:
 
 \`\`\`json

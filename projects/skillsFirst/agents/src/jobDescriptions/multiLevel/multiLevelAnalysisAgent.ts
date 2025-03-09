@@ -127,6 +127,7 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
     const useMaxCounter = true;
 
     let counter = 1;
+    let skipCounter = 0;
 
     // For each multi-level job, split it, then process the resulting sub-levels
     for (const multiLevelJD of multiLevelDescriptions) {
@@ -136,6 +137,17 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
         );
         break;
       }
+
+      if (
+        this.memory.doNotReprocessTitleCodes?.includes(multiLevelJD.titleCode)
+      ) {
+        this.logger.info(
+          `Skipping ${multiLevelJD.titleCode} because it is in the doNotReprocessTitleCodes list`
+        );
+        skipCounter++;
+        continue;
+      }
+
       // Use a sub-agent to parse out sub-levels
       const splittedLevels = await this.splitMultiLevelJobDescription(
         multiLevelJD
@@ -172,6 +184,10 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
     await this.updateRangedProgress(
       100,
       "Multi-Level Job Description Analysis Completed"
+    );
+
+    this.logger.info(
+      `Skipped ${skipCounter} multi-level job descriptions because they are in the doNotReprocessTitleCodes list`
     );
     await this.setCompleted("Task Completed");
   }

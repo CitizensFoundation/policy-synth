@@ -15,9 +15,10 @@ export class RewriteSubAgentOne extends PolicySynthAgent {
     }
     async processJobDescription(jobDescription) {
         await this.updateRangedProgress(0, `Starting RewriteSubAgentOne for ${jobDescription.name}`);
+        const readingLevel = jobDescription.degreeAnalysis.maximumDegreeRequirement;
         const systemPrompt = `You are an expert at rewriting complex job descriptions.
 
-Given the job description below, rewrite the job details to a reading level equivalent to high school or GED.
+Given the job description below, rewrite the job details to a reading level equivalent to ${readingLevel}.
 The job title must remain unchanged.
 Please generate three distinct rewritten versions that simplify the language, reduce complexity, and preserve the original job title.
 Focus only on rewriting the description details while keeping the title exactly as provided.
