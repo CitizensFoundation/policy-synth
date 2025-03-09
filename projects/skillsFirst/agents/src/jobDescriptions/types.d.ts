@@ -26,7 +26,8 @@ interface JobDescription {
   workMonth: string;
   deptCode: string;
   name: string; // The name of the job
-  text: string; // The full text of the job description
+  text: string;
+  rewrittenText?: string;
   classification: import("./educationTypes.js").EducationType;
   url?: string;
   error?: string;

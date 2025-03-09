@@ -1,8 +1,8 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { DifferenceAnalysisAgent } from "./rewriting/DifferenceAnalysisAgent.js";
-import { JobDescriptionBucketAgent } from "./rewriting/JobDescriptionBucketAgent.js";
-import { JobDescriptionRewriterMasterAgent } from "./rewriting/JobDescriptionRewriterMasterAgent.js";
+import { DifferenceAnalysisAgent } from "./rewriting/differenceAnalysisAgent.js";
+import { JobDescriptionBucketAgent } from "./rewriting/bucketAgent.js";
+import { JobDescriptionRewriterMasterAgent } from "./rewriting/rewriterMasterAgent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
@@ -27,16 +27,23 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     const mem = this.memory as JobDescriptionMemoryData;
     await this.updateRangedProgress(0, "Starting rewriting pipeline");
 
+    let mismatchCount = 0;
+
     // Step 1: Run Difference Analysis for each job description
     for (const jobDescription of mem.jobDescriptions as JobDescription[]) {
       try {
         const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
-        await diffAgent.processJobDescription(jobDescription);
+        const needsRewriting = await diffAgent.processJobDescription(jobDescription);
+        if (!needsRewriting) {
+          mismatchCount++;
+        }
       } catch (error) {
         this.logger.error(`DifferenceAnalysisAgent error for job ${jobDescription.name}: ${error}`);
         mem.llmErrors.push(`DifferenceAnalysisAgent error for ${jobDescription.name}: ${error}`);
       }
     }
+
+    this.logger.debug(`Found ${mismatchCount} job descriptions that need rewriting`);
 
     // Step 2: Filter job descriptions with readability mismatches
     const mismatchedJobDescriptions = (mem.jobDescriptions as JobDescription[]).filter(
@@ -49,7 +56,7 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     // Step 3: Bucket job descriptions by occupational classification
     let buckets: { [bucket: string]: JobDescription[] } = {};
     try {
-      buckets = await JobDescriptionBucketAgent.bucketJobDescriptions(mismatchedJobDescriptions);
+      buckets = JobDescriptionBucketAgent.bucketJobDescriptions(mismatchedJobDescriptions);
     } catch (error) {
       this.logger.error(`JobDescriptionBucketAgent error: ${error}`);
       mem.llmErrors.push(`JobDescriptionBucketAgent error: ${error}`);
@@ -94,7 +101,7 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
           "An agent for rewriting job descriptions",
         queueName: "JOB_DESCRIPTION_REWRITING",
         imageUrl:
-          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png",
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/2e8adfc9-cf7c-4ddd-a1cc-639e59ee813c.png",
         iconName: "job_description_rewriting",
         capabilities: ["analysis", "text processing"],
         requestedAiModelSizes: [

@@ -83,7 +83,7 @@ Return only the JSON object with no additional commentary:`;
         // Step 2: For each level, extract the corresponding text.
         const result = [];
         for (let i = 1; i <= levelCountOutput.numberOfLevels; i++) {
-            await this.updateRangedProgress((i / levelCountOutput.numberOfLevels) * 100, `Extracting text for Level ${i} of ${jobDescription.titleCode}`);
+            await this.updateRangedProgress((i / levelCountOutput.numberOfLevels) * 100, `Extracting text for Level ${i} for ${jobDescription.titleCode}`);
             const extractPrompt = `<JobDescription>
 ${jobDescription.text}
 </JobDescription>

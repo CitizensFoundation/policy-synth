@@ -14,7 +14,7 @@ export class ParallelCheckAgents extends PolicySynthAgent {
   modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {
-    return 100000;
+    return 5000;
   }
 
   override get modelTemperature(): number {
@@ -52,7 +52,7 @@ ${mergedText}
 
 You are an expert in job description rewriting quality assurance.
 Please perform the following checks on the rewritten job description:
-1. Verify that all essential details from the original job description are preserved.
+1. Verify that all details from the original job description are preserved.
 2. Confirm that there are no hallucinations or fabricated information in the rewritten text.
 3. Ensure that the rewritten job description is appropriate for a 10th grade reading level.
 
