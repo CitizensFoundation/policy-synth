@@ -2,6 +2,11 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 
+interface ParallelCheckResult {
+  allChecksPassed: boolean;
+  aggregatedFeedback: string;
+}
+
 export class ParallelCheckAgents extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
@@ -37,18 +42,19 @@ export class ParallelCheckAgents extends PolicySynthAgent {
     const mem = this.memory as JobDescriptionMemoryData;
     await this.updateRangedProgress(0, `Starting parallel checks for ${jobDescription.name}`);
 
-    const systemPrompt = `<JobDescription>
-Title: ${jobDescription.name}
-Original Excerpt: ${jobDescription.text.substring(0, 200)}
-Rewritten Job Description:
+    const systemPrompt = `<OriginalJobDescription>
+${jobDescription.text}
+</OriginalJobDescription>
+
+<RewrittenJobDescription>
 ${mergedText}
-</JobDescription>
+</RewrittenJobDescription>
 
 You are an expert in job description rewriting quality assurance.
 Please perform the following checks on the rewritten job description:
 1. Verify that all essential details from the original job description are preserved.
 2. Confirm that there are no hallucinations or fabricated information in the rewritten text.
-3. Ensure that the rewritten job description is appropriate for a high school or GED reading level.
+3. Ensure that the rewritten job description is appropriate for a 10th grade reading level.
 
 Based on these checks, determine if the rewritten job description meets all criteria.
 Return your evaluation in the following JSON format exactly with no additional text:
@@ -74,9 +80,9 @@ Return your evaluation in the following JSON format exactly with no additional t
       return { allChecksPassed: false, aggregatedFeedback: "Empty response from model." };
     }
 
-    let checkResult: { allChecksPassed: boolean; aggregatedFeedback: string };
+    let checkResult: ParallelCheckResult;
     try {
-      checkResult = resultText as { allChecksPassed: boolean; aggregatedFeedback: string };
+      checkResult = resultText as ParallelCheckResult;
     } catch (parseError) {
       mem.llmErrors.push(`ParallelCheckAgents parsing error for ${jobDescription.name}: ${parseError}`);
       await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);

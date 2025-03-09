@@ -3,9 +3,15 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { DifferenceAnalysisAgent } from "./rewriting/DifferenceAnalysisAgent.js";
 import { JobDescriptionBucketAgent } from "./rewriting/JobDescriptionBucketAgent.js";
 import { JobDescriptionRewriterMasterAgent } from "./rewriting/JobDescriptionRewriterMasterAgent.js";
+import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
+import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 
 export class JobDescriptionRewriterAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
+
+  static readonly JOB_DESCRIPTION_REWRITER_AGENT_CLASS_VERSION = 1;
+  static readonly JOB_DESCRIPTION_REWRITER_AGENT_CLASS_BASE_ID = "f340db77-476b-4195-bd51-6ea2a1610833";
 
   constructor(
     agent: PsAgent,
@@ -69,7 +75,52 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     await this.updateRangedProgress(100, "Rewriting pipeline completed");
   }
 
-  async processJobDescription(_jobDescription: JobDescription): Promise<void> {
+  async process(): Promise<void> {
     await this.runRewritingPipeline();
   }
+
+  static getAgentClass(): PsAgentClassCreationAttributes {
+    return {
+      class_base_id: this.JOB_DESCRIPTION_REWRITER_AGENT_CLASS_BASE_ID,
+      user_id: 0,
+      name: "Job Description Rewriter Agent",
+      version: this.JOB_DESCRIPTION_REWRITER_AGENT_CLASS_VERSION,
+      available: true,
+      configuration: {
+        category: PsAgentClassCategories.HRManagement,
+        subCategory: "jobDescriptionAnalysis",
+        hasPublicAccess: false,
+        description:
+          "An agent for rewriting job descriptions",
+        queueName: "JOB_DESCRIPTION_REWRITING",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/d243273c-f11e-4055-9a78-eaa1fa4baa28.png",
+        iconName: "job_description_rewriting",
+        capabilities: ["analysis", "text processing"],
+        requestedAiModelSizes: [
+          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+        ],
+        defaultStructuredQuestions: [
+          {
+            uniqueId: "numJobDescriptions",
+            type: "textField",
+            subType: "number",
+            value: 10,
+            maxLength: 4,
+            required: true,
+            text: "Number of job descriptions to analyze",
+          },
+        ],
+        supportedConnectors: [] as PsConnectorClassTypes[],
+        questions: this.getConfigurationQuestions(),
+      },
+    };
+  }
+
+  static getConfigurationQuestions(): YpStructuredQuestionData[] {
+    return [];
+  }
+
 }

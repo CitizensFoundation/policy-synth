@@ -38,7 +38,7 @@ Rewrite Versions:
 2. ${rewrites[1]}
 3. ${rewrites[2]}
 Your task is to review these rewrites and merge them into a single, refined version that preserves the original job title.
-Ensure the final text is clear, concise, and written at a ${readingLevel} level.
+Ensure the final text is clear, concise, and written at a 10th grade reading level.
 Return your answer in exactly the following JSON format:
 
 \`\`\`json

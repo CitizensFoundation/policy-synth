@@ -46,7 +46,7 @@ You are an expert in evaluating rewritten job descriptions.
 
 Your task is to verify that:
 1. The job title remains unchanged.
-2. The rewritten job description is written at a high school or GED reading level.
+2. The rewritten job description is written at a 10th grade reading level.
 3. All essential details from the original job description are preserved in the rewritten version.
 
 Return your evaluation in the following JSON format exactly:
