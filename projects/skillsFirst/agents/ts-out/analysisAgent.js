@@ -100,6 +100,7 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
         else {
             this.logger.info("Skipping main processing of job descriptions");
         }
+        await this.updateRangedProgress(95, "Starting Multi-Level Job Description Analysis");
         const multiLevelAnalysisAgent = new JobDescriptionMultiLevelAnalysisAgent(this.agent, this.memory, 95, 100, this);
         await multiLevelAnalysisAgent.process();
         const googleSheetsReportAgent = new SheetsJobDescriptionExportAgent(this.agent, this.memory, 95, 100, "Sheet1");
@@ -117,14 +118,14 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
      */
     async processJobDescription(jobDescription, processCounter, totalProcesses) {
         // Read toggles from config using getConfig
-        const enableDetermineCollegeDegreeStatus = this.getConfig("enableDetermineCollegeDegreeStatus", true);
-        const enableReviewEvidenceQuote = this.getConfig("enableReviewEvidenceQuote", true);
-        const enableDetermineMandatoryStatus = this.getConfig("enableDetermineMandatoryStatus", true);
-        const enableDetermineProfessionalLicense = this.getConfig("enableDetermineProfessionalLicense", true);
-        const enableIdentifyBarriers = this.getConfig("enableIdentifyBarriers", true);
-        const enableValidateJobDescription = this.getConfig("enableValidateJobDescription", true);
-        const enableReadabilityScore = this.getConfig("enableReadabilityScore", true);
-        const enableReadingLevelAnalysis = this.getConfig("enableReadingLevelAnalysis", true);
+        const enableDetermineCollegeDegreeStatus = this.getConfig("enableDetermineCollegeDegreeStatus", false);
+        const enableReviewEvidenceQuote = this.getConfig("enableReviewEvidenceQuote", false);
+        const enableDetermineMandatoryStatus = this.getConfig("enableDetermineMandatoryStatus", false);
+        const enableDetermineProfessionalLicense = this.getConfig("enableDetermineProfessionalLicense", false);
+        const enableIdentifyBarriers = this.getConfig("enableIdentifyBarriers", false);
+        const enableValidateJobDescription = this.getConfig("enableValidateJobDescription", false);
+        const enableReadabilityScore = this.getConfig("enableReadabilityScore", false);
+        const enableReadingLevelAnalysis = this.getConfig("enableReadingLevelAnalysis", false);
         if (!this.memory.llmErrors) {
             this.memory.llmErrors = [];
         }

@@ -131,7 +131,7 @@ Return only the JSON object with no additional commentary:`;
     for (let i = 1; i <= levelCountOutput.numberOfLevels; i++) {
       await this.updateRangedProgress(
         (i / levelCountOutput.numberOfLevels) * 100,
-        `Extracting text for Level ${i} of ${jobDescription.titleCode}`
+        `Extracting text for Level ${i} for ${jobDescription.titleCode}`
       );
 
       const extractPrompt = `<JobDescription>

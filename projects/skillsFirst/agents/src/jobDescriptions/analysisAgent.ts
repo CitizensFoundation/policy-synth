@@ -174,6 +174,8 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
       this.logger.info("Skipping main processing of job descriptions");
     }
 
+    await this.updateRangedProgress(95, "Starting Multi-Level Job Description Analysis");
+
     const multiLevelAnalysisAgent = new JobDescriptionMultiLevelAnalysisAgent(
       this.agent,
       this.memory,
@@ -214,35 +216,35 @@ export class JobDescriptionAnalysisAgent extends PolicySynthAgent {
     // Read toggles from config using getConfig
     const enableDetermineCollegeDegreeStatus = this.getConfig<boolean>(
       "enableDetermineCollegeDegreeStatus",
-      true
+      false
     );
     const enableReviewEvidenceQuote = this.getConfig<boolean>(
       "enableReviewEvidenceQuote",
-      true
+      false
     );
     const enableDetermineMandatoryStatus = this.getConfig<boolean>(
       "enableDetermineMandatoryStatus",
-      true
+      false
     );
     const enableDetermineProfessionalLicense = this.getConfig<boolean>(
       "enableDetermineProfessionalLicense",
-      true
+      false
     );
     const enableIdentifyBarriers = this.getConfig<boolean>(
       "enableIdentifyBarriers",
-      true
+      false
     );
     const enableValidateJobDescription = this.getConfig<boolean>(
       "enableValidateJobDescription",
-      true
+      false
     );
     const enableReadabilityScore = this.getConfig<boolean>(
       "enableReadabilityScore",
-      true
+      false
     );
     const enableReadingLevelAnalysis = this.getConfig<boolean>(
       "enableReadingLevelAnalysis",
-      true
+      false
     );
 
     if (!this.memory.llmErrors) {
