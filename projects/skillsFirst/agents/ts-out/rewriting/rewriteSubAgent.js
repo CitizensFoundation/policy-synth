@@ -1,8 +1,6 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
 export class RewriteSubAgent extends PolicySynthAgent {
-    modelSize = PsAiModelSize.Medium;
-    modelType = PsAiModelType.TextReasoning;
     get maxModelTokensOut() {
         return 16000;
     }
@@ -31,7 +29,7 @@ Do not include any explanation or additional commentary in your output, only the
         const messages = [this.createSystemMessage(systemPrompt)];
         let resultText;
         try {
-            resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, false);
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
         }
         catch (error) {
             this.logger.error(`RewriteSubAgentOne error for ${jobDescription.name}: ${error}`);

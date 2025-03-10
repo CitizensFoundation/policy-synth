@@ -8,11 +8,10 @@ import {
 export class RewriteSubAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Medium;
-  modelType: PsAiModelType = PsAiModelType.TextReasoning;
   override get maxModelTokensOut(): number {
     return 16000;
   }
+
   override get modelTemperature(): number {
     return 0.0;
   }
@@ -52,7 +51,7 @@ Do not include any explanation or additional commentary in your output, only the
     let resultText: string;
     try {
       resultText = await this.callModel(
-        PsAiModelType.TextReasoning,
+        PsAiModelType.Text,
         PsAiModelSize.Large,
         messages,
         false
