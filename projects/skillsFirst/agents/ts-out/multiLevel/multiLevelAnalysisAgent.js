@@ -79,7 +79,7 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
         let skipCounter = 0;
         // For each multi-level job, split it, then process the resulting sub-levels
         for (const multiLevelJD of multiLevelDescriptions) {
-            if (useMaxCounter && counter > 15) {
+            if (useMaxCounter && counter > 300) {
                 this.logger.info(`Processed ${counter} multi-level job descriptions. Exiting.`);
                 break;
             }
