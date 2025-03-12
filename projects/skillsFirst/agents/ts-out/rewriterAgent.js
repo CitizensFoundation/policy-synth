@@ -19,6 +19,10 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
         // Step 1: Run Difference Analysis for each job description
         for (const jobDescription of mem.jobDescriptions) {
+            if (!jobDescription.text) {
+                //this.logger.warn(`Skipping job description ${jobDescription.name} due to missing text`);
+                continue;
+            }
             try {
                 const needsRewriting = await diffAgent.processJobDescription(jobDescription);
                 if (!needsRewriting) {

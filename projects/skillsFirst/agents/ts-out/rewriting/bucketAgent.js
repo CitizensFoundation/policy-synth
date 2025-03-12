@@ -8,18 +8,20 @@ export class JobDescriptionBucketAgent {
      * @returns An object mapping bucket keys to arrays of selected JobDescription objects.
      */
     static bucketJobDescriptions(jobDescriptions) {
-        // Filter job descriptions where the readability analysis indicates a mismatch
+        // Filter job descriptions where the readability analysis indicates a mismatch.
         const mismatched = jobDescriptions.filter((jd) => jd.readingLevelGradeAnalysis &&
             jd.readingLevelGradeAnalysis.readingLevelMatchesDegreeRequirement === false);
         // Group the filtered job descriptions by their occupational classification.
         const buckets = {};
         mismatched.forEach((jd) => {
-            let key;
-            if (jd.occupationalCategory && jd.occupationalCategory.mainCategory) {
-                key = jd.occupationalCategory.mainCategory.toLowerCase();
-            }
-            else {
-                key = "no classification";
+            let key = "no classification";
+            // Make sure occupationalCategory is an array with at least one item
+            if (Array.isArray(jd.occupationalCategory) && jd.occupationalCategory.length > 0) {
+                const mainCat = jd.occupationalCategory[0].mainCategory;
+                // Ensure mainCategory is a non-empty string
+                if (mainCat && mainCat.trim() !== "") {
+                    key = mainCat.toLowerCase();
+                }
             }
             if (!buckets[key]) {
                 buckets[key] = [];

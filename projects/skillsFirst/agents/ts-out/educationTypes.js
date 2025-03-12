@@ -12,11 +12,11 @@ export var EducationType;
 export const EducationTypes = {
     [EducationType.HighSchool]: {
         code: "High school",
-        phrases: ["high school degree", "high school degree completion"],
+        phrases: ["high school", "high school degree", "high school degree completion"],
     },
     [EducationType.CollegeCoursework]: {
         code: "Some college",
-        phrases: ["college coursework", "study at a college", "study at a university"],
+        phrases: ["some college", "college coursework", "study at a college", "study at a university"],
     },
     [EducationType.AssociatesDegree]: {
         code: "Associate's degree",
