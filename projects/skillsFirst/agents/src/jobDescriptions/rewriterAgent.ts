@@ -6,6 +6,7 @@ import { JobDescriptionRewriterMasterAgent } from "./rewriting/rewriterMasterAge
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
+import { JobDescriptionPairExporter } from "./rewriting/docExporter.js";
 
 export class JobDescriptionRewriterAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -29,10 +30,11 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
 
     let mismatchCount = 0;
 
+    const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
+
     // Step 1: Run Difference Analysis for each job description
-    for (const jobDescription of mem.jobDescriptions as JobDescription[]) {
+    for (const jobDescription of mem.jobDescriptions) {
       try {
-        const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
         const needsRewriting = await diffAgent.processJobDescription(jobDescription);
         if (!needsRewriting) {
           mismatchCount++;
@@ -51,6 +53,7 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         jd.readabilityAnalysis &&
         jd.readabilityAnalysis.readingLevelMatchesDegreeRequirement === false
     );
+
     this.logger.info(`Found ${mismatchedJobDescriptions.length} job descriptions with readability mismatches`);
 
     // Step 3: Bucket job descriptions by occupational classification
@@ -60,7 +63,12 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     } catch (error) {
       this.logger.error(`JobDescriptionBucketAgent error: ${error}`);
       mem.llmErrors.push(`JobDescriptionBucketAgent error: ${error}`);
+      throw error;
     }
+
+    this.memory.rewritingBuckets = buckets;
+
+    await this.saveMemory();
 
     // Step 4: For each bucket, invoke the Master Rewriter Agent to rewrite the job description
     for (const bucket in buckets) {
@@ -78,6 +86,11 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         }
       }
     }
+
+    await this.updateRangedProgress(90, "Exporting rewritten job descriptions to Google Doc");
+
+    const exporter = new JobDescriptionPairExporter(this.agent, mem, 0, 100);
+    await exporter.exportPairs();
 
     await this.updateRangedProgress(100, "Rewriting pipeline completed");
   }

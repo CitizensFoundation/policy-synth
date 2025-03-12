@@ -4,6 +4,7 @@ import { JobDescriptionBucketAgent } from "./rewriting/bucketAgent.js";
 import { JobDescriptionRewriterMasterAgent } from "./rewriting/rewriterMasterAgent.js";
 import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
+import { JobDescriptionPairExporter } from "./rewriting/docExporter.js";
 export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     static JOB_DESCRIPTION_REWRITER_AGENT_CLASS_VERSION = 1;
     static JOB_DESCRIPTION_REWRITER_AGENT_CLASS_BASE_ID = "f340db77-476b-4195-bd51-6ea2a1610833";
@@ -15,10 +16,10 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         const mem = this.memory;
         await this.updateRangedProgress(0, "Starting rewriting pipeline");
         let mismatchCount = 0;
+        const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
         // Step 1: Run Difference Analysis for each job description
         for (const jobDescription of mem.jobDescriptions) {
             try {
-                const diffAgent = new DifferenceAnalysisAgent(this.agent, mem, 0, 10);
                 const needsRewriting = await diffAgent.processJobDescription(jobDescription);
                 if (!needsRewriting) {
                     mismatchCount++;
@@ -42,7 +43,10 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         catch (error) {
             this.logger.error(`JobDescriptionBucketAgent error: ${error}`);
             mem.llmErrors.push(`JobDescriptionBucketAgent error: ${error}`);
+            throw error;
         }
+        this.memory.rewritingBuckets = buckets;
+        await this.saveMemory();
         // Step 4: For each bucket, invoke the Master Rewriter Agent to rewrite the job description
         for (const bucket in buckets) {
             const jobsInBucket = buckets[bucket];
@@ -60,6 +64,9 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
                 }
             }
         }
+        await this.updateRangedProgress(90, "Exporting rewritten job descriptions to Google Doc");
+        const exporter = new JobDescriptionPairExporter(this.agent, mem, 0, 100);
+        await exporter.exportPairs();
         await this.updateRangedProgress(100, "Rewriting pipeline completed");
     }
     async process() {

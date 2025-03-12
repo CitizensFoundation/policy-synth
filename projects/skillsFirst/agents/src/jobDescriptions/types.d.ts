@@ -58,6 +58,7 @@ interface JobDescriptionMemoryData extends PsAgentMemoryData {
   rewrittenJobDescriptions: JobDescription[];
   llmErrors: string[];
   doNotReprocessTitleCodes?: string[];
+  rewritingBuckets?: { [bucket: string]: JobDescription[] };
 }
 
 /**

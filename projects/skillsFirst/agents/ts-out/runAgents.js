@@ -8,6 +8,8 @@ import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/g
 import { PsGoogleDriveConnector } from "@policysynth/agents/connectors/drive/googleDrive.js";
 import { SheetsComparisonAgent } from "./evals/compareSheets.js";
 import { JobDescriptionCompareSheetsQueue } from "./evals/compareAgentQueue.js";
+import { JobDescriptionRewriterAgent } from "./rewriterAgent.js";
+import { JobDescriptionRewriterQueue } from "./rewriteAgentQueue.js";
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
     agentClasses;
     connectorClasses;
@@ -16,10 +18,12 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
         this.agentsToRun = [
             new JobDescriptionAnalysisQueue(),
             new JobDescriptionCompareSheetsQueue(),
+            new JobDescriptionRewriterQueue(),
         ];
         this.agentClasses = [
             JobDescriptionAnalysisAgent.getAgentClass(),
             SheetsComparisonAgent.getAgentClass(),
+            JobDescriptionRewriterAgent.getAgentClass(),
         ];
         this.connectorClasses = [
             PsGoogleDocsConnector.getConnectorClass,
