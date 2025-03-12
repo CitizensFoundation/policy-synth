@@ -53,7 +53,7 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
 
         rewriteAttempts++;
 
-        /*await this.updateRangedProgress(
+        await this.updateRangedProgress(
           50,
           `Performing parallel checks for ${jobDescription.name}`
         );
@@ -73,7 +73,7 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
             `Parallel checks failed for ${jobDescription.name} on attempt ${rewriteAttempts}: ${parallelCheckResult.aggregatedFeedback}`
           );
           continue;
-        }*/
+        }
 
         reviewPassed = true;
         await this.updateRangedProgress(

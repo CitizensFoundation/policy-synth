@@ -1,5 +1,6 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { RewriteSubAgent } from "./rewriteSubAgent.js";
+import { ParallelCheckAgents } from "./parallelCheckAgents.js";
 export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
@@ -22,27 +23,13 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
                     throw new Error(`No rewrite versions generated for ${jobDescription.name}`);
                 }
                 rewriteAttempts++;
-                /*await this.updateRangedProgress(
-                  50,
-                  `Performing parallel checks for ${jobDescription.name}`
-                );
-                const parallelCheckAgent = new ParallelCheckAgents(
-                  this.agent,
-                  mem,
-                  60,
-                  80
-                );
-                const parallelCheckResult =
-                  await parallelCheckAgent.processJobDescription(
-                    jobDescription,
-                    rewrittenText
-                  );
+                await this.updateRangedProgress(50, `Performing parallel checks for ${jobDescription.name}`);
+                const parallelCheckAgent = new ParallelCheckAgents(this.agent, mem, 60, 80);
+                const parallelCheckResult = await parallelCheckAgent.processJobDescription(jobDescription, rewrittenText);
                 if (!parallelCheckResult.allChecksPassed) {
-                  mem.llmErrors.push(
-                    `Parallel checks failed for ${jobDescription.name} on attempt ${rewriteAttempts}: ${parallelCheckResult.aggregatedFeedback}`
-                  );
-                  continue;
-                }*/
+                    mem.llmErrors.push(`Parallel checks failed for ${jobDescription.name} on attempt ${rewriteAttempts}: ${parallelCheckResult.aggregatedFeedback}`);
+                    continue;
+                }
                 reviewPassed = true;
                 await this.updateRangedProgress(90, `Rewritten text approved for ${jobDescription.name}`);
             }
