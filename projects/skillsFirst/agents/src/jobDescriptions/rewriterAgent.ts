@@ -39,6 +39,11 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         continue;
       }
 
+      if (jobDescription.multiLevelJob) {
+        this.logger.debug(`Skipping multi-level job description ${jobDescription.name}`);
+        continue;
+      }
+
       try {
         const needsRewriting = await diffAgent.processJobDescription(jobDescription);
         if (!needsRewriting) {

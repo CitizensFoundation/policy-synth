@@ -35,7 +35,7 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
     let content = "Job Description Pair Export Report\n\n";
     content += `Total Job Descriptions Processed: ${mem.jobDescriptions.length}\n\n`;
 
-    for (const jd of mem.jobDescriptions) {
+    for (const jd of mem.rewrittenJobDescriptions) {
       // Only include job descriptions that have a rewritten version.
       if (!jd.rewrittenText) continue;
 

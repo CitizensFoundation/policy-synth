@@ -36,13 +36,17 @@ export class JobDescriptionBucketAgent {
         for (const key in buckets) {
             const descriptions = buckets[key];
             if (key === "professional" ||
-                key === "occp_professional" ||
-                key === "clerical" ||
-                key === "occp_clerical") {
+                key === "occp_professional") {
                 selected[key] = descriptions.slice(0, 3);
             }
+            else if (key === "clerical" ||
+                key === "occp_clerical" ||
+                key === "occp_service" ||
+                key === "service") {
+                selected[key] = descriptions.slice(0, 2);
+            }
             else if (key === "no classification") {
-                selected[key] = descriptions.slice(0, 1);
+                selected[key] = descriptions.slice(0, 3);
             }
             else {
                 selected[key] = descriptions.slice(0, 1);
