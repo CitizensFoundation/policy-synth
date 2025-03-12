@@ -41,12 +41,12 @@ interface JobDescription {
   };
   occupationalCategory: OccupationalCategory;
   degreeAnalysis: JobDescriptionDegreeAnalysis;
-  readabilityAnalysis?: JobDescriptionReadabilityAnalysis; // The readability analysis of the job description
 
   readingLevelGradeAnalysis?: {
     readabilityLevelExplanation: string;
     readabilityLevel: string;
     difficultPassages: string[];
+    readingLevelMatchesDegreeRequirement?: boolean;
   };
 }
 /**
@@ -384,13 +384,6 @@ interface ReadabilityAssessment {
   isComprehensible: boolean; // Whether the job description is fully comprehensible for this education level
   difficultLanguage?: string[]; // If not comprehensible, the language that is difficult to understand
   readingMismatch?: boolean; // Indicates "Reading Mismatch" as per prompts
-}
-
-// Interface representing the readability analysis of a job description
-interface JobDescriptionReadabilityAnalysis {
-  assessedEducationLevel: import("./educationTypes.js").EducationType; // The education level assessed for the job description (from Prompt #1)
-  readingLevelMatchesDegreeRequirement: boolean; // True if assessed education level matches degree requirement
-  readabilityAssessments: ReadabilityAssessment[]; // Array of readability assessments for different education levels
 }
 
 interface JobDescriptionInput {

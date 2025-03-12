@@ -32,8 +32,8 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         }
         this.logger.debug(`Found ${mismatchCount} job descriptions that need rewriting`);
         // Step 2: Filter job descriptions with readability mismatches
-        const mismatchedJobDescriptions = mem.jobDescriptions.filter((jd) => jd.readabilityAnalysis &&
-            jd.readabilityAnalysis.readingLevelMatchesDegreeRequirement === false);
+        const mismatchedJobDescriptions = mem.jobDescriptions.filter((jd) => jd.readingLevelGradeAnalysis &&
+            jd.readingLevelGradeAnalysis.readingLevelMatchesDegreeRequirement === false);
         this.logger.info(`Found ${mismatchedJobDescriptions.length} job descriptions with readability mismatches`);
         // Step 3: Bucket job descriptions by occupational classification
         let buckets = {};

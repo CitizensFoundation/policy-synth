@@ -7,6 +7,7 @@ export var EducationType;
     EducationType["BachelorsDegree"] = "Bachelor's degree";
     EducationType["MastersDegree"] = "Master's degree";
     EducationType["DoctoralDegree"] = "Doctoral degree";
+    EducationType["None"] = "none";
 })(EducationType || (EducationType = {}));
 export const EducationTypes = {
     [EducationType.HighSchool]: {
@@ -60,6 +61,10 @@ export const EducationTypes = {
             "MD",
             "dental degree",
         ],
-    }
+    },
+    [EducationType.None]: {
+        code: "None",
+        phrases: ["none", "no degree", "no degree required", "no degree needed"],
+    },
 };
 //# sourceMappingURL=educationTypes.js.map

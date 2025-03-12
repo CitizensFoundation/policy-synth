@@ -5,18 +5,19 @@ export enum EducationType {
   AssociatesDegree = "Associate's degree", // Type3: Associate's degree or equivalent.
   BachelorsDegree = "Bachelor's degree", // Type4: Bachelor's degree or equivalent.
   MastersDegree = "Master's degree", // Type5: Master's degree or equivalent.
-  DoctoralDegree = "Doctoral degree"
+  DoctoralDegree = "Doctoral degree",
+  None = "none"
 }
 
 
 export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
   [EducationType.HighSchool]: {
     code: "High school",
-    phrases: ["high school degree", "high school degree completion"],
+    phrases: ["high school", "high school degree", "high school degree completion"],
   },
   [EducationType.CollegeCoursework]: {
     code: "Some college",
-    phrases: ["college coursework", "study at a college", "study at a university"],
+    phrases: ["some college", "college coursework", "study at a college", "study at a university"],
   },
   [EducationType.AssociatesDegree]: {
     code: "Associate's degree",
@@ -61,5 +62,9 @@ export const EducationTypes: Record<EducationType, EducationTypeInfo> = {
       "MD",
       "dental degree",
     ],
-  }
+  },
+  [EducationType.None]: {
+    code: "None",
+    phrases: ["none", "no degree", "no degree required", "no degree needed"],
+  },
 };

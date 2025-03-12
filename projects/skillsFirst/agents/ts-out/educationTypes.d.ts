@@ -4,7 +4,8 @@ export declare enum EducationType {
     AssociatesDegree = "Associate's degree",// Type3: Associate's degree or equivalent.
     BachelorsDegree = "Bachelor's degree",// Type4: Bachelor's degree or equivalent.
     MastersDegree = "Master's degree",// Type5: Master's degree or equivalent.
-    DoctoralDegree = "Doctoral degree"
+    DoctoralDegree = "Doctoral degree",
+    None = "none"
 }
 export declare const EducationTypes: Record<EducationType, EducationTypeInfo>;
 //# sourceMappingURL=educationTypes.d.ts.map

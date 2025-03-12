@@ -2,9 +2,10 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import {
   PsAiModelSize,
-  PsAiModelType
+  PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
 import { EducationType } from "../educationTypes.js";
+import { runInThisContext } from "vm";
 
 export class DifferenceAnalysisAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -29,43 +30,66 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
     this.memory = memory;
   }
 
-  async processJobDescription(jobDescription: JobDescription): Promise<boolean> {
+  async processJobDescription(
+    jobDescription: JobDescription
+  ): Promise<boolean> {
     await this.updateRangedProgress(
       0,
       `Starting difference analysis for ${jobDescription.name}`
     );
 
     // Ensure we have all required data
-    if (!jobDescription.degreeAnalysis || !jobDescription.degreeAnalysis.maximumDegreeRequirement) {
-      this.logger.warn(`Missing degree analysis or maximumDegreeRequirement for ${jobDescription.name}`);
-      await this.updateRangedProgress(100, `Skipping difference analysis due to missing data`);
+    if (
+      !jobDescription.degreeAnalysis ||
+      !jobDescription.degreeAnalysis.maximumDegreeRequirement
+    ) {
+      this.logger.warn(
+        `Missing degree analysis or maximumDegreeRequirement for ${jobDescription.name}`
+      );
+      await this.updateRangedProgress(
+        100,
+        `Skipping difference analysis due to missing data`
+      );
       return false;
     }
-    if (!jobDescription.readabilityAnalysis || !jobDescription.readabilityAnalysis.assessedEducationLevel) {
-      this.logger.warn(`Missing readabilityAnalysis or assessedEducationLevel for ${jobDescription.name}`);
-      await this.updateRangedProgress(100, `Skipping difference analysis due to missing data`);
+    if (
+      !jobDescription.readingLevelGradeAnalysis ||
+      !jobDescription.readingLevelGradeAnalysis.readabilityLevel
+    ) {
+      this.logger.warn(
+        `Missing readabilityAnalysis or assessedEducationLevel for ${jobDescription.name}`
+      );
+      await this.updateRangedProgress(
+        100,
+        `Skipping difference analysis due to missing data`
+      );
       return false;
     }
 
     // Extract needed fields
-    const requiredLevel = jobDescription.degreeAnalysis.maximumDegreeRequirement;
-    const assessedLevel = jobDescription.readabilityAnalysis.assessedEducationLevel;
+    const requiredLevel =
+      jobDescription.degreeAnalysis.maximumDegreeRequirement;
+    const assessedLevel =
+      jobDescription.readingLevelGradeAnalysis.readabilityLevel;
 
     /**
      * Mismatch Definition per your policy:
      * A mismatch happens IF the job requires only HighSchool (GED) or none,
      * but the text is at a 'higher' reading level: Some college or above.
      */
-    const isHighSchoolOrNone = (
-      requiredLevel === EducationType.HighSchool
-    );
-    const isTextSomeCollegeOrAbove = (
-      assessedLevel === EducationType.CollegeCoursework
-      || assessedLevel === EducationType.AssociatesDegree
-      || assessedLevel === EducationType.BachelorsDegree
-      || assessedLevel === EducationType.MastersDegree
-      || assessedLevel === EducationType.DoctoralDegree
-    );
+    const isHighSchoolOrNone =
+      requiredLevel === EducationType.HighSchool ||
+      requiredLevel === EducationType.None ||
+      requiredLevel == null;
+
+    const isTextSomeCollegeOrAbove =
+      assessedLevel === EducationType.CollegeCoursework ||
+      assessedLevel === EducationType.AssociatesDegree ||
+      assessedLevel === EducationType.BachelorsDegree ||
+      assessedLevel === EducationType.MastersDegree ||
+      assessedLevel === EducationType.DoctoralDegree;
+
+    this.logger.debug(`Comparing Job Level: ${requiredLevel} and Text Level: ${assessedLevel}`);
 
     // If "high school or none" required but text is "some college or above", mismatch => false for "readingLevelMatches"
     let readingLevelMatches = true;
@@ -73,11 +97,14 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
       readingLevelMatches = false;
     }
 
-    jobDescription.readabilityAnalysis.readingLevelMatchesDegreeRequirement = readingLevelMatches;
+    jobDescription.readingLevelGradeAnalysis.readingLevelMatchesDegreeRequirement =
+      readingLevelMatches;
 
-    this.logger.info(
-      `Difference analysis for ${jobDescription.name}: readingLevelMatchesDegreeRequirement = ${readingLevelMatches}`
-    );
+    if (!readingLevelMatches) {
+      this.logger.info(
+        `Difference analysis for ${jobDescription.name}: readingLevelMatchesDegreeRequirement = ${readingLevelMatches}`
+      );
+    }
 
     await this.updateRangedProgress(
       100,

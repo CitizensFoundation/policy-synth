@@ -9,8 +9,8 @@ export class JobDescriptionBucketAgent {
      */
     static bucketJobDescriptions(jobDescriptions) {
         // Filter job descriptions where the readability analysis indicates a mismatch
-        const mismatched = jobDescriptions.filter((jd) => jd.readabilityAnalysis &&
-            jd.readabilityAnalysis.readingLevelMatchesDegreeRequirement === false);
+        const mismatched = jobDescriptions.filter((jd) => jd.readingLevelGradeAnalysis &&
+            jd.readingLevelGradeAnalysis.readingLevelMatchesDegreeRequirement === false);
         // Group the filtered job descriptions by their occupational classification.
         const buckets = {};
         mismatched.forEach((jd) => {

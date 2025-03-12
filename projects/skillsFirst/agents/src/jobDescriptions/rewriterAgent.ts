@@ -50,8 +50,8 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
     // Step 2: Filter job descriptions with readability mismatches
     const mismatchedJobDescriptions = (mem.jobDescriptions as JobDescription[]).filter(
       (jd) =>
-        jd.readabilityAnalysis &&
-        jd.readabilityAnalysis.readingLevelMatchesDegreeRequirement === false
+        jd.readingLevelGradeAnalysis &&
+        jd.readingLevelGradeAnalysis.readingLevelMatchesDegreeRequirement === false
     );
 
     this.logger.info(`Found ${mismatchedJobDescriptions.length} job descriptions with readability mismatches`);

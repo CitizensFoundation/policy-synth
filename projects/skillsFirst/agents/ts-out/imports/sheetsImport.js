@@ -156,7 +156,6 @@ export class SheetsJobDescriptionImportAgent extends PolicySynthAgent {
                 },
             },
             // We won’t fill readabilityAnalysis by default, but we can do so if needed:
-            readabilityAnalysis: undefined,
             readingLevelGradeAnalysis: undefined,
             readabilityAnalysisTextTSNPM: undefined,
         };
