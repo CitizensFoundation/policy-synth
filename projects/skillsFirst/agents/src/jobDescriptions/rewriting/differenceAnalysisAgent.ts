@@ -48,10 +48,7 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
   }
 
   async processJobDescription(jobDescription: JobDescription): Promise<boolean> {
-    await this.updateRangedProgress(
-      0,
-      `Starting difference analysis for ${jobDescription.name}`
-    );
+
 
     // Ensure we have all required data
     if (
@@ -86,16 +83,11 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
       this.logger.warn(`Required Level: ${requiredLevel} from ${jobDescription.degreeAnalysis.maximumDegreeRequirement}`);
       this.logger.warn(`Assessed Level: ${assessedLevel} from ${jobDescription.readingLevelGradeAnalysis.readabilityLevel}`);
      //this.logger.warn(`Text: ${jobDescription.readingLevelGradeAnalysis.readabilityLevel}`);
-      await this.updateRangedProgress(
-        100,
-        `Skipping difference analysis due to unrecognized text`
-      );
+
       return false;
     }
 
-    this.logger.debug(
-      `Comparing Job Level: ${requiredLevel} and Text Level: ${assessedLevel}`
-    );
+
 
     // A mismatch happens IF the job requires only HighSchool/None
     // but the text is at a 'higher' reading level: Some college or above.
@@ -122,15 +114,13 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
       readingLevelMatches;
 
     if (!readingLevelMatches) {
+      this.logger.debug(
+        `Comparing Job Level: ${requiredLevel} and Text Level: ${assessedLevel}`
+      );
       this.logger.info(
         `Difference analysis for ${jobDescription.name}: readingLevelMatchesDegreeRequirement = ${readingLevelMatches}`
       );
     }
-
-    await this.updateRangedProgress(
-      100,
-      `Difference analysis completed for ${jobDescription.name}`
-    );
 
     return readingLevelMatches;
   }

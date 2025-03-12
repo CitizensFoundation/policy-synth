@@ -39,11 +39,22 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
       // Only include job descriptions that have a rewritten version.
       if (!jd.rewrittenText) continue;
 
-      content += `Job Name: ${jd.name}\n`;
+      let category = "no classification";
 
+      if (Array.isArray(jd.occupationalCategory) && jd.occupationalCategory.length > 0) {
+        const mainCat = jd.occupationalCategory[0].mainCategory;
+        // Ensure mainCategory is a non-empty string
+        if (mainCat && mainCat.trim() !== "") {
+          category = mainCat.toLowerCase();
+        }
+      }
+
+      content += `Job Name: ${jd.name}\n`;
+      content += `Title Code: ${jd.titleCode}\n`;
+      content += `Category: ${category}\n\n`;
       // Add reading level meta data.
       if (jd.readingLevelGradeAnalysis) {
-        content += `Reading Level: ${jd.readingLevelGradeAnalysis.readabilityLevel} - ${jd.readingLevelGradeAnalysis.readabilityLevelExplanation}\n`;
+        content += `Reading Level: ${jd.readingLevelGradeAnalysis.readabilityLevel}\n`;
       } else if (jd.readabilityAnalysisTextTSNPM) {
         content += `Reading Level (Flesch-Kincaid Grade): ${jd.readabilityAnalysisTextTSNPM.fleschKincaidGrade}\n`;
       } else {
@@ -62,7 +73,7 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
 
       content += "--- Rewritten Job Description ---\n";
       content += jd.rewrittenText + "\n";
-      content += "---------------------------------------\n\n";
+      content += "---------------------------------------\n\n\n\n";
     }
 
     await this.docsConnector.updateDocument(content);

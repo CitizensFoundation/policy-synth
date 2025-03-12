@@ -26,12 +26,14 @@ export const EducationTypes = {
             "associates degree",
             "two-year college degree",
             "community college degree",
+            "associate's degree",
         ],
     },
     [EducationType.BachelorsDegree]: {
         code: "Bachelor's degree",
         phrases: [
             "bachelor's degree",
+            "bachelor’s degree",
             "bachelor degree",
             "bachelors degree",
             "college degree",
@@ -43,6 +45,7 @@ export const EducationTypes = {
         code: "Master's degree",
         phrases: [
             "master’s degree",
+            "master's degree",
             "master degree",
             "masters degree",
             "graduate degree",
@@ -53,6 +56,7 @@ export const EducationTypes = {
         code: "Doctoral degree",
         phrases: [
             "juris doctor",
+            "doctoral degree",
             "law degree",
             "doctor of philosophy",
             "Ph.D.",

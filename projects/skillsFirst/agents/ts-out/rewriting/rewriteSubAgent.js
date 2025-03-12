@@ -25,6 +25,10 @@ The job title must remain unchanged.
 
 Everything in the job description must be included in the rewritten version. Keep all data and information from the original job description.
 
+Do not leave anything out, all information must be included, just write it in a reading level equivalent to a 10th grade reading level.
+
+Keep the same format as the original with the same metadata. Do not use markdown, just output plain text format as the input job description format but with line breaks for formatting.
+
 Do not include any explanation or additional commentary in your output, only the rewritten job description here:`;
         const messages = [this.createSystemMessage(systemPrompt)];
         let resultText;
