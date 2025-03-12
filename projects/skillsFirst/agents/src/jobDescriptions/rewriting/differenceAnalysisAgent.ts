@@ -92,8 +92,8 @@ export class DifferenceAnalysisAgent extends PolicySynthAgent {
     // A mismatch happens IF the job requires only HighSchool/None
     // but the text is at a 'higher' reading level: Some college or above.
     const isHighSchoolOrNone =
-      requiredLevel === EducationType.HighSchool ||
-      requiredLevel === EducationType.None;
+      requiredLevel === EducationType.HighSchool// ||
+//      requiredLevel === EducationType.None;
 
     const isTextSomeCollegeOrAbove =
       assessedLevel === EducationType.CollegeCoursework ||
