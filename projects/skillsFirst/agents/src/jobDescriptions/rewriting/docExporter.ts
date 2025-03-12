@@ -3,6 +3,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
+import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 
 export class JobDescriptionPairExporter extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -28,6 +29,33 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
     }
   }
 
+  async formatJobDescriptionText(text: string): Promise<string> {
+    const systemPrompt =
+      "Please output the job description text with linebreaks formatted that is easy to read. \n" +
+      "Do not use markdown, just use linebreaks. \n" +
+      "Please remove any html or css artifacts but nothing else. \n" +
+      "Do not change anything and output everything (except html and css)!";
+
+    const messages = [
+      this.createSystemMessage(systemPrompt),
+      this.createHumanMessage(text),
+    ];
+
+    let resultText: string;
+    try {
+      resultText = await this.callModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Medium,
+        messages,
+        false
+      );
+    } catch (error) {
+      throw error;
+    }
+
+    return resultText;
+  }
+
   async exportPairs(): Promise<void> {
     await this.updateRangedProgress(0, "Starting Job Description Pair Export");
 
@@ -41,7 +69,10 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
 
       let category = "no classification";
 
-      if (Array.isArray(jd.occupationalCategory) && jd.occupationalCategory.length > 0) {
+      if (
+        Array.isArray(jd.occupationalCategory) &&
+        jd.occupationalCategory.length > 0
+      ) {
         const mainCat = jd.occupationalCategory[0].mainCategory;
         // Ensure mainCategory is a non-empty string
         if (mainCat && mainCat.trim() !== "") {
@@ -49,9 +80,13 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
         }
       }
 
+      const formattedOriginalJobDescriptionText =
+        await this.formatJobDescriptionText(jd.text);
       content += `Job Name: ${jd.name}\n`;
       content += `Title Code: ${jd.titleCode}\n`;
       content += `Category: ${category}\n\n`;
+      content += `Link: ${jd.url}\n\n`;
+
       // Add reading level meta data.
       if (jd.readingLevelGradeAnalysis) {
         content += `Reading Level: ${jd.readingLevelGradeAnalysis.readabilityLevel}\n`;
@@ -69,7 +104,7 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
       }
 
       content += "\n--- Original Job Description ---\n";
-      content += jd.text + "\n\n";
+      content += formattedOriginalJobDescriptionText + "\n\n";
 
       content += "--- Rewritten Job Description ---\n";
       content += jd.rewrittenText + "\n";
@@ -77,6 +112,9 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
     }
 
     await this.docsConnector.updateDocument(content);
-    await this.updateRangedProgress(100, "Job Description Pair Export completed");
+    await this.updateRangedProgress(
+      100,
+      "Job Description Pair Export completed"
+    );
   }
 }

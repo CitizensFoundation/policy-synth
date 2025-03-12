@@ -4,6 +4,7 @@ export declare class JobDescriptionPairExporter extends PolicySynthAgent {
     memory: JobDescriptionMemoryData;
     private docsConnector;
     constructor(agent: PsAgent, memory: JobDescriptionMemoryData, startProgress: number, endProgress: number);
+    formatJobDescriptionText(text: string): Promise<string>;
     exportPairs(): Promise<void>;
 }
 //# sourceMappingURL=docExporter.d.ts.map

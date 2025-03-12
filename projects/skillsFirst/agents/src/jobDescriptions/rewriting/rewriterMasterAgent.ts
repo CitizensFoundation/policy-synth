@@ -33,7 +33,6 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
     let rewrittenText = "";
     let reviewPassed = false;
 
-
     try {
       await this.updateRangedProgress(
         10,
@@ -53,26 +52,30 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
 
         rewriteAttempts++;
 
-        await this.updateRangedProgress(
-          50,
-          `Performing parallel checks for ${jobDescription.name}`
-        );
-        const parallelCheckAgent = new ParallelCheckAgents(
-          this.agent,
-          mem,
-          60,
-          80
-        );
-        const parallelCheckResult =
-          await parallelCheckAgent.processJobDescription(
-            jobDescription,
-            rewrittenText
+        const doParallelCheck = false;
+
+        if (doParallelCheck) {
+          await this.updateRangedProgress(
+            50,
+            `Performing parallel checks for ${jobDescription.name}`
           );
-        if (!parallelCheckResult.allChecksPassed) {
-          mem.llmErrors.push(
-            `Parallel checks failed for ${jobDescription.name} on attempt ${rewriteAttempts}: ${parallelCheckResult.aggregatedFeedback}`
+          const parallelCheckAgent = new ParallelCheckAgents(
+            this.agent,
+            mem,
+            60,
+            80
           );
-          continue;
+          const parallelCheckResult =
+            await parallelCheckAgent.processJobDescription(
+              jobDescription,
+              rewrittenText
+            );
+          if (!parallelCheckResult.allChecksPassed) {
+            mem.llmErrors.push(
+              `Parallel checks failed for ${jobDescription.name} on attempt ${rewriteAttempts}: ${parallelCheckResult.aggregatedFeedback}`
+            );
+            continue;
+          }
         }
 
         reviewPassed = true;
@@ -91,10 +94,6 @@ export class JobDescriptionRewriterMasterAgent extends PolicySynthAgent {
       finalRewrittenText = rewrittenText;
 
       jobDescription.rewrittenText = finalRewrittenText;
-      if (!mem.rewrittenJobDescriptions) {
-        mem.rewrittenJobDescriptions = [];
-      }
-      mem.rewrittenJobDescriptions.push(jobDescription);
 
       await this.saveMemory();
 

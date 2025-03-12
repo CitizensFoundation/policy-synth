@@ -55,6 +55,7 @@ export class JobDescriptionRewriterAgent extends PolicySynthAgent {
         }
         this.memory.rewritingBuckets = buckets;
         await this.saveMemory();
+        mem.rewrittenJobDescriptions = [];
         // Step 4: For each bucket, invoke the Master Rewriter Agent to rewrite the job description
         for (const bucket in buckets) {
             const jobsInBucket = buckets[bucket];
