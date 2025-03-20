@@ -25,7 +25,7 @@ export class PolicySynthApiApp {
     this.app = express();
     this.httpServer = createServer(this.app);
     this.port = port || parseInt(process.env.PORT || "8000");
-    this.ws = new WebSocketServer({ server: this.httpServer });
+    this.ws = new WebSocketServer({ server: this.httpServer, path: "/ws" });
 
     if (process.env.REDIS_AGENT_URL) {
       this.redisClient = createClient({

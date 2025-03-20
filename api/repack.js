@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import tar from 'tar';
+import * as tar from 'tar';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { promisify } from 'util';
@@ -44,6 +44,7 @@ const repackPackage = async () => {
 
     // Move files from 'ts-out' and 'src' directories to 'new-folder'
     moveAndRemove(path.join(tmpDir, 'package', 'ts-out'), newDir);
+    moveAndRemove(path.join(tmpDir, 'package', 'src'), newDir);
 
     // Create a new tarball from 'new-folder'
     const newPackageName = path.join(tmpDir, `${safePackageName}-${packageJson.version}.tgz`);

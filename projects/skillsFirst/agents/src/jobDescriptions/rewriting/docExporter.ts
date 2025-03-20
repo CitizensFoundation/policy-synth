@@ -9,6 +9,10 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
   private docsConnector: PsGoogleDocsConnector;
 
+  override get modelTemperature(): number {
+    return 0.0;
+  }
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,

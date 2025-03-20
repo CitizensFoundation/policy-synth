@@ -21,7 +21,7 @@ import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
 import { isArray } from "util";
 
-export abstract class IngestionAgentAgent extends BaseIngestionAgent {
+export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   dataLayoutPath: string;
   cachedFiles: string[] = [];
   fileMetadataPath: string = "./src/ingestion/cache/fileMetadata.json";
