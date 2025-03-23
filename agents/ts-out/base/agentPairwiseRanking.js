@@ -123,14 +123,22 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
                 retry = false;
             }
             catch (err) {
-                this.logger.error("Error getting results from LLM");
-                retryCount++;
-                if (retryCount < maxRetryCount) {
-                    // Wait a bit, then retry
-                    await new Promise((resolve) => setTimeout(resolve, 4500 + retryCount * 5000));
+                if (err instanceof Error && err.message.includes("Prohibited content")) {
+                    this.logger.info("Prohibited content, skipping");
+                    wonItemIndex = -1;
+                    lostItemIndex = -1;
+                    retry = false;
                 }
                 else {
-                    throw err;
+                    this.logger.error("Error getting results from LLM");
+                    retryCount++;
+                    if (retryCount < maxRetryCount) {
+                        // Wait a bit, then retry
+                        await new Promise((resolve) => setTimeout(resolve, 4500 + retryCount * 5000));
+                    }
+                    else {
+                        throw err;
+                    }
                 }
             }
         }
