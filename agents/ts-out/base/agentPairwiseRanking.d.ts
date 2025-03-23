@@ -21,14 +21,33 @@ export declare abstract class PairwiseRankingAgent extends PolicySynthAgent {
     disableRelativeProgress: boolean;
     fisherYatesShuffle(array: any[]): any[];
     setupRankingPrompts(subProblemIndex: number, allItems: PsEloRateable[] | string[], maxPrompts?: number | undefined, updateFunction?: Function | undefined, maxParallellRanking?: number): void;
+    /**
+     * Abstract method that calls the LLM or any logic to decide which prompt item wins.
+     * Must resolve with { wonItemIndex, lostItemIndex } (could be -1, -1 if there's no clear winner).
+     */
     abstract voteOnPromptPair(subProblemIndex: number, promptPair: number[], additionalData?: any): Promise<PsPairWiseVoteResults>;
-    getResultsFromLLM(subProblemIndex: number, messages: PsModelMessage[], itemOneIndex: number, itemTwoIndex: number): Promise<{
-        subProblemIndex: number;
-        wonItemIndex: number | undefined;
-        lostItemIndex: number | undefined;
-    }>;
+    /**
+     * Example helper that calls the LLM and interprets the response.
+     * (You might already have your own version; this is just an illustration.)
+     */
+    getResultsFromLLM(subProblemIndex: number, messages: any[], itemOneIndex: number, itemTwoIndex: number): Promise<PsPairWiseVoteResults>;
+    /**
+     * Elo K-factor schedule: linearly decrease from K_FACTOR_INITIAL to K_FACTOR_MIN
+     * over NUM_COMPARISONS_FOR_MIN_K comparisons.
+     */
     getUpdatedKFactor(numComparisons: number): number;
+    /**
+     * Perform pairwise ranking using `p-limit` for concurrency-limited parallel calls.
+     *
+     * - We dispatch all prompt-pairs to the model in parallel (limited by maxParallellRanking).
+     * - Each LLM call returns a winner-loser result.
+     * - We apply Elo updates **in index order** to maintain stable, deterministic Elo results.
+     */
     performPairwiseRanking(subProblemIndex: number, additionalData?: any): Promise<void>;
-    getOrderedListOfItems(subProblemIndex: number, setEloRatings?: boolean, customEloRatingKey?: string | undefined): (string | PsEloRateable)[];
+    /**
+     * Helper to handle the actual Elo math once we know the winner/loser.
+     */
+    private updateElo;
+    getOrderedListOfItems(subProblemIndex: number, setEloRatings?: boolean, customEloRatingKey?: string): (string | PsEloRateable)[];
 }
 //# sourceMappingURL=agentPairwiseRanking.d.ts.map

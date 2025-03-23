@@ -154,6 +154,7 @@ interface PsExternalApiUsageAttributes extends PsBaseModelClassNoUuid {
 interface PsPairWiseVoteResults {
   wonItemIndex: number | undefined;
   lostItemIndex: number | undefined;
+  subProblemIndex: number | undefined;
 }
 
 interface PsSearchResultItem extends PsEloRateable {
