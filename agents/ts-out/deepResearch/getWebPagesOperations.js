@@ -135,7 +135,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
     async getAIAnalysis(text, subProblemIndex, entityIndex) {
         this.logger.info("Get AI Analysis");
         const messages = this.renderScanningPrompt("", text, subProblemIndex, entityIndex);
-        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true)); //TODO: Use <T>
+        const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages)); //TODO: Use <T>
         return analysis;
     }
     async getTextAnalysis(text, subProblemIndex, entityIndex) {

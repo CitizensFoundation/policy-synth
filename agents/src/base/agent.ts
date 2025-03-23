@@ -150,19 +150,18 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     messages: PsModelMessage[],
-    parseJson = true,
-    limitedRetries = false,
-    tokenOutEstimate = 120,
-    streamingCallbacks?: Function
+    options: PsCallModelOptions = {
+      parseJson: true,
+      limitedRetries: false,
+      tokenOutEstimate: 1200,
+      streamingCallbacks: undefined
+    }
   ) {
     return this.modelManager?.callModel(
       modelType,
       modelSize,
       messages,
-      parseJson,
-      limitedRetries,
-      tokenOutEstimate,
-      streamingCallbacks
+      options
     );
   }
 

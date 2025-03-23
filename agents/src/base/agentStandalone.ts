@@ -86,19 +86,18 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     messages: PsModelMessage[],
-    parseJson = true,
-    limitedRetries = false,
-    tokenOutEstimate = 120,
-    streamingCallbacks?: Function
+    options: PsCallModelOptions = {
+      parseJson: false,
+      limitedRetries: false,
+      tokenOutEstimate: 120,
+      streamingCallbacks: undefined
+    }
   ): Promise<any> {
     return this.modelManager.callModel(
       modelType,
       modelSize,
       messages,
-      parseJson,
-      limitedRetries,
-      tokenOutEstimate,
-      streamingCallbacks
+      options
     );
   }
 

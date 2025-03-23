@@ -89,8 +89,7 @@ Your JSON output:`,
       const result = (await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Small,
-        messages,
-        true
+        messages
       )) as PrivacyPolicyCheckResult;
 
       if (result.isOnlyPrivacyPolicyOrTermsOfService) {

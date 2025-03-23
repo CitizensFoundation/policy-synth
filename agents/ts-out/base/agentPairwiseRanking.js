@@ -89,7 +89,7 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
             while (retry && retryCount < maxRetryCount) {
                 try {
                     this.logger.debug(`Calling model`);
-                    const winningItemText = await this.callModel(this.defaultModelType, this.defaultModelSize, messages, false);
+                    const winningItemText = await this.callModel(this.defaultModelType, this.defaultModelSize, messages, { parseJson: false });
                     if (!winningItemText) {
                         throw new Error("No winning item text");
                     }

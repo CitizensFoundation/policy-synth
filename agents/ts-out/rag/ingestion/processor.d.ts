@@ -5,7 +5,7 @@ import { BaseIngestionAgent } from "./baseAgent.js";
 import { IngestionChunkCompressorAgent } from "./chunkCompressorAgent.js";
 import { DocumentAnalyzerAgent } from "./docAnalyzer.js";
 import { IngestionChunkAnalzyerAgent } from "./chunkAnalyzer.js";
-export declare abstract class IngestionAgentAgent extends BaseIngestionAgent {
+export declare abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath: string;
     cachedFiles: string[];
     fileMetadataPath: string;

@@ -3,6 +3,7 @@ import { PolicySynthAgentBase } from "../base/agentBase.js";
 export declare abstract class BaseChatModel extends PolicySynthAgentBase {
     modelName: string | TiktokenModel;
     maxTokensOut: number;
+    provider?: string;
     constructor(modelName: string | TiktokenModel, maxTokensOut?: number);
     abstract generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<{
         tokensIn: number;

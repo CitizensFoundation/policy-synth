@@ -8,6 +8,16 @@ interface PsBaseModelClass {
 
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, "uuid"> {}
 
+interface PsAzureAiModelConfig {
+  endpoint: string;
+  apiKey: string;
+  deploymentName: string;
+  modelName?: string;
+  maxTokensOut?: number;
+  reasoningEffort?: 'low' | 'medium' | 'high';
+  temperature?: number;
+}
+
 interface PsAiModelConfig {
   apiKey: string;
   modelName?: string;
@@ -17,6 +27,19 @@ interface PsAiModelConfig {
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
   maxThinkingTokens?: number;
+}
+
+interface PsCallModelOptions {
+  parseJson?: boolean;
+  limitedRetries?: boolean;
+  tokenOutEstimate?: number;
+  streamingCallbacks?: Function;
+  modelProvider?: string;
+  modelName?: string;
+  modelTemperature?: number;
+  modelMaxTokens?: number;
+  modelMaxThinkingTokens?: number;
+  modelReasoningEffort?: 'low' | 'medium' | 'high';
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

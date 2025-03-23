@@ -199,8 +199,7 @@ export class BaseGetWebPagesOperationsAgent extends PolicySynthAgent {
     const analysis = (await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Small,
-      messages,
-      true
+      messages
     )) as any; //TODO: Use <T>
 
     return analysis;

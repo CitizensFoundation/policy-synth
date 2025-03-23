@@ -143,7 +143,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
             this.defaultModelType,
             this.defaultModelSize,
             messages,
-            false
+            { parseJson: false }
           );
 
           if (!winningItemText) {

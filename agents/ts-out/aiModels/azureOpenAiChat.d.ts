@@ -1,13 +1,4 @@
 import { BaseChatModel } from "./baseChatModel.js";
-interface PsAzureAiModelConfig {
-    endpoint: string;
-    apiKey: string;
-    deploymentName: string;
-    modelName?: string;
-    maxTokensOut?: number;
-    reasoningEffort?: 'low' | 'medium' | 'high';
-    temperature?: number;
-}
 interface PsModelMessage {
     role: "system" | "developer" | "user" | "assistant";
     message: string;

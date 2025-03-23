@@ -3,6 +3,7 @@ import { PolicySynthAgentBase } from "../base/agentBase.js";
 export class BaseChatModel extends PolicySynthAgentBase {
     modelName;
     maxTokensOut;
+    provider;
     constructor(modelName, maxTokensOut = 4096) {
         super();
         this.modelName = modelName;

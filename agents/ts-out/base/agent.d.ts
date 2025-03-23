@@ -30,7 +30,7 @@ export declare abstract class PolicySynthAgent extends PolicySynthAgentBase {
     constructor(agent: PsAgent, memory: PsAgentMemoryData | undefined, startProgress: number, endProgress: number);
     process(): Promise<void>;
     loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData>;
-    callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options?: PsCallModelOptions): Promise<any>;
     updateRangedProgress(progress: number | undefined, message: string): Promise<void>;
     updateProgress(progress: number | undefined, message: string): Promise<void>;
     getConfig<T>(uniqueId: string, defaultValue: T): T;

@@ -34,6 +34,6 @@ export declare class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
      * @param tokenOutEstimate Estimated tokens for the output.
      * @param streamingCallbacks Optional streaming callbacks.
      */
-    callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function): Promise<any>;
+    callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options?: PsCallModelOptions): Promise<any>;
 }
 //# sourceMappingURL=agentStandalone.d.ts.map

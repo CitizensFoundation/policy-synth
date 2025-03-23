@@ -65,7 +65,7 @@ Your JSON output:`,
             },
         ];
         try {
-            const result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages, true));
+            const result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Small, messages));
             if (result.isOnlyPrivacyPolicyOrTermsOfService) {
                 this.logger.debug("-------> filtering out legal or privacy policy");
                 this.logger.debug(document);

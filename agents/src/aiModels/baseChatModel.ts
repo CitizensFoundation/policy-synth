@@ -5,6 +5,7 @@ import { PolicySynthAgentBase } from "../base/agentBase.js";
 export abstract class BaseChatModel extends PolicySynthAgentBase {
   modelName: string | TiktokenModel;
   maxTokensOut: number;
+  provider?: string;
 
   constructor(modelName: string | TiktokenModel, maxTokensOut = 4096) {
     super();

@@ -15,7 +15,7 @@ import { IngestionDocumentRanker } from "./docRanker.js";
 import { DocumentClassifierAgent } from "./docClassifier.js";
 import { PsRagDocumentVectorStore } from "../vectorstore/ragDocument.js";
 import { PsRagChunkVectorStore } from "../vectorstore/ragChunk.js";
-export class IngestionAgentAgent extends BaseIngestionAgent {
+export class IngestionAgentProcessor extends BaseIngestionAgent {
     dataLayoutPath;
     cachedFiles = [];
     fileMetadataPath = "./src/ingestion/cache/fileMetadata.json";

@@ -1,3 +1,17 @@
+interface PsCallModelOptions {
+  parseJson?: boolean;
+  limitedRetries?: boolean;
+  tokenOutEstimate?: number;
+  streamingCallbacks?: Function;
+  // NEW OVERRIDE FIELDS:
+  modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
+  modelName?: string; // e.g. "gpt-4", "claude-2", etc.
+  modelTemperature?: number;
+  modelMaxTokens?: number;
+  modelMaxThinkingTokens?: number;
+  modelReasoningEffort?: "low" | "medium" | "high";
+}
+
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
@@ -125,7 +139,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       if (model) {
         this.models.set(modelKey, model);
         this.modelsByType.set(modelType, model);
-        this.modelIds.set(modelKey, -1); // Use -1 to indicate that this is a single model not really in db
+        this.modelIds.set(modelKey, -1); // Use -1 to indicate ephemeral/no DB row
         this.modelIdsByType.set(modelType, -1);
 
         this.logger.info(
@@ -163,10 +177,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const apiKeyConfig = accessConfiguration.find(
         (access) => access.aiModelId === model.id
       );
-
-      /*this.logger.debug(
-        `Access configuration: ${JSON.stringify(accessConfiguration)}`
-      );*/
 
       if (!apiKeyConfig) {
         this.logger.warn(
@@ -227,23 +237,131 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
   }
 
+  /**
+   * Creates a one-off ephemeral model instance, merging overrides from `options`.
+   * If provider is not specified, we’ll reuse the provider from the fallback model
+   * or environment. This returns `undefined` if no ephemeral override was requested.
+   */
+  private createEphemeralModel(
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
+    options: PsCallModelOptions
+  ): BaseChatModel | undefined {
+    // Determine if user actually wants ephemeral overrides
+    const isOverrideRequested =
+      options.modelProvider != null ||
+      options.modelName != null ||
+      options.modelTemperature != null ||
+      options.modelMaxTokens != null ||
+      options.modelMaxThinkingTokens != null ||
+      options.modelReasoningEffort != null;
+
+    if (!isOverrideRequested) {
+      return undefined;
+    }
+
+    // Fall back to a known model (or the first model of the same type)
+    const fallbackModelKey = `${modelType}_${modelSize}`;
+    let fallbackModel = this.models.get(fallbackModelKey);
+    if (!fallbackModel) {
+      // if not found by size, use any model of that type
+      fallbackModel = this.modelsByType.get(modelType);
+    }
+
+    if (!fallbackModel) {
+      // As a last-ditch: might rely on environment
+      // You can choose to throw instead if no fallback is found
+      fallbackModel = this.initializeOneModelFromEnv();
+      if (!fallbackModel) {
+        this.logger.warn(
+          `No fallback model found for ephemeral override of ${modelType} ${modelSize}.`
+        );
+        return undefined;
+      }
+    }
+
+    // We need a provider, name, etc. If user didn’t supply `modelProvider`, reuse fallback’s
+    const fallbackProvider = fallbackModel.provider || ""; // Add a `provider` getter to your BaseChatModel or store it in your config
+    const provider = options.modelProvider ?? fallbackProvider;
+
+    // Figure out the best API key for that provider:
+    const apiKey = this.getApiKeyForProvider(provider);
+
+    // Merge ephemeral config
+    const ephemeralConfig: PsAiModelConfig = {
+      apiKey,
+      modelName: options.modelName ?? fallbackModel.modelName,
+      maxTokensOut: options.modelMaxTokens ?? this.maxModelTokensOut,
+      temperature: options.modelTemperature ?? this.modelTemperature,
+      reasoningEffort:
+        options.modelReasoningEffort ?? (this.reasoningEffort as any),
+      maxThinkingTokens:
+        options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
+      modelType,
+      modelSize,
+    };
+
+    // Construct ephemeral model
+    let ephemeralModel: BaseChatModel;
+    switch (provider.toLowerCase()) {
+      case "openai":
+        ephemeralModel = new OpenAiChat(ephemeralConfig);
+        break;
+      case "anthropic":
+        ephemeralModel = new ClaudeChat(ephemeralConfig);
+        break;
+      case "google":
+        ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
+        break;
+      case "azure":
+        // You may want to incorporate fallback’s endpoint and deployment
+        // or see if user provided them in `options` somehow
+        ephemeralModel = new AzureOpenAiChat({
+          ...ephemeralConfig,
+          endpoint:
+            (fallbackModel as any).endpoint ??
+            process.env.PS_AI_MODEL_ENDPOINT,
+          deploymentName:
+            (fallbackModel as any).deploymentName ??
+            process.env.PS_AI_MODEL_DEPLOYMENT_NAME,
+        });
+        break;
+      default:
+        this.logger.warn(`Unsupported ephemeral provider: ${provider}`);
+        return undefined;
+    }
+
+    return ephemeralModel;
+  }
+
+  private getApiKeyForProvider(provider: string): string {
+    switch (provider.toLowerCase()) {
+      case "openai":
+        return process.env.OPENAI_API_KEY || "";
+      case "anthropic":
+        return process.env.ANTHROPIC_API_KEY || "";
+      case "google":
+        return process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
+      case "azure":
+        return process.env.AZURE_API_KEY || "";
+      default:
+        return "";
+    }
+  }
+
   async callModel(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     messages: PsModelMessage[],
-    parseJson = true,
-    limitedRetries = false,
-    tokenOutEstimate = 120,
-    streamingCallbacks?: Function
+    options: PsCallModelOptions
   ) {
     if (process.env.PS_PROMPT_DEBUG) {
       this.logger.debug("\n\n\n\n\n\n\n\nDebugging callModel");
       this.logger.debug(`modelType: ${modelType}`);
       this.logger.debug(`modelSize: ${modelSize}`);
-      this.logger.debug(
-        `messages: ${JSON.stringify(messages)}\n\n\n\n\n\n\n\n`
-      );
+      this.logger.debug(`messages: ${JSON.stringify(messages)}`);
     }
+
     switch (modelType) {
       case PsAiModelType.Text:
       case PsAiModelType.TextReasoning:
@@ -251,10 +369,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           modelType,
           modelSize,
           messages,
-          parseJson,
-          limitedRetries,
-          tokenOutEstimate,
-          streamingCallbacks
+          options
         );
       case PsAiModelType.Embedding:
         return await this.callEmbeddingModel(messages);
@@ -275,13 +390,26 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     messages: PsModelMessage[],
-    parseJson = true,
-    limitedRetries = false,
-    tokenOutEstimate = 120,
-    streamingCallbacks?: Function
+    options: PsCallModelOptions
   ) {
-    let selectedModelSize: PsAiModelSize = modelSize;
+    // 1) Check for ephemeral override
+    const ephemeralModel = this.createEphemeralModel(
+      modelType,
+      modelSize,
+      options
+    );
+    if (ephemeralModel) {
+      // If ephemeral model is requested, just use it
+      return await this.runTextModelCall(
+        ephemeralModel,
+        modelType,
+        modelSize,
+        messages,
+        options
+      );
+    }
 
+    // 2) Otherwise, do your fallback priority as before
     const getFallbackPriority = (size: PsAiModelSize): PsAiModelSize[] => {
       switch (size) {
         case PsAiModelSize.Large:
@@ -314,6 +442,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelSizePriority = getFallbackPriority(modelSize);
 
     let model: BaseChatModel | undefined;
+    let selectedModelSize: PsAiModelSize = modelSize;
+
     for (const size of modelSizePriority) {
       const modelKey = `${modelType}_${size}`;
       this.logger.debug(`Checking model ${modelKey}`);
@@ -328,6 +458,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     if (!model) {
+      // fallback to “any” model by type
       model = this.modelsByType.get(modelType);
       if (model) {
         this.logger.warn(
@@ -338,136 +469,145 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       }
     }
 
-    try {
-      let retryCount = 0;
-      const maxRetries = limitedRetries
-        ? this.limitedLLMmaxRetryCount
-        : this.mainLLMmaxRetryCount;
-      let retry = true;
+    return this.runTextModelCall(
+      model,
+      modelType,
+      selectedModelSize,
+      messages,
+      options
+    );
+  }
 
-      while (retry && retryCount < maxRetries) {
-        try {
-          //const estimatedTokensToAdd = tokensIn + tokenOutEstimate;
+  /**
+   * Actually does the call against the chosen model,
+   * with your retry logic, parseJson, usage tracking, etc.
+   */
+  private async runTextModelCall(
+    model: BaseChatModel,
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
+    messages: PsModelMessage[],
+    options: PsCallModelOptions
+  ) {
+    // Work out how many times to retry
+    let retryCount = 0;
+    const maxRetries = options.limitedRetries
+      ? this.limitedLLMmaxRetryCount
+      : this.mainLLMmaxRetryCount;
 
-          //TODO: Get Rate limit working again
-          //await this.checkRateLimits(modelType, estimatedTokensToAdd);
-          //await this.updateRateLimits(modelType, tokensIn);
+    while (retryCount < maxRetries) {
+      try {
+        // Example debug
+        console.log(`Calling ${model.modelName}...`);
 
-          console.log(`Calling ${model.modelName}...`);
-
-          const results = await model.generate(
-            messages,
-            !!streamingCallbacks,
-            streamingCallbacks
-          );
-
-          if (results) {
-            const { tokensIn, tokensOut, content } = results;
-
-            //await this.updateRateLimits(modelType, tokensOut);
-            await this.saveTokenUsage(
-              modelType,
-              selectedModelSize,
-              tokensIn,
-              tokensOut
-            );
-
-            if (parseJson) {
-              let parsedJson;
-              try {
-                parsedJson = this.parseJsonResponse(content.trim());
-              } catch (error) {
-                retryCount++;
-                this.logger.warn(`Retrying callTextModel ${retryCount}`);
-                continue;
-              }
-
-              if (
-                parsedJson == '"[]"' ||
-                parsedJson == "[]" ||
-                parsedJson == "'[]'"
-              ) {
-                this.logger.warn(
-                  `JSON processing returned an empty array string ${parsedJson}`
-                );
-                parsedJson = [];
-              }
-
-              return parsedJson;
-            } else {
-              return content.trim();
-            }
-          } else {
-            retryCount++;
-            this.logger.warn(`callTextModel response was empty, retrying`);
-          }
-        } catch (error: any) {
-          this.logger.warn("Error from model, retrying");
-          if (error.message && error.message.indexOf("429") > -1) {
-            this.logger.warn("429 error, retrying");
-          }
-          if (
-            error.message &&
-            (error.message.indexOf(
-              "Failed to generate output due to special tokens in the input"
-            ) > -1 ||
-              error.message.indexOf(
-                "The model produced invalid content. Consider modifying"
-              ) > -1)
-          ) {
-            this.logger.error(
-              "Failed to generate output due to special tokens in the input stopping or The model produced invalid content."
-            );
-            retryCount = maxRetries;
-          } else {
-            this.logger.warn(error);
-            this.logger.warn(error.stack);
-          }
-          if (retryCount >= maxRetries) {
-            throw error;
-          } else {
-            retryCount++;
-          }
-        }
-        const sleepTime = 4500 + retryCount * 5000;
-        this.logger.debug(
-          `Sleeping for ${sleepTime} ms before retrying. Retry count: ${retryCount}}`
+        const results = await model.generate(
+          messages,
+          !!options.streamingCallbacks,
+          options.streamingCallbacks
         );
-        await new Promise((resolve) => setTimeout(resolve, sleepTime));
+
+        if (results) {
+          const { tokensIn, tokensOut, content } = results;
+
+          // usage tracking
+          await this.saveTokenUsage(modelType, modelSize, tokensIn, tokensOut);
+
+          if (options.parseJson) {
+            let parsedJson: any;
+            try {
+              parsedJson = this.parseJsonResponse(content.trim());
+            } catch (error) {
+              retryCount++;
+              this.logger.warn(
+                `JSON parse failure: retrying callTextModel. Attempt #${retryCount}`
+              );
+              await this.sleepBeforeRetry(retryCount);
+              continue;
+            }
+            // Some models return `'[]'` or `"[]"` or just plain `[]`
+            if (
+              parsedJson === '"[]"' ||
+              parsedJson === "[]" ||
+              parsedJson === "'[]'"
+            ) {
+              this.logger.warn(
+                `JSON processing returned an empty array string: ${parsedJson}`
+              );
+              parsedJson = [];
+            }
+            return parsedJson;
+          } else {
+            return content.trim();
+          }
+        } else {
+          // If results empty
+          retryCount++;
+          this.logger.warn(
+            `callTextModel response was empty, retrying. Attempt #${retryCount}`
+          );
+          await this.sleepBeforeRetry(retryCount);
+        }
+      } catch (error: any) {
+        this.logger.warn("Error from model, might retry.");
+        if (error.message && error.message.includes("429")) {
+          this.logger.warn("429 error, will attempt retry.");
+        }
+        if (
+          error.message?.includes(
+            "Failed to generate output due to special tokens in the input"
+          ) ||
+          error.message?.includes(
+            "The model produced invalid content. Consider modifying"
+          )
+        ) {
+          // If it's a known “non-retryable” scenario, break immediately
+          this.logger.error(
+            "Stopping because of special tokens or invalid content from model."
+          );
+          throw error;
+        }
+        if (retryCount >= maxRetries - 1) {
+          this.logger.error("Reached max retries, rethrowing error.");
+          throw error;
+        }
+        retryCount++;
+        await this.sleepBeforeRetry(retryCount);
       }
-    } catch (error) {
-      this.logger.error("Unrecoverable Error in callTextModel method");
-      this.logger.error(error);
-      throw error;
     }
+
+    this.logger.error(
+      "Unrecoverable Error in runTextModelCall method - no response"
+    );
+    throw new Error("Model call failed after maximum retries");
+  }
+
+  private async sleepBeforeRetry(retryCount: number) {
+    const sleepTime = 4500 + retryCount * 5000;
+    this.logger.debug(`Sleeping ${sleepTime}ms before next attempt`);
+    return new Promise((resolve) => setTimeout(resolve, sleepTime));
   }
 
   async callEmbeddingModel(messages: PsModelMessage[]) {
-    // Placeholder for embedding model call
     this.logger.warn("Embedding model call not yet implemented");
     return null;
   }
 
   async callMultiModalModel(messages: PsModelMessage[]) {
-    // Placeholder for multi-modal model call
     this.logger.warn("Multi-modal model call not yet implemented");
     return null;
   }
 
   async callAudioModel(messages: PsModelMessage[]) {
-    // Placeholder for audio model call
     this.logger.warn("Audio model call not yet implemented");
     return null;
   }
 
   async callVideoModel(messages: PsModelMessage[]) {
-    // Placeholder for video model call
     this.logger.warn("Video model call not yet implemented");
     return null;
   }
 
   async callImageModel(messages: PsModelMessage[]) {
-    // Placeholder for image model call
     this.logger.warn("Image model call not yet implemented");
     return null;
   }
@@ -478,35 +618,25 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     tokensIn: number,
     tokensOut: number
   ) {
-    // Check for disable usage flag via environment variable.
-    const disableUsageTracking = process.env.DISABLE_DB_USAGE_TRACKING === "true";
+    // Check for usage tracking disable
+    const disableUsageTracking =
+      process.env.DISABLE_DB_USAGE_TRACKING === "true";
     if (disableUsageTracking) {
       this.logger.info(
-        `(Usage Tracking Disabled) Skipping token usage update for model ${modelType} (${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`
+        `(Usage Tracking Disabled) Skipping token usage for model ${modelType} (${modelSize}): in=${tokensIn} out=${tokensOut}`
       );
       return;
     }
 
-    // Keep this in: Ensure the model is initialized.
+    // Attempt to find the model in your manager:
     const modelKey = `${modelType}_${modelSize}`;
     const model = this.models.get(modelKey);
     const modelId = this.modelIds.get(modelKey);
 
-    if (!model || !modelId) {
-      this.logger.error(
-        `Model of type ${modelType} and size ${modelSize} not initialized`
-      );
-      this.logger.debug("Available models:", Array.from(this.models.keys()));
-      this.logger.debug(
-        "Available modelIds:",
-        Array.from(this.modelIds.keys())
-      );
-      throw new Error(
-        `Model of type ${modelType} and size ${modelSize} not initialized`
-      );
-    }
+    // If ephemeral or missing, fallback to -1 or bail
+    const finalModelId = modelId ?? -1; // -1 for ephemeral or not found
 
-    // Cache the dynamic import if not already cached.
+    // Lazy-load usage models
     if (!cachedPsModelUsage) {
       const module = await import("../dbModels/modelUsage.js");
       cachedPsModelUsage = module.PsModelUsage;
@@ -521,14 +651,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       await sequelize.transaction(async (t: Transaction) => {
         const [usage, created] = await PsModelUsage.findOrCreate({
           where: {
-            model_id: modelId,
+            model_id: finalModelId,
             agent_id: this.agentId,
           },
           defaults: {
             token_in_count: tokensIn,
             token_out_count: tokensOut,
             token_in_cached_context_count: 0,
-            model_id: modelId,
+            model_id: finalModelId,
             agent_id: this.agentId,
             user_id: this.userId,
           },
@@ -547,7 +677,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       });
 
       this.logger.info(
-        `Token usage updated for agent ${this.agentId} and model ${model.modelName}`
+        `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId}`
       );
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
@@ -559,10 +689,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   public async getTokensFromMessages(
     messages: PsModelMessage[]
   ): Promise<number> {
+    // Example usage of Tiktoken for GPT-based models
     let encoding;
-    if (this.models.get(PsAiModelType.Text)) {
+    // Check for your default text model, or fallback to e.g. "gpt-4"
+    if (this.models.has(`${PsAiModelType.Text}_Medium`)) {
       encoding = encoding_for_model(
-        this.models.get(PsAiModelType.Text)!.modelName as TiktokenModel
+        this.models.get(`${PsAiModelType.Text}_Medium`)!
+          .modelName as TiktokenModel
       );
     } else {
       encoding = encoding_for_model("gpt-4");
@@ -572,18 +705,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     for (const message of messages) {
       // Every message follows <im_start>{role/name}\n{content}<im_end>\n
       totalTokens += 4;
-
       for (const [key, value] of Object.entries(message)) {
         totalTokens += encoding.encode(value).length;
         if (key === "name") {
-          totalTokens -= 1; // Role is always required and always 1 token
+          // Role is always required and always 1 token
+          totalTokens -= 1;
         }
       }
     }
-
-    totalTokens += 2; // Every reply is primed with <im_start>assistant
-
-    encoding.free(); // Free up the memory used by the encoder
+    // Every reply is primed with <im_start>assistant
+    totalTokens += 2;
+    encoding.free();
 
     return totalTokens;
   }

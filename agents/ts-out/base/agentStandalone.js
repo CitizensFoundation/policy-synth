@@ -58,8 +58,13 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
      * @param tokenOutEstimate Estimated tokens for the output.
      * @param streamingCallbacks Optional streaming callbacks.
      */
-    async callModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
-        return this.modelManager.callModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+    async callModel(modelType, modelSize, messages, options = {
+        parseJson: false,
+        limitedRetries: false,
+        tokenOutEstimate: 120,
+        streamingCallbacks: undefined
+    }) {
+        return this.modelManager.callModel(modelType, modelSize, messages, options);
     }
 }
 //# sourceMappingURL=agentStandalone.js.map

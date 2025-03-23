@@ -3,15 +3,7 @@ import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity"
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 
-interface PsAzureAiModelConfig {
-  endpoint: string;
-  apiKey: string;
-  deploymentName: string;
-  modelName?: string;
-  maxTokensOut?: number;
-  reasoningEffort?: 'low' | 'medium' | 'high';
-  temperature?: number;
-}
+
 
 interface PsModelMessage {
   role: "system" | "developer" | "user" | "assistant";

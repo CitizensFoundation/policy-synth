@@ -101,8 +101,13 @@ export class PolicySynthAgent extends PolicySynthAgentBase {
         }
         return this.memory;
     }
-    async callModel(modelType, modelSize, messages, parseJson = true, limitedRetries = false, tokenOutEstimate = 120, streamingCallbacks) {
-        return this.modelManager?.callModel(modelType, modelSize, messages, parseJson, limitedRetries, tokenOutEstimate, streamingCallbacks);
+    async callModel(modelType, modelSize, messages, options = {
+        parseJson: true,
+        limitedRetries: false,
+        tokenOutEstimate: 1200,
+        streamingCallbacks: undefined
+    }) {
+        return this.modelManager?.callModel(modelType, modelSize, messages, options);
     }
     async updateRangedProgress(progress, message) {
         if (this.progressTracker) {
