@@ -81,7 +81,9 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     }
 
     if (agent && !agent.redisStatusKey) {
-      this.logger.error("Agent status key not set", agent);
+      if (!process.env.DISABLE_AGENT_STATUS) {
+        this.logger.error("Agent status key not set", agent);
+      }
     }
 
     this.progressTracker = new PsProgressTracker(

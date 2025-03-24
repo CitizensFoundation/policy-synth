@@ -36,13 +36,17 @@ export class PsProgressTracker extends PolicySynthAgentBase {
             }
         }
         else {
-            this.logger.error("No Redis key set for agent status");
+            if (!process.env.DISABLE_AGENT_STATUS) {
+                this.logger.error("No Redis key set for agent status");
+            }
         }
     }
     async updateRangedProgress(progress, message) {
         await this.loadStatusFromRedis();
         if (!this.status) {
-            this.logger.error("Agent status not initialized");
+            if (!process.env.DISABLE_AGENT_STATUS) {
+                this.logger.error("Agent status not initialized");
+            }
             return;
         }
         //this.logger.debug(`Updating progress: ${progress} message: ${message}`);
@@ -89,7 +93,9 @@ export class PsProgressTracker extends PolicySynthAgentBase {
             }
         }
         else {
-            this.logger.error("No Redis key set for agent status");
+            if (!process.env.DISABLE_AGENT_STATUS) {
+                this.logger.error("No Redis key set for agent status");
+            }
             return;
         }
     }

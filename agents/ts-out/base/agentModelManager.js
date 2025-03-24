@@ -450,7 +450,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         // Check for usage tracking disable
         const disableUsageTracking = process.env.DISABLE_DB_USAGE_TRACKING === "true";
         if (disableUsageTracking) {
-            this.logger.info(`(Usage Tracking Disabled) Skipping token usage for model ${modelType} (${modelSize}): in=${tokensIn} out=${tokensOut}`);
+            this.logger.info(`(Database Usage Tracking Disabled) Token usage for ${modelType} (${modelSize}): in=${tokensIn} out=${tokensOut}`);
             return;
         }
         // Attempt to find the model in your manager:
