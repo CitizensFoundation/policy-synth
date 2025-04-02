@@ -4,6 +4,9 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
 export class JobDescriptionPairExporter extends PolicySynthAgent {
     docsConnector;
+    get modelTemperature() {
+        return 0.0;
+    }
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         this.memory = memory;

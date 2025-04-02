@@ -76,50 +76,24 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
         const newSubLevelDescriptions = [];
         const useMaxCounter = true;
         let counter = 1;
-        let skipCounter = 0;
         // For each multi-level job, split it, then process the resulting sub-levels
         for (const multiLevelJD of multiLevelDescriptions) {
             if (useMaxCounter && counter > 300) {
                 this.logger.info(`Processed ${counter} multi-level job descriptions. Exiting.`);
                 break;
             }
-            if (this.memory.doNotReprocessTitleCodes?.includes(multiLevelJD.titleCode)) {
-                this.logger.info(`Skipping ${multiLevelJD.titleCode} because it is in the doNotReprocessTitleCodes list`);
-                skipCounter++;
-                continue;
-            }
             // Use a sub-agent to parse out sub-levels
-            const splittedLevels = await this.splitMultiLevelJobDescription(multiLevelJD);
-            // For each sub-level, run the same chain of analysis. Then collect them in memory.
-            for (let i = 0; i < splittedLevels.length; i++) {
-                const levelJD = splittedLevels[i];
-                this.logger.info(`Processing sub-level ${i + 1} of ${splittedLevels.length} for ${multiLevelJD.titleCode}`);
-                // We'll artificially set .processed = false so the parent's logic can run
-                // any sub-agents it needs. Or, you can call `processJobDescription` directly:
-                await this.analysisAgent.processJobDescription(levelJD, i + 1, splittedLevels.length);
-                levelJD.haveProcessedSubLevel = true;
-                // Add the newly analyzed sub-level job description to memory
-                this.memory.jobDescriptions.push(levelJD);
-                await this.saveMemory();
-                newSubLevelDescriptions.push(levelJD);
-                counter++;
-            }
+            await this.splitMultiLevelJobDescription(multiLevelJD);
+            await this.analysisAgent.processJobDescription(multiLevelJD, counter, multiLevelDescriptions.length);
+            multiLevelJD.haveProcessedSubLevel = true;
         }
         await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");
-        this.logger.info(`Skipped ${skipCounter} multi-level job descriptions because they are in the doNotReprocessTitleCodes list`);
+        this.logger.info(`Processed ${counter} multi-level job descriptions`);
         await this.setCompleted("Task Completed");
     }
     async splitMultiLevelJobDescription(multiLevelJD) {
         const splitAgent = new SplitMultiLevelJobDescriptionAgent(this.agent, this.memory, 0, 10);
-        const splits = await splitAgent.processJobDescription(multiLevelJD);
-        return splits.map((split) => ({
-            ...multiLevelJD,
-            text: split.text,
-            name: `${multiLevelJD.name} - Level ${split.level}`,
-            titleCode: `${multiLevelJD.titleCode}-level${split.level}`,
-            multiLevelJob: false,
-            processed: false,
-        }));
+        await splitAgent.processJobDescription(multiLevelJD);
     }
 }
 //# sourceMappingURL=multiLevelAnalysisAgent.js.map

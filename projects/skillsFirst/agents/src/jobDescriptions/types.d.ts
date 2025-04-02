@@ -28,6 +28,7 @@ interface JobDescription {
   name: string; // The name of the job
   text: string;
   rewrittenText?: string;
+  originalText?: string;
   classification: import("./educationTypes.js").EducationType;
   url?: string;
   error?: string;

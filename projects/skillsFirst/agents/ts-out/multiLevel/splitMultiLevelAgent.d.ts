@@ -17,9 +17,6 @@ export declare class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent
     /**
      * Processes the provided job description by first determining how many levels are present,
      */
-    processJobDescription(jobDescription: JobDescription): Promise<{
-        level: number;
-        text: string;
-    }[]>;
+    processJobDescription(jobDescription: JobDescription): Promise<void>;
 }
 //# sourceMappingURL=splitMultiLevelAgent.d.ts.map
