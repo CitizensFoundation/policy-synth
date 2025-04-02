@@ -1,6 +1,7 @@
 interface PsCallModelOptions {
   parseJson?: boolean;
   limitedRetries?: boolean;
+  overrideMaxRetries?: number;
   tokenOutEstimate?: number;
   streamingCallbacks?: Function;
   // NEW OVERRIDE FIELDS:
@@ -40,7 +41,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   maxThinkingTokens: number;
 
   limitedLLMmaxRetryCount = 3;
-  mainLLMmaxRetryCount = 40;
+  mainLLMmaxRetryCount = 75;
 
   constructor(
     aiModels: PsAiModelAttributes[],
@@ -491,9 +492,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   ) {
     // Work out how many times to retry
     let retryCount = 0;
-    const maxRetries = options.limitedRetries
+    let maxRetries = options.limitedRetries
       ? this.limitedLLMmaxRetryCount
       : this.mainLLMmaxRetryCount;
+
+    if (options.overrideMaxRetries) {
+      maxRetries = options.overrideMaxRetries;
+    }
 
     while (retryCount < maxRetries) {
       try {
