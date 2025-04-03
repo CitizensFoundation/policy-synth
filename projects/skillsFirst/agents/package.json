@@ -34,6 +34,7 @@
     "metascraper-title": "^5.45.10",
     "metascraper-url": "^5.45.10",
     "openai": "^4.77.0",
+    "p-limit": "^6.2.0",
     "sanitize-html": "^2.14.0",
     "syllable": "^5.0.1",
     "xlsx": "^0.18.5"

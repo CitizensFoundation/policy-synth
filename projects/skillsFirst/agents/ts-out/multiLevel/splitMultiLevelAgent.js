@@ -15,7 +15,7 @@ export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
         return 0.0;
     }
     get reasoningEffort() {
-        return "high";
+        return "medium";
     }
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
@@ -31,23 +31,19 @@ export class SplitMultiLevelJobDescriptionAgent extends PolicySynthAgent {
 ${jobDescription.text}
 </JobDescription>
 
-<CurrentTitleCodeToExtractInToANewJobDescription>
+<CurrentTitleCodeToExtract>
 ${jobDescription.titleCode}
-</CurrentTitleCodeToExtractInToANewJobDescription>
+</CurrentTitleCodeToExtract>
 
-<CurrentJobNameToExtractInToANewJobDescription>
+<CurrentJobNameToExtract>
 ${jobDescription.name}
-</CurrentJobNameToExtractInToANewJobDescription>
+</CurrentJobNameToExtract>
 
-You are an expert in analyzing job descriptions. The <JobDescription> above will contain multiple distinct roles or levels,
-usually with different education requirements, indicated by headings such as "Level 1", "Level 2" for different job titles and title code.
+TASK: Extract the job description for the job code and title from the multi-job job description, leave out any information about the other levels not applicable to this job code and title.
 
-Extract and output only the text for the job code and title you are currently processing. We only want to get the job description for one level, the one we are looking at.
-
-Output the whole job description exactly as it is except only include the text for the job code and title you are currently processing. Do not change any wording otherwise.
-
-Return only the plain text for that job code and title with no additional commentary`;
+Output the plain text for the job description for the job code and title with no additional commentary: `;
         const extractMessages = [this.createSystemMessage(extractPrompt)];
+        this.logger.debug(`Extracting text for job code and title ${jobDescription.titleCode} ${jobDescription.name}:\n ${JSON.stringify(extractMessages, null, 2)}`);
         let extractedText;
         try {
             extractedText = await this.callModel(this.modelType, this.modelSize, extractMessages, false);
@@ -58,7 +54,7 @@ Return only the plain text for that job code and title with no additional commen
             // Fallback to empty string if error occurs.
             extractedText = "";
         }
-        this.logger.debug(`Extracted text for job code and title ${jobDescription.titleCode}:\n ${extractedText.trim()}`);
+        this.logger.debug(`Extracted text for job code and title ${jobDescription.titleCode} ${jobDescription.name}:\n ${extractedText.trim()}`);
         jobDescription.originalText = jobDescription.text;
         jobDescription.rewrittenText = extractedText.trim();
         jobDescription.text = jobDescription.rewrittenText;

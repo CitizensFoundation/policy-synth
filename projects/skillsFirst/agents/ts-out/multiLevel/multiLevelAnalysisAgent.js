@@ -1,4 +1,5 @@
 // jobDescriptionMultiLevelAnalysisAgent.ts
+import pLimit from "p-limit";
 import { SplitMultiLevelJobDescriptionAgent } from "./splitMultiLevelAgent.js";
 import fs from "fs";
 import path, { dirname } from "path";
@@ -73,26 +74,31 @@ export class JobDescriptionMultiLevelAnalysisAgent extends PolicySynthAgent {
             return;
         }
         this.logger.info(`Found ${multiLevelDescriptions.length} multi-level job descriptions`);
-        const newSubLevelDescriptions = [];
         const useMaxCounter = true;
         let counter = 1;
         // For each multi-level job, split it, then process the resulting sub-levels
-        for (const multiLevelJD of multiLevelDescriptions) {
-            if (useMaxCounter && counter > 300) {
-                this.logger.info(`Processed ${counter} multi-level job descriptions. Exiting.`);
-                break;
-            }
-            // Use a sub-agent to parse out sub-levels
+        const descriptionsToProcess = useMaxCounter
+            ? multiLevelDescriptions.slice(0, 300)
+            : multiLevelDescriptions;
+        // Create a p-limit instance with a concurrency of 10.
+        const limit = pLimit(10);
+        // Map each job description to a limited asynchronous task.
+        const tasks = descriptionsToProcess.map((multiLevelJD, index) => limit(async () => {
+            // Logging can help track progress for each task.
+            this.logger.info(`Processing job description ${index + 1}`);
             await this.splitMultiLevelJobDescription(multiLevelJD);
-            await this.analysisAgent.processJobDescription(multiLevelJD, counter, multiLevelDescriptions.length);
+            await this.analysisAgent.processJobDescription(multiLevelJD, index + 1, descriptionsToProcess.length);
             multiLevelJD.haveProcessedSubLevel = true;
-        }
+        }));
+        await Promise.all(tasks);
+        this.logger.info(`Processed ${tasks.length} multi-level job descriptions`);
         await this.updateRangedProgress(100, "Multi-Level Job Description Analysis Completed");
         this.logger.info(`Processed ${counter} multi-level job descriptions`);
         await this.setCompleted("Task Completed");
     }
     async splitMultiLevelJobDescription(multiLevelJD) {
         const splitAgent = new SplitMultiLevelJobDescriptionAgent(this.agent, this.memory, 0, 10);
+        this.logger.info(`Splitting multi-level job description ${multiLevelJD.titleCode} ${multiLevelJD.name}`);
         await splitAgent.processJobDescription(multiLevelJD);
     }
 }
