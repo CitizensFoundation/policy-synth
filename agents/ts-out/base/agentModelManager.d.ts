@@ -1,6 +1,7 @@
 interface PsCallModelOptions {
     parseJson?: boolean;
     limitedRetries?: boolean;
+    overrideMaxRetries?: number;
     tokenOutEstimate?: number;
     streamingCallbacks?: Function;
     modelProvider?: string;

@@ -8,6 +8,9 @@ export class GoogleGeminiChat extends BaseChatModel {
         this.client = new GoogleGenerativeAI(config.apiKey);
     }
     async generate(messages, streaming, streamingCallback) {
+        if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+            this.logger.debug(`Messages:\n${JSON.stringify(messages, null, 2)}`);
+        }
         // 1. Extract system messages & combine them
         const systemContent = messages
             .filter((m) => m.role === "system")

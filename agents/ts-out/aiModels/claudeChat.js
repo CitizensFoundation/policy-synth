@@ -29,14 +29,19 @@ export class ClaudeChat extends BaseChatModel {
             role: msg.role,
             content: msg.message,
         }));
+        if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+            this.logger.debug(`Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`);
+        }
         const requestOptions = {
             max_tokens: this.maxTokensOut,
             messages: formattedMessages,
             model: this.modelName,
-            thinking: this.maxThinkingTokens ? {
-                type: "enabled",
-                budget_tokens: this.maxThinkingTokens,
-            } : undefined,
+            thinking: this.maxThinkingTokens
+                ? {
+                    type: "enabled",
+                    budget_tokens: this.maxThinkingTokens,
+                }
+                : undefined,
         };
         if (systemMessage) {
             requestOptions.system = [

@@ -20,7 +20,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     reasoningEffort = "medium";
     maxThinkingTokens;
     limitedLLMmaxRetryCount = 3;
-    mainLLMmaxRetryCount = 40;
+    mainLLMmaxRetryCount = 75;
     constructor(aiModels, accessConfiguration, maxModelTokensOut = 4096, modelTemperature = 0.7, reasoningEffort = "medium", maxThinkingTokens = 0, agentId, userId) {
         super();
         this.maxModelTokensOut = maxModelTokensOut;
@@ -355,9 +355,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     async runTextModelCall(model, modelType, modelSize, messages, options) {
         // Work out how many times to retry
         let retryCount = 0;
-        const maxRetries = options.limitedRetries
+        let maxRetries = options.limitedRetries
             ? this.limitedLLMmaxRetryCount
             : this.mainLLMmaxRetryCount;
+        if (options.overrideMaxRetries) {
+            maxRetries = options.overrideMaxRetries;
+        }
         while (retryCount < maxRetries) {
             try {
                 // Example debug
@@ -402,6 +405,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 this.logger.warn("Error from model, might retry.");
                 if (error.message && error.message.includes("429")) {
                     this.logger.warn("429 error, will attempt retry.");
+                }
+                else {
+                    this.logger.error(`Error from model: ${error.message}`);
                 }
                 if (error.message?.includes("Failed to generate output due to special tokens in the input") ||
                     error.message?.includes("The model produced invalid content. Consider modifying") ||

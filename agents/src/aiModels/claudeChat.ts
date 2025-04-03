@@ -44,14 +44,22 @@ export class ClaudeChat extends BaseChatModel {
         content: msg.message,
       }));
 
+    if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+      this.logger.debug(
+        `Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`
+      );
+    }
+
     const requestOptions: Anthropic.MessageCreateParams = {
       max_tokens: this.maxTokensOut,
       messages: formattedMessages,
       model: this.modelName,
-      thinking: this.maxThinkingTokens ? {
-        type: "enabled",
-        budget_tokens: this.maxThinkingTokens!,
-      } : undefined,
+      thinking: this.maxThinkingTokens
+        ? {
+            type: "enabled",
+            budget_tokens: this.maxThinkingTokens!,
+          }
+        : undefined,
     };
 
     if (systemMessage) {
@@ -73,8 +81,6 @@ export class ClaudeChat extends BaseChatModel {
         );
       }
     }
-
-
 
     if (streaming) {
       const stream = await this.client.messages.create({
@@ -119,7 +125,9 @@ export class ClaudeChat extends BaseChatModel {
       }
     }
 
-    this.logger.warn(`Unknown content type: ${JSON.stringify(content, null, 2)}`);
+    this.logger.warn(
+      `Unknown content type: ${JSON.stringify(content, null, 2)}`
+    );
     return "unknown";
   }
 

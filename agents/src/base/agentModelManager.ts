@@ -556,6 +556,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         this.logger.warn("Error from model, might retry.");
         if (error.message && error.message.includes("429")) {
           this.logger.warn("429 error, will attempt retry.");
+        } else {
+          this.logger.error(`Error from model: ${error.message}`);
         }
         if (
           error.message?.includes(
