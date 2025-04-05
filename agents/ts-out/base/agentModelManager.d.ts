@@ -1,16 +1,3 @@
-interface PsCallModelOptions {
-    parseJson?: boolean;
-    limitedRetries?: boolean;
-    overrideMaxRetries?: number;
-    tokenOutEstimate?: number;
-    streamingCallbacks?: Function;
-    modelProvider?: string;
-    modelName?: string;
-    modelTemperature?: number;
-    modelMaxTokens?: number;
-    modelMaxThinkingTokens?: number;
-    modelReasoningEffort?: "low" | "medium" | "high";
-}
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
@@ -40,6 +27,8 @@ export declare class PsAiModelManager extends PolicySynthAgentBase {
     private getApiKeyForProvider;
     callModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options: PsCallModelOptions): Promise<any>;
     callTextModel(modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options: PsCallModelOptions): Promise<any>;
+    static prohibitedContentErrors: string[];
+    static isProhibitedContentError: (err: any) => boolean;
     /**
      * Actually does the call against the chosen model,
      * with your retry logic, parseJson, usage tracking, etc.
@@ -54,5 +43,4 @@ export declare class PsAiModelManager extends PolicySynthAgentBase {
     saveTokenUsage(modelType: PsAiModelType, modelSize: PsAiModelSize, tokensIn: number, tokensOut: number): Promise<void>;
     getTokensFromMessages(messages: PsModelMessage[]): Promise<number>;
 }
-export {};
 //# sourceMappingURL=agentModelManager.d.ts.map

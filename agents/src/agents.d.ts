@@ -32,14 +32,20 @@ interface PsAiModelConfig {
 interface PsCallModelOptions {
   parseJson?: boolean;
   limitedRetries?: boolean;
+  overrideMaxRetries?: number;
   tokenOutEstimate?: number;
   streamingCallbacks?: Function;
-  modelProvider?: string;
-  modelName?: string;
+  // NEW OVERRIDE FIELDS:
+  modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
+  modelName?: string; // e.g. "gpt-4", "claude-2", etc.
   modelTemperature?: number;
   modelMaxTokens?: number;
   modelMaxThinkingTokens?: number;
-  modelReasoningEffort?: 'low' | 'medium' | 'high';
+  modelReasoningEffort?: "low" | "medium" | "high";
+  fallbackModelProvider?: string;
+  fallbackModelName?: string;
+  fallbackModelType?: import("./aiModelTypes.js").PsAiModelType;
+  simulateContentErrorForFallbackDebugging?: boolean;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

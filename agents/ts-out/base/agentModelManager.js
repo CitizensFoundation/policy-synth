@@ -234,8 +234,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 // or see if user provided them in `options` somehow
                 ephemeralModel = new AzureOpenAiChat({
                     ...ephemeralConfig,
-                    endpoint: fallbackModel.endpoint ??
-                        process.env.PS_AI_MODEL_ENDPOINT,
+                    endpoint: fallbackModel.endpoint ?? process.env.PS_AI_MODEL_ENDPOINT,
                     deploymentName: fallbackModel.deploymentName ??
                         process.env.PS_AI_MODEL_DEPLOYMENT_NAME,
                 });
@@ -348,12 +347,24 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
         return this.runTextModelCall(model, modelType, selectedModelSize, messages, options);
     }
+    static prohibitedContentErrors = [
+        "prohibited content",
+        "response was blocked due to prohibited content",
+        "response was blocked due to other",
+        "failed to generate output due to special tokens",
+        "invalid content",
+    ];
+    static isProhibitedContentError = (err) => {
+        if (!err.message)
+            return false;
+        const lowerCaseMessage = err.message.toLowerCase();
+        return PsAiModelManager.prohibitedContentErrors.some((error) => lowerCaseMessage.includes(error));
+    };
     /**
      * Actually does the call against the chosen model,
      * with your retry logic, parseJson, usage tracking, etc.
      */
     async runTextModelCall(model, modelType, modelSize, messages, options) {
-        // Work out how many times to retry
         let retryCount = 0;
         let maxRetries = options.limitedRetries
             ? this.limitedLLMmaxRetryCount
@@ -361,14 +372,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (options.overrideMaxRetries) {
             maxRetries = options.overrideMaxRetries;
         }
+        // Track if we’ve tried the fallback model yet:
+        let usedFallback = false;
+        // Simple helper to check if error is 5xx or "prohibited content".
+        const is5xxError = (err) => err?.response?.status >= 500 && err?.response?.status < 600;
         while (retryCount < maxRetries) {
             try {
-                // Example debug
                 console.log(`Calling ${model.modelName}...`);
+                if (options.simulateContentErrorForFallbackDebugging) {
+                    throw new Error("Test error: Response was blocked due to OTHER");
+                }
                 const results = await model.generate(messages, !!options.streamingCallbacks, options.streamingCallbacks);
                 if (results) {
                     const { tokensIn, tokensOut, content } = results;
-                    // usage tracking
                     await this.saveTokenUsage(modelType, modelSize, tokensIn, tokensOut);
                     if (options.parseJson) {
                         let parsedJson;
@@ -381,7 +397,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                             await this.sleepBeforeRetry(retryCount);
                             continue;
                         }
-                        // Some models return `'[]'` or `"[]"` or just plain `[]`
+                        // Some models might respond with stringified empty array etc.
                         if (parsedJson === '"[]"' ||
                             parsedJson === "[]" ||
                             parsedJson === "'[]'") {
@@ -395,27 +411,63 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     }
                 }
                 else {
-                    // If results empty
+                    // If results are empty
                     retryCount++;
                     this.logger.warn(`callTextModel response was empty, retrying. Attempt #${retryCount}`);
                     await this.sleepBeforeRetry(retryCount);
                 }
             }
             catch (error) {
-                this.logger.warn("Error from model, might retry.");
+                // Check if it’s a 5xx or “prohibited content” scenario
+                if ((is5xxError(error) || PsAiModelManager.isProhibitedContentError(error)) &&
+                    !usedFallback) {
+                    // If we have a fallback model defined in options, try once
+                    if (options.fallbackModelProvider && options.fallbackModelName) {
+                        this.logger.warn(`Encountered 5xx or content-prohibited error. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`);
+                        usedFallback = true;
+                        // Create ephemeral fallback with user-supplied fallback provider/name:
+                        const fallbackEphemeral = this.createEphemeralModel(options.fallbackModelType ?? modelType, modelSize, {
+                            modelProvider: options.fallbackModelProvider,
+                            modelName: options.fallbackModelName,
+                            modelTemperature: options.modelTemperature,
+                            modelMaxTokens: options.modelMaxTokens,
+                            modelMaxThinkingTokens: options.modelMaxThinkingTokens,
+                            modelReasoningEffort: options.modelReasoningEffort,
+                        });
+                        if (!fallbackEphemeral) {
+                            this.logger.warn(`Unable to create fallback ephemeral model, rethrowing error.`);
+                            throw error;
+                        }
+                        // Attempt the call with the fallback ephemeral model (no further fallback if this fails)
+                        try {
+                            console.log(`Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`);
+                            const fallbackResults = await fallbackEphemeral.generate(messages, !!options.streamingCallbacks, options.streamingCallbacks);
+                            if (fallbackResults) {
+                                const { tokensIn, tokensOut, content } = fallbackResults;
+                                await this.saveTokenUsage(modelType, modelSize, tokensIn, tokensOut);
+                                return options.parseJson
+                                    ? this.parseJsonResponse(content.trim())
+                                    : content.trim();
+                            }
+                            else {
+                                // Fallback returned empty result; let's break out
+                                this.logger.warn("Fallback returned empty result; aborting");
+                                throw error;
+                            }
+                        }
+                        catch (fallbackError) {
+                            // If fallback also fails, throw the original or fallback error
+                            this.logger.error("Fallback model also failed. Throwing error.");
+                            throw fallbackError;
+                        }
+                    }
+                }
+                // If the error was not 5xx or prohibited, or fallback is not possible or used up:
                 if (error.message && error.message.includes("429")) {
-                    this.logger.warn("429 error, will attempt retry.");
+                    this.logger.warn("429 error: rate limit or too many requests; retrying...");
                 }
                 else {
-                    this.logger.error(`Error from model: ${error.message}`);
-                }
-                if (error.message?.includes("Failed to generate output due to special tokens in the input") ||
-                    error.message?.includes("The model produced invalid content. Consider modifying") ||
-                    error.message?.includes("Response was blocked due to PROHIBITED_CONTENT") ||
-                    error.message?.includes("Response was blocked due to OTHER")) {
-                    // If it's a known “non-retryable” scenario, break immediately
-                    this.logger.error("Stopping because of special tokens or invalid content from model.");
-                    throw new Error("Prohibited content");
+                    this.logger.error(`Error from model: ${error.message || error}`);
                 }
                 if (retryCount >= maxRetries - 1) {
                     this.logger.error("Reached max retries, rethrowing error.");
@@ -425,7 +477,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 await this.sleepBeforeRetry(retryCount);
             }
         }
-        this.logger.error("Unrecoverable Error in runTextModelCall method - no response");
+        this.logger.error("Unrecoverable Error in runTextModelCall method - no valid response after retries");
         throw new Error("Model call failed after maximum retries");
     }
     async sleepBeforeRetry(retryCount) {

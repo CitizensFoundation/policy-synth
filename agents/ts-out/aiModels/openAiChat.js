@@ -91,12 +91,9 @@ export class OpenAiChat extends BaseChatModel {
                 temperature: this.modelConfig.modelType === PsAiModelType.TextReasoning
                     ? undefined
                     : this.modelConfig.temperature,
-                max_tokens: this.modelConfig.modelType === PsAiModelType.TextReasoning
-                    ? undefined
-                    : this.modelConfig.maxTokensOut,
                 max_completion_tokens: this.modelConfig.modelType === PsAiModelType.TextReasoning
-                    ? this.modelConfig.maxTokensOut
-                    : undefined,
+                    ? undefined
+                    : this.modelConfig.maxTokensOut
             });
             const timeNow2 = new Date();
             this.logger.info(`OpenAI model call completed in ${(timeNow2.getTime() - timeNow.getTime()) / 1000} seconds`);
