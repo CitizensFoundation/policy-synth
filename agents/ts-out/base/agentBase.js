@@ -16,10 +16,10 @@ export class PolicySynthAgentBase {
         });
     }
     createSystemMessage(content) {
-        return { role: "system", message: content };
+        return { role: "system", message: content.trim() };
     }
     createHumanMessage(content) {
-        return { role: "user", message: content };
+        return { role: "user", message: content.trim() };
     }
     getJsonBlock(text) {
         let startIndex = text.indexOf("```json");

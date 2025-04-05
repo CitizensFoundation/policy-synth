@@ -22,11 +22,11 @@ export class PolicySynthAgentBase {
   }
 
   protected createSystemMessage(content: string): PsModelMessage {
-    return { role: "system", message: content };
+    return { role: "system", message: content.trim() };
   }
 
   protected createHumanMessage(content: string): PsModelMessage {
-    return { role: "user", message: content };
+    return { role: "user", message: content.trim() };
   }
 
   getJsonBlock(text: string) {
