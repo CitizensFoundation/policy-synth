@@ -568,6 +568,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           ) ||
           error.message?.includes(
             "Response was blocked due to PROHIBITED_CONTENT"
+          ) ||
+          error.message?.includes(
+            "Response was blocked due to OTHER"
           )
         ) {
           // If it's a known “non-retryable” scenario, break immediately

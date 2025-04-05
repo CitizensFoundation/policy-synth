@@ -411,7 +411,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 }
                 if (error.message?.includes("Failed to generate output due to special tokens in the input") ||
                     error.message?.includes("The model produced invalid content. Consider modifying") ||
-                    error.message?.includes("Response was blocked due to PROHIBITED_CONTENT")) {
+                    error.message?.includes("Response was blocked due to PROHIBITED_CONTENT") ||
+                    error.message?.includes("Response was blocked due to OTHER")) {
                     // If it's a known “non-retryable” scenario, break immediately
                     this.logger.error("Stopping because of special tokens or invalid content from model.");
                     throw new Error("Prohibited content");
