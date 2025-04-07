@@ -42,6 +42,7 @@ interface PsCallModelOptions {
   modelMaxTokens?: number;
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: "low" | "medium" | "high";
+  retryLimitFor429sUntilFallback?: number;
   fallbackModelProvider?: string;
   fallbackModelName?: string;
   fallbackModelType?: import("./aiModelTypes.js").PsAiModelType;

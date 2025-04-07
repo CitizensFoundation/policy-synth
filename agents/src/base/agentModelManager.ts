@@ -480,7 +480,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
-
   /**
    * Actually does the call against the chosen model,
    * with your retry logic, parseJson, usage tracking, etc.
@@ -503,8 +502,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     // Track if we’ve tried the fallback model yet:
     let usedFallback = false;
-
-
 
     // Simple helper to check if error is 5xx or "prohibited content".
     const is5xxError = (err: any) =>
@@ -563,15 +560,30 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
-        // Check if it’s a 5xx or “prohibited content” scenario
+        let tooMany429s = false;
         if (
-          (is5xxError(error) || PsAiModelManager.isProhibitedContentError(error)) &&
+          options.fallbackModelProvider &&
+          !usedFallback &&
+          options.retryLimitFor429sUntilFallback !== undefined &&
+          error.message &&
+          error.message.includes("429") &&
+          retryCount >= options.retryLimitFor429sUntilFallback
+        ) {
+          tooMany429s = true;
+          this.logger.warn(
+            `Encountered too many 429 errors. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
+          );
+        }
+        if (
+          (is5xxError(error) ||
+            PsAiModelManager.isProhibitedContentError(error) ||
+            tooMany429s) &&
           !usedFallback
         ) {
           // If we have a fallback model defined in options, try once
           if (options.fallbackModelProvider && options.fallbackModelName) {
             this.logger.warn(
-              `Encountered 5xx or content-prohibited error. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
+              `Encountered 5xx, content-prohibited error or too many 429s. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
             );
             usedFallback = true;
 
@@ -656,7 +668,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   private async sleepBeforeRetry(retryCount: number) {
-    const sleepTime = 4500 + retryCount * 5000;
+    const sleepTime = 4500 + Math.max(retryCount-1,0) * 5000;
     this.logger.debug(`Sleeping ${sleepTime}ms before next attempt`);
     return new Promise((resolve) => setTimeout(resolve, sleepTime));
   }
