@@ -353,8 +353,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         "response was blocked due to other",
         "failed to generate output due to special tokens",
         "invalid content",
+        "violating our usage policy",
+        "content management policy",
         "response was blocked due to prohibited_content",
-        "prohibited_content"
+        "prohibited_content",
+        "not allowed by our safety system"
     ];
     static isProhibitedContentError = (err) => {
         if (!err.message)
