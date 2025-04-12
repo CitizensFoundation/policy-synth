@@ -381,6 +381,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         let usedFallback = false;
         // Simple helper to check if error is 5xx or "prohibited content".
         const is5xxError = (err) => err?.response?.status >= 500 && err?.response?.status < 600;
+        const isUnknownError = (err) => {
+            if (!err.message)
+                return false;
+            const lowerCaseMessage = err.message.toLowerCase();
+            return lowerCaseMessage.includes("error: unknown") && !lowerCaseMessage.includes("429");
+        };
         while (retryCount < maxRetries) {
             try {
                 console.log(`Calling ${model.modelName}...`);
@@ -435,7 +441,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 }
                 if ((is5xxError(error) ||
                     PsAiModelManager.isProhibitedContentError(error) ||
-                    tooMany429s) &&
+                    tooMany429s ||
+                    isUnknownError(error)) &&
                     !usedFallback) {
                     // If we have a fallback model defined in options, try once
                     if (options.fallbackModelProvider && options.fallbackModelName) {
