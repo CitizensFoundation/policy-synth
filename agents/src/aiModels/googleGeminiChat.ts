@@ -87,6 +87,52 @@ export class GoogleGeminiChat extends BaseChatModel {
     return contents;
   }
 
+  static vertexSafetySettingsBlockNone = [
+    {
+      category: VertexHarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: VertexHarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: VertexHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: VertexHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: VertexHarmCategory.HARM_CATEGORY_UNSPECIFIED,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+  ]
+
+  static generativeAiSafetySettingsBlockNone = [
+    {
+      category: GenerativeHarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: GenerativeHarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: GenerativeHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: GenerativeHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: GenerativeHarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+  ]
+
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
@@ -108,55 +154,13 @@ export class GoogleGeminiChat extends BaseChatModel {
       this.model = this.vertexAiClient.getGenerativeModel({
         model: this.modelName,
         systemInstruction: systemContent,
-        safetySettings: [
-          {
-            category: VertexHarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: VertexHarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: VertexHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: VertexHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: VertexHarmCategory.HARM_CATEGORY_UNSPECIFIED,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-        ],
+        safetySettings: GoogleGeminiChat.vertexSafetySettingsBlockNone,
       });
     } else if (!this.useVertexAi && this.googleAiClient) {
       this.model = this.googleAiClient.getGenerativeModel({
         model: this.modelName,
         systemInstruction: systemContent,
-        safetySettings: [
-          {
-            category: GenerativeHarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: GenerativeHarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: GenerativeHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: GenerativeHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: GenerativeHarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-        ],
+        safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
       });
     } else {
       throw new Error("Client not initialized correctly."); // Should not happen
