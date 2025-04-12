@@ -512,6 +512,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const is5xxError = (err: any) =>
       err?.response?.status >= 500 && err?.response?.status < 600;
 
+    const isUnknownError = (err: any) => {
+      if (!err.message) return false;
+      const lowerCaseMessage = err.message.toLowerCase();
+      return lowerCaseMessage.includes("error: unknown") && !lowerCaseMessage.includes("429");
+    };
+
     while (retryCount < maxRetries) {
       try {
         console.log(`Calling ${model.modelName}...`);
@@ -582,7 +588,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (
           (is5xxError(error) ||
             PsAiModelManager.isProhibitedContentError(error) ||
-            tooMany429s) &&
+            tooMany429s ||
+            isUnknownError(error)) &&
           !usedFallback
         ) {
           // If we have a fallback model defined in options, try once
