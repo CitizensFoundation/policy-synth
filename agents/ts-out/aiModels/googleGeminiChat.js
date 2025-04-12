@@ -15,6 +15,12 @@ export class GoogleGeminiChat extends BaseChatModel {
         super(config.modelName || "gemini-pro", config.maxTokensOut || 16000); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
         this.modelName = config.modelName || "gemini-pro"; // Store model name
         this.useVertexAi = process.env.USE_GOOGLE_VERTEX_AI === "true";
+        if (!this.useVertexAi && process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS) {
+            const listOfModels = process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS?.split(",");
+            if (listOfModels?.includes(this.modelName)) {
+                this.useVertexAi = true;
+            }
+        }
         if (this.useVertexAi) {
             this.vertexProjectId = process.env.GOOGLE_CLOUD_PROJECT;
             this.vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
