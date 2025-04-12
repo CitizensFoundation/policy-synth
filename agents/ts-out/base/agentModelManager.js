@@ -385,7 +385,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             if (!err.message)
                 return false;
             const lowerCaseMessage = err.message.toLowerCase();
-            return lowerCaseMessage.includes("error: unknown") && !lowerCaseMessage.includes("429");
+            return lowerCaseMessage.includes("error: unknown");
         };
         while (retryCount < maxRetries) {
             try {

@@ -217,7 +217,9 @@ export class GoogleGeminiChat extends BaseChatModel {
                 const response = result.response;
                 const content = response.candidates?.[0]?.content?.parts?.[0]?.text || "";
                 if (!content && response.candidates?.[0]?.finishReason !== "STOP") {
-                    this.logger.error(`Vertex AI Error: ${response.candidates?.[0]?.finishReason || "Unknown"}`, response.candidates?.[0]?.safetyRatings);
+                    const errorMessage = response.candidates?.[0]?.finishReason || "Unknown";
+                    this.logger.error(`Vertex AI Error: ${errorMessage}`, response.candidates?.[0]?.safetyRatings);
+                    throw new Error(`Vertex AI Error: ${errorMessage}`);
                 }
                 //console.log(`VERTEX RESPONSE: ${JSON.stringify(response, null, 2)}`);
                 return {
