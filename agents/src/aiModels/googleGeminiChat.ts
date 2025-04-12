@@ -108,7 +108,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       category: VertexHarmCategory.HARM_CATEGORY_UNSPECIFIED,
       threshold: HarmBlockThreshold.BLOCK_NONE,
     },
-  ]
+  ];
 
   static generativeAiSafetySettingsBlockNone = [
     {
@@ -131,7 +131,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       category: GenerativeHarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
       threshold: HarmBlockThreshold.BLOCK_NONE,
     },
-  ]
+  ];
 
   async generate(
     messages: PsModelMessage[],
@@ -262,12 +262,15 @@ export class GoogleGeminiChat extends BaseChatModel {
         const content =
           response.candidates?.[0]?.content?.parts?.[0]?.text || "";
         if (!content && response.candidates?.[0]?.finishReason !== "STOP") {
+          const errorMessage =
+            response.candidates?.[0]?.finishReason || "Unknown";
+
           this.logger.error(
-            `Vertex AI Error: ${
-              response.candidates?.[0]?.finishReason || "Unknown"
-            }`,
+            `Vertex AI Error: ${errorMessage}`,
             response.candidates?.[0]?.safetyRatings
           );
+
+          throw new Error(`Vertex AI Error: ${errorMessage}`);
         }
         //console.log(`VERTEX RESPONSE: ${JSON.stringify(response, null, 2)}`);
         return {
