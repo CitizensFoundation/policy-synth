@@ -87,7 +87,9 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
      * Example helper that calls the LLM and interprets the response.
      * (You might already have your own version; this is just an illustration.)
      */
-    async getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex) {
+    async getResultsFromLLM(subProblemIndex, messages, itemOneIndex, itemTwoIndex, modelOptions = {
+        parseJson: false
+    }) {
         let wonItemIndex = -1;
         let lostItemIndex = -1;
         // Simplified example. Real code would do your normal LLM call + parse result.
@@ -99,7 +101,7 @@ export class PairwiseRankingAgent extends PolicySynthAgent {
         while (retry && retryCount < maxRetryCount) {
             try {
                 // Suppose we call the model (placeholder):
-                const winningItemText = await this.callModel(this.defaultModelType, this.defaultModelSize, messages, { parseJson: false });
+                const winningItemText = await this.callModel(this.defaultModelType, this.defaultModelSize, messages, modelOptions);
                 if (!winningItemText) {
                     throw new Error("No winning item text");
                 }

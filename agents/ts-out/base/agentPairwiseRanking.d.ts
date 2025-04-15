@@ -30,7 +30,7 @@ export declare abstract class PairwiseRankingAgent extends PolicySynthAgent {
      * Example helper that calls the LLM and interprets the response.
      * (You might already have your own version; this is just an illustration.)
      */
-    getResultsFromLLM(subProblemIndex: number, messages: any[], itemOneIndex: number, itemTwoIndex: number): Promise<PsPairWiseVoteResults>;
+    getResultsFromLLM(subProblemIndex: number, messages: any[], itemOneIndex: number, itemTwoIndex: number, modelOptions?: PsCallModelOptions): Promise<PsPairWiseVoteResults>;
     /**
      * Elo K-factor schedule: linearly decrease from K_FACTOR_INITIAL to K_FACTOR_MIN
      * over NUM_COMPARISONS_FOR_MIN_K comparisons.

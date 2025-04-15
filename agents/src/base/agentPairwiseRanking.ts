@@ -136,7 +136,10 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     subProblemIndex: number,
     messages: any[],
     itemOneIndex: number,
-    itemTwoIndex: number
+    itemTwoIndex: number,
+    modelOptions: PsCallModelOptions = {
+      parseJson: false
+    }
   ): Promise<PsPairWiseVoteResults> {
     let wonItemIndex: number = -1;
     let lostItemIndex: number = -1;
@@ -155,7 +158,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
           this.defaultModelType,
           this.defaultModelSize,
           messages,
-          { parseJson: false }
+          modelOptions
         );
 
         if (!winningItemText) {
