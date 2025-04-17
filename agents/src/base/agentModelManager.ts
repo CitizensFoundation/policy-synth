@@ -681,8 +681,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   private async sleepBeforeRetry(retryCount: number) {
     const sleepTime = 4500 + Math.max(retryCount-1,0) * 5000;
-    this.logger.debug(`Sleeping ${sleepTime}ms before next attempt`);
-    return new Promise((resolve) => setTimeout(resolve, sleepTime));
+    const cappedTime = Math.min(sleepTime, 90000);
+    this.logger.debug(`Sleeping ${cappedTime}ms before next attempt`);
+    return new Promise((resolve) => setTimeout(resolve, cappedTime));
   }
 
   async callEmbeddingModel(messages: PsModelMessage[]) {
