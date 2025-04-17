@@ -2,8 +2,9 @@ import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import axios from "axios";
 import * as cheerio from "cheerio";
 import * as xlsx from "xlsx";
-import { LicenseDeepResearchAgent } from "./licenceDeepResearch";
+import { LicenseDeepResearchAgent } from "./licenceDeepResearch.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+
 export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
   declare memory: LicenseDegreeAnalysisMemoryData;
 

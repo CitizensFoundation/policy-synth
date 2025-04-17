@@ -1,6 +1,6 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import axios from "axios";
-import { LicenseDeepResearchAgent } from "./licenceDeepResearch";
+import { LicenseDeepResearchAgent } from "./licenceDeepResearch.js";
 export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
     constructor(agent, memory, start, end) {
         super(agent, memory, start, end);
