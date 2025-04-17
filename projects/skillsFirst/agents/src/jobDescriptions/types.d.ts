@@ -60,6 +60,8 @@ interface JobDescriptionMemoryData extends PsAgentMemoryData {
   llmErrors: string[];
   doNotReprocessTitleCodes?: string[];
   rewritingBuckets?: { [bucket: string]: JobDescription[] };
+  additionalGeneralContext?: string;
+  researchPlan?: string;
 }
 
 /**
@@ -166,8 +168,6 @@ type JobDegreeClassification =
   | "Bachelor's degree" // "bachelor's degree", etc.
   | "Master's degree" // "master's degree", etc.
   | "Doctoral degree"; // "doctoral degree", "Ph.D.", etc.
-
-
 
 /**
  * Represents an occupational category.
@@ -391,3 +391,42 @@ interface JobDescriptionInput {
   agentId: number;
   jobDescriptions: JobDescription[];
 }
+
+interface LicenseDegreeExportInput {
+  agentId: number;
+  analysisResults: LicenseDegreeAnalysisResult[];
+}
+
+interface LicenseDegreeAnalysisMemoryData extends JobDescriptionMemoryData {
+  spreadsheetPath: string;
+  worksheetName?: string;
+  jobTitlesForLicenceAnalysis: JobTitleRow[];
+  results: LicenseDegreeAnalysisResult[];
+  llmErrors: string[];
+  researchPlan?: string;
+}
+
+interface LicenseSeedInfo {
+  licenseType: string;
+  issuingAuthority?: string;
+  link?: string;
+}
+
+interface JobTitleRow {
+  jobTitle: string;
+  seedLicenses: LicenseSeedInfo[];
+}
+
+interface LicenseDegreeAnalysisResult {
+  jobTitle: string;
+  licenseType: string;
+  degreeRequiredStatus: string;
+  supportingEvidence: string;
+  confidenceScore: number;
+  reasoning: string;
+}
+
+type DeepResearchWebResearchTypes =
+  | "jobDescription"
+  | "licenseSource"
+  | "organization";
