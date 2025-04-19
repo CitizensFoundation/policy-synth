@@ -81,7 +81,7 @@ Designed to analyze and recommend regulatory or policy changes—both in governm
 Since 2008, **Your Priorities** has evolved into one of the leading platforms for collective decision-making and is now the backbone of the Policy Synth Agent Workflow Engine.
 
 **Accolades**  
-- #1 on [PeoplePowered 2024 Platform Ratings](https://www.peoplepowered.org/platform-ratings)  
+- #1 on [PeoplePowered 2025 Platform Ratings](https://www.peoplepowered.org/platform-ratings)  
 - Top-rated in the [2024 Digital Democracy Report](https://www.solonian-institute.com/publications)  
 - Featured in the [OECD Guidelines for Citizen Participation Processes](https://www.oecd.org/publications/oecd-guidelines-for-citizen-participation-processes-f765caf6-en.htm)
 
