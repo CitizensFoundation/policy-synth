@@ -4,7 +4,7 @@ import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.
 export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
-    crawlPageLimit = 5;
+    crawlPageLimit = 10;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;

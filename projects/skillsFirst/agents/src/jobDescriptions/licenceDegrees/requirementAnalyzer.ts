@@ -76,7 +76,7 @@ Return your analysis *only* as a JSON object adhering strictly to the following 
   "supportingEvidence": "string", // Quote the *exact* key sentence(s) or phrase(s) from the <SourceText> that justify your conclusion. Keep it concise (1-3 relevant snippets). If "No Degree Found", state that no degree requirement was mentioned. If "Could Not Determine", explain the ambiguity briefly.
   "confidenceScore": number, // Your confidence level (0.0 to 1.0) based on the clarity and explicitness of the text. Explicit mentions = higher confidence (0.8-1.0), Implicit = medium (0.6-0.8), No mention = high if requirements are detailed otherwise (0.8-0.9), Ambiguous = low (0.1-0.5).
   "reasoning": "string" // A brief (1-2 sentence) explanation of *why* you chose that status based on the evidence and rules.
-}git
+}
 
 Do NOT include any text before or after the JSON object.
 `;

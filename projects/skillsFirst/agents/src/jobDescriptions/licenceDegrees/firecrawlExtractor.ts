@@ -6,23 +6,36 @@ import {
   PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
 
-
 interface RelevanceCheckResult {
   isRelevant: boolean;
   reasoning?: string;
+}
+
+/**
+ * Convenience wrapper so callers get *both* the markdown content scraped
+ * **and** the URL it originated from, instead of only the content.
+ */
+export interface ScrapedPage {
+  /** URL where the content was scraped */
+  url: string;
+  /** Markdown representation of the page */
+  content: string;
 }
 
 export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
   needsAiModel = false;
   private app: FirecrawlApp;
 
-  crawlPageLimit = 5;
+  licenseType: string;
+
+  crawlPageLimit = 10;
 
   constructor(
     agent: PsAgent,
     memory: PsAgentMemoryData | undefined,
     startProgress: number,
-    endProgress: number
+    endProgress: number,
+    licenseType: string
   ) {
     super(agent, memory, startProgress, endProgress);
     const apiKey = process.env.FIRECRAWL_API_KEY;
@@ -30,6 +43,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
       throw new Error("Missing FIRECRAWL_API_KEY environment variable");
     }
     this.app = new FirecrawlApp({ apiKey });
+    this.licenseType = licenseType;
   }
 
   private async checkIfRelevant(
@@ -87,13 +101,14 @@ Your JSON output:`,
   }
 
   /**
-   * Scrape a URL using Firecrawl. If rate-limited (429), it will retry
-   * after the time specified by the Retry-After header.
+   * Scrape a URL using Firecrawl. If rate‑limited (429), it will retry
+   * after the time specified by the Retry‑After header.
    *
    * @param url - The URL to scrape
    * @param formats - An array of formats to request, e.g. ['markdown', 'html']
    * @param maxRetries - Maximum number of retries upon rate limits
-   * @returns The scrape response from Firecrawl
+   * @param crawlUrlIfNotPdf - If true, will deep‑crawl non‑PDF URLs up to `crawlPageLimit`
+   * @returns Array of objects, each containing the original URL and its markdown content
    */
   public async scrapeUrl(
     url: string,
@@ -109,74 +124,88 @@ Your JSON output:`,
     )[] = ["markdown", "rawHtml"],
     maxRetries: number = 3,
     crawlUrlIfNotPdf: boolean
-  ): Promise<string[]> {
+  ): Promise<ScrapedPage[]> {
     let retries = 0;
 
     while (retries <= maxRetries) {
       try {
         this.logger.debug(`Attempting to scrape: ${url}, try #${retries + 1}`);
-        let scrapeResponse;
 
-        // If a reference domain is specified, only crawl if the current URL's domain matches
-        // that of the reference domain. Using the more robust domain extraction here.
+        // 1️⃣ CRAWL branch ──────────────────────────────────────────────
         if (crawlUrlIfNotPdf && !url.endsWith(".pdf")) {
-          this.logger.debug(
-            `Crawling ${url} because it is not a PDF`
-          );
-          scrapeResponse = await this.app.crawlUrl(url, {
+          this.logger.debug(`Crawling ${url} because it is not a PDF`);
+          const crawlResponse = await this.app.crawlUrl(url, {
             limit: this.crawlPageLimit,
             scrapeOptions: {
               formats,
-              excludeTags: ["img", "svg", "a", "iframe", "script", "style", "br"]
+              excludeTags: [
+                "img",
+                "svg",
+                "a",
+                "iframe",
+                "script",
+                "style",
+                "br",
+              ],
             },
           });
 
           this.logger.debug(
-            `Crawl response length: ${Object.keys(scrapeResponse).length}`
+            `Crawl response length: ${Object.keys(crawlResponse).length}`
           );
 
-          if (!scrapeResponse.success) {
-            throw new Error(`Failed to crawl: ${scrapeResponse.error}`);
+          if (!crawlResponse.success) {
+            throw new Error(`Failed to crawl: ${crawlResponse.error}`);
           }
 
-          let allMarkdownObjects = scrapeResponse.data
-            ? scrapeResponse.data.map((item: any) => item.markdown)
+          // 🔁 Build {url, content} array and relevance‑filter it
+          let pages: ScrapedPage[] = crawlResponse.data
+            ? crawlResponse.data.map((item: any) => ({
+                url: item.url as string,
+                content: item.markdown as string,
+              }))
             : [];
 
           const checks = await Promise.all(
-            allMarkdownObjects.map((doc) =>
-              this.checkIfRelevant(doc)
-            )
-          );
-          allMarkdownObjects = allMarkdownObjects.filter(
-            (_, i) => checks[i].isRelevant
+            pages.map((page) => this.checkIfRelevant(page.content))
           );
 
-          return allMarkdownObjects
-
-        } else {
-          let scrapeResponseOne;
-          this.logger.debug(
-            `Starting to scrape: ${url}`
-          );
-          scrapeResponseOne = await this.app.scrapeUrl(url, {
-            formats,
-            excludeTags: ["img", "svg", "a", "iframe", "script", "style", "br"]
-          }) as ScrapeResponse<any, never>;
-          this.logger.debug(
-            `Successfully scraped: ${url}`
-          );
-
-          if (scrapeResponseOne.markdown) {
-            const isRelevant = await this.checkIfRelevant(scrapeResponseOne.markdown);
-            if (isRelevant.isRelevant) {
-              return [scrapeResponseOne.markdown]
-            }
-          } else {
-            this.logger.debug("No markdown found in scrape response");
-            return []
-          }
+          pages = pages.filter((_, i) => checks[i].isRelevant);
+          return pages;
         }
+
+        // 2️⃣ SINGLE‑PAGE branch ────────────────────────────────────────
+        this.logger.debug(`Starting to scrape: ${url}`);
+        const scrapeResponseOne = (await this.app.scrapeUrl(url, {
+          formats,
+          excludeTags: [
+            "img",
+            "svg",
+            "a",
+            "iframe",
+            "script",
+            "style",
+            "br",
+          ],
+        })) as ScrapeResponse<any, never>;
+        this.logger.debug(`Successfully scraped: ${url}`);
+
+        if (scrapeResponseOne.markdown) {
+          const isRelevant = await this.checkIfRelevant(
+            scrapeResponseOne.markdown
+          );
+          if (isRelevant.isRelevant) {
+            return [
+              {
+                url,
+                content: scrapeResponseOne.markdown,
+              },
+            ];
+          }
+        } else {
+          this.logger.debug("No markdown found in scrape response");
+        }
+        return [];
       } catch (error: any) {
         if (error.response && error.response.status === 429) {
           // Rate limit hit
@@ -201,24 +230,6 @@ Your JSON output:`,
             setTimeout(resolve, retryAfter * 1000)
           );
           retries++;
-        } else if (/*error.response && error.response.status !== 403*/ false) {
-          /*const fallbackScraper = new WebScraper();
-          let fallbackResponse;
-          try {
-            fallbackResponse = await fallbackScraper.scrapeUrl(url);
-            if (fallbackResponse.success) {
-              return {
-                markdown: fallbackResponse.data.rawHtml,
-                rawHtml: fallbackResponse.data.rawHtml,
-                metadata: {
-                  source: "fallback",
-                },
-              };
-            }
-          } catch (fallbackErr: any) {
-            this.logger.error("Fallback also failed: " + fallbackErr.message);
-            throw fallbackErr; // re-throw
-          }*/
         } else {
           // Some other error
           this.logger.error(`Error scraping ${url}: ${error.message}`);

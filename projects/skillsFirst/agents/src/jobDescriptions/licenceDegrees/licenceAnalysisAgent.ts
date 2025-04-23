@@ -12,7 +12,7 @@ import { RequirementExtractorAgent } from "./requirementsExtractor.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { SheetsLicenseDegreeImportAgent } from "./importSheet.js";
 import { SheetsLicenseDegreeExportAgent } from "./exportSheet.js";
-import { FirecrawlScrapeAndCrawlerAgent } from "./firecrawlExtractor.js";
+import { FirecrawlScrapeAndCrawlerAgent, ScrapedPage } from "./firecrawlExtractor.js";
 
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   declare memory: LicenseDegreeAnalysisMemoryData;
@@ -143,7 +143,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     for (const src of sources) {
       try {
         // Pull requirements text
-        let textToAnalyze: string[] = [];
+        let pagesToAnalyze: ScrapedPage[] = [];
         if (src) {
           const extractor = new FirecrawlScrapeAndCrawlerAgent(
             this.agent,
@@ -151,10 +151,10 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             this.startProgress,
             this.endProgress
           );
-          textToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
+          pagesToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
         }
 
-        for (const text of textToAnalyze) {
+        for (const page of pagesToAnalyze) {
           // Run the degree‑requirement analysis
           const analyzer = new DegreeRequirementAnalyzerAgent(
             this.agent,
@@ -163,15 +163,14 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             this.endProgress
           );
           const res = await analyzer.analyze(
-            text,
+            page.content,
             sheetLinks[0].licenseType, // licenceType is the same across the row
             src
           ) as LicenseDegreeAnalysisResult;
 
           res.jobTitle = jobTitle;
           res.licenseType = sheetLinks[0].licenseType;
-          res.sourceUrl = src;
-
+          res.sourceUrl = page.url;
 
           if ("error" in res) throw new Error(res.error as string);
           results.push(res);
