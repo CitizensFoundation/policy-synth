@@ -4,7 +4,7 @@ import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.
 export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
-    crawlPageLimit = 50;
+    crawlPageLimit = 5;
     constructor(agent, memory, startProgress, endProgress) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;
@@ -22,7 +22,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 Instructions:
 
 If DocumentToAnalyze has any information about occupational licensing requirements in New Jersey then it is relevant.
-Could be license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
+Focus on license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
 
 If the DocumentToAnalyze is a legal privacy policy or terms of service only, then return true.
 
@@ -43,17 +43,17 @@ Your JSON output:`,
         try {
             const result = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages));
             if (result.isRelevant) {
-                this.logger.debug("-------> filtering out legal or privacy policy");
+                this.logger.debug("-------> filtering out");
                 this.logger.debug(document);
-                this.logger.debug("-------> end of legal or privacy policy");
+                this.logger.debug("-------> end of filtering out");
             }
             else {
-                this.logger.debug("-------> not a legal or privacy policy document");
+                this.logger.debug("-------> not filtering out");
             }
             return result;
         }
         catch (error) {
-            this.logger.warn("checkIfLegalOrPrivacyPolicy: Model did not return a valid JSON object. Falling back to false.");
+            this.logger.warn("checkIfRelevant: Model did not return a valid JSON object. Falling back to false.");
             return { isRelevant: false };
         }
     }

@@ -420,6 +420,7 @@ interface JobTitleRow {
 interface LicenseDegreeAnalysisResult {
   jobTitle: string;
   licenseType: string;
+  sourceUrl: string;
   degreeRequiredStatus: string;
   supportingEvidence: string;
   confidenceScore: number;

@@ -7,6 +7,7 @@ export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
     }
     async findSource(license) {
         const { link, licenseType } = license;
+        this.logger.debug(`Finding authoritative source for ${JSON.stringify(license, null, 2)}`);
         // 1a. Validate provided link (if any)
         if (link) {
             try {

@@ -1,7 +1,6 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
-import { AuthoritativeSourceFinderAgent } from "./authorativeSourceFinder.js";
 import { DegreeRequirementAnalyzerAgent } from "./requirementAnalyzer.js";
 import { SheetsLicenseDegreeImportAgent } from "./importSheet.js";
 import { SheetsLicenseDegreeExportAgent } from "./exportSheet.js";
@@ -26,9 +25,10 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     async process() {
         await this.loadSpreadsheet();
         this.memory.results = [];
-        const total = 2; //this.memory.jobTitlesForLicenceAnalysis.length;
+        const total = 10; //this.memory.jobTitlesForLicenceAnalysis.length;
         for (let i = 0; i < total; i++) {
             const row = this.memory.jobTitlesForLicenceAnalysis[i];
+            this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
             await this.updateRangedProgress(Math.floor((i / total) * 90), `Analyzing ${row.jobTitle} (${i + 1}/${total})`);
             // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
             const licenseResults = await this.processLicense(row.jobTitle, row.seedLicenses);
@@ -68,15 +68,20 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
         // ────────────────────────────────────────────────────────────────────────────
         // 2️⃣  Always attempt an authoritative search; add it if it’s new
         // ────────────────────────────────────────────────────────────────────────────
+        /*
         try {
-            const finder = new AuthoritativeSourceFinderAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-            const discovered = await finder.findSource(sheetLinks[0]); // use first licence seed
-            if (discovered && !urls.includes(discovered))
-                urls.push(discovered);
+          const finder = new AuthoritativeSourceFinderAgent(
+            this.agent,
+            this.memory,
+            this.startProgress,
+            this.endProgress
+          );
+          const discovered = await finder.findSource(sheetLinks[0]); // use first licence seed
+          if (discovered && !urls.includes(discovered)) urls.push(discovered);
+        } catch (err) {
+          this.logger.warn(`Source‑finder failed: ${err}`);
         }
-        catch (err) {
-            this.logger.warn(`Source‑finder failed: ${err}`);
-        }
+        */
         // We only want the first three distinct URLs (sheet link‑1, sheet link‑2, search)
         const sources = urls.slice(0, 3);
         // ────────────────────────────────────────────────────────────────────────────
@@ -96,6 +101,9 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
                     const analyzer = new DegreeRequirementAnalyzerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
                     const res = await analyzer.analyze(text, sheetLinks[0].licenseType, // licenceType is the same across the row
                     src);
+                    res.jobTitle = jobTitle;
+                    res.licenseType = sheetLinks[0].licenseType;
+                    res.sourceUrl = src;
                     if ("error" in res)
                         throw new Error(res.error);
                     results.push(res);

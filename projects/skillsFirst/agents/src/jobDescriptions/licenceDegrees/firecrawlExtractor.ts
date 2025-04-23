@@ -16,7 +16,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
   needsAiModel = false;
   private app: FirecrawlApp;
 
-  crawlPageLimit = 50;
+  crawlPageLimit = 5;
 
   constructor(
     agent: PsAgent,
@@ -43,7 +43,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 Instructions:
 
 If DocumentToAnalyze has any information about occupational licensing requirements in New Jersey then it is relevant.
-Could be license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
+Focus on license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
 
 If the DocumentToAnalyze is a legal privacy policy or terms of service only, then return true.
 
@@ -65,22 +65,22 @@ Your JSON output:`,
     try {
       const result = (await this.callModel(
         PsAiModelType.Text,
-        PsAiModelSize.Medium  ,
+        PsAiModelSize.Medium,
         messages
       )) as RelevanceCheckResult;
 
       if (result.isRelevant) {
-        this.logger.debug("-------> filtering out legal or privacy policy");
+        this.logger.debug("-------> filtering out");
         this.logger.debug(document);
-        this.logger.debug("-------> end of legal or privacy policy");
+        this.logger.debug("-------> end of filtering out");
       } else {
-        this.logger.debug("-------> not a legal or privacy policy document");
+        this.logger.debug("-------> not filtering out");
       }
 
       return result;
     } catch (error: any) {
       this.logger.warn(
-        "checkIfLegalOrPrivacyPolicy: Model did not return a valid JSON object. Falling back to false."
+        "checkIfRelevant: Model did not return a valid JSON object. Falling back to false."
       );
       return { isRelevant: false };
     }

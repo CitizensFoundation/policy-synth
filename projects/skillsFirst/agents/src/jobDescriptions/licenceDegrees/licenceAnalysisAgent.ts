@@ -54,9 +54,11 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
 
     this.memory.results = [];
 
-    const total = 2; //this.memory.jobTitlesForLicenceAnalysis.length;
+    const total = 10; //this.memory.jobTitlesForLicenceAnalysis.length;
     for (let i = 0; i < total; i++) {
       const row = this.memory.jobTitlesForLicenceAnalysis[i];
+
+      this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
 
       await this.updateRangedProgress(
         Math.floor((i / total) * 90),
@@ -115,6 +117,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     // ────────────────────────────────────────────────────────────────────────────
     // 2️⃣  Always attempt an authoritative search; add it if it’s new
     // ────────────────────────────────────────────────────────────────────────────
+    /*
     try {
       const finder = new AuthoritativeSourceFinderAgent(
         this.agent,
@@ -127,6 +130,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     } catch (err) {
       this.logger.warn(`Source‑finder failed: ${err}`);
     }
+    */
 
     // We only want the first three distinct URLs (sheet link‑1, sheet link‑2, search)
     const sources = urls.slice(0, 3);
@@ -162,9 +166,14 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             text,
             sheetLinks[0].licenseType, // licenceType is the same across the row
             src
-          );
+          ) as LicenseDegreeAnalysisResult;
 
-          if ("error" in res) throw new Error(res.error);
+          res.jobTitle = jobTitle;
+          res.licenseType = sheetLinks[0].licenseType;
+          res.sourceUrl = src;
+
+
+          if ("error" in res) throw new Error(res.error as string);
           results.push(res);
         }
       } catch (e) {
