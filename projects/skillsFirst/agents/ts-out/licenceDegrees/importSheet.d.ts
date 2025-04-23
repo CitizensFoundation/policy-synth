@@ -30,9 +30,8 @@ export declare class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
     importLicenseDegreeRows(): Promise<LicenseDegreeRow[]>;
     private buildRows;
     /** Locate any of the candidate header names, returns index or -1 */
-    private findHeaderIdx;
     private safeGet;
-    /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
+    /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
     private columnIndexToLetter;
 }
 //# sourceMappingURL=importSheet.d.ts.map

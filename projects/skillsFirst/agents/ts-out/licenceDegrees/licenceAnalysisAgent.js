@@ -3,9 +3,9 @@ import { PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { AuthoritativeSourceFinderAgent } from "./authorativeSourceFinder.js";
 import { DegreeRequirementAnalyzerAgent } from "./requirementAnalyzer.js";
-import { RequirementExtractorAgent } from "./requirementsExtractor.js";
 import { SheetsLicenseDegreeImportAgent } from "./importSheet.js";
 import { SheetsLicenseDegreeExportAgent } from "./exportSheet.js";
+import { FirecrawlScrapeAndCrawlerAgent } from "./firecrawlExtractor.js";
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_BASE_ID = "a1b19c4b-79b1-491a-ba32-5fa4c9f74f1c";
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_VERSION = 1;
@@ -20,12 +20,13 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             return; // already cached
         this.sheetImporter ??= new SheetsLicenseDegreeImportAgent(this.agent, this.memory, this.startProgress, this.endProgress, this.memory.worksheetName // falls back to “Sheet1”
         );
-        this.memory.jobTitlesForLicenceAnalysis = await this.sheetImporter.importLicenseDegreeRows();
+        this.memory.jobTitlesForLicenceAnalysis =
+            await this.sheetImporter.importLicenseDegreeRows();
     }
     async process() {
         await this.loadSpreadsheet();
         this.memory.results = [];
-        const total = this.memory.jobTitlesForLicenceAnalysis.length;
+        const total = 2; //this.memory.jobTitlesForLicenceAnalysis.length;
         for (let i = 0; i < total; i++) {
             const row = this.memory.jobTitlesForLicenceAnalysis[i];
             await this.updateRangedProgress(Math.floor((i / total) * 90), `Analyzing ${row.jobTitle} (${i + 1}/${total})`);
@@ -85,18 +86,20 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
         for (const src of sources) {
             try {
                 // Pull requirements text
-                let text = "";
+                let textToAnalyze = [];
                 if (src) {
-                    const extractor = new RequirementExtractorAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-                    text = await extractor.extractRequirements(src);
+                    const extractor = new FirecrawlScrapeAndCrawlerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
+                    textToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
                 }
-                // Run the degree‑requirement analysis
-                const analyzer = new DegreeRequirementAnalyzerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-                const res = await analyzer.analyze(text, sheetLinks[0].licenseType, // licenceType is the same across the row
-                src);
-                if ("error" in res)
-                    throw new Error(res.error);
-                results.push(res);
+                for (const text of textToAnalyze) {
+                    // Run the degree‑requirement analysis
+                    const analyzer = new DegreeRequirementAnalyzerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
+                    const res = await analyzer.analyze(text, sheetLinks[0].licenseType, // licenceType is the same across the row
+                    src);
+                    if ("error" in res)
+                        throw new Error(res.error);
+                    results.push(res);
+                }
             }
             catch (e) {
                 this.logger.error(`Error analysing source “${src}”: ${e}`);

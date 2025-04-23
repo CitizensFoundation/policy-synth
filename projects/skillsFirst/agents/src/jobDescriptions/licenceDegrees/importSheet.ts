@@ -2,11 +2,11 @@
  * SheetsLicenseDegreeImportAgent.ts
  * ---------------------------------------------------------------------------
  * A Google‑Sheets based importer that reads license/degree‑requirement rows
- * from the Skills‑First "NJ Job Descriptions" spreadsheet (or any compatible
+ * from the Skills‑First "NJ Job Descriptions" spreadsheet (or any compatible
  * sheet) and transforms them into the structured format expected by
  * JobTitleLicenseDegreeAnalysisAgent.  It captures **both** link columns that
- * appear in the sheet (the public “Licenses & Permits” URL and the secondary
- * “GPT‑4.5 deep search” URL) so that downstream agents can consider the user‑
+ * appear in the sheet (the public "Licenses & Permits" URL and the secondary
+ * "GPT‑4.5 deep search" URL) so that downstream agents can consider the user‑
  * supplied sources _before_ resorting to automated deep‑search.
  *
  * The implementation mirrors the pattern used by `SheetsJobDescriptionImportAgent`.
@@ -65,7 +65,7 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
     ) as PsBaseSheetConnector;
 
     if (!this.sheetsConnector) {
-      throw new Error("Google Sheets connector not found");
+      throw new Error("Google Sheets connector not found");
     }
     if (sheetName) this.sheetName = sheetName;
   }
@@ -79,7 +79,7 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
    * link variants (when present).
    */
   async importLicenseDegreeRows(): Promise<LicenseDegreeRow[]> {
-    await this.updateRangedProgress(0, `Starting Google Sheets import: ${this.sheetsConnector.name}`);
+    await this.updateRangedProgress(0, `Starting Google Sheets import: ${this.sheetsConnector.name}`);
 
     const range = `${this.sheetName}!A${this.startRow}:${this.columnIndexToLetter(this.maxCols - 1)}${this.maxRows}`;
     const rows = await this.sheetsConnector.getRange(range);
@@ -103,16 +103,14 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
   /* ----------------------------------------------------------------------- */
 
   private buildRows(headers: string[], dataRows: string[][]): LicenseDegreeRow[] {
-    const getIdx = (needle: string) => headers.findIndex((h) => h === needle.toLowerCase());
-
-    const idxTitle                    = this.findHeaderIdx(headers, ["title", "title - licenses", "job title"]);
-    const idxLtPolicysynth            = this.findHeaderIdx(headers, ["licensetype - policysynth", "licensetype", "license type - policysynth"]);
-    const idxAuthPolicysynth          = this.findHeaderIdx(headers, ["issuingauthority - policysynth", "issuing authority - policysynth"]);
-    const idxLinkLicenses             = this.findHeaderIdx(headers, ["link - licenses & permits", "link", "link - licences & permits"]);
-
-    const idxLtGpt                    = this.findHeaderIdx(headers, ["licensetype - gpt4.5 deep search", "licensetype - gpt deep search"]);
-    const idxAuthGpt                  = this.findHeaderIdx(headers, ["issuingauthority - gpt4.5 deep search"]);
-    const idxLinkGpt                  = this.findHeaderIdx(headers, ["link - gpt4.5 deep search", "link - gpt deep search"]);
+    // Define fixed 0-based column indices based on the sheet structure
+    const idxTitle                    = 3;
+    const idxLtPolicysynth            = 0;
+    const idxAuthPolicysynth          = 1;
+    const idxLinkLicenses             = 4;
+    const idxLtGpt                    = 5;
+    const idxAuthGpt                  = 6;
+    const idxLinkGpt                  = 8;
 
     const rows: LicenseDegreeRow[] = [];
 
@@ -155,6 +153,7 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
   }
 
   /** Locate any of the candidate header names, returns index or -1 */
+  /*
   private findHeaderIdx(headers: string[], candidates: string[]): number {
     for (const c of candidates) {
       const idx = headers.indexOf(c.toLowerCase());
@@ -162,13 +161,14 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
     }
     return -1;
   }
+  */
 
   private safeGet(row: string[], idx: number): string {
     if (idx === -1 || idx >= row.length) return "";
     return (row[idx] ?? "").toString().trim();
   }
 
-  /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
+  /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
   private columnIndexToLetter(index: number): string {
     let temp = index;
     let letter = "";
