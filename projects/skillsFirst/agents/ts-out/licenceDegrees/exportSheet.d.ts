@@ -20,13 +20,7 @@ export declare class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
      */
     skipAiModels: boolean;
     constructor(agent: PsAgent, memory: any, startProgress: number, endProgress: number, sheetName?: string);
-    /**
-     * Converts an array of {@link LicenseDegreeAnalysisResult}s into a two‑dimensional
-     * array and streams it into Google Sheets.  The method is a drop‑in counterpart
-     * of {@link SheetsJobDescriptionExportAgent.processJsonData} so both can be
-     * orchestrated by the same calling code, if desired.
-     */
-    processJsonData(json: LicenseDegreeExportInput): Promise<void>;
+    processJsonData(json: any): Promise<void>;
     private generateSheetData;
     /**
      * Break the data into {{@link chunkSize}}‑sized pieces and update the sheet

@@ -19,7 +19,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
      * This speeds up initialisation and avoids unnecessary credits.
      */
     skipAiModels = true;
-    constructor(agent, memory, startProgress, endProgress, sheetName = "License Degree Analysis") {
+    constructor(agent, memory, startProgress, endProgress, sheetName = "Sheet1") {
         super(agent, memory, startProgress, endProgress);
         this.sheetName = sheetName;
         // ────────────────────────────────────────────────────────────────────────────
@@ -33,12 +33,6 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     // ──────────────────────────────────────────────────────────────────────────────
     // PUBLIC API
     // ──────────────────────────────────────────────────────────────────────────────
-    /**
-     * Converts an array of {@link LicenseDegreeAnalysisResult}s into a two‑dimensional
-     * array and streams it into Google Sheets.  The method is a drop‑in counterpart
-     * of {@link SheetsJobDescriptionExportAgent.processJsonData} so both can be
-     * orchestrated by the same calling code, if desired.
-     */
     async processJsonData(json) {
         await this.updateRangedProgress(0, "Starting License‑Degree sheet export");
         const data2d = this.generateSheetData(json);
@@ -53,8 +47,8 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
         // 1) Full‑path header row
         const headers = [
             "agentId",
-            "jobTitle",
             "licenseType",
+            "sourceUrl",
             "degreeRequiredStatus",
             "supportingEvidence",
             "confidenceScore",
@@ -70,8 +64,8 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
         for (const res of analysisResults) {
             sheetRows.push([
                 String(agentId),
-                this.toStr(res.jobTitle),
                 this.toStr(res.licenseType),
+                this.toStr(res.sourceUrl),
                 this.toStr(res.degreeRequiredStatus),
                 this.toStr(res.supportingEvidence),
                 this.toStr(res.confidenceScore),

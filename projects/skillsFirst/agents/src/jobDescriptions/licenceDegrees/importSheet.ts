@@ -1,16 +1,22 @@
 /*
  * SheetsLicenseDegreeImportAgent.ts
  * ---------------------------------------------------------------------------
- * A Google‑Sheets based importer that reads license/degree‑requirement rows
- * from the Skills‑First "NJ Job Descriptions" spreadsheet (or any compatible
- * sheet) and transforms them into the structured format expected by
- * JobTitleLicenseDegreeAnalysisAgent.  It captures **both** link columns that
- * appear in the sheet (the public "Licenses & Permits" URL and the secondary
- * "GPT‑4.5 deep search" URL) so that downstream agents can consider the user‑
- * supplied sources _before_ resorting to automated deep‑search.
+ * Google-Sheets importer for the “NJ Job Descriptions” workbook (simple row-by-row variant).
  *
- * The implementation mirrors the pattern used by `SheetsJobDescriptionImportAgent`.
- * ---------------------------------------------------------------------------*/
+ * Sheet column layout (0-based indexes → spreadsheet letters):
+ *   0  A  licenseType – policysynth  (primary key; may be carried downward)
+ *   1  B  issuingAuthorityPart1      (optional)
+ *   2  C  issuingAuthorityPart2      (optional)
+ *   3  D  titleOrPermit              (optional)
+ *   4  E  licenseLink                (optional)
+ *   5  F  licenceTypeForDeepResearch (optional)
+ *   6  G  issuingAuthorityForDeepResearch (optional)
+ *   7  H  degreeRequirementFromDeepResearch (optional)
+ *   8  I  deepResearchLinks          (optional)
+ *
+ * Each physical row in the sheet becomes exactly one `LicenseDegreeRow`.
+ * Empty cells are preserved as empty strings.
+ */
 
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
@@ -18,35 +24,20 @@ import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connecto
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
 
-// ---------------------------------------------------------------------------
-// Shared interfaces (duplicated here for clarity – they already exist in the
-// original code base; remove duplicates if you have the canonical definitions)
-// ---------------------------------------------------------------------------
+/* ------------------------------------------------------------------------- */
+/* Row interface                                                             */
+/* ------------------------------------------------------------------------- */
 
-export interface LicenseSeedInfo {
-  licenseType: string;
-  issuingAuthority: string;
-  link: string; // May be empty – consumers should test
-}
+/* ------------------------------------------------------------------------- */
+/* SheetsLicenseDegreeImportAgent                                            */
+/* ------------------------------------------------------------------------- */
 
-export interface LicenseDegreeRow {
-  jobTitle: string;
-  seedLicenses: LicenseSeedInfo[];
-}
-
-/**
- * SheetsLicenseDegreeImportAgent
- * --------------------------------
- * Usage:
- *   const importer = new SheetsLicenseDegreeImportAgent(this.agent, this.memory);
- *   const rows     = await importer.importLicenseDegreeRows();
- */
 export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
   private sheetsConnector: PsBaseSheetConnector;
-  private sheetName = "Sheet1"; // default; allow caller to override
-  private readonly startRow = 1; // header row starts here (1‑based)
-  private readonly maxRows = 10_000;
-  private readonly maxCols = 40;
+  private sheetName = "Sheet1";
+  private readonly startRow = 1;          // header row
+  private readonly maxRows  = 10_000;
+  private readonly maxCols  = 300;        // generous upper bound
 
   constructor(
     agent: PsAgent,
@@ -74,25 +65,25 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
   /* Public API                                                              */
   /* ----------------------------------------------------------------------- */
 
-  /**
-   * Reads the configured sheet and produces a list of rows that include both
-   * link variants (when present).
-   */
+  /** Reads the sheet and produces `LicenseDegreeRow` objects */
   async importLicenseDegreeRows(): Promise<LicenseDegreeRow[]> {
     await this.updateRangedProgress(0, `Starting Google Sheets import: ${this.sheetsConnector.name}`);
 
     const range = `${this.sheetName}!A${this.startRow}:${this.columnIndexToLetter(this.maxCols - 1)}${this.maxRows}`;
-    const rows = await this.sheetsConnector.getRange(range);
+    const rows  = await this.sheetsConnector.getRange(range);
 
     if (!rows || rows.length < 2) {
-      this.logger.warn("No data or insufficient rows in sheet: " + this.sheetsConnector.name);
+      this.logger.warn(`No data or insufficient rows in sheet: ${this.sheetsConnector.name}`);
       return [];
     }
 
-    const headers = rows[0].map((h: string) => (h ?? "").trim().toLowerCase());
-    const dataRows: string[][] = rows.slice(1);
+    const headers  = rows[0].map((h: string) => (h ?? "").trim().toLowerCase());
+    const dataRows = rows.slice(1);
 
-    const results = this.buildRows(headers, dataRows);
+    this.logger.debug(`Headers: ${JSON.stringify(headers, null, 2)}`);
+    this.logger.debug(`Row count (excluding header): ${dataRows.length}`);
+
+    const results = this.buildRows(dataRows);
 
     await this.updateRangedProgress(100, `Completed import from ${this.sheetsConnector.name}`);
     return results;
@@ -102,73 +93,65 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
   /* Internal helpers                                                        */
   /* ----------------------------------------------------------------------- */
 
-  private buildRows(headers: string[], dataRows: string[][]): LicenseDegreeRow[] {
-    // Define fixed 0-based column indices based on the sheet structure
-    const idxTitle                    = 3;
-    const idxLtPolicysynth            = 0;
-    const idxAuthPolicysynth          = 1;
-    const idxLinkLicenses             = 4;
-    const idxLtGpt                    = 5;
-    const idxAuthGpt                  = 6;
-    const idxLinkGpt                  = 8;
+  /** Convert sheet rows into structured objects */
+  private buildRows(dataRows: string[][]): LicenseDegreeRow[] {
+    /** Column indexes */
+    const COL = {
+      TYPE: 0,
+      AUTH1: 1,
+      AUTH2: 2,
+      TITLE: 3,
+      LINK: 4,
+      TYPE_DR: 5,
+      AUTH_DR: 6,
+      DEGREE_DR: 7,
+      LINKS_DR: 8,
+    } as const;
 
     const rows: LicenseDegreeRow[] = [];
+    let lastLicenseType = "";
 
-    for (const row of dataRows) {
-      const jobTitle = this.safeGet(row, idxTitle);
-      if (!jobTitle) continue; // skip empty
+    for (const [rowIdx, row] of dataRows.entries()) {
+      const rawType = this.safeGet(row, COL.TYPE);
+      if (rawType) lastLicenseType = rawType;
 
-      const seedLicenses: LicenseSeedInfo[] = [];
-
-      // -- Policysynth (human) link -------------------------------------------------
-      const licenseTypeHuman = this.safeGet(row, idxLtPolicysynth);
-      const issuingAuthHuman = this.safeGet(row, idxAuthPolicysynth);
-      const linkHuman        = this.safeGet(row, idxLinkLicenses);
-      if (licenseTypeHuman || linkHuman) {
-        seedLicenses.push({
-          licenseType: licenseTypeHuman || "",
-          issuingAuthority: issuingAuthHuman || "",
-          link: linkHuman || "",
-        });
+      if (!lastLicenseType) {
+        this.logger.debug(`Row ${rowIdx + 2}: licenseType empty and no prior value – skipped`);
+        continue;
       }
 
-      // -- GPT‑4.5 deep‑search link -------------------------------------------------
-      const licenseTypeGpt  = this.safeGet(row, idxLtGpt);
-      const issuingAuthGpt  = this.safeGet(row, idxAuthGpt);
-      const linkGpt         = this.safeGet(row, idxLinkGpt);
-      if (licenseTypeGpt || linkGpt) {
-        seedLicenses.push({
-          licenseType: licenseTypeGpt || licenseTypeHuman || "",
-          issuingAuthority: issuingAuthGpt || issuingAuthHuman || "",
-          link: linkGpt || "",
-        });
+      const record: LicenseDegreeRow = {
+        licenseType: lastLicenseType,
+        issuingAuthorityPart1: this.safeGet(row, COL.AUTH1),
+        issuingAuthorityPart2: this.safeGet(row, COL.AUTH2),
+        titleOrPermit: this.safeGet(row, COL.TITLE),
+        licenseLink: this.safeGet(row, COL.LINK),
+        licenceTypeForDeepResearch: this.safeGet(row, COL.TYPE_DR),
+        issuingAuthorityForDeepResearch: this.safeGet(row, COL.AUTH_DR),
+        degreeRequirementFromDeepResearch: this.safeGet(row, COL.DEGREE_DR),
+        deepResearchLinks: this.safeGet(row, COL.LINKS_DR),
+      };
+
+      // Skip rows that carry-forward the licenceType but have no other data
+      const hasDetail = Object.entries(record).some(([key, val]) => key === "licenseType" ? false : !!val);
+      if (!hasDetail) {
+        this.logger.debug(`Row ${rowIdx + 2}: no detail columns – skipped`);
+        continue;
       }
 
-      if (seedLicenses.length === 0) continue; // Nothing useful on this row
-
-      rows.push({ jobTitle, seedLicenses });
+      rows.push(record);
     }
 
     return rows;
   }
 
-  /** Locate any of the candidate header names, returns index or -1 */
-  /*
-  private findHeaderIdx(headers: string[], candidates: string[]): number {
-    for (const c of candidates) {
-      const idx = headers.indexOf(c.toLowerCase());
-      if (idx !== -1) return idx;
-    }
-    return -1;
-  }
-  */
-
+  /** Safe getter with bounds-checking & trimming */
   private safeGet(row: string[], idx: number): string {
     if (idx === -1 || idx >= row.length) return "";
     return (row[idx] ?? "").toString().trim();
   }
 
-  /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
+  /** 0-based column index → spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
   private columnIndexToLetter(index: number): string {
     let temp = index;
     let letter = "";

@@ -5,20 +5,20 @@ export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
     constructor(agent, memory, start, end) {
         super(agent, memory, start, end);
     }
-    async findSource(license) {
-        const { link, licenseType } = license;
-        this.logger.debug(`Finding authoritative source for ${JSON.stringify(license, null, 2)}`);
+    async findSource(row) {
+        const { licenseLink, licenseType } = row;
+        this.logger.debug(`Finding authoritative source for ${JSON.stringify(row, null, 2)}`);
         // 1a. Validate provided link (if any)
-        if (link) {
+        if (licenseLink) {
             try {
-                const headResp = await axios.head(link, { maxRedirects: 5, timeout: 10000 });
+                const headResp = await axios.head(licenseLink, { maxRedirects: 5, timeout: 10000 });
                 if (headResp.status < 400) {
-                    this.logger.debug(`Validated existing link for ${licenseType}: ${link}`);
-                    return link;
+                    this.logger.debug(`Validated existing link for ${licenseType}: ${licenseLink}`);
+                    return licenseLink;
                 }
             }
             catch (_) {
-                this.logger.warn(`Existing link failed validation for ${licenseType}: ${link}`);
+                this.logger.warn(`Existing link failed validation for ${licenseType}: ${licenseLink}`);
             }
         }
         // 1b. Targeted web search using LicenseWebResearchAgent
@@ -30,7 +30,7 @@ export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
             maxItemsToAnalyze: 10,
         };
         const researcher = new LicenseDeepResearchAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-        const query = `${licenseType} license requirements New Jersey`; // simple seed – in practice generate multiple
+        const query = `${licenseType} license requirements ${row.issuingAuthorityForDeepResearch}`; // simple seed – in practice generate multiple
         await researcher.updateRangedProgress(0, `Searching authoritative source for ${licenseType}`);
         const results = (await researcher.doWebResearch({ ...webResearchCfg, overrideQueries: [query] }));
         // pick the first .gov result if available

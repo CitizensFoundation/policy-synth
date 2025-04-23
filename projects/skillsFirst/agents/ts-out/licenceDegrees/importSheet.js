@@ -1,32 +1,37 @@
 /*
  * SheetsLicenseDegreeImportAgent.ts
  * ---------------------------------------------------------------------------
- * A Google‑Sheets based importer that reads license/degree‑requirement rows
- * from the Skills‑First "NJ Job Descriptions" spreadsheet (or any compatible
- * sheet) and transforms them into the structured format expected by
- * JobTitleLicenseDegreeAnalysisAgent.  It captures **both** link columns that
- * appear in the sheet (the public "Licenses & Permits" URL and the secondary
- * "GPT‑4.5 deep search" URL) so that downstream agents can consider the user‑
- * supplied sources _before_ resorting to automated deep‑search.
+ * Google-Sheets importer for the “NJ Job Descriptions” workbook (simple row-by-row variant).
  *
- * The implementation mirrors the pattern used by `SheetsJobDescriptionImportAgent`.
- * ---------------------------------------------------------------------------*/
+ * Sheet column layout (0-based indexes → spreadsheet letters):
+ *   0  A  licenseType – policysynth  (primary key; may be carried downward)
+ *   1  B  issuingAuthorityPart1      (optional)
+ *   2  C  issuingAuthorityPart2      (optional)
+ *   3  D  titleOrPermit              (optional)
+ *   4  E  licenseLink                (optional)
+ *   5  F  licenceTypeForDeepResearch (optional)
+ *   6  G  issuingAuthorityForDeepResearch (optional)
+ *   7  H  degreeRequirementFromDeepResearch (optional)
+ *   8  I  deepResearchLinks          (optional)
+ *
+ * Each physical row in the sheet becomes exactly one `LicenseDegreeRow`.
+ * Empty cells are preserved as empty strings.
+ */
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
-/**
- * SheetsLicenseDegreeImportAgent
- * --------------------------------
- * Usage:
- *   const importer = new SheetsLicenseDegreeImportAgent(this.agent, this.memory);
- *   const rows     = await importer.importLicenseDegreeRows();
- */
+/* ------------------------------------------------------------------------- */
+/* Row interface                                                             */
+/* ------------------------------------------------------------------------- */
+/* ------------------------------------------------------------------------- */
+/* SheetsLicenseDegreeImportAgent                                            */
+/* ------------------------------------------------------------------------- */
 export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
     sheetsConnector;
-    sheetName = "Sheet1"; // default; allow caller to override
-    startRow = 1; // header row starts here (1‑based)
+    sheetName = "Sheet1";
+    startRow = 1; // header row
     maxRows = 10_000;
-    maxCols = 40;
+    maxCols = 300; // generous upper bound
     constructor(agent, memory, startProgress = 0, endProgress = 100, sheetName) {
         super(agent, memory, startProgress, endProgress);
         this.sheetsConnector = PsConnectorFactory.getConnector(this.agent, this.memory, PsConnectorClassTypes.Spreadsheet, true);
@@ -39,86 +44,78 @@ export class SheetsLicenseDegreeImportAgent extends PolicySynthAgent {
     /* ----------------------------------------------------------------------- */
     /* Public API                                                              */
     /* ----------------------------------------------------------------------- */
-    /**
-     * Reads the configured sheet and produces a list of rows that include both
-     * link variants (when present).
-     */
+    /** Reads the sheet and produces `LicenseDegreeRow` objects */
     async importLicenseDegreeRows() {
         await this.updateRangedProgress(0, `Starting Google Sheets import: ${this.sheetsConnector.name}`);
         const range = `${this.sheetName}!A${this.startRow}:${this.columnIndexToLetter(this.maxCols - 1)}${this.maxRows}`;
         const rows = await this.sheetsConnector.getRange(range);
         if (!rows || rows.length < 2) {
-            this.logger.warn("No data or insufficient rows in sheet: " + this.sheetsConnector.name);
+            this.logger.warn(`No data or insufficient rows in sheet: ${this.sheetsConnector.name}`);
             return [];
         }
         const headers = rows[0].map((h) => (h ?? "").trim().toLowerCase());
         const dataRows = rows.slice(1);
-        const results = this.buildRows(headers, dataRows);
+        this.logger.debug(`Headers: ${JSON.stringify(headers, null, 2)}`);
+        this.logger.debug(`Row count (excluding header): ${dataRows.length}`);
+        const results = this.buildRows(dataRows);
         await this.updateRangedProgress(100, `Completed import from ${this.sheetsConnector.name}`);
         return results;
     }
     /* ----------------------------------------------------------------------- */
     /* Internal helpers                                                        */
     /* ----------------------------------------------------------------------- */
-    buildRows(headers, dataRows) {
-        // Define fixed 0-based column indices based on the sheet structure
-        const idxTitle = 3;
-        const idxLtPolicysynth = 0;
-        const idxAuthPolicysynth = 1;
-        const idxLinkLicenses = 4;
-        const idxLtGpt = 5;
-        const idxAuthGpt = 6;
-        const idxLinkGpt = 8;
+    /** Convert sheet rows into structured objects */
+    buildRows(dataRows) {
+        /** Column indexes */
+        const COL = {
+            TYPE: 0,
+            AUTH1: 1,
+            AUTH2: 2,
+            TITLE: 3,
+            LINK: 4,
+            TYPE_DR: 5,
+            AUTH_DR: 6,
+            DEGREE_DR: 7,
+            LINKS_DR: 8,
+        };
         const rows = [];
-        for (const row of dataRows) {
-            const jobTitle = this.safeGet(row, idxTitle);
-            if (!jobTitle)
-                continue; // skip empty
-            const seedLicenses = [];
-            // -- Policysynth (human) link -------------------------------------------------
-            const licenseTypeHuman = this.safeGet(row, idxLtPolicysynth);
-            const issuingAuthHuman = this.safeGet(row, idxAuthPolicysynth);
-            const linkHuman = this.safeGet(row, idxLinkLicenses);
-            if (licenseTypeHuman || linkHuman) {
-                seedLicenses.push({
-                    licenseType: licenseTypeHuman || "",
-                    issuingAuthority: issuingAuthHuman || "",
-                    link: linkHuman || "",
-                });
+        let lastLicenseType = "";
+        for (const [rowIdx, row] of dataRows.entries()) {
+            const rawType = this.safeGet(row, COL.TYPE);
+            if (rawType)
+                lastLicenseType = rawType;
+            if (!lastLicenseType) {
+                this.logger.debug(`Row ${rowIdx + 2}: licenseType empty and no prior value – skipped`);
+                continue;
             }
-            // -- GPT‑4.5 deep‑search link -------------------------------------------------
-            const licenseTypeGpt = this.safeGet(row, idxLtGpt);
-            const issuingAuthGpt = this.safeGet(row, idxAuthGpt);
-            const linkGpt = this.safeGet(row, idxLinkGpt);
-            if (licenseTypeGpt || linkGpt) {
-                seedLicenses.push({
-                    licenseType: licenseTypeGpt || licenseTypeHuman || "",
-                    issuingAuthority: issuingAuthGpt || issuingAuthHuman || "",
-                    link: linkGpt || "",
-                });
+            const record = {
+                licenseType: lastLicenseType,
+                issuingAuthorityPart1: this.safeGet(row, COL.AUTH1),
+                issuingAuthorityPart2: this.safeGet(row, COL.AUTH2),
+                titleOrPermit: this.safeGet(row, COL.TITLE),
+                licenseLink: this.safeGet(row, COL.LINK),
+                licenceTypeForDeepResearch: this.safeGet(row, COL.TYPE_DR),
+                issuingAuthorityForDeepResearch: this.safeGet(row, COL.AUTH_DR),
+                degreeRequirementFromDeepResearch: this.safeGet(row, COL.DEGREE_DR),
+                deepResearchLinks: this.safeGet(row, COL.LINKS_DR),
+            };
+            // Skip rows that carry-forward the licenceType but have no other data
+            const hasDetail = Object.entries(record).some(([key, val]) => key === "licenseType" ? false : !!val);
+            if (!hasDetail) {
+                this.logger.debug(`Row ${rowIdx + 2}: no detail columns – skipped`);
+                continue;
             }
-            if (seedLicenses.length === 0)
-                continue; // Nothing useful on this row
-            rows.push({ jobTitle, seedLicenses });
+            rows.push(record);
         }
         return rows;
     }
-    /** Locate any of the candidate header names, returns index or -1 */
-    /*
-    private findHeaderIdx(headers: string[], candidates: string[]): number {
-      for (const c of candidates) {
-        const idx = headers.indexOf(c.toLowerCase());
-        if (idx !== -1) return idx;
-      }
-      return -1;
-    }
-    */
+    /** Safe getter with bounds-checking & trimming */
     safeGet(row, idx) {
         if (idx === -1 || idx >= row.length)
             return "";
         return (row[idx] ?? "").toString().trim();
     }
-    /** Convert zero‑based column index to spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
+    /** 0-based column index → spreadsheet letter (0 → A, 25 → Z, 26 → AA) */
     columnIndexToLetter(index) {
         let temp = index;
         let letter = "";

@@ -19,7 +19,7 @@ export declare class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent
      *   2. run the DegreeRequirementAnalyzer
      *   3. return an array of results (max 3 per row)
      */
-    processLicense(jobTitle: string, sheetLinks: LicenseSeedInfo[]): Promise<LicenseDegreeAnalysisResult[]>;
+    processLicense(row: LicenseDegreeRow): Promise<LicenseDegreeAnalysisResult[]>;
     static getAgentClass(): PsAgentClassCreationAttributes;
     static getConfigurationQuestions(): YpStructuredQuestionData[];
 }

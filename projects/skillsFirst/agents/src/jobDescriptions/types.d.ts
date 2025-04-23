@@ -400,25 +400,25 @@ interface LicenseDegreeExportInput {
 interface LicenseDegreeAnalysisMemoryData extends JobDescriptionMemoryData {
   spreadsheetPath: string;
   worksheetName?: string;
-  jobTitlesForLicenceAnalysis: JobTitleRow[];
-  results: LicenseDegreeAnalysisResult[];
+  jobLicenceTypesForLicenceAnalysis: LicenseDegreeRow[];
   llmErrors: string[];
   researchPlan?: string;
 }
 
-interface LicenseSeedInfo {
+interface LicenseDegreeRow {
   licenseType: string;
-  issuingAuthority?: string;
-  link?: string;
-}
-
-interface JobTitleRow {
-  jobTitle: string;
-  seedLicenses: LicenseSeedInfo[];
+  issuingAuthorityPart1: string;
+  issuingAuthorityPart2: string;
+  titleOrPermit: string;
+  licenseLink: string;
+  licenceTypeForDeepResearch: string;
+  issuingAuthorityForDeepResearch: string;
+  degreeRequirementFromDeepResearch: string;
+  deepResearchLinks: string;
+  analysisResults?: LicenseDegreeAnalysisResult[];
 }
 
 interface LicenseDegreeAnalysisResult {
-  jobTitle: string;
   licenseType: string;
   sourceUrl: string;
   degreeRequiredStatus: string;

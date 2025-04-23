@@ -7,7 +7,7 @@ import {
 } from "@policysynth/agents/aiModelTypes.js";
 
 interface RelevanceCheckResult {
-  isRelevant: boolean;
+  isPossiblyRelevant: boolean;
   reasoning?: string;
 }
 
@@ -64,7 +64,7 @@ Instructions:
 
 Output format: Return *only* a JSON object with the following structure:
   {
-   "isRelevant": boolean, // true if relevant, false otherwise
+   "isPossiblyRelevant": boolean, // true if possibly relevant, false otherwise
    "reasoning": string // Brief explanation for your decision
   }
   `,
@@ -84,12 +84,12 @@ Your JSON output:`,
         messages
       )) as RelevanceCheckResult;
 
-      if (result.isRelevant) {
-        this.logger.debug("-------> filtering out");
+      if (result.isPossiblyRelevant) {
+        this.logger.debug("IS RELEVANT ---------------------------------");
         this.logger.debug(document);
-        this.logger.debug("-------> end of filtering out");
+        this.logger.debug("--------------------------------");
       } else {
-        this.logger.debug("-------> not filtering out");
+        this.logger.debug("NOT RELEVANT");
       }
 
       return result;
@@ -97,7 +97,7 @@ Your JSON output:`,
       this.logger.warn(
         "checkIfRelevant: Model did not return a valid JSON object. Falling back to false."
       );
-      return { isRelevant: false };
+      return { isPossiblyRelevant: false };
     }
   }
 
@@ -162,16 +162,18 @@ Your JSON output:`,
           // 🔁 Build {url, content} array and relevance‑filter it
           let pages: ScrapedPage[] = crawlResponse.data
             ? crawlResponse.data.map((item: any) => ({
-                url: item.url as string,
+                url: item.metadata.sourceURL as string,
                 content: item.markdown as string,
               }))
             : [];
+
+          this.logger.debug(`Pages: ${JSON.stringify(pages, null, 2)}`);
 
           const checks = await Promise.all(
             pages.map((page) => this.checkIfRelevant(page.content))
           );
 
-          pages = pages.filter((_, i) => checks[i].isRelevant);
+          pages = pages.filter((_, i) => checks[i].isPossiblyRelevant);
           return pages;
         }
 
@@ -195,7 +197,7 @@ Your JSON output:`,
           const isRelevant = await this.checkIfRelevant(
             scrapeResponseOne.markdown
           );
-          if (isRelevant.isRelevant) {
+          if (isRelevant.isPossiblyRelevant) {
             return [
               {
                 url,

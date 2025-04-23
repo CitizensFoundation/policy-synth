@@ -4,7 +4,7 @@ import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { DegreeRequirementAnalyzerAgent } from "./requirementAnalyzer.js";
 import { SheetsLicenseDegreeImportAgent } from "./importSheet.js";
 import { SheetsLicenseDegreeExportAgent } from "./exportSheet.js";
-import { FirecrawlScrapeAndCrawlerAgent } from "./firecrawlExtractor.js";
+import { FirecrawlScrapeAndCrawlerAgent, } from "./firecrawlExtractor.js";
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_BASE_ID = "a1b19c4b-79b1-491a-ba32-5fa4c9f74f1c";
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_VERSION = 1;
@@ -15,35 +15,33 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     // ↓ add this property if you like to keep the importer around
     sheetImporter;
     async loadSpreadsheet() {
-        if (this.memory.jobTitlesForLicenceAnalysis?.length)
-            return; // already cached
         this.sheetImporter ??= new SheetsLicenseDegreeImportAgent(this.agent, this.memory, this.startProgress, this.endProgress, this.memory.worksheetName // falls back to “Sheet1”
         );
-        this.memory.jobTitlesForLicenceAnalysis =
+        this.logger.debug(`Importing license degree rows from ${this.memory.worksheetName}`);
+        this.memory.jobLicenceTypesForLicenceAnalysis =
             await this.sheetImporter.importLicenseDegreeRows();
     }
     async process() {
         await this.loadSpreadsheet();
-        this.memory.results = [];
-        this.logger.debug(JSON.stringify(this.memory.jobTitlesForLicenceAnalysis, null, 2));
-        const total = this.memory.jobTitlesForLicenceAnalysis.length;
+        await this.saveMemory();
+        this.logger.debug(JSON.stringify(this.memory.jobLicenceTypesForLicenceAnalysis, null, 2));
+        const total = this.memory.jobLicenceTypesForLicenceAnalysis.length;
         this.logger.debug(`Total job titles: ${total}`);
         for (let i = 0; i < total; i++) {
-            const row = this.memory.jobTitlesForLicenceAnalysis[i];
+            const row = this.memory.jobLicenceTypesForLicenceAnalysis[i];
             this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
-            await this.updateRangedProgress(Math.floor((i / total) * 90), `Analyzing ${row.jobTitle} (${i + 1}/${total})`);
+            await this.updateRangedProgress(Math.floor((i / total) * 90), `Analyzing ${row.licenseType} (${i + 1}/${total})`);
             // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
-            const licenseResults = await this.processLicense(row.jobTitle, row.seedLicenses);
-            // ────────────────────────────────────────────────────────────────────────
-            this.memory.results.push(...licenseResults);
+            const licenseResults = await this.processLicense(row);
+            row.analysisResults = licenseResults;
             await this.saveMemory();
         }
-        if (this.memory.results?.length) {
+        if (this.memory.jobLicenceTypesForLicenceAnalysis?.length) {
             const exporter = new SheetsLicenseDegreeExportAgent(this.agent, this.memory, this.startProgress, this.endProgress, this.memory.worksheetName ?? "License Degree Analysis" // optional override
             );
             await exporter.processJsonData({
                 agentId: this.agent.id,
-                analysisResults: this.memory.results,
+                analysisResults: this.memory.jobLicenceTypesForLicenceAnalysis,
             });
         }
         await this.updateRangedProgress(100, "Completed all job titles");
@@ -59,52 +57,39 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
      *   2. run the DegreeRequirementAnalyzer
      *   3. return an array of results (max 3 per row)
      */
-    async processLicense(jobTitle, sheetLinks // ← now pass *all* sheet links for this row
-    ) {
+    async processLicense(row) {
         // ────────────────────────────────────────────────────────────────────────────
         // 1️⃣  Collect unique URLs from the sheet (0‑2 entries)
         // ────────────────────────────────────────────────────────────────────────────
-        const urls = [
-            ...new Set(sheetLinks.map((l) => (l.link || "").trim()).filter(Boolean)),
-        ];
-        // ────────────────────────────────────────────────────────────────────────────
-        // 2️⃣  Always attempt an authoritative search; add it if it’s new
-        // ────────────────────────────────────────────────────────────────────────────
-        /*
-        try {
-          const finder = new AuthoritativeSourceFinderAgent(
-            this.agent,
-            this.memory,
-            this.startProgress,
-            this.endProgress
-          );
-          const discovered = await finder.findSource(sheetLinks[0]); // use first licence seed
-          if (discovered && !urls.includes(discovered)) urls.push(discovered);
-        } catch (err) {
-          this.logger.warn(`Source‑finder failed: ${err}`);
+        const urls = [];
+        if (row.licenseLink)
+            urls.push(row.licenseLink.trim());
+        if (row.deepResearchLinks) {
+            if (row.deepResearchLinks.includes(",")) {
+                const links = row.deepResearchLinks.split(",").map((l) => l.trim());
+                urls.push(...links);
+            }
+            else {
+                urls.push(row.deepResearchLinks.trim());
+            }
         }
-        */
-        // We only want the first three distinct URLs (sheet link‑1, sheet link‑2, search)
-        const sources = urls.slice(0, 3);
         // ────────────────────────────────────────────────────────────────────────────
         // 3️⃣  Extract + analyse each source in turn
         // ────────────────────────────────────────────────────────────────────────────
         const results = [];
-        for (const src of sources) {
+        for (const src of urls) {
             try {
                 // Pull requirements text
                 let pagesToAnalyze = [];
                 if (src) {
-                    const extractor = new FirecrawlScrapeAndCrawlerAgent(this.agent, this.memory, this.startProgress, this.endProgress, sheetLinks[0].licenseType);
+                    const extractor = new FirecrawlScrapeAndCrawlerAgent(this.agent, this.memory, this.startProgress, this.endProgress, row.licenseType);
                     pagesToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
                 }
                 for (const page of pagesToAnalyze) {
                     // Run the degree‑requirement analysis
                     const analyzer = new DegreeRequirementAnalyzerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-                    const res = await analyzer.analyze(page.content, sheetLinks[0].licenseType, // licenceType is the same across the row
-                    src);
-                    res.jobTitle = jobTitle;
-                    res.licenseType = sheetLinks[0].licenseType;
+                    const res = (await analyzer.analyze(page.content, row.licenseType, src));
+                    res.licenseType = row.licenseType;
                     res.sourceUrl = page.url;
                     if ("error" in res)
                         throw new Error(res.error);
