@@ -4,32 +4,35 @@ import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.
 export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
-    crawlPageLimit = 10;
-    constructor(agent, memory, startProgress, endProgress) {
+    licenseType;
+    crawlPageLimit = 50;
+    constructor(agent, memory, startProgress, endProgress, licenseType) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;
         if (!apiKey) {
             throw new Error("Missing FIRECRAWL_API_KEY environment variable");
         }
         this.app = new FirecrawlApp({ apiKey });
+        this.licenseType = licenseType;
     }
     async checkIfRelevant(document) {
         const messages = [
             {
                 role: "system",
-                message: `You are a helpful relevance checker. Determine if the provided document is relevant to the user's request.
+                message: `You are an AI assistant tasked with determining the possible relevance of web page content for extracting occupational licensing requirements in New Jersey.
 
 Instructions:
 
-If DocumentToAnalyze has any information about occupational licensing requirements in New Jersey then it is relevant.
-Focus on license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
+1.  Analyze the provided <DocumentToAnalyze>.
+2.  Determine if it contains information about licensing requirements specifically for **${this.licenseType}** in New Jersey.
+3.  The focus is on identifying requirements related to college degrees (Associate's, Bachelor's, Graduate/Professional).
+4.  If the document *only* contains generic information, legal disclaimers, privacy policies, or terms of service without specific licensing details for **${this.licenseType}**, consider it **not relevant**.
+5.  If the document contains relevant information about degree requirements for **${this.licenseType}** in New Jersey, consider it **relevant**.
 
-If the DocumentToAnalyze is a legal privacy policy or terms of service only, then return true.
-
-output only JSON:
+Output format: Return *only* a JSON object with the following structure:
   {
-   "isRelevant": boolean,
-   "reasoning": string
+   "isRelevant": boolean, // true if relevant, false otherwise
+   "reasoning": string // Brief explanation for your decision
   }
   `,
             },
@@ -58,61 +61,83 @@ Your JSON output:`,
         }
     }
     /**
-     * Scrape a URL using Firecrawl. If rate-limited (429), it will retry
-     * after the time specified by the Retry-After header.
+     * Scrape a URL using Firecrawl. If rate‑limited (429), it will retry
+     * after the time specified by the Retry‑After header.
      *
      * @param url - The URL to scrape
      * @param formats - An array of formats to request, e.g. ['markdown', 'html']
      * @param maxRetries - Maximum number of retries upon rate limits
-     * @returns The scrape response from Firecrawl
+     * @param crawlUrlIfNotPdf - If true, will deep‑crawl non‑PDF URLs up to `crawlPageLimit`
+     * @returns Array of objects, each containing the original URL and its markdown content
      */
     async scrapeUrl(url, formats = ["markdown", "rawHtml"], maxRetries = 3, crawlUrlIfNotPdf) {
         let retries = 0;
         while (retries <= maxRetries) {
             try {
                 this.logger.debug(`Attempting to scrape: ${url}, try #${retries + 1}`);
-                let scrapeResponse;
-                // If a reference domain is specified, only crawl if the current URL's domain matches
-                // that of the reference domain. Using the more robust domain extraction here.
+                // 1️⃣ CRAWL branch ──────────────────────────────────────────────
                 if (crawlUrlIfNotPdf && !url.endsWith(".pdf")) {
                     this.logger.debug(`Crawling ${url} because it is not a PDF`);
-                    scrapeResponse = await this.app.crawlUrl(url, {
+                    const crawlResponse = await this.app.crawlUrl(url, {
                         limit: this.crawlPageLimit,
                         scrapeOptions: {
                             formats,
-                            excludeTags: ["img", "svg", "a", "iframe", "script", "style", "br"]
+                            excludeTags: [
+                                "img",
+                                "svg",
+                                "a",
+                                "iframe",
+                                "script",
+                                "style",
+                                "br",
+                            ],
                         },
                     });
-                    this.logger.debug(`Crawl response length: ${Object.keys(scrapeResponse).length}`);
-                    if (!scrapeResponse.success) {
-                        throw new Error(`Failed to crawl: ${scrapeResponse.error}`);
+                    this.logger.debug(`Crawl response length: ${Object.keys(crawlResponse).length}`);
+                    if (!crawlResponse.success) {
+                        throw new Error(`Failed to crawl: ${crawlResponse.error}`);
                     }
-                    let allMarkdownObjects = scrapeResponse.data
-                        ? scrapeResponse.data.map((item) => item.markdown)
+                    // 🔁 Build {url, content} array and relevance‑filter it
+                    let pages = crawlResponse.data
+                        ? crawlResponse.data.map((item) => ({
+                            url: item.url,
+                            content: item.markdown,
+                        }))
                         : [];
-                    const checks = await Promise.all(allMarkdownObjects.map((doc) => this.checkIfRelevant(doc)));
-                    allMarkdownObjects = allMarkdownObjects.filter((_, i) => checks[i].isRelevant);
-                    return allMarkdownObjects;
+                    const checks = await Promise.all(pages.map((page) => this.checkIfRelevant(page.content)));
+                    pages = pages.filter((_, i) => checks[i].isRelevant);
+                    return pages;
+                }
+                // 2️⃣ SINGLE‑PAGE branch ────────────────────────────────────────
+                this.logger.debug(`Starting to scrape: ${url}`);
+                const scrapeResponseOne = (await this.app.scrapeUrl(url, {
+                    formats,
+                    excludeTags: [
+                        "img",
+                        "svg",
+                        "a",
+                        "iframe",
+                        "script",
+                        "style",
+                        "br",
+                    ],
+                }));
+                this.logger.debug(`Successfully scraped: ${url}`);
+                if (scrapeResponseOne.markdown) {
+                    const isRelevant = await this.checkIfRelevant(scrapeResponseOne.markdown);
+                    if (isRelevant.isRelevant) {
+                        return [
+                            {
+                                url,
+                                content: scrapeResponseOne.markdown,
+                            },
+                        ];
+                    }
                 }
                 else {
-                    let scrapeResponseOne;
-                    this.logger.debug(`Starting to scrape: ${url}`);
-                    scrapeResponseOne = await this.app.scrapeUrl(url, {
-                        formats,
-                        excludeTags: ["img", "svg", "a", "iframe", "script", "style", "br"]
-                    });
-                    this.logger.debug(`Successfully scraped: ${url}`);
-                    if (scrapeResponseOne.markdown) {
-                        const isRelevant = await this.checkIfRelevant(scrapeResponseOne.markdown);
-                        if (isRelevant.isRelevant) {
-                            return [scrapeResponseOne.markdown];
-                        }
-                    }
-                    else {
-                        this.logger.debug("No markdown found in scrape response");
-                        return [];
-                    }
+                    this.logger.debug("No markdown found in scrape response");
                 }
+                return [];
             }
             catch (error) {
                 if (error.response && error.response.status === 429) {
@@ -125,25 +150,6 @@ Your JSON output:`,
                     }
                     await new Promise((resolve) => setTimeout(resolve, retryAfter * 1000));
                     retries++;
-                }
-                else if ( /*error.response && error.response.status !== 403*/false) {
-                    /*const fallbackScraper = new WebScraper();
-                    let fallbackResponse;
-                    try {
-                      fallbackResponse = await fallbackScraper.scrapeUrl(url);
-                      if (fallbackResponse.success) {
-                        return {
-                          markdown: fallbackResponse.data.rawHtml,
-                          rawHtml: fallbackResponse.data.rawHtml,
-                          metadata: {
-                            source: "fallback",
-                          },
-                        };
-                      }
-                    } catch (fallbackErr: any) {
-                      this.logger.error("Fallback also failed: " + fallbackErr.message);
-                      throw fallbackErr; // re-throw
-                    }*/
                 }
                 else {
                     // Some other error

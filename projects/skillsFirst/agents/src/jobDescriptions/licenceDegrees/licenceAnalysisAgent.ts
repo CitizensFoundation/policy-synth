@@ -54,7 +54,10 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
 
     this.memory.results = [];
 
-    const total = 10; //this.memory.jobTitlesForLicenceAnalysis.length;
+    this.logger.debug(JSON.stringify(this.memory.jobTitlesForLicenceAnalysis, null, 2));
+
+    const total = this.memory.jobTitlesForLicenceAnalysis.length;
+    this.logger.debug(`Total job titles: ${total}`);
     for (let i = 0; i < total; i++) {
       const row = this.memory.jobTitlesForLicenceAnalysis[i];
 
@@ -149,7 +152,8 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             this.agent,
             this.memory,
             this.startProgress,
-            this.endProgress
+            this.endProgress,
+            sheetLinks[0].licenseType
           );
           pagesToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
         }

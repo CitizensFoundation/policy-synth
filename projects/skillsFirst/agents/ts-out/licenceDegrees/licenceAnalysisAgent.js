@@ -25,7 +25,9 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     async process() {
         await this.loadSpreadsheet();
         this.memory.results = [];
-        const total = 10; //this.memory.jobTitlesForLicenceAnalysis.length;
+        this.logger.debug(JSON.stringify(this.memory.jobTitlesForLicenceAnalysis, null, 2));
+        const total = this.memory.jobTitlesForLicenceAnalysis.length;
+        this.logger.debug(`Total job titles: ${total}`);
         for (let i = 0; i < total; i++) {
             const row = this.memory.jobTitlesForLicenceAnalysis[i];
             this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
@@ -91,19 +93,19 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
         for (const src of sources) {
             try {
                 // Pull requirements text
-                let textToAnalyze = [];
+                let pagesToAnalyze = [];
                 if (src) {
-                    const extractor = new FirecrawlScrapeAndCrawlerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-                    textToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
+                    const extractor = new FirecrawlScrapeAndCrawlerAgent(this.agent, this.memory, this.startProgress, this.endProgress, sheetLinks[0].licenseType);
+                    pagesToAnalyze = await extractor.scrapeUrl(src, ["markdown"], 3, true);
                 }
-                for (const text of textToAnalyze) {
+                for (const page of pagesToAnalyze) {
                     // Run the degree‑requirement analysis
                     const analyzer = new DegreeRequirementAnalyzerAgent(this.agent, this.memory, this.startProgress, this.endProgress);
-                    const res = await analyzer.analyze(text, sheetLinks[0].licenseType, // licenceType is the same across the row
+                    const res = await analyzer.analyze(page.content, sheetLinks[0].licenseType, // licenceType is the same across the row
                     src);
                     res.jobTitle = jobTitle;
                     res.licenseType = sheetLinks[0].licenseType;
-                    res.sourceUrl = src;
+                    res.sourceUrl = page.url;
                     if ("error" in res)
                         throw new Error(res.error);
                     results.push(res);

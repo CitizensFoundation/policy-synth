@@ -28,7 +28,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 
   licenseType: string;
 
-  crawlPageLimit = 10;
+  crawlPageLimit = 50;
 
   constructor(
     agent: PsAgent,
@@ -52,19 +52,20 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
     const messages = [
       {
         role: "system" as const,
-        message: `You are a helpful relevance checker. Determine if the provided document is relevant to the user's request.
+        message: `You are an AI assistant tasked with determining the possible relevance of web page content for extracting occupational licensing requirements in New Jersey.
 
 Instructions:
 
-If DocumentToAnalyze has any information about occupational licensing requirements in New Jersey then it is relevant.
-Focus on license degree requirements that require a college degree (Associate's, Bachelor's, Graduate/Professional).
+1.  Analyze the provided <DocumentToAnalyze>.
+2.  Determine if it contains information about licensing requirements specifically for **${this.licenseType}** in New Jersey.
+3.  The focus is on identifying requirements related to college degrees (Associate's, Bachelor's, Graduate/Professional).
+4.  If the document *only* contains generic information, legal disclaimers, privacy policies, or terms of service without specific licensing details for **${this.licenseType}**, consider it **not relevant**.
+5.  If the document contains relevant information about degree requirements for **${this.licenseType}** in New Jersey, consider it **relevant**.
 
-If the DocumentToAnalyze is a legal privacy policy or terms of service only, then return true.
-
-output only JSON:
+Output format: Return *only* a JSON object with the following structure:
   {
-   "isRelevant": boolean,
-   "reasoning": string
+   "isRelevant": boolean, // true if relevant, false otherwise
+   "reasoning": string // Brief explanation for your decision
   }
   `,
       },
