@@ -89,13 +89,10 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
         this.memory,
         this.startProgress,
         this.endProgress,
-        this.memory.worksheetName ?? "License Degree Analysis" // optional override
+        "Sheet1"
       );
 
-      await exporter.processJsonData({
-        agentId: this.agent.id,
-        analysisResults: this.memory.jobLicenceTypesForLicenceAnalysis,
-      });
+      await exporter.processJsonData(this.memory.jobLicenceTypesForLicenceAnalysis);
     }
 
     await this.updateRangedProgress(100, "Completed all job titles");

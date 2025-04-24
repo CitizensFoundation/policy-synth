@@ -37,12 +37,8 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
             await this.saveMemory();
         }
         if (this.memory.jobLicenceTypesForLicenceAnalysis?.length) {
-            const exporter = new SheetsLicenseDegreeExportAgent(this.agent, this.memory, this.startProgress, this.endProgress, this.memory.worksheetName ?? "License Degree Analysis" // optional override
-            );
-            await exporter.processJsonData({
-                agentId: this.agent.id,
-                analysisResults: this.memory.jobLicenceTypesForLicenceAnalysis,
-            });
+            const exporter = new SheetsLicenseDegreeExportAgent(this.agent, this.memory, this.startProgress, this.endProgress, "Sheet1");
+            await exporter.processJsonData(this.memory.jobLicenceTypesForLicenceAnalysis);
         }
         await this.updateRangedProgress(100, "Completed all job titles");
     }

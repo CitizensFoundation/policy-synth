@@ -4,7 +4,6 @@ import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connecto
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
 
-
 /**
  * Google‑Sheets exporter for {@link JobTitleLicenseDegreeAnalysisAgent} results.
  *
@@ -49,7 +48,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     ) as PsBaseSheetConnector;
 
     if (!this.sheetsConnector) {
-      throw new Error("Google Sheets connector not found – did you configure one in Policy Synth?");
+      throw new Error(
+        "Google Sheets connector not found – did you configure one in Policy Synth?"
+      );
     }
   }
 
@@ -57,11 +58,10 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   // PUBLIC API
   // ──────────────────────────────────────────────────────────────────────────────
 
-
-  async processJsonData(json: any): Promise<void> {
+  async processJsonData(rows: LicenseDegreeRow[]): Promise<void> {
     await this.updateRangedProgress(0, "Starting License‑Degree sheet export");
 
-    const data2d = this.generateSheetData(json);
+    const data2d = this.generateSheetData(rows);
     const sanitised = this.sanitiseData(data2d);
 
     await this.writeInChunks(sanitised);
@@ -73,10 +73,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   // INTERNAL HELPERS
   // ──────────────────────────────────────────────────────────────────────────────
 
-  private generateSheetData({ agentId, analysisResults }: LicenseDegreeExportInput): string[][] {
+  private generateSheetData(rows: LicenseDegreeRow[]): string[][] {
     // 1) Full‑path header row
     const headers: string[] = [
-      "agentId",
       "licenseType",
       "sourceUrl",
       "degreeRequiredStatus",
@@ -93,17 +92,26 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
 
     const sheetRows: string[][] = [headers, shortHeaders];
 
-    // 3) Data rows – one per analysis result
-    for (const res of analysisResults) {
-      sheetRows.push([
-        String(agentId),
-        this.toStr(res.licenseType),
-        this.toStr(res.sourceUrl),
-        this.toStr(res.degreeRequiredStatus),
-        this.toStr(res.supportingEvidence),
-        this.toStr(res.confidenceScore),
-        this.toStr(res.reasoning),
-      ]);
+    for (const row of rows) {
+      const analysisResults = row.analysisResults;
+      if (!analysisResults) {
+        this.logger.warn(
+          `No analysis results for row: ${JSON.stringify(row, null, 2)}`
+        );
+        continue;
+      }
+
+      // 3) Data rows – one per analysis result
+      for (const res of analysisResults) {
+        sheetRows.push([
+          this.toStr(res.licenseType),
+          this.toStr(res.sourceUrl),
+          this.toStr(res.degreeRequiredStatus),
+          this.toStr(res.supportingEvidence),
+          this.toStr(res.confidenceScore),
+          this.toStr(res.reasoning),
+        ]);
+      }
     }
 
     return sheetRows;
@@ -145,7 +153,8 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   private sanitiseData(data: any[][]): string[][] {
     return data.map((row) =>
       row.map((cell) => {
-        if (typeof cell === "object" && cell !== null) return JSON.stringify(cell);
+        if (typeof cell === "object" && cell !== null)
+          return JSON.stringify(cell);
         return cell === undefined || cell === null ? "" : String(cell);
       })
     );

@@ -33,9 +33,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     // ──────────────────────────────────────────────────────────────────────────────
     // PUBLIC API
     // ──────────────────────────────────────────────────────────────────────────────
-    async processJsonData(json) {
+    async processJsonData(rows) {
         await this.updateRangedProgress(0, "Starting License‑Degree sheet export");
-        const data2d = this.generateSheetData(json);
+        const data2d = this.generateSheetData(rows);
         const sanitised = this.sanitiseData(data2d);
         await this.writeInChunks(sanitised);
         await this.updateRangedProgress(100, "Google Sheets export completed");
@@ -43,10 +43,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     // ──────────────────────────────────────────────────────────────────────────────
     // INTERNAL HELPERS
     // ──────────────────────────────────────────────────────────────────────────────
-    generateSheetData({ agentId, analysisResults }) {
+    generateSheetData(rows) {
         // 1) Full‑path header row
         const headers = [
-            "agentId",
             "licenseType",
             "sourceUrl",
             "degreeRequiredStatus",
@@ -60,17 +59,23 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
             return idx === -1 ? h : h.substring(idx + 1);
         });
         const sheetRows = [headers, shortHeaders];
-        // 3) Data rows – one per analysis result
-        for (const res of analysisResults) {
-            sheetRows.push([
-                String(agentId),
-                this.toStr(res.licenseType),
-                this.toStr(res.sourceUrl),
-                this.toStr(res.degreeRequiredStatus),
-                this.toStr(res.supportingEvidence),
-                this.toStr(res.confidenceScore),
-                this.toStr(res.reasoning),
-            ]);
+        for (const row of rows) {
+            const analysisResults = row.analysisResults;
+            if (!analysisResults) {
+                this.logger.warn(`No analysis results for row: ${JSON.stringify(row, null, 2)}`);
+                continue;
+            }
+            // 3) Data rows – one per analysis result
+            for (const res of analysisResults) {
+                sheetRows.push([
+                    this.toStr(res.licenseType),
+                    this.toStr(res.sourceUrl),
+                    this.toStr(res.degreeRequiredStatus),
+                    this.toStr(res.supportingEvidence),
+                    this.toStr(res.confidenceScore),
+                    this.toStr(res.reasoning),
+                ]);
+            }
         }
         return sheetRows;
     }

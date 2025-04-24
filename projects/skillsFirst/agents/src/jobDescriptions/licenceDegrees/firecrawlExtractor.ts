@@ -28,7 +28,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 
   licenseType: string;
 
-  crawlPageLimit = 50;
+  crawlPageLimit = 75;
 
   constructor(
     agent: PsAgent,
@@ -49,6 +49,25 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
   private async checkIfRelevant(
     document: string
   ): Promise<RelevanceCheckResult> {
+    const estimatedTokenFactor = 1.42;
+    const tokenLimit = 1_000_000;
+    const words = document.split(" ");
+    const wordCount = words.length;
+    const estimatedTokenCount = wordCount * estimatedTokenFactor;
+
+    if (estimatedTokenCount > tokenLimit) {
+      const maxWordCount = Math.floor(tokenLimit / estimatedTokenFactor);
+      const originalWordCount = wordCount;
+      document = words.slice(0, maxWordCount).join(" ");
+      this.logger.debug(
+        `Reduced document from ${originalWordCount} words (estimated ${Math.round(
+          estimatedTokenCount
+        )} tokens) to ${maxWordCount} words (estimated ${Math.round(
+          maxWordCount * estimatedTokenFactor
+        )} tokens) based on token limit.`
+      );
+    }
+
     const messages = [
       {
         role: "system" as const,
@@ -60,7 +79,7 @@ Instructions:
 2.  Determine if it contains information about licensing requirements specifically for **${this.licenseType}** in New Jersey.
 3.  The focus is on identifying requirements related to college degrees (Associate's, Bachelor's, Graduate/Professional).
 4.  If the document *only* contains generic information, legal disclaimers, privacy policies, or terms of service without specific licensing details for **${this.licenseType}**, consider it **not relevant**.
-5.  If the document contains relevant information about degree requirements for **${this.licenseType}** in New Jersey, consider it **relevant**.
+5.  If the document contains possibly relevant information about degree requirements for **${this.licenseType}** in New Jersey, consider it **relevant**.
 
 Output format: Return *only* a JSON object with the following structure:
   {

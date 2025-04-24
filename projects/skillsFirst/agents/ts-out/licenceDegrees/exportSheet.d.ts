@@ -20,7 +20,7 @@ export declare class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
      */
     skipAiModels: boolean;
     constructor(agent: PsAgent, memory: any, startProgress: number, endProgress: number, sheetName?: string);
-    processJsonData(json: any): Promise<void>;
+    processJsonData(rows: LicenseDegreeRow[]): Promise<void>;
     private generateSheetData;
     /**
      * Break the data into {{@link chunkSize}}‑sized pieces and update the sheet
