@@ -1,4 +1,5 @@
 .env
+ts-out/
 memoryBackups/
 projectImages/
 node_modules/
