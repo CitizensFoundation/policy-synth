@@ -21,6 +21,17 @@ export class DegreeRequirementAnalyzerAgent extends PolicySynthAgent {
         this.memory = memory;
     }
     async analyze(extractedText, licenseType, sourceUrl) {
+        const estimatedTokenFactor = 1.42;
+        const tokenLimit = 150_000;
+        const words = extractedText.split(" ");
+        const wordCount = words.length;
+        const estimatedTokenCount = wordCount * estimatedTokenFactor;
+        if (estimatedTokenCount > tokenLimit) {
+            const maxWordCount = Math.floor(tokenLimit / estimatedTokenFactor);
+            const originalWordCount = wordCount;
+            extractedText = words.slice(0, maxWordCount).join(" ");
+            this.logger.debug(`Reduced document from ${originalWordCount} words (estimated ${Math.round(estimatedTokenCount)} tokens) to ${maxWordCount} words (estimated ${Math.round(maxWordCount * estimatedTokenFactor)} tokens) based on token limit.`);
+        }
         await this.updateRangedProgress(0, `Analyzing requirements for: ${licenseType}`);
         this.logger.info(`Analyzing extracted text for ${licenseType} from ${sourceUrl}`);
         if (!extractedText || extractedText.trim().length === 0) {
