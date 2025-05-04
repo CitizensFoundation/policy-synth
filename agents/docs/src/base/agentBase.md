@@ -1,26 +1,26 @@
 # PolicySynthAgentBase
 
-The `PolicySynthAgentBase` class provides a foundational structure for creating agents in the PolicySynth framework. It includes methods for logging, JSON parsing and repair, message creation, and token counting.
+The `PolicySynthAgentBase` class provides foundational utilities for PolicySynth agents, including logging, message formatting, JSON parsing/repair, number formatting, and token counting for LLM messages. It is designed to be extended by more specialized agent classes.
 
 ## Properties
 
-| Name       | Type            | Description                                      |
-|------------|-----------------|--------------------------------------------------|
-| logger     | winston.Logger  | Logger instance for logging messages and errors. |
-| timeStart  | number          | Timestamp of when the instance was created.      |
+| Name        | Type            | Description                                      |
+|-------------|-----------------|--------------------------------------------------|
+| logger      | winston.Logger  | Winston logger instance for logging events.       |
+| timeStart   | number          | Timestamp (ms) when the instance was created.     |
 
 ## Methods
 
-| Name                  | Parameters                          | Return Type | Description                                                                 |
-|-----------------------|-------------------------------------|-------------|-----------------------------------------------------------------------------|
-| constructor           | None                                | void        | Initializes the logger and sets the start time.                             |
-| createSystemMessage   | content: string                     | PsModelMessage | Creates a system message with the given content.                            |
-| createHumanMessage    | content: string                     | PsModelMessage | Creates a human (user) message with the given content.                      |
-| getJsonBlock          | text: string                        | string \| null | Extracts a JSON block from a given text if it exists.                       |
-| repairJson            | text: string                        | string      | Attempts to repair a malformed JSON string.                                 |
-| parseJsonResponse     | response: string                    | T           | Parses a JSON response, attempting repair if parsing fails.                 |
-| formatNumber          | number: number, fractions: number = 0 | string      | Formats a number to a string with specified fraction digits.                |
-| getTokensFromMessages | messages: PsModelMessage[]          | Promise<number> | Calculates the number of tokens in a list of messages using a specific encoding. |
+| Name                   | Parameters                                                                 | Return Type         | Description                                                                                                 |
+|------------------------|----------------------------------------------------------------------------|---------------------|-------------------------------------------------------------------------------------------------------------|
+| constructor            | —                                                                          | PolicySynthAgentBase| Initializes the logger and sets the start time.                                                             |
+| createSystemMessage    | content: string                                                            | PsModelMessage      | Creates a system message object for LLM input.                                                              |
+| createHumanMessage     | content: string                                                            | PsModelMessage      | Creates a user (human) message object for LLM input.                                                        |
+| getJsonBlock           | text: string                                                               | string \| null      | Extracts a JSON code block (```json ... ```) from a string, or returns null if not found.                   |
+| repairJson             | text: string                                                               | string              | Attempts to repair malformed JSON using `jsonrepair`. Throws if repair fails.                               |
+| parseJsonResponse      | response: string                                                           | T                   | Parses a JSON string, attempts repair if parsing fails, and returns the parsed object of type `T`.          |
+| formatNumber           | number: number, fractions: number = 0                                      | string              | Formats a number with a specified number of fraction digits (default 0), using US locale.                   |
+| getTokensFromMessages  | messages: PsModelMessage[]                                                 | Promise<number>     | Asynchronously counts the number of tokens in a list of LLM messages, using the `tiktoken` library.         |
 
 ## Example
 
@@ -28,15 +28,31 @@ The `PolicySynthAgentBase` class provides a foundational structure for creating 
 import { PolicySynthAgentBase } from '@policysynth/agents/base/agentBase.js';
 
 const agent = new PolicySynthAgentBase();
-const systemMessage = agent.createSystemMessage("System initialization complete.");
-const humanMessage = agent.createHumanMessage("Hello, how can I assist you today?");
-const jsonResponse = agent.parseJsonResponse('{"key": "value"}');
-const formattedNumber = agent.formatNumber(12345.6789, 2);
 
-(async () => {
-  const tokenCount = await agent.getTokensFromMessages([systemMessage, humanMessage]);
+// Logging
+agent.logger.info("Agent started");
+
+// Creating messages
+const sysMsg = agent.createSystemMessage("You are a helpful assistant.");
+const userMsg = agent.createHumanMessage("What is the weather today?");
+
+// Parsing JSON responses
+const jsonString = '{"foo": "bar"}';
+const parsed = agent.parseJsonResponse(jsonString); // { foo: "bar" }
+
+// Formatting numbers
+const formatted = agent.formatNumber(12345.678, 2); // "12,345.68"
+
+// Counting tokens in messages
+const messages = [
+  agent.createSystemMessage("System prompt"),
+  agent.createHumanMessage("User prompt")
+];
+agent.getTokensFromMessages(messages).then(tokenCount => {
   console.log(`Total tokens: ${tokenCount}`);
-})();
+});
 ```
 
-This class is designed to be extended by other agent classes that require these foundational functionalities. It leverages the `winston` library for logging and provides utility methods for handling JSON data and calculating token usage, which is essential for interacting with language models.
+---
+
+**File:** `@policysynth/agents/base/agentBase.js`

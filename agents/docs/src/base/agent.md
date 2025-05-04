@@ -1,65 +1,100 @@
 # PolicySynthAgent
 
-The `PolicySynthAgent` class is an abstract class that extends the `PolicySynthAgentBase` class. It is designed to manage the execution of agents, including handling memory, model management, progress tracking, and configuration management. This class provides a framework for implementing specific agent behaviors by extending it and overriding the `process` method.
+The `PolicySynthAgent` is an abstract base class for PolicySynth agents, providing core logic for agent memory management, AI model interaction, progress tracking, configuration management, and Redis-based state persistence. It is designed to be extended by specific agent implementations.
 
 ## Properties
 
-| Name                  | Type                      | Description                                                                 |
-|-----------------------|---------------------------|-----------------------------------------------------------------------------|
-| memory                | PsAgentMemoryData         | Stores the memory data for the agent.                                       |
-| agent                 | PsAgent                   | Represents the agent being managed.                                         |
-| modelManager          | PsAiModelManager \| undefined | Manages AI models associated with the agent.                                |
-| progressTracker       | PsProgressTracker \| undefined | Tracks the progress of the agent's execution.                               |
-| configManager         | PsConfigManager           | Manages the configuration of the agent.                                     |
-| redis                 | Redis                     | Redis client for managing agent memory and status.                          |
-| skipAiModels          | boolean                   | Flag to skip AI model initialization.                                       |
-| skipCheckForProgress  | boolean                   | Flag to skip progress checks.                                               |
-| startProgress         | number                    | Initial progress value.                                                     |
-| endProgress           | number                    | Final progress value.                                                       |
-| pauseCheckInterval    | number                    | Interval for checking pause status (default: 48 hours).                     |
-| pauseTimeout          | number                    | Timeout for pause status (default: 1000 ms).                                |
-| memorySaveTimer       | NodeJS.Timeout \| null    | Timer for scheduling memory saves.                                          |
-| memorySaveError       | Error \| null             | Stores the last memory save error.                                          |
+| Name                  | Type                              | Description                                                                                   |
+|-----------------------|-----------------------------------|-----------------------------------------------------------------------------------------------|
+| memory                | PsAgentMemoryData                 | The agent's working memory, persisted in Redis.                                               |
+| agent                 | PsAgent                           | The agent instance, including configuration and model info.                                   |
+| modelManager          | PsAiModelManager \| undefined     | Manages AI model selection and calls for the agent.                                           |
+| progressTracker       | PsProgressTracker \| undefined    | Tracks and updates the agent's progress and status.                                           |
+| configManager         | PsConfigManager                   | Handles agent configuration and access to config values.                                      |
+| redis                 | Redis                             | Redis client instance for memory and status persistence.                                      |
+| skipAiModels          | boolean                           | If true, disables AI model usage for this agent.                                              |
+| skipCheckForProgress  | boolean                           | If true, disables progress check for pause/stop.                                              |
+| startProgress         | number                            | The starting progress value for the agent.                                                    |
+| endProgress           | number                            | The ending progress value for the agent.                                                      |
+| pauseCheckInterval    | number                            | Interval (ms) to check for pause state (default: 48 hours).                                   |
+| pauseTimeout          | number                            | Timeout (ms) for pause state (default: 1000 ms).                                              |
+| memorySaveTimer       | NodeJS.Timeout \| null            | Timer for scheduled memory save.                                                              |
+| memorySaveError       | Error \| null                     | Stores the last error encountered during memory save.                                         |
+
+### Protected Getters
+
+| Name                | Type                | Description                                               |
+|---------------------|---------------------|-----------------------------------------------------------|
+| maxModelTokensOut   | number              | Maximum output tokens for the model (default: 16384).     |
+| modelTemperature    | number              | Model temperature (default: 0.7).                         |
+| reasoningEffort     | 'low'\|'medium'\|'high' | Reasoning effort for the model (default: 'medium').   |
+| maxThinkingTokens   | number              | Maximum thinking tokens (default: 0).                     |
 
 ## Methods
 
-| Name                          | Parameters                                                                 | Return Type                  | Description                                                                 |
-|-------------------------------|----------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| constructor                   | agent: PsAgent, memory: PsAgentMemoryData \| undefined, startProgress: number, endProgress: number | void                         | Initializes a new instance of the `PolicySynthAgent` class.                 |
-| process                       | -                                                                          | Promise<void>                | Main processing logic for the agent. Subclasses should override this method.|
-| loadAgentMemoryFromRedis      | -                                                                          | Promise<PsAgentMemoryData>   | Loads agent memory from Redis.                                              |
-| callModel                     | modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], parseJson?: boolean, limitedRetries?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function | Promise<any>                 | Calls the AI model with the specified parameters.                           |
-| updateRangedProgress          | progress: number \| undefined, message: string                             | Promise<void>                | Updates the ranged progress of the agent.                                   |
-| updateProgress                | progress: number \| undefined, message: string                             | Promise<void>                | Updates the progress of the agent.                                          |
-| getConfig                     | uniqueId: string, defaultValue: T                                          | T                            | Retrieves a configuration value by unique ID.                               |
-| getConfigOld                  | uniqueId: string, defaultValue: T                                          | T                            | Retrieves an old configuration value by unique ID.                          |
-| loadStatusFromRedis           | -                                                                          | Promise<PsAgentStatus \| undefined> | Loads the agent's status from Redis.                                        |
-| checkProgressForPauseOrStop   | -                                                                          | Promise<void>                | Checks the progress for pause or stop conditions.                           |
-| scheduleMemorySave            | -                                                                          | Promise<void>                | Schedules a memory save operation.                                          |
-| checkLastMemorySaveError      | -                                                                          | void                         | Checks for the last memory save error and throws it if present.             |
-| saveMemory                    | -                                                                          | Promise<void>                | Saves the agent's memory to Redis.                                          |
-| getTokensFromMessages         | messages: PsModelMessage[]                                                 | Promise<number>              | Calculates the number of tokens from the given messages.                    |
-| setCompleted                  | message: string                                                            | Promise<void>                | Sets the agent's status to completed with a message.                        |
-| setError                      | errorMessage: string                                                       | Promise<void>                | Sets the agent's status to error with an error message.                     |
-| getModelUsageEstimates        | -                                                                          | PsAgentModelUsageEstimate[] \| undefined | Retrieves model usage estimates.                                            |
-| getApiUsageEstimates          | -                                                                          | PsAgentApiUsageEstimate[] \| undefined | Retrieves API usage estimates.                                              |
-| getMaxTokensOut               | -                                                                          | number \| undefined          | Retrieves the maximum tokens out configuration.                             |
-| getTemperature                | -                                                                          | number \| undefined          | Retrieves the temperature configuration.                                    |
+| Name                        | Parameters                                                                                                    | Return Type                        | Description                                                                                                 |
+|-----------------------------|---------------------------------------------------------------------------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| constructor                 | agent: PsAgent, memory?: PsAgentMemoryData, startProgress: number, endProgress: number                        | PolicySynthAgent                   | Initializes the agent, memory, model manager, progress tracker, and config manager.                         |
+| process                     | none                                                                                                          | Promise\<void\>                    | Main processing logic (to be overridden by subclasses).                                                     |
+| loadAgentMemoryFromRedis    | none                                                                                                          | Promise\<PsAgentMemoryData\>        | Loads agent memory from Redis and sets `this.memory`.                                                       |
+| callModel                   | modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options?: PsCallModelOptions  | Promise\<any\>                     | Calls the AI model via the model manager.                                                                   |
+| updateRangedProgress        | progress: number \| undefined, message: string                                                                | Promise\<void\>                    | Updates progress within a range using the progress tracker.                                                 |
+| updateProgress              | progress: number \| undefined, message: string                                                                | Promise\<void\>                    | Updates progress using the progress tracker.                                                                |
+| getConfig                   | uniqueId: string, defaultValue: T                                                                             | T                                  | Gets a config value by uniqueId, with a default fallback.                                                   |
+| getConfigOld                | uniqueId: string, defaultValue: T                                                                             | T                                  | Gets a config value using the old method.                                                                   |
+| loadStatusFromRedis         | none                                                                                                          | Promise\<PsAgentStatus \| undefined\> | Loads the agent's status from Redis.                                                                        |
+| checkProgressForPauseOrStop | none                                                                                                          | Promise\<void\>                    | Checks if the agent should pause or stop, and throws if so.                                                 |
+| scheduleMemorySave          | none                                                                                                          | Promise\<void\>                    | Schedules a memory save operation with a delay.                                                             |
+| checkLastMemorySaveError    | none                                                                                                          | void                               | Throws the last memory save error if one occurred.                                                          |
+| saveMemory                  | none                                                                                                          | Promise\<void\>                    | Saves the agent's memory to Redis and checks for pause/stop.                                                |
+| getTokensFromMessages       | messages: PsModelMessage[]                                                                                    | Promise\<number\>                  | Returns the token count for a set of messages using the model manager.                                      |
+| setCompleted                | message: string                                                                                               | Promise\<void\>                    | Sets the agent's progress to completed with a message.                                                      |
+| setError                    | errorMessage: string                                                                                          | Promise\<void\>                    | Sets the agent's progress to error with a message.                                                          |
+| getModelUsageEstimates      | none                                                                                                          | PsAgentModelUsageEstimate[] \| undefined | Gets model usage estimates from the config manager.                                                    |
+| getApiUsageEstimates        | none                                                                                                          | PsAgentApiUsageEstimate[] \| undefined | Gets API usage estimates from the config manager.                                                      |
+| getMaxTokensOut             | none                                                                                                          | number \| undefined                | Gets the max tokens out from the config manager.                                                            |
+| getTemperature              | none                                                                                                          | number \| undefined                | Gets the temperature from the config manager.                                                               |
+
+## Error Classes
+
+### AgentExecutionStoppedError
+
+Custom error thrown when agent execution is stopped or paused for too long.
+
+| Name    | Type   | Description                        |
+|---------|--------|------------------------------------|
+| message | string | Error message.                     |
 
 ## Example
 
 ```typescript
-import { PolicySynthAgent } from '@policysynth/agents/base/agent.js';
+import { PolicySynthAgent, AgentExecutionStoppedError } from '@policysynth/agents/base/agent.js';
+import { PsAgent } from '@policysynth/agents/dbModels/agent.js';
 
-// Example usage of PolicySynthAgent
-class CustomAgent extends PolicySynthAgent {
+// Example subclass implementation
+class MyCustomAgent extends PolicySynthAgent {
   async process() {
-    // Implement custom processing logic here
+    // Custom agent logic here
+    await this.updateProgress(10, "Starting custom agent process");
+    // ... do work ...
+    await this.setCompleted("Agent completed successfully");
   }
 }
 
-const agent = new CustomAgent(agentData, memoryData, 0, 100);
-agent.process();
+// Usage
+const agentInstance = new PsAgent(/* ...agent data... */);
+const myAgent = new MyCustomAgent(agentInstance, undefined, 0, 100);
+
+myAgent.process().catch(err => {
+  if (err instanceof AgentExecutionStoppedError) {
+    console.error("Agent was stopped:", err.message);
+  } else {
+    console.error("Agent error:", err);
+  }
+});
 ```
 
-This documentation provides an overview of the `PolicySynthAgent` class, its properties, methods, and an example of how to extend and use it. The class is designed to be extended for specific agent implementations, with the `process` method being the primary entry point for custom logic.
+---
+
+**File:** `@policysynth/agents/base/agent.js`  
+This class is intended to be extended for custom PolicySynth agent implementations, providing robust memory, progress, and AI model management out of the box.

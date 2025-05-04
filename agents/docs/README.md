@@ -18,6 +18,7 @@
   - [agentQueue](src/base/agentQueue.md)
   - [agentRateLimiter](src/base/agentRateLimiter.md)
   - [agentRunner](src/base/agentRunner.md)
+  - [agentStandalone](src/base/agentStandalone.md)
   - [redisClient](src/base/redisClient.md)
   - [simpleAgent](src/base/simpleAgent.md)
   - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
@@ -65,6 +66,8 @@
 - deepResearch
   - [fireCrawlApi](src/deepResearch/fireCrawlApi.md)
   - [getWebPagesBase](src/deepResearch/getWebPagesBase.md)
+  - [getWebPagesOperations](src/deepResearch/getWebPagesOperations.md)
+  - [googleSearchApi](src/deepResearch/googleSearchApi.md)
   - [webScraper](src/deepResearch/webScraper.md)
 - operations
   - [agentConnectorManager](src/operations/agentConnectorManager.md)

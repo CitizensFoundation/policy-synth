@@ -1,58 +1,71 @@
 # PolicySynthSimpleAgentBase
 
-The `PolicySynthSimpleAgentBase` class is a specialized agent class that extends the `PolicySynthAgentBase`. It is designed to interact with AI models for natural language processing tasks, utilizing various AI model providers such as OpenAI, Anthropic, Google, and Azure. The class manages AI model initialization, tokenization, and rate limiting, and provides methods for calling language models (LLMs) and handling their responses.
+A base class for simple PolicySynth agents that interact with Large Language Models (LLMs) and manage agent memory, tokenization, and cost tracking. This class extends `PolicySynthAgentBase` and provides utility methods for token counting, model initialization, LLM calls with retry logic, and memory persistence using Redis.
 
 ## Properties
 
-| Name                  | Type                              | Description                                                                 |
-|-----------------------|-----------------------------------|-----------------------------------------------------------------------------|
-| memory                | `PsSimpleAgentMemoryData`         | Optional memory data for the agent.                                         |
-| timeStart             | `number`                          | Timestamp indicating when the agent was started.                            |
-| rateLimits            | `PsModelRateLimitTracking`        | Tracks rate limits for AI model usage.                                      |
-| models                | `Map<PsAiModelType, BaseChatModel>` | A map of AI models initialized for the agent.                               |
-| tokenizer             | `tiktoken.Tiktoken \| null`       | Tokenizer instance for encoding messages.                                   |
-| needsAiModel          | `boolean`                         | Indicates if the agent requires an AI model.                                |
-| maxModelTokensOut     | `number`                          | Maximum number of tokens the model can output.                              |
-| modelTemperature      | `number`                          | Temperature setting for the AI model, affecting randomness of outputs.      |
+| Name                | Type                                 | Description                                                                                 |
+|---------------------|--------------------------------------|---------------------------------------------------------------------------------------------|
+| memory              | PsSimpleAgentMemoryData \| undefined | The agent's working memory, including stage tracking and cost information.                  |
+| timeStart           | number                               | Timestamp (ms) when the agent instance was created.                                         |
+| rateLimits          | PsModelRateLimitTracking             | Tracks rate limits for different models.                                                    |
+| models              | Map<PsAiModelType, BaseChatModel>    | Map of AI model types to their instantiated chat model objects.                             |
+| tokenizer           | tiktoken.Tiktoken \| null            | Tokenizer instance for counting tokens (lazy-initialized).                                  |
+| needsAiModel        | boolean                              | Indicates if the agent requires an AI model (default: true).                                |
+| maxModelTokensOut   | number                               | Maximum number of output tokens for the model (default: 4096).                              |
+| modelTemperature    | number                               | Temperature setting for the model (default: 0.7).                                           |
 
 ## Methods
 
-| Name                        | Parameters                                                                 | Return Type | Description                                                                 |
-|-----------------------------|----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| constructor                 | `memory?: PsSimpleAgentMemoryData`                                         | `void`      | Initializes the agent, setting up memory and models if needed.              |
-| initializeTokenizer         | `void`                                                                     | `void`      | Initializes the tokenizer based on the AI model name.                       |
-| getTokenizer                | `void`                                                                     | `tiktoken.Tiktoken` | Retrieves the tokenizer, initializing it if necessary.                      |
-| getNumTokensFromMessages    | `messages: PsModelMessage[]`                                               | `number`    | Calculates the number of tokens in a list of messages.                      |
-| getNumTokensFromText        | `text: string`                                                             | `number`    | Calculates the number of tokens in a text string.                           |
-| getApproximateTokenCount    | `text: string`                                                             | `number`    | Approximates token count based on text length.                              |
-| initializeModels            | `void`                                                                     | `void`      | Initializes AI models based on environment variables.                       |
-| callLLM                     | `stage: string, messages: PsModelMessage[], parseJson = true, tokenOutEstimate = 120, streamingCallbacks?: Function` | `Promise<any>` | Calls the language model with specified messages and handles the response.  |
-| updateMemoryStages          | `stage: string, tokensIn: number, tokensOut: number, model: BaseChatModel` | `void`      | Updates memory stages with token usage and costs.                           |
-| redisKey                    | `void`                                                                     | `string`    | Retrieves the Redis key for storing agent memory.                           |
-| saveMemory                  | `void`                                                                     | `Promise<void>` | Saves the agent's memory to Redis.                                          |
-| fullLLMCostsForMemory       | `void`                                                                     | `number`    | Retrieves the total cost of LLM usage from memory.                          |
+| Name                    | Parameters                                                                                                                                         | Return Type                | Description                                                                                                    |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|----------------------------------------------------------------------------------------------------------------|
+| constructor             | memory?: PsSimpleAgentMemoryData \| undefined                                                                                                      | PolicySynthSimpleAgentBase | Initializes the agent, memory, tokenizer, and models if needed.                                                |
+| private initializeTokenizer | —                                                                                                                                            | void                       | Initializes the tokenizer for the configured model.                                                            |
+| private getTokenizer    | —                                                                                                                                                | tiktoken.Tiktoken          | Returns the tokenizer, initializing it if necessary.                                                           |
+| protected getNumTokensFromMessages | messages: PsModelMessage[]                                                                                                            | number                     | Counts the number of tokens in a list of model messages.                                                       |
+| protected getNumTokensFromText     | text: string                                                                                                                         | number                     | Counts the number of tokens in a text string.                                                                  |
+| private getApproximateTokenCount   | text: string                                                                                                                         | number                     | Approximates token count if tokenizer fails (based on text length).                                            |
+| initializeModels         | —                                                                                                                                                | void                       | Instantiates the appropriate chat model(s) based on environment variables.                                     |
+| callLLM                 | stage: string, messages: PsModelMessage[], parseJson?: boolean, tokenOutEstimate?: number, streamingCallbacks?: Function                          | Promise<any>               | Calls the LLM with retry logic, parses JSON if requested, updates memory and cost tracking.                    |
+| updateMemoryStages       | stage: string, tokensIn: number, tokensOut: number, model: BaseChatModel                                                                         | void                       | Updates memory with token usage and cost for a given stage.                                                    |
+| redisKey                | —                                                                                                                                                | string                     | Returns the Redis key for storing this agent's memory.                                                         |
+| saveMemory              | —                                                                                                                                                | Promise<void>              | Persists the agent's memory to Redis.                                                                         |
+| fullLLMCostsForMemory   | —                                                                                                                                                | number                     | Returns the total LLM cost accumulated in memory.                                                             |
 
 ## Example
 
 ```typescript
 import { PolicySynthSimpleAgentBase } from '@policysynth/agents/base/simpleAgent.js';
 
-const agentMemory: PsSimpleAgentMemoryData = {
+// Example: Creating a simple agent with memory and calling the LLM
+const memory = {
   groupId: 123,
   stages: {},
   totalCost: 0,
-};
+} as PsSimpleAgentMemoryData;
 
-const agent = new PolicySynthSimpleAgentBase(agentMemory);
+const agent = new PolicySynthSimpleAgentBase(memory);
 
-const messages: PsModelMessage[] = [
-  { role: "user", message: "Hello, how are you?" },
-  { role: "assistant", message: "I'm good, thank you!" }
+const messages = [
+  { role: "user", message: "What is the capital of France?" }
 ];
 
-agent.callLLM("greeting", messages).then(response => {
+(async () => {
+  const response = await agent.callLLM("initial", messages, false);
   console.log("LLM Response:", response);
-});
+
+  // Save memory to Redis
+  await agent.saveMemory();
+
+  // Get total cost so far
+  console.log("Total LLM cost:", agent.fullLLMCostsForMemory);
+})();
 ```
 
-This example demonstrates how to create an instance of `PolicySynthSimpleAgentBase`, initialize it with memory, and call a language model with a series of messages. The response from the LLM is logged to the console.
+---
+
+**Note:**  
+- This class expects certain environment variables to be set for model configuration (e.g., `AI_MODEL_API_KEY`, `AI_MODEL_NAME`, `AI_MODEL_PROVIDER`, etc.).
+- The agent uses Redis for memory persistence and `tiktoken` for token counting.
+- The `callLLM` method includes retry logic and cost tracking for robust LLM interaction.
+- Extend this class to implement custom agent logic, leveraging the provided memory and LLM utilities.
