@@ -1,1 +1,0 @@
-{"version":3,"file":"baseIdeasCollaborationConnector.js","sourceRoot":"","sources":["../../../src/connectors/base/baseIdeasCollaborationConnector.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,eAAe,EAAE,MAAM,oBAAoB,CAAC;AACrD,MAAM,OAAgB,iCAAkC,SAAQ,eAAe;IAc7E,mFAAmF;IACnF,KAAK,CAAC,aAAa,CAAE,OAAe,EAAE,MAAc;QAClD,MAAM,IAAI,KAAK,CACb,iEAAiE,CAClE,CAAC;IACJ,CAAC;CACF"}

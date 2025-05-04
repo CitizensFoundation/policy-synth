@@ -1,1 +1,0 @@
-{"version":3,"file":"bingSearchApi.d.ts","sourceRoot":"","sources":["../../src/deepResearch/bingSearchApi.ts"],"names":[],"mappings":"AACA,OAAO,EAAE,0BAA0B,EAAE,MAAM,wBAAwB,CAAC;AAEpE,qBAAa,aAAc,SAAQ,0BAA0B;IAC3D,OAAO,CAAC,gBAAgB,CAAqB;;IAWhC,MAAM,CACjB,KAAK,EAAE,MAAM,EACb,eAAe,EAAE,MAAM,GACtB,OAAO,CAAC,kBAAkB,EAAE,CAAC;CAuEjC"}
