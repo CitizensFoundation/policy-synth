@@ -5,7 +5,7 @@ export class LicenseDeepResearchAgent extends BaseDeepResearchAgent {
 
   licenseType: string = "";
 
-  searchInstructions = `Search for authoritative webpages (statutes, regulations, or New Jersey board pages) that describe licensing requirements for the specified occupational license provided by the user.`;
+  searchInstructions = `Search for authoritative webpages (statutes, regulations, or New Jersey board pages) that describe licensing requirements.`;
 
   rankingInstructions = `Rank result One higher if it is a .nj.gov or .njconsumeraffairs.gov domain, or if the page contains statutory or regulatory text.`;
 

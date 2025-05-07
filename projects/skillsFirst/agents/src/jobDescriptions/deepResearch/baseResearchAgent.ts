@@ -25,8 +25,11 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
   abstract scanningSystemPrompt: string;
   abstract scanType: DeepResearchWebResearchTypes;
   abstract attributeNameToUseForDedup: string;
+  abstract licenseType: string;
 
   disableRanking = false;
+
+  skipScanning = true;
 
   findOrganizationUrlsAndLogos = false;
 
@@ -60,12 +63,14 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
 
 
   async doWebResearch(
+    licenseType: string,
     config: any,//WebResearchConfig,
     dataType: string | undefined = undefined,
     statusPrefix: string = ""
   ) {
     const cacheDebugFilePath = `/tmp/${this.scanType}_DeepAgentWebResearchDebugCache_${this.debugCacheVersion}.json`;
     const totalProgressRange = this.endProgress - this.startProgress;
+    this.licenseType = licenseType;
 
     this.statusPrefix = statusPrefix;
 
@@ -115,7 +120,8 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         numberOfQueriesToGenerate,
         this.searchInstructions,
         generatorStartProgress,
-        generatorEndProgress
+        generatorEndProgress,
+        licenseType
       );
 
       const searchQueries =
@@ -235,6 +241,10 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         0,
         Math.floor(rankedSearchResults.length * percentOfResultsToScan)
       );
+
+      if (this.skipScanning) {
+        return searchResultsToScan;
+      }
 
       // Scan and Research Web pages
       this.logger.info(

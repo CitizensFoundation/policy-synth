@@ -5,7 +5,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
     needsAiModel = false;
     app;
     licenseType;
-    crawlPageLimit = 75;
+    crawlPageLimit = 25;
     constructor(agent, memory, startProgress, endProgress, licenseType) {
         super(agent, memory, startProgress, endProgress);
         const apiKey = process.env.FIRECRAWL_API_KEY;

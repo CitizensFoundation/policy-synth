@@ -28,7 +28,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 
   licenseType: string;
 
-  crawlPageLimit = 75;
+  crawlPageLimit = 25;
 
   constructor(
     agent: PsAgent,

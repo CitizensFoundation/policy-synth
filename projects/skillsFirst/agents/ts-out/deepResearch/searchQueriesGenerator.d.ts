@@ -4,7 +4,8 @@ export declare class SearchQueriesGenerator extends PolicySynthAgent {
     systemPrompt: string;
     userPrompt: string;
     memory: JobDescriptionMemoryData;
-    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, numberOfQueriesToGenerate: number, instructions: string, startProgress: number, endProgress: number);
+    licenseType: string;
+    constructor(agent: PsAgent, memory: JobDescriptionMemoryData, numberOfQueriesToGenerate: number, instructions: string, startProgress: number, endProgress: number, licenseType: string);
     renderMessages(): Promise<PsModelMessage[]>;
     generateSearchQueries(): Promise<string[]>;
 }

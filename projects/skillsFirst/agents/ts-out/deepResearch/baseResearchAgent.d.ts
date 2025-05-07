@@ -11,7 +11,9 @@ export declare abstract class BaseDeepResearchAgent extends PolicySynthAgent {
     abstract scanningSystemPrompt: string;
     abstract scanType: DeepResearchWebResearchTypes;
     abstract attributeNameToUseForDedup: string;
+    abstract licenseType: string;
     disableRanking: boolean;
+    skipScanning: boolean;
     findOrganizationUrlsAndLogos: boolean;
     filterOutNonCompetitors: boolean;
     useSmallModelForSearchResultsRanking: boolean;
@@ -19,7 +21,7 @@ export declare abstract class BaseDeepResearchAgent extends PolicySynthAgent {
     urlToCrawl: string | undefined;
     convertFromCamelCaseToReadable(dataType: string): string;
     private static readonly CONCURRENCY_LIMIT;
-    doWebResearch(config: any, //WebResearchConfig,
+    doWebResearch(licenseType: string, config: any, //WebResearchConfig,
     dataType?: string | undefined, statusPrefix?: string): Promise<any[]>;
 }
 //# sourceMappingURL=baseResearchAgent.d.ts.map

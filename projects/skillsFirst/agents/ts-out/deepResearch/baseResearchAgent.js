@@ -14,6 +14,7 @@ export class BaseDeepResearchAgent extends PolicySynthAgent {
     debugCacheVersion = "V13";
     defaultModelSize = PsAiModelSize.Medium;
     disableRanking = false;
+    skipScanning = true;
     findOrganizationUrlsAndLogos = false;
     filterOutNonCompetitors = false;
     useSmallModelForSearchResultsRanking = false;
@@ -35,10 +36,11 @@ export class BaseDeepResearchAgent extends PolicySynthAgent {
         return spaced.trim();
     }
     static CONCURRENCY_LIMIT = 10;
-    async doWebResearch(config, //WebResearchConfig,
+    async doWebResearch(licenseType, config, //WebResearchConfig,
     dataType = undefined, statusPrefix = "") {
         const cacheDebugFilePath = `/tmp/${this.scanType}_DeepAgentWebResearchDebugCache_${this.debugCacheVersion}.json`;
         const totalProgressRange = this.endProgress - this.startProgress;
+        this.licenseType = licenseType;
         this.statusPrefix = statusPrefix;
         // Use the config parameters instead of class properties
         let { numberOfQueriesToGenerate, percentOfQueriesToSearch, percentOfResultsToScan, maxTopContentResultsToUse, } = config;
@@ -66,7 +68,7 @@ export class BaseDeepResearchAgent extends PolicySynthAgent {
             await this.updateRangedProgress(this.startProgress + 0.05 * totalProgressRange, `${statusPrefix}Creating Search Queries`);
             const generatorStartProgress = this.startProgress + 0.0 * totalProgressRange;
             const generatorEndProgress = this.startProgress + 0.3 * totalProgressRange;
-            const searchQueriesGenerator = new SearchQueriesGenerator(this.agent, this.memory, numberOfQueriesToGenerate, this.searchInstructions, generatorStartProgress, generatorEndProgress);
+            const searchQueriesGenerator = new SearchQueriesGenerator(this.agent, this.memory, numberOfQueriesToGenerate, this.searchInstructions, generatorStartProgress, generatorEndProgress, licenseType);
             const searchQueries = await searchQueriesGenerator.generateSearchQueries();
             this.logger.info(`Generated ${searchQueries.length} search queries`);
             // Rank search queries
@@ -109,6 +111,9 @@ export class BaseDeepResearchAgent extends PolicySynthAgent {
             this.logger.info("Pairwise Ranking Completed length: " + rankedSearchResults.length);
             console.log(`ranked searchResults: (${rankedSearchResults.length}) ${JSON.stringify(rankedSearchResults, null, 2)}`);
             const searchResultsToScan = rankedSearchResults.slice(0, Math.floor(rankedSearchResults.length * percentOfResultsToScan));
+            if (this.skipScanning) {
+                return searchResultsToScan;
+            }
             // Scan and Research Web pages
             this.logger.info("Scan and Research Web pages length: " + searchResultsToScan.length);
             await this.updateRangedProgress(80, `${statusPrefix}Scanning Web Pages`);

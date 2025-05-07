@@ -24,6 +24,8 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     "a1b19c4b-79b1-491a-ba32-5fa4c9f74f1c";
   static readonly LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_VERSION = 1;
 
+  authorativeSourceFinder: AuthoritativeSourceFinderAgent;
+
   constructor(
     agent: PsAgent,
     memory: LicenseDegreeAnalysisMemoryData,
@@ -32,6 +34,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   ) {
     super(agent, memory, start, end);
     this.memory = memory;
+    this.authorativeSourceFinder = new AuthoritativeSourceFinderAgent(agent, memory, start, end);
   }
 
   // ↓ add this property if you like to keep the importer around
@@ -127,13 +130,22 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
       }
     }
 
+    const authoritativeSources = await this.authorativeSourceFinder.findSources(row) || [];
+    urls.push(...authoritativeSources);
+
+    this.logger.debug(`Authoritative sources: ${JSON.stringify(authoritativeSources, null, 2)}`);
+
+    // make urls unique
+    const finalUrls = Array.from(new Set(urls));
+
     // ────────────────────────────────────────────────────────────────────────────
     // 3️⃣  Extract + analyse each source in turn
     // ────────────────────────────────────────────────────────────────────────────
     const results: LicenseDegreeAnalysisResult[] = [];
 
-    for (const src of urls) {
+    for (const src of finalUrls) {
       try {
+        this.logger.info(`Analyzing source: ${src}`);
         // Pull requirements text
         let pagesToAnalyze: ScrapedPage[] = [];
         if (src) {

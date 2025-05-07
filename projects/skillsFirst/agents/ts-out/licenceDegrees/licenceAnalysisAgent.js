@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAiModelSize, } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
+import { AuthoritativeSourceFinderAgent } from "./authorativeSourceFinder.js";
 import { DegreeRequirementAnalyzerAgent } from "./requirementAnalyzer.js";
 import { SheetsLicenseDegreeImportAgent } from "./importSheet.js";
 import { SheetsLicenseDegreeExportAgent } from "./exportSheet.js";
@@ -8,9 +9,11 @@ import { FirecrawlScrapeAndCrawlerAgent, } from "./firecrawlExtractor.js";
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_BASE_ID = "a1b19c4b-79b1-491a-ba32-5fa4c9f74f1c";
     static LICENSE_DEGREE_ANALYSIS_AGENT_CLASS_VERSION = 1;
+    authorativeSourceFinder;
     constructor(agent, memory, start, end) {
         super(agent, memory, start, end);
         this.memory = memory;
+        this.authorativeSourceFinder = new AuthoritativeSourceFinderAgent(agent, memory, start, end);
     }
     // ↓ add this property if you like to keep the importer around
     sheetImporter;
@@ -69,12 +72,18 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
                 urls.push(row.deepResearchLinks.trim());
             }
         }
+        const authoritativeSources = await this.authorativeSourceFinder.findSources(row) || [];
+        urls.push(...authoritativeSources);
+        this.logger.debug(`Authoritative sources: ${JSON.stringify(authoritativeSources, null, 2)}`);
+        // make urls unique
+        const finalUrls = Array.from(new Set(urls));
         // ────────────────────────────────────────────────────────────────────────────
         // 3️⃣  Extract + analyse each source in turn
         // ────────────────────────────────────────────────────────────────────────────
         const results = [];
-        for (const src of urls) {
+        for (const src of finalUrls) {
             try {
+                this.logger.info(`Analyzing source: ${src}`);
                 // Pull requirements text
                 let pagesToAnalyze = [];
                 if (src) {

@@ -4,9 +4,11 @@ export class SearchQueriesGenerator extends PolicySynthAgent {
     systemPrompt;
     userPrompt;
     memory;
-    constructor(agent, memory, numberOfQueriesToGenerate, instructions, startProgress, endProgress) {
+    licenseType;
+    constructor(agent, memory, numberOfQueriesToGenerate, instructions, startProgress, endProgress, licenseType) {
         super(agent, memory, startProgress, endProgress);
         this.memory = memory;
+        this.licenseType = licenseType;
         this.systemPrompt = `Inspired by the instructions below and our deep research plan, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used with Google Search.
 
       <OurResearchPlan>
@@ -28,6 +30,8 @@ export class SearchQueriesGenerator extends PolicySynthAgent {
     `;
         this.userPrompt = `User instructions: ${instructions}
 
+      Look for licensing requirements for the following license type: ${licenseType}
+
       Your JSON array output:
     `;
         console.log(`User prompt is: ${this.userPrompt}`);
@@ -39,6 +43,7 @@ export class SearchQueriesGenerator extends PolicySynthAgent {
         ];
     }
     async generateSearchQueries() {
+        this.logger.debug(`User prompt is: ${this.userPrompt}`);
         return await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, await this.renderMessages());
     }
 }
