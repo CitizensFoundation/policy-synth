@@ -11,5 +11,6 @@ src/addOCtoTitleJSON.py
 startWithEnv.sh
 ts-out/data
 startAgent.sh
+ts-out/
 
 data
