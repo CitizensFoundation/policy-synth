@@ -86,9 +86,7 @@ Do not include any explanations or comments before or after the JSON output.
       resultText = await this.callModel(
         this.modelType,
         this.modelSize,
-        messages,
-        true,
-        true
+        messages
       );
     } catch (error) {
       this.logger.error(error);
@@ -111,8 +109,7 @@ Do not include any explanations or comments before or after the JSON output.
       resultText = await this.callModel(
         PsAiModelType.TextReasoning,
         PsAiModelSize.Large,
-        messages,
-        true
+        messages
       );
     }
 
@@ -192,8 +189,7 @@ Do not include any explanations or comments before or after the JSON output.
       result = await this.callModel(
         this.modelType,
         this.modelSize,
-        messages,
-        true
+        messages
       );
     } catch (error) {
       this.logger.error(error);
@@ -216,8 +212,7 @@ Do not include any explanations or comments before or after the JSON output.
       result = await this.callModel(
         PsAiModelType.TextReasoning,
         PsAiModelSize.Large,
-        messages,
-        true
+        messages
       );
     }
 

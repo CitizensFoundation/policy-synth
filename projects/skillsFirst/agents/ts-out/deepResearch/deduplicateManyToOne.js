@@ -28,7 +28,7 @@ Your single JSON object with fields:`;
             { role: "user", message: userPrompt },
         ];
         console.log(`DeduplicationManyToOneAgent: Calling LLM with prompt: ${JSON.stringify(messages, null, 2)}`);
-        const response = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, false);
+        const response = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages);
         console.log(`DeduplicationManyToOneAgent: LLM response: ${JSON.stringify(response, null, 2)}`);
         return response;
     }

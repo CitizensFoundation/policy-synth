@@ -60,7 +60,7 @@ Do not include any explanations or comments before or after the JSON output.
         const messages = [this.createSystemMessage(systemPrompt)];
         let resultText;
         try {
-            resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+            resultText = await this.callModel(this.modelType, this.modelSize, messages);
         }
         catch (error) {
             this.logger.error(error);
@@ -71,7 +71,7 @@ Do not include any explanations or comments before or after the JSON output.
             this.memory.llmErrors.push(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`DetermineProfessionalLicenseRequirementAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
-            resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
+            resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages);
         }
         const result = resultText;
         jobDescription.degreeAnalysis =
@@ -125,7 +125,7 @@ Do not include any explanations or comments before or after the JSON output.
         const messages = [this.createSystemMessage(systemPrompt)];
         let result;
         try {
-            result = await this.callModel(this.modelType, this.modelSize, messages, true);
+            result = await this.callModel(this.modelType, this.modelSize, messages);
         }
         catch (error) {
             this.logger.error(error);
@@ -136,7 +136,7 @@ Do not include any explanations or comments before or after the JSON output.
             this.memory.llmErrors.push(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`processLicenseTypes - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model
-            result = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
+            result = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages);
         }
         // Ensure jobDescription.degreeAnalysis exists and update licenseTypes.
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};

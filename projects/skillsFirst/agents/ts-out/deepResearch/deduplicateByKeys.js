@@ -159,7 +159,7 @@ Your JSON Output:`;
             { role: "user", message: userPrompt },
         ];
         console.log(`DeduplicationAgent: Calling LLM with prompt: ${JSON.stringify(messages, null, 2)}`);
-        const response = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, false));
+        const response = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages));
         if (!response.organizationName || response.organizationName.trim() === "") {
             // Attempt to find a real organizationName from one of the duplicates
             const fallback = duplicates.find((d) => d.organizationName && d.organizationName.trim());

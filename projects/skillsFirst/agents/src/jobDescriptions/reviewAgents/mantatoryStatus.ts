@@ -94,9 +94,7 @@ Do not include any explanations or comments before or after the JSON output.
     let resultText = await this.callModel(
       this.modelType,
       this.modelSize,
-      messages,
-      true,
-      true
+      messages
     );
 
     if (!resultText) {
@@ -106,8 +104,7 @@ Do not include any explanations or comments before or after the JSON output.
       resultText = await this.callModel(
         PsAiModelType.TextReasoning,
         PsAiModelSize.Large,
-        messages,
-        true
+        messages
       );
     }
 
@@ -152,8 +149,9 @@ Your output:`;
         PsAiModelType.TextReasoning,
         PsAiModelSize.Medium,
         messages,
-        false,
-        true
+        {
+          parseJson: false,
+        }
       );
 
       if (!resultText) {
@@ -164,7 +162,9 @@ Your output:`;
           PsAiModelType.Text,
           PsAiModelSize.Large,
           messages,
-          false
+          {
+            parseJson: false,
+          }
         );
       }
 
@@ -189,8 +189,9 @@ Provide the explanation without any additional text.
         PsAiModelType.TextReasoning,
         PsAiModelSize.Medium,
         messages,
-        false,
-        true
+        {
+          parseJson: false,
+        }
       );
 
       if (!resultText) {
@@ -201,7 +202,9 @@ Provide the explanation without any additional text.
           PsAiModelType.TextReasoning,
           PsAiModelSize.Large,
           messages,
-          false
+          {
+            parseJson: false,
+          }
         );
       }
 
@@ -225,8 +228,9 @@ Your output:`;
       PsAiModelType.TextReasoning,
       PsAiModelSize.Medium,
       messages,
-      false,
-      true
+      {
+        parseJson: false,
+      }
     );
 
     if (!resultText) {
@@ -236,8 +240,7 @@ Your output:`;
       resultText = await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Large,
-        messages,
-        false
+        messages
       );
     }
 

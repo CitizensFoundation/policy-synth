@@ -12,8 +12,8 @@ export declare class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent
     process(): Promise<void>;
     /**
      * Analyse up‑to three sources for a single licence:
-     *   • any “Licenses & Permits” URL that came from the sheet
-     *   • any “o3 deep search” URL that came from the sheet
+     *   • any "Licenses & Permits" URL that came from the sheet
+     *   • any "o3 deep search" URL that came from the sheet
      *   • ⸻plus⸻ one authoritative URL we always try to discover ourselves
      *
      * For every usable URL we:

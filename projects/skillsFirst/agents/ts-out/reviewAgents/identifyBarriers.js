@@ -35,12 +35,14 @@ Provide the output as a plain text description without any additional text.
 
 Your output:`;
         const messages = [this.createSystemMessage(systemPrompt)];
-        let resultText = await this.callModel(this.modelType, this.modelSize, messages, false, true);
+        let resultText = await this.callModel(this.modelType, this.modelSize, messages, {
+            parseJson: false,
+        });
         if (!resultText) {
             this.memory.llmErrors.push(`IdentifyBarriersAgent - ${systemPrompt}`);
             this.logger.error(`IdentifyBarriersAgent - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
-            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages);
         }
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};
         jobDescription.degreeAnalysis.barriersToNonDegreeApplicants = resultText.trim();

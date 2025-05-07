@@ -48,7 +48,7 @@ export class SearchQueriesRanker extends PairwiseRankingAgent {
     }
     async rankSearchQueries(queriesToRank, instructions, maxPrompts = 120) {
         this.instructions = instructions;
-        this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 10, this.progressFunction, 6);
+        this.setupRankingPrompts(-1, queriesToRank, queriesToRank.length * 10, this.progressFunction, 2, true);
         await this.performPairwiseRanking(-1);
         await this.saveMemory();
         return this.getOrderedListOfItems(-1);

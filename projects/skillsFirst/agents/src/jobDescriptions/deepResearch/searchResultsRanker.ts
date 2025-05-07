@@ -98,7 +98,8 @@ export class SearchResultsRanker extends PairwiseRankingAgent {
       queriesToRank,
       queriesToRank.length * this.numberOfMatchesForEachPrompt,
       this.progressFunction,
-      12
+      2,
+      true
     );
     await this.performPairwiseRanking(-1);
     await this.saveMemory();

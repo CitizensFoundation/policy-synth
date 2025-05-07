@@ -42,8 +42,9 @@ Answer only "True" if it supports or only "False" otherwise, nothing else.
 
 Your True or False answer:`;
             const messages = [this.createSystemMessage(systemPrompt)];
-            const resultText = await this.callModel(this.modelType, this.modelSize, messages, false // don't parse as JSON
-            );
+            const resultText = await this.callModel(this.modelType, this.modelSize, messages, {
+                parseJson: false,
+            });
             const result = resultText.trim();
             if (result.toLowerCase() === "true") {
                 // Evidence is confirmed

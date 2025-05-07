@@ -59,9 +59,7 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
       let resultText = await this.callModel(
         this.modelType,
         this.modelSize,
-        messages,
-        true,
-        false
+        messages
       );
 
       if (!this.memory.llmErrors) {
@@ -75,8 +73,7 @@ export class ReadingLevelAnalysisAgent extends PolicySynthAgent {
         resultText = await this.callModel(
           PsAiModelType.Text,
           PsAiModelSize.Large,
-          messages,
-          true
+          messages
         );
       }
 

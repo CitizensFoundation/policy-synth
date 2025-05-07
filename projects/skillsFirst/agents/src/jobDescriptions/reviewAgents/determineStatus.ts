@@ -94,9 +94,7 @@ Your JSON output:`;
     let resultText = await this.callModel(
       this.modelType,
       this.modelSize,
-      messages,
-      true,
-      true
+      messages
     );
 
     if (!resultText) {
@@ -106,8 +104,7 @@ Your JSON output:`;
       resultText = await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Large,
-        messages,
-        true
+        messages
       );
     }
 

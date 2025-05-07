@@ -47,9 +47,7 @@ Your single JSON object with fields:`;
     const response = await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Medium,
-      messages,
-      true,
-      false
+      messages
     );
 
     console.log(

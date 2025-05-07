@@ -58,8 +58,9 @@ Your output:`;
       this.modelType,
       this.modelSize,
       messages,
-      false,
-      true
+      {
+        parseJson: false,
+      }
     );
 
     if (!resultText) {
@@ -69,8 +70,7 @@ Your output:`;
       resultText = await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Large,
-        messages,
-        false
+        messages
       );
     }
 

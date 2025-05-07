@@ -1,6 +1,9 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 
 interface ParallelCheckResult {
   allChecksPassed: boolean;
@@ -40,7 +43,10 @@ export class ParallelCheckAgents extends PolicySynthAgent {
     mergedText: string
   ): Promise<{ allChecksPassed: boolean; aggregatedFeedback: string }> {
     const mem = this.memory as JobDescriptionMemoryData;
-    await this.updateRangedProgress(0, `Starting parallel checks for ${jobDescription.name}`);
+    await this.updateRangedProgress(
+      0,
+      `Starting parallel checks for ${jobDescription.name}`
+    );
 
     const systemPrompt = `<OriginalJobDescription>
 ${jobDescription.text}
@@ -67,29 +73,57 @@ Return your evaluation in the following JSON format exactly with no additional t
     const messages = [this.createSystemMessage(systemPrompt)];
     let resultText;
     try {
-      resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+      resultText = await this.callModel(
+        this.modelType,
+        this.modelSize,
+        messages
+      );
     } catch (error) {
-      mem.llmErrors.push(`ParallelCheckAgents error for ${jobDescription.name}: ${error}`);
-      await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);
-      return { allChecksPassed: false, aggregatedFeedback: "Error during parallel checks." };
+      mem.llmErrors.push(
+        `ParallelCheckAgents error for ${jobDescription.name}: ${error}`
+      );
+      await this.updateRangedProgress(
+        100,
+        `Parallel checks failed for ${jobDescription.name}`
+      );
+      return {
+        allChecksPassed: false,
+        aggregatedFeedback: "Error during parallel checks.",
+      };
     }
 
     if (!resultText) {
-      mem.llmErrors.push(`ParallelCheckAgents received empty response for ${jobDescription.name}`);
-      await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);
-      return { allChecksPassed: false, aggregatedFeedback: "Empty response from model." };
+      mem.llmErrors.push(
+        `ParallelCheckAgents received empty response for ${jobDescription.name}`
+      );
+      await this.updateRangedProgress(
+        100,
+        `Parallel checks failed for ${jobDescription.name}`
+      );
+      return {
+        allChecksPassed: false,
+        aggregatedFeedback: "Empty response from model.",
+      };
     }
 
     let checkResult: ParallelCheckResult;
     try {
       checkResult = resultText as ParallelCheckResult;
     } catch (parseError) {
-      mem.llmErrors.push(`ParallelCheckAgents parsing error for ${jobDescription.name}: ${parseError}`);
-      await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);
+      mem.llmErrors.push(
+        `ParallelCheckAgents parsing error for ${jobDescription.name}: ${parseError}`
+      );
+      await this.updateRangedProgress(
+        100,
+        `Parallel checks failed for ${jobDescription.name}`
+      );
       return { allChecksPassed: false, aggregatedFeedback: "Parsing error." };
     }
 
-    await this.updateRangedProgress(100, `Parallel checks completed for ${jobDescription.name}`);
+    await this.updateRangedProgress(
+      100,
+      `Parallel checks completed for ${jobDescription.name}`
+    );
     return checkResult;
   }
 }

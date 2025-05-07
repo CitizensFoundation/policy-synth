@@ -83,7 +83,9 @@ Output the plain text for the job description for the job code and title with no
           this.modelType,
           this.modelSize,
           extractMessages,
-          false
+          {
+            parseJson: false,
+          }
         );
       } catch (error) {
         this.logger.error(error);

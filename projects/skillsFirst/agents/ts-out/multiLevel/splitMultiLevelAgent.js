@@ -46,7 +46,9 @@ Output the plain text for the job description for the job code and title with no
         this.logger.debug(`Extracting text for job code and title ${jobDescription.titleCode} ${jobDescription.name}:\n ${JSON.stringify(extractMessages, null, 2)}`);
         let extractedText;
         try {
-            extractedText = await this.callModel(this.modelType, this.modelSize, extractMessages, false);
+            extractedText = await this.callModel(this.modelType, this.modelSize, extractMessages, {
+                parseJson: false,
+            });
         }
         catch (error) {
             this.logger.error(error);

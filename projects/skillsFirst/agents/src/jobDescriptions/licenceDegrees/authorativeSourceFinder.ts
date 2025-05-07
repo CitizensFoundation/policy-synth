@@ -19,11 +19,11 @@ export class AuthoritativeSourceFinderAgent extends PolicySynthAgent {
 
     // 1b. Targeted web search using LicenseWebResearchAgent
     const webResearchCfg: any = {
-      numberOfQueriesToGenerate: 6,
-      percentOfQueriesToSearch: 0.3,
-      percentOfResultsToScan: 0.3,
-      maxTopContentResultsToUse: 10,
-      maxItemsToAnalyze: 10,
+      numberOfQueriesToGenerate: 12,
+      percentOfQueriesToSearch: 0.4,
+      percentOfResultsToScan: 0.4,
+      maxTopContentResultsToUse: 20,
+      maxItemsToAnalyze: 20,
     };
 
     const researcher = new LicenseDeepResearchAgent(this.agent, this.memory as any, this.startProgress, this.endProgress);

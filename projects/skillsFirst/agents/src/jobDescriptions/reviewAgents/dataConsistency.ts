@@ -291,8 +291,7 @@ Return only the following JSON (no extra text or explanation):
     const resultText = await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Large,
-      messages,
-      true
+      messages
     );
 
 

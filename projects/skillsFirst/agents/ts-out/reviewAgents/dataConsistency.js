@@ -217,7 +217,7 @@ Return only the following JSON (no extra text or explanation):
 `;
         // Call the LLM
         const messages = [this.createSystemMessage(systemPrompt)];
-        const resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages, true);
+        const resultText = await this.callModel(PsAiModelType.TextReasoning, PsAiModelSize.Large, messages);
         if (resultText) {
             // Map the string values "True"/"False" to booleans
             const mapResult = (value) => {

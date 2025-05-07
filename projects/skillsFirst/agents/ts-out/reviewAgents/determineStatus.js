@@ -68,12 +68,12 @@ Your JSON output:`;
             this.createSystemMessage(systemPrompt),
             this.createHumanMessage(userPrompt),
         ];
-        let resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+        let resultText = await this.callModel(this.modelType, this.modelSize, messages);
         if (!resultText) {
             this.memory.llmErrors.push(`DetermineCollegeDegreeStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             this.logger.error(`DetermineCollegeDegreeStatusAgent - ${this.modelType} - ${this.modelSize} - ${systemPrompt}`);
             // Calling a larger model to try to get a result and not a reasoning model TODO: Check this later with better reasoning models as this is due to random 500 errors in o1
-            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, true);
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages);
         }
         const result = resultText;
         jobDescription.degreeAnalysis = jobDescription.degreeAnalysis || {};

@@ -117,8 +117,7 @@ Your JSON output:`;
       const llmResponse = await this.callModel(
         PsAiModelType.TextReasoning, // Use reasoning model
         PsAiModelSize.Large, // Potentially use Large model for better analysis
-        messages,
-        true
+        messages
       );
 
       this.logger.debug(`LLM response: ${JSON.stringify(llmResponse, null, 2)}`);

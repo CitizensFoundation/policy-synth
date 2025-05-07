@@ -51,7 +51,9 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
         PsAiModelType.Text,
         PsAiModelSize.Medium,
         messages,
-        false
+        {
+          parseJson: false,
+        }
       );
     } catch (error) {
       throw error;

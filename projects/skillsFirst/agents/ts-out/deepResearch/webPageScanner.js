@@ -57,7 +57,7 @@ ${this.memory.researchPlan}
             if (process.env.PS_DEBUG_AI_MESSAGES) {
                 console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
             }
-            const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, true, true));
+            const analysis = (await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages));
             console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
             return analysis;
         }

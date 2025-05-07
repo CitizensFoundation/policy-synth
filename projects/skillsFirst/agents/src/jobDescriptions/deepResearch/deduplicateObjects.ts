@@ -60,9 +60,7 @@ Return the deduplicated array as a JSON array:`;
     const response = await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Medium,
-      messages,
-      true,
-      false
+      messages
     );
 
     console.log(

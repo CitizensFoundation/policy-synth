@@ -1,5 +1,5 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import { PsAiModelSize, PsAiModelType, } from "@policysynth/agents/aiModelTypes.js";
 export class ParallelCheckAgents extends PolicySynthAgent {
     modelSize = PsAiModelSize.Medium;
     modelType = PsAiModelType.TextReasoning;
@@ -43,17 +43,23 @@ Return your evaluation in the following JSON format exactly with no additional t
         const messages = [this.createSystemMessage(systemPrompt)];
         let resultText;
         try {
-            resultText = await this.callModel(this.modelType, this.modelSize, messages, true, true);
+            resultText = await this.callModel(this.modelType, this.modelSize, messages);
         }
         catch (error) {
             mem.llmErrors.push(`ParallelCheckAgents error for ${jobDescription.name}: ${error}`);
             await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);
-            return { allChecksPassed: false, aggregatedFeedback: "Error during parallel checks." };
+            return {
+                allChecksPassed: false,
+                aggregatedFeedback: "Error during parallel checks.",
+            };
         }
         if (!resultText) {
             mem.llmErrors.push(`ParallelCheckAgents received empty response for ${jobDescription.name}`);
             await this.updateRangedProgress(100, `Parallel checks failed for ${jobDescription.name}`);
-            return { allChecksPassed: false, aggregatedFeedback: "Empty response from model." };
+            return {
+                allChecksPassed: false,
+                aggregatedFeedback: "Empty response from model.",
+            };
         }
         let checkResult;
         try {

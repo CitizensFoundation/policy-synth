@@ -26,7 +26,9 @@ export class JobDescriptionPairExporter extends PolicySynthAgent {
         ];
         let resultText;
         try {
-            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, false);
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Medium, messages, {
+                parseJson: false,
+            });
         }
         catch (error) {
             throw error;

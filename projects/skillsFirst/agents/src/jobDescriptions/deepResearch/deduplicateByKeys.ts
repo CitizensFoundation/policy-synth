@@ -231,9 +231,7 @@ Your JSON Output:`;
     const response = (await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Medium,
-      messages,
-      true,
-      false
+      messages
     )) as any;
 
     if (!response.organizationName || response.organizationName.trim() === "") {

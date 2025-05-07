@@ -69,7 +69,9 @@ Your True or False answer:`;
         this.modelType,
         this.modelSize,
         messages,
-        false // don't parse as JSON
+        {
+          parseJson: false,
+        }
       );
 
       const result = resultText.trim();

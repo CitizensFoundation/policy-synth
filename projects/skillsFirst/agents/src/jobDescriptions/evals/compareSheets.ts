@@ -566,9 +566,7 @@ If you cannot determine correctness for any connector, output an empty array:
     let result = (await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Medium,
-      messages,
-      true,
-      true
+      messages
     )) as ComparisonDifferenceReturn;
 
     if (!result) {
@@ -578,8 +576,7 @@ If you cannot determine correctness for any connector, output an empty array:
       result = (await this.callModel(
         PsAiModelType.Text,
         PsAiModelSize.Large,
-        messages,
-        true
+        messages
       )) as ComparisonDifferenceReturn;
     }
 

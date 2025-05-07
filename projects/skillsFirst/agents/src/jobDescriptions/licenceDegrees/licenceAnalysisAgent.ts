@@ -17,6 +17,8 @@ import {
   ScrapedPage,
 } from "./firecrawlExtractor.js";
 
+import pLimit from "p-limit";
+
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   declare memory: LicenseDegreeAnalysisMemoryData;
 
@@ -46,7 +48,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
       this.memory,
       this.startProgress,
       this.endProgress,
-      this.memory.worksheetName // falls back to “Sheet1”
+      this.memory.worksheetName // falls back to "Sheet1"
     );
 
     this.logger.debug(
@@ -66,25 +68,45 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
       JSON.stringify(this.memory.jobLicenceTypesForLicenceAnalysis, null, 2)
     );
 
-    const total = this.memory.jobLicenceTypesForLicenceAnalysis.length;
-    this.logger.debug(`Total job titles: ${total}`);
-    for (let i = 0; i < total; i++) {
-      const row = this.memory.jobLicenceTypesForLicenceAnalysis[i];
-
-      this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
-
-      await this.updateRangedProgress(
-        Math.floor((i / total) * 90),
-        `Analyzing ${row.licenseType} (${i + 1}/${total})`
-      );
-
-      // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
-      const licenseResults: LicenseDegreeAnalysisResult[] =
-        await this.processLicense(row);
-
-      row.analysisResults = licenseResults;
-      await this.saveMemory();
+    const jobLicenceTypes = this.memory.jobLicenceTypesForLicenceAnalysis;
+    if (!jobLicenceTypes || jobLicenceTypes.length === 0) {
+      this.logger.info("No job license types to process.");
+      await this.updateRangedProgress(100, "No job titles to process");
+      return;
     }
+
+    const total = jobLicenceTypes.length;
+    this.logger.debug(`Total job titles: ${total}`);
+
+    const limit = pLimit(10);
+    let completedCount = 0;
+
+    const processingPromises = jobLicenceTypes.map(async (row, index) => {
+      return limit(async () => {
+        this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
+
+        // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
+        const licenseResults: LicenseDegreeAnalysisResult[] =
+          await this.processLicense(row);
+
+        row.analysisResults = licenseResults;
+        // It's important to ensure that 'row' here is the actual object in memory
+        // If jobLicenceTypes[index] is a different reference, update that instead.
+        // Assuming 'row' is a direct reference from the array:
+        // this.memory.jobLicenceTypesForLicenceAnalysis[index].analysisResults = licenseResults;
+
+        await this.saveMemory(); // Consider if saving memory this frequently in parallel is safe and efficient
+
+        completedCount++;
+        await this.updateRangedProgress(
+          Math.floor((completedCount / total) * 90),
+          `Analyzing ${row.licenseType} (${completedCount}/${total})`
+        );
+        this.logger.info(`Completed processing for ${row.licenseType} (${completedCount}/${total})`);
+      });
+    });
+
+    await Promise.all(processingPromises);
 
     if (this.memory.jobLicenceTypesForLicenceAnalysis?.length) {
       const exporter = new SheetsLicenseDegreeExportAgent(
@@ -103,8 +125,8 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
 
   /**
    * Analyse up‑to three sources for a single licence:
-   *   • any “Licenses & Permits” URL that came from the sheet
-   *   • any “o3 deep search” URL that came from the sheet
+   *   • any "Licenses & Permits" URL that came from the sheet
+   *   • any "o3 deep search" URL that came from the sheet
    *   • ⸻plus⸻ one authoritative URL we always try to discover ourselves
    *
    * For every usable URL we:
@@ -185,7 +207,7 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
           results.push(res);
         }
       } catch (e) {
-        this.logger.error(`Error analysing source “${src}”: ${e}`);
+        this.logger.error(`Error analysing source "${src}": ${e}`);
       }
     }
 

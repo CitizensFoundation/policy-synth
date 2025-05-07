@@ -58,7 +58,9 @@ Do not include any explanation or additional commentary in your output, only the
         PsAiModelType.Text,
         PsAiModelSize.Large,
         messages,
-        false
+        {
+          parseJson: false,
+        }
       );
     } catch (error) {
       this.logger.error(

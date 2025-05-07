@@ -33,7 +33,9 @@ Do not include any explanation or additional commentary in your output, only the
         const messages = [this.createSystemMessage(systemPrompt)];
         let resultText;
         try {
-            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, false);
+            resultText = await this.callModel(PsAiModelType.Text, PsAiModelSize.Large, messages, {
+                parseJson: false,
+            });
         }
         catch (error) {
             this.logger.error(`RewriteSubAgentOne error for ${jobDescription.name}: ${error}`);
