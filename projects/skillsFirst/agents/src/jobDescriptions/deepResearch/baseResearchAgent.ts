@@ -160,7 +160,8 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         this.memory as JobDescriptionMemoryData,
         undefined,
         subAgentStartProgress,
-        subAgentEndProgress
+        subAgentEndProgress,
+        licenseType
       );
 
       const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
@@ -218,6 +219,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         undefined,
         resultsRankerStartProgress,
         resultsRankerEndProgress,
+        licenseType,
         this.useSmallModelForSearchResultsRanking
       );
 

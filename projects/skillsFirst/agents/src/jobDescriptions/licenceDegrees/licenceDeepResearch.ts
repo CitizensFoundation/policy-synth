@@ -7,7 +7,7 @@ export class LicenseDeepResearchAgent extends BaseDeepResearchAgent {
 
   searchInstructions = `Search for authoritative webpages (statutes, regulations, or New Jersey board pages) that describe licensing requirements.`;
 
-  rankingInstructions = `Rank result One higher if it is a .nj.gov or .njconsumeraffairs.gov domain, or if the page contains statutory or regulatory text.`;
+  rankingInstructions = `The most important pages contain statutory or regulatory text connected to professional licensing education requirements.`;
 
   attributeNameToUseForDedup = "url";
 

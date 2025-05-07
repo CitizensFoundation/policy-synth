@@ -11,16 +11,20 @@ export class SearchQueriesRanker extends PairwiseRankingAgent {
 
   updatePrefix = "Rank Search Queries";
 
+  licenseType: string;
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,
     progressFunction: Function | undefined = undefined,
     startProgress: number,
-    endProgress: number
+    endProgress: number,
+    licenseType: string
   ) {
     super(agent, memory, startProgress, endProgress);
     this.memory = memory;
     this.progressFunction = progressFunction;
+    this.licenseType = licenseType;
   }
 
   async voteOnPromptPair(
@@ -40,9 +44,10 @@ export class SearchQueriesRanker extends PairwiseRankingAgent {
       this.createSystemMessage(
         `<searchQueriesRanker>You are an AI expert trained to rank search queries based on their relevance to the user instructions.
 
-        <OurResearchPlan>
-        ${this.memory.researchPlan}
-        </OurResearchPlan>
+        <ProfessionalLicenseType>
+        ${this.licenseType}
+        </ProfessionalLicenseType>
+
         ${this.memory.additionalGeneralContext ? this.memory.additionalGeneralContext : ""}
 
         Instructions:

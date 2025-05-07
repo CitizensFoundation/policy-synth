@@ -12,12 +12,15 @@ export class SearchResultsRanker extends PairwiseRankingAgent {
 
   updatePrefix = "Rank Search Results";
 
+  licenseType: string;
+
   constructor(
     agent: PsAgent,
     memory: JobDescriptionMemoryData,
     progressFunction: Function | undefined = undefined,
     startProgress: number,
     endProgress: number,
+    licenseType: string,
     useSmallModelForSearchResultsRanking: boolean = false
   ) {
     super(agent, memory, startProgress, endProgress);
@@ -27,6 +30,7 @@ export class SearchResultsRanker extends PairwiseRankingAgent {
       this.defaultModelSize = PsAiModelSize.Small;
       this.numberOfMatchesForEachPrompt = 12;
     }
+    this.licenseType = licenseType;
   }
 
   async voteOnPromptPair(
@@ -47,9 +51,10 @@ export class SearchResultsRanker extends PairwiseRankingAgent {
         `<searchResultsRanker>
         You are an AI expert trained to rank search results based on their relevance to the user instructions.
 
-        <OurResearchPlan>
-        ${this.memory.researchPlan}
-        </OurResearchPlan>
+        <ProfessionalLicenseType>
+        ${this.licenseType}
+        </ProfessionalLicenseType>
+
         ${this.memory.additionalGeneralContext ? this.memory.additionalGeneralContext : ""}
 
         Instructions:
@@ -64,12 +69,12 @@ export class SearchResultsRanker extends PairwiseRankingAgent {
 
         Search Results to Rank:
 
-        Search Results One:
+        Search Result One:
         ${itemOne.title}
         ${itemOne.description}
         ${itemOne.url}
 
-        Search Results Two:
+        Search Result Two:
         ${itemTwo.title}
         ${itemTwo.description}
         ${itemTwo.url}

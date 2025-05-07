@@ -28,7 +28,11 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
 
   licenseType: string;
 
-  crawlPageLimit = 25;
+  get modelTemperature() {
+    return 0.0;
+  }
+
+  crawlPageLimit = 30;
 
   constructor(
     agent: PsAgent,
@@ -49,7 +53,7 @@ export class FirecrawlScrapeAndCrawlerAgent extends PolicySynthAgent {
   private async checkIfRelevant(
     document: string
   ): Promise<RelevanceCheckResult> {
-    const estimatedTokenFactor = 1.42;
+    const estimatedTokenFactor = 2.5;
     const tokenLimit = 1_000_000;
     const words = document.split(" ");
     const wordCount = words.length;

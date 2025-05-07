@@ -25,9 +25,9 @@ export class SearchQueriesGenerator extends PolicySynthAgent {
     this.licenseType = licenseType;
     this.systemPrompt = `Inspired by the instructions below and our deep research plan, generate ${numberOfQueriesToGenerate} high quality search queries that will then be used with Google Search.
 
-      <OurResearchPlan>
-      ${this.memory.researchPlan}
-      </OurResearchPlan>
+      <ProfessionalLicenseType>
+      ${this.licenseType}
+      </ProfessionalLicenseType>
 
       ${this.memory.additionalGeneralContext ? this.memory.additionalGeneralContext : ""}
 
@@ -44,7 +44,7 @@ export class SearchQueriesGenerator extends PolicySynthAgent {
     `;
     this.userPrompt = `User instructions: ${instructions}
 
-      Look for licensing requirements for the following license type: ${licenseType}
+      Look for degree requirements for the following license type: ${licenseType}
 
       Your JSON array output:
     `;
