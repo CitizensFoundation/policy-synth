@@ -24,6 +24,8 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
   // Concurrency limit
   maxParallellRanking: number = 1;
 
+  disableStatusUpdates = false;
+
   // Elo tracking
   numComparisons: Record<number, Record<number, number>> = {};
   KFactors: Record<number, Record<number, number>> = {};
@@ -52,11 +54,12 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
     allItems: PsEloRateable[] | string[],
     maxPrompts: number | undefined = undefined,
     updateFunction: Function | undefined = undefined,
-    maxParallellRanking: number = 1
+    maxParallellRanking: number = 1,
+    disableStatusUpdates: boolean = false
   ) {
     this.progressFunction = updateFunction;
     this.maxParallellRanking = maxParallellRanking;
-
+    this.disableStatusUpdates = disableStatusUpdates;
     this.logger.info(
       `Item count for sub-problem ${subProblemIndex}: ${allItems.length}`
     );
@@ -264,10 +267,13 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
           this.progressFunction(`${nextToApply + 1}/${prompts.length}`);
         }
         const progress = ((nextToApply + 1) / prompts.length) * 100;
-        this.updateRangedProgress(
-          this.disableRelativeProgress ? undefined : progress,
-          `${this.updatePrefix}\n${nextToApply + 1}/${prompts.length}`
-        );
+
+        if (!this.disableStatusUpdates) {
+          this.updateRangedProgress(
+            this.disableRelativeProgress ? undefined : progress,
+            `${this.updatePrefix}\n${nextToApply + 1}/${prompts.length}`
+          );
+        }
 
         // If it's a tie/invalid, skip Elo update
         if (wonItemIndex === -1 && lostItemIndex === -1) {

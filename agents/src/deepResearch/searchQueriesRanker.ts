@@ -71,7 +71,7 @@ export class SearchQueriesRanker extends SimplePairwiseRankingsAgent {
       -1,
       queriesToRank,
       maxPrompts,
-      this.progressFunction
+      this.progressFunction,
     );
     await this.performPairwiseRanking(-1);
     return this.getOrderedListOfItems(-1) as string[];
