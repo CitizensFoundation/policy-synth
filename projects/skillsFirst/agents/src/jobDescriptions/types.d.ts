@@ -418,13 +418,14 @@ interface LicenseDegreeRow {
   analysisResults?: LicenseDegreeAnalysisResult[];
 }
 
-interface LicenseDegreeAnalysisResult {
+interface LicenseDegreeAnalysisResult extends PsEloRateable {
   licenseType: string;
   sourceUrl: string;
   degreeRequiredStatus: string;
   supportingEvidence: string;
   confidenceScore: number;
   reasoning: string;
+  error?: string; // Keep error field as it was in licenceAnalysisAgent.ts when pushing error results
 }
 
 type DeepResearchWebResearchTypes =

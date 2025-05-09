@@ -19,6 +19,10 @@ import {
 
 import pLimit from "p-limit";
 
+const skipMainProcessing = true;
+
+import { LicenseDegreeResultsRanker } from "./rankResults.js";
+
 export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   declare memory: LicenseDegreeAnalysisMemoryData;
 
@@ -36,7 +40,12 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   ) {
     super(agent, memory, start, end);
     this.memory = memory;
-    this.authorativeSourceFinder = new AuthoritativeSourceFinderAgent(agent, memory, start, end);
+    this.authorativeSourceFinder = new AuthoritativeSourceFinderAgent(
+      agent,
+      memory,
+      start,
+      end
+    );
   }
 
   // ↓ add this property if you like to keep the importer around
@@ -60,55 +69,124 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
   }
 
   async process(): Promise<void> {
-    await this.loadSpreadsheet();
-
-    await this.saveMemory();
-
-    this.logger.debug(
-      JSON.stringify(this.memory.jobLicenceTypesForLicenceAnalysis, null, 2)
-    );
-
     const jobLicenceTypes = this.memory.jobLicenceTypesForLicenceAnalysis;
-    if (!jobLicenceTypes || jobLicenceTypes.length === 0) {
-      this.logger.info("No job license types to process.");
-      await this.updateRangedProgress(100, "No job titles to process");
-      return;
+
+    if (!skipMainProcessing) {
+      await this.loadSpreadsheet();
+
+      await this.saveMemory();
+
+      this.logger.debug(
+        JSON.stringify(this.memory.jobLicenceTypesForLicenceAnalysis, null, 2)
+      );
+
+      if (!jobLicenceTypes || jobLicenceTypes.length === 0) {
+        this.logger.info("No job license types to process.");
+        await this.updateRangedProgress(100, "No job titles to process");
+        return;
+      }
+
+      const total = jobLicenceTypes.length;
+      this.logger.debug(`Total job titles: ${total}`);
+
+      const limit = pLimit(10);
+      let completedCount = 0;
+
+      const processingPromises = jobLicenceTypes.map(async (row, index) => {
+        return limit(async () => {
+          this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
+
+          // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
+          const licenseResults: LicenseDegreeAnalysisResult[] =
+            await this.processLicense(row);
+
+          row.analysisResults = licenseResults;
+          // It's important to ensure that 'row' here is the actual object in memory
+          // If jobLicenceTypes[index] is a different reference, update that instead.
+          // Assuming 'row' is a direct reference from the array:
+          // this.memory.jobLicenceTypesForLicenceAnalysis[index].analysisResults = licenseResults;
+
+          await this.saveMemory(); // Consider if saving memory this frequently in parallel is safe and efficient
+
+          completedCount++;
+          await this.updateRangedProgress(
+            Math.floor((completedCount / total) * 90),
+            `Analyzing ${row.licenseType} (${completedCount}/${total})`
+          );
+          this.logger.info(
+            `Completed processing for ${row.licenseType} (${completedCount}/${total})`
+          );
+        });
+      });
+
+      await Promise.all(processingPromises);
     }
 
-    const total = jobLicenceTypes.length;
-    this.logger.debug(`Total job titles: ${total}`);
+    // Group job license types by licenseType and rank them
+    if (
+      this.memory.jobLicenceTypesForLicenceAnalysis &&
+      this.memory.jobLicenceTypesForLicenceAnalysis.length > 0
+    ) {
+      const groupedByLicenseType = new Map<string, LicenseDegreeRow[]>();
 
-    const limit = pLimit(10);
-    let completedCount = 0;
+      for (const row of this.memory.jobLicenceTypesForLicenceAnalysis) {
+        if (!groupedByLicenseType.has(row.licenseType)) {
+          groupedByLicenseType.set(row.licenseType, []);
+        }
+        // The non-null assertion operator (!) is used here because we've just ensured the key exists.
+        groupedByLicenseType.get(row.licenseType)!.push(row);
+      }
 
-    const processingPromises = jobLicenceTypes.map(async (row, index) => {
-      return limit(async () => {
-        this.logger.debug(`Analyzing ${JSON.stringify(row, null, 2)}`);
+      this.logger.info(
+        `Found ${groupedByLicenseType.size} unique license types to rank.`
+      );
 
-        // ─── NEW: analyse up‑to three sources in one shot ───────────────────────
-        const licenseResults: LicenseDegreeAnalysisResult[] =
-          await this.processLicense(row);
-
-        row.analysisResults = licenseResults;
-        // It's important to ensure that 'row' here is the actual object in memory
-        // If jobLicenceTypes[index] is a different reference, update that instead.
-        // Assuming 'row' is a direct reference from the array:
-        // this.memory.jobLicenceTypesForLicenceAnalysis[index].analysisResults = licenseResults;
-
-        await this.saveMemory(); // Consider if saving memory this frequently in parallel is safe and efficient
-
-        completedCount++;
-        await this.updateRangedProgress(
-          Math.floor((completedCount / total) * 90),
-          `Analyzing ${row.licenseType} (${completedCount}/${total})`
+      for (const [licenseType, rowsForType] of groupedByLicenseType.entries()) {
+        this.logger.info(
+          `Ranking results for license type: "${licenseType}" with ${rowsForType.length} item(s).`
         );
-        this.logger.info(`Completed processing for ${row.licenseType} (${completedCount}/${total})`);
-      });
-    });
 
-    await Promise.all(processingPromises);
+        // Collect all analysis results for the current license type
+        const allAnalysisResultsForType: LicenseDegreeAnalysisResult[] = [];
+        for (const row of rowsForType) {
+          if (row.analysisResults && row.analysisResults.length > 0) {
+            allAnalysisResultsForType.push(...row.analysisResults);
+          }
+        }
 
-    if (this.memory.jobLicenceTypesForLicenceAnalysis?.length) {
+        if (allAnalysisResultsForType.length === 0) {
+          this.logger.info(
+            `No analysis results to rank for license type: "${licenseType}". Skipping ranking.`
+          );
+          continue; // Skip to the next license type
+        }
+
+        const ranker = new LicenseDegreeResultsRanker(
+          this.agent,
+          this.memory,
+          this.startProgress,
+          this.endProgress,
+          licenseType
+        );
+
+        try {
+          // Pass the collected analysis results to the ranker
+          await ranker.rankLicenseDegreeResults(allAnalysisResultsForType);
+          this.logger.info(
+            `Successfully ranked analysis results for license type: "${licenseType}".`
+          );
+        } catch (error) {
+          this.logger.error(
+            `Error ranking analysis results for license type "${licenseType}": ${error}`
+          );
+        }
+
+        // Save memory after each type is ranked.
+        await this.saveMemory();
+      }
+
+      // Export the (potentially) modified data after all ranking is attempted.
+      this.logger.info("Ranking process finished. Proceeding to export.");
       const exporter = new SheetsLicenseDegreeExportAgent(
         this.agent,
         this.memory,
@@ -117,7 +195,14 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
         "Sheet1"
       );
 
-      await exporter.processJsonData(this.memory.jobLicenceTypesForLicenceAnalysis);
+      await exporter.processJsonData(
+        this.memory.jobLicenceTypesForLicenceAnalysis
+      );
+      this.logger.info("Data export completed.");
+    } else {
+      this.logger.info(
+        "No job license types found in memory to rank or export."
+      );
     }
 
     await this.updateRangedProgress(100, "Completed all job titles");
@@ -152,10 +237,13 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
       }
     }
 
-    const authoritativeSources = await this.authorativeSourceFinder.findSources(row) || [];
+    const authoritativeSources =
+      (await this.authorativeSourceFinder.findSources(row)) || [];
     urls.push(...authoritativeSources);
 
-    this.logger.debug(`Authoritative sources: ${JSON.stringify(authoritativeSources, null, 2)}`);
+    this.logger.debug(
+      `Authoritative sources: ${JSON.stringify(authoritativeSources, null, 2)}`
+    );
 
     // make urls unique
     const finalUrls = Array.from(new Set(urls));

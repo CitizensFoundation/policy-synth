@@ -76,12 +76,13 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   private generateSheetData(rows: LicenseDegreeRow[]): string[][] {
     // 1) Full‑path header row
     const headers: string[] = [
-      "licenseType",
-      "sourceUrl",
-      "degreeRequiredStatus",
-      "supportingEvidence",
-      "confidenceScore",
-      "reasoning",
+      "License Type",
+      "Source URL",
+      "Degree Required Status",
+      "Supporting Evidence",
+      "Reasoning",
+      "Confidence Score",
+      "Elo Rating",
     ];
 
     // 2) Short header row (label only after final dot – here identical to full)
@@ -108,8 +109,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
           this.toStr(res.sourceUrl),
           this.toStr(res.degreeRequiredStatus),
           this.toStr(res.supportingEvidence),
-          this.toStr(res.confidenceScore),
           this.toStr(res.reasoning),
+          this.toStr(res.confidenceScore),
+          this.toStr(Math.round(res.eloRating ?? 0)),
         ]);
       }
     }
