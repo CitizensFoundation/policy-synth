@@ -7,9 +7,9 @@ import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSh
 /**
  * Google‑Sheets exporter for {@link JobTitleLicenseDegreeAnalysisAgent} results.
  *
- * It creates (or appends to) a worksheet – default name "License Degree Analysis" –
+ * It creates (or appends to) a worksheet – default name "License Degree Analysis" –
  * and writes two header rows followed by one row per analysis result.  All writes
- * are chunked so very large result sets won’t hit the Sheets API request quota.
+ * are chunked so very large result sets won't hit the Sheets API request quota.
  *
  * The exporter intentionally contains **no AI‑model calls** (`skipAiModels = true`).
  */
@@ -21,7 +21,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   private sheetName: string;
 
   /**
-   * Because the agent only moves data into Google Sheets, we skip model selection.
+   * Because the agent only moves data into Google Sheets, we skip model selection.
    * This speeds up initialisation and avoids unnecessary credits.
    */
   skipAiModels = true;
@@ -38,7 +38,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     this.sheetName = sheetName;
 
     // ────────────────────────────────────────────────────────────────────────────
-    // Locate the spreadsheet connector declared in the parent agent’s config
+    // Locate the spreadsheet connector declared in the parent agent's config
     // ────────────────────────────────────────────────────────────────────────────
     this.sheetsConnector = PsConnectorFactory.getConnector(
       this.agent,
@@ -49,7 +49,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
 
     if (!this.sheetsConnector) {
       throw new Error(
-        "Google Sheets connector not found – did you configure one in Policy Synth?"
+        "Google Sheets connector not found – did you configure one in Policy Synth?"
       );
     }
   }
@@ -66,14 +66,14 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
 
     await this.writeInChunks(sanitised);
 
-    await this.updateRangedProgress(100, "Google Sheets export completed");
+    await this.updateRangedProgress(100, "Google Sheets export completed");
   }
 
   // ──────────────────────────────────────────────────────────────────────────────
   // INTERNAL HELPERS
   // ──────────────────────────────────────────────────────────────────────────────
 
-  private generateSheetData(rows: LicenseDegreeRow[]): string[][] {
+  private generateSheetData(rows: LicenseDegreeRow[]): (string | number)[][] {
     // 1) Full‑path header row
     const headers: string[] = [
       "License Type",
@@ -91,7 +91,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
       return idx === -1 ? h : h.substring(idx + 1);
     });
 
-    const sheetRows: string[][] = [headers, shortHeaders];
+    const sheetRows: (string | number)[][] = [headers, shortHeaders];
 
     for (const row of rows) {
       const analysisResults = row.analysisResults;
@@ -102,7 +102,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
         continue;
       }
 
-      // 3) Data rows – one per analysis result
+      // 3) Data rows – one per analysis result
       for (const res of analysisResults) {
         sheetRows.push([
           this.toStr(res.licenseType),
@@ -110,8 +110,9 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
           this.toStr(res.degreeRequiredStatus),
           this.toStr(res.supportingEvidence),
           this.toStr(res.reasoning),
-          this.toStr(res.confidenceScore),
-          this.toStr(Math.round(res.eloRating ?? 0)),
+          // Keep numeric values as numbers so Google Sheets recognises them as such
+          res.confidenceScore ?? "", // confidenceScore is already a number
+          Math.round(res.eloRating ?? 0), // rounded Elo rating as number
         ]);
       }
     }
@@ -120,14 +121,14 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
   }
 
   /**
-   * Break the data into {{@link chunkSize}}‑sized pieces and update the sheet
-   * range‑by‑range to stay within API limits.
+   * Break the data into {{@link chunkSize}}-sized pieces and update the sheet
+   * range-by-range to stay within API limits.
    */
-  private async writeInChunks(rows: string[][]): Promise<void> {
+  private async writeInChunks(rows: (string | number)[][]): Promise<void> {
     if (!rows.length) return;
 
     const totalCols = rows[0].length;
-    let pointer = 1; // Google Sheets rows are 1‑based
+    let pointer = 1; // Google Sheets rows are 1-based
 
     for (let i = 0; i < rows.length; i += this.chunkSize) {
       const chunk = rows.slice(i, i + this.chunkSize);
@@ -137,7 +138,7 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
       const endColLetter = this.colIdxToLetter(totalCols - 1);
       const range = `${this.sheetName}!A${startRow}:${endColLetter}${endRow}`;
 
-      await this.sheetsConnector.updateRange(range, chunk);
+      await this.sheetsConnector.updateRange(range, chunk as unknown as string[][]);
       pointer += chunk.length;
     }
   }
@@ -152,12 +153,17 @@ export class SheetsLicenseDegreeExportAgent extends PolicySynthAgent {
     return letter;
   }
 
-  private sanitiseData(data: any[][]): string[][] {
+  private sanitiseData(data: (string | number)[][]): (string | number)[][] {
     return data.map((row) =>
       row.map((cell) => {
-        if (typeof cell === "object" && cell !== null)
-          return JSON.stringify(cell);
-        return cell === undefined || cell === null ? "" : String(cell);
+        if (cell === undefined || cell === null) return "";
+
+        // Preserve numbers to avoid leading apostrophe in Google Sheets
+        if (typeof cell === "number") return cell;
+
+        if (typeof cell === "object") return JSON.stringify(cell);
+
+        return String(cell);
       })
     );
   }

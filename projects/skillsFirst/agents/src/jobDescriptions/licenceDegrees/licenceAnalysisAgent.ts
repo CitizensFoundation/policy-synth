@@ -20,6 +20,7 @@ import {
 import pLimit from "p-limit";
 
 const skipMainProcessing = true;
+const skipRanking = true;
 
 import { LicenseDegreeResultsRanker } from "./rankResults.js";
 
@@ -122,88 +123,93 @@ export class JobTitleLicenseDegreeAnalysisAgent extends PolicySynthAgent {
       await Promise.all(processingPromises);
     }
 
-    // Group job license types by licenseType and rank them
-    if (
-      this.memory.jobLicenceTypesForLicenceAnalysis &&
-      this.memory.jobLicenceTypesForLicenceAnalysis.length > 0
-    ) {
-      const groupedByLicenseType = new Map<string, LicenseDegreeRow[]>();
+    if (!skipRanking) {
+      // Group job license types by licenseType and rank them
+      if (
+        this.memory.jobLicenceTypesForLicenceAnalysis &&
+        this.memory.jobLicenceTypesForLicenceAnalysis.length > 0
+      ) {
+        const groupedByLicenseType = new Map<string, LicenseDegreeRow[]>();
 
-      for (const row of this.memory.jobLicenceTypesForLicenceAnalysis) {
-        if (!groupedByLicenseType.has(row.licenseType)) {
-          groupedByLicenseType.set(row.licenseType, []);
-        }
-        // The non-null assertion operator (!) is used here because we've just ensured the key exists.
-        groupedByLicenseType.get(row.licenseType)!.push(row);
-      }
-
-      this.logger.info(
-        `Found ${groupedByLicenseType.size} unique license types to rank.`
-      );
-
-      for (const [licenseType, rowsForType] of groupedByLicenseType.entries()) {
-        this.logger.info(
-          `Ranking results for license type: "${licenseType}" with ${rowsForType.length} item(s).`
-        );
-
-        // Collect all analysis results for the current license type
-        const allAnalysisResultsForType: LicenseDegreeAnalysisResult[] = [];
-        for (const row of rowsForType) {
-          if (row.analysisResults && row.analysisResults.length > 0) {
-            allAnalysisResultsForType.push(...row.analysisResults);
+        for (const row of this.memory.jobLicenceTypesForLicenceAnalysis) {
+          if (!groupedByLicenseType.has(row.licenseType)) {
+            groupedByLicenseType.set(row.licenseType, []);
           }
+          // The non-null assertion operator (!) is used here because we've just ensured the key exists.
+          groupedByLicenseType.get(row.licenseType)!.push(row);
         }
 
-        if (allAnalysisResultsForType.length === 0) {
-          this.logger.info(
-            `No analysis results to rank for license type: "${licenseType}". Skipping ranking.`
-          );
-          continue; // Skip to the next license type
-        }
-
-        const ranker = new LicenseDegreeResultsRanker(
-          this.agent,
-          this.memory,
-          this.startProgress,
-          this.endProgress,
-          licenseType
+        this.logger.info(
+          `Found ${groupedByLicenseType.size} unique license types to rank.`
         );
 
-        try {
-          // Pass the collected analysis results to the ranker
-          await ranker.rankLicenseDegreeResults(allAnalysisResultsForType);
+        for (const [
+          licenseType,
+          rowsForType,
+        ] of groupedByLicenseType.entries()) {
           this.logger.info(
-            `Successfully ranked analysis results for license type: "${licenseType}".`
+            `Ranking results for license type: "${licenseType}" with ${rowsForType.length} item(s).`
           );
-        } catch (error) {
-          this.logger.error(
-            `Error ranking analysis results for license type "${licenseType}": ${error}`
+
+          // Collect all analysis results for the current license type
+          const allAnalysisResultsForType: LicenseDegreeAnalysisResult[] = [];
+          for (const row of rowsForType) {
+            if (row.analysisResults && row.analysisResults.length > 0) {
+              allAnalysisResultsForType.push(...row.analysisResults);
+            }
+          }
+
+          if (allAnalysisResultsForType.length === 0) {
+            this.logger.info(
+              `No analysis results to rank for license type: "${licenseType}". Skipping ranking.`
+            );
+            continue; // Skip to the next license type
+          }
+
+          const ranker = new LicenseDegreeResultsRanker(
+            this.agent,
+            this.memory,
+            this.startProgress,
+            this.endProgress,
+            licenseType
           );
+
+          try {
+            // Pass the collected analysis results to the ranker
+            await ranker.rankLicenseDegreeResults(allAnalysisResultsForType);
+            this.logger.info(
+              `Successfully ranked analysis results for license type: "${licenseType}".`
+            );
+          } catch (error) {
+            this.logger.error(
+              `Error ranking analysis results for license type "${licenseType}": ${error}`
+            );
+          }
+
+          // Save memory after each type is ranked.
+          await this.saveMemory();
         }
-
-        // Save memory after each type is ranked.
-        await this.saveMemory();
+      } else {
+        this.logger.info(
+          "No job license types found in memory to rank or export."
+        );
       }
-
-      // Export the (potentially) modified data after all ranking is attempted.
-      this.logger.info("Ranking process finished. Proceeding to export.");
-      const exporter = new SheetsLicenseDegreeExportAgent(
-        this.agent,
-        this.memory,
-        this.startProgress,
-        this.endProgress,
-        "Sheet1"
-      );
-
-      await exporter.processJsonData(
-        this.memory.jobLicenceTypesForLicenceAnalysis
-      );
-      this.logger.info("Data export completed.");
-    } else {
-      this.logger.info(
-        "No job license types found in memory to rank or export."
-      );
     }
+
+    // Export the (potentially) modified data after all ranking is attempted.
+    this.logger.info("Ranking process finished. Proceeding to export.");
+    const exporter = new SheetsLicenseDegreeExportAgent(
+      this.agent,
+      this.memory,
+      this.startProgress,
+      this.endProgress,
+      "Sheet1"
+    );
+
+    await exporter.processJsonData(
+      this.memory.jobLicenceTypesForLicenceAnalysis
+    );
+    this.logger.info("Data export completed.");
 
     await this.updateRangedProgress(100, "Completed all job titles");
   }
