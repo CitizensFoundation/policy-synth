@@ -27,6 +27,7 @@ interface PsAiModelConfig {
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
   maxThinkingTokens?: number;
+  prices: PsBaseModelPriceConfiguration;
 }
 
 interface PsCallModelOptions {
@@ -76,6 +77,15 @@ interface PsAgentEvalCriterionConfig {
   yourPrioritiesGroupId?: number;
 }
 
+interface PsBaseModelReturnParameters {
+  tokensIn: number;
+  tokensOut: number;
+  content: string;
+  cachedInTokens?: number;
+  reasoningTokens?: number;
+  audioTokens?: number;
+}
+
 // Evaluation configuration for an agent class
 interface PsAgentEvalConfig {
   criteria: PsAgentEvalCriterionConfig[];
@@ -95,8 +105,11 @@ interface PsAgentEvalAttributes extends PsBaseModelClassNoUuid {
 interface PsBaseModelPriceConfiguration {
   costInTokensPerMillion: number;
   costOutTokensPerMillion: number;
-  costInCachedContextTokensPerMillion?: number;
-  costOutCachedContextTokensPerMillion?: number;
+  costInCachedContextTokensPerMillion: number;
+  longContextCostInTokensPerMillion?: number;
+  longContextCostInCachedContextTokensPerMillion?: number;
+  longContextCostOutTokensPerMillion?: number;
+  longContextTokenThreshold?: number;
   currency: string;
 }
 
@@ -146,6 +159,15 @@ interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
   token_in_count: number;
   token_out_count: number;
   token_in_cached_context_count?: number;
+  long_context_token_in_count?: number;
+  long_context_token_in_cached_context_count?: number;
+  token_out_reasoning_count?: number;
+  token_out_audio_count?: number;
+  token_out_image_count?: number;
+  long_context_token_out_count?: number;
+  long_context_token_out_reasoning_count?: number;
+  long_context_token_out_audio_count?: number;
+  long_context_token_out_image_count?: number;
   agent_id?: number;
   connector_id?: number;
 }

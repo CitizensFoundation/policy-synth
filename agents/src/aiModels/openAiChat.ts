@@ -3,6 +3,7 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { resolve } from "path";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
+import { PsAiModel } from "../dbModels/aiModel.js";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
@@ -15,7 +16,7 @@ export class OpenAiChat extends BaseChatModel {
       maxTokensOut = 16384,
       temperature = 0.7,
     } = config;
-    super(modelName, maxTokensOut);
+    super(config, modelName, maxTokensOut);
     if (process.env.PS_AGENT_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OPENAI_API_KEY;
       this.logger.debug("Using OpenAI API key from PS_AGENT_OPENAI_API_KEY environment variable");
@@ -30,7 +31,7 @@ export class OpenAiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
-  ): Promise<any> {
+  ): Promise<PsBaseModelReturnParameters | undefined> {
     // 1. Convert messages to OpenAI format
     let formattedMessages = messages.map((msg) => ({
       role: msg.role as "system" | "developer" | "user" | "assistant",
@@ -135,26 +136,26 @@ export class OpenAiChat extends BaseChatModel {
       }
       const tokensIn = response.usage!.prompt_tokens;
       const tokensOut = response.usage!.completion_tokens;
-      const cachedTokens =
+      const cachedInTokens =
         response.usage!.prompt_tokens_details?.cached_tokens || 0;
+
+      const reasoningTokens = response.usage!.completion_tokens_details?.reasoning_tokens || 0;
+      const audioTokens = response.usage!.completion_tokens_details?.audio_tokens || 0;
 
       const completion_tokens_details =
         response.usage!.completion_tokens_details;
 
-      // Adjust the tokensIn to reflect the 50% discount for cached tokens
-      const adjustedTokensIn = tokensIn - cachedTokens * 0.5;
-      const cacheRatio = (cachedTokens / tokensIn) * 100;
 
       this.logger.debug(
         JSON.stringify(
           {
             tokensIn,
-            cachedTokens,
-            cacheRatio,
+            cachedInTokens,
             tokensOut,
-            adjustedTokensIn,
             content,
             completion_tokens_details,
+            reasoningTokens,
+            audioTokens
           },
           null,
           2
@@ -162,10 +163,12 @@ export class OpenAiChat extends BaseChatModel {
       );
 
       return {
-        tokensIn: adjustedTokensIn,
+        tokensIn,
         tokensOut,
-        cacheRatio,
-        content,
+        cachedInTokens,
+        content: content ?? "",
+        reasoningTokens,
+        audioTokens
       };
     }
   }

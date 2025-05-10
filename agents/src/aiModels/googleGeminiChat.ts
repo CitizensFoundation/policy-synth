@@ -16,6 +16,7 @@ import {
 
 import { BaseChatModel } from "./baseChatModel.js";
 import { types } from "util";
+import { PsAiModel } from "../dbModels/aiModel.js";
 
 export class GoogleGeminiChat extends BaseChatModel {
   private useVertexAi: boolean;
@@ -29,7 +30,7 @@ export class GoogleGeminiChat extends BaseChatModel {
   model!: GoogleAiGenerativeModel | VertexAiGenerativeModel;
 
   constructor(config: PsAiModelConfig) {
-    super(config.modelName || "gemini-pro", config.maxTokensOut || 16000); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
+    super(config, config.modelName || "gemini-pro", config.maxTokensOut || 16000); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
 
     this.modelName = config.modelName || "gemini-pro"; // Store model name
     this.useVertexAi = process.env.USE_GOOGLE_VERTEX_AI === "true";
@@ -137,7 +138,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: (chunk: string) => void
-  ) {
+  ): Promise<PsBaseModelReturnParameters | undefined> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(`Messages:\n${JSON.stringify(messages, null, 2)}`);
     }
@@ -276,6 +277,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         return {
           tokensIn: response.usageMetadata?.promptTokenCount ?? 0,
           tokensOut: response.usageMetadata?.candidatesTokenCount ?? 0,
+          cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
           content: content,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
@@ -286,6 +288,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         return {
           tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
           tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+          cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
           content,
         };
       } else {

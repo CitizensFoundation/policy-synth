@@ -1,23 +1,26 @@
 import { TiktokenModel } from "tiktoken";
 import chalk from "chalk";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
+import { PsAiModel } from "../dbModels/aiModel.js";
 
 export abstract class BaseChatModel extends PolicySynthAgentBase {
   modelName: string | TiktokenModel;
   maxTokensOut: number;
   provider?: string;
+  config: PsAiModelConfig;
 
-  constructor(modelName: string | TiktokenModel, maxTokensOut = 4096) {
+  constructor(config: PsAiModelConfig, modelName: string | TiktokenModel, maxTokensOut = 4096) {
     super();
     this.modelName = modelName;
     this.maxTokensOut = maxTokensOut;
+    this.config = config;
   }
 
   abstract generate(
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
-  ): Promise<{ tokensIn: number; tokensOut: number; content: string } | undefined>;
+  ): Promise<PsBaseModelReturnParameters | undefined>;
 
   truncateXmlTags(text: string, maxChars = 500): string {
     const xmlTagRegex = /<(\w[\w\d-]*)([^>]*)>([\s\S]*?)<\/\1>/g;

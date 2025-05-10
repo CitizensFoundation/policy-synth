@@ -16,9 +16,23 @@ export class PsModelUsage
   declare created_at: Date;
   declare updated_at: Date;
   declare model_id: number;
+
   declare token_in_count: number;
-  declare token_out_count: number;
   declare token_in_cached_context_count: number;
+
+  declare long_context_token_in_count: number;
+  declare long_context_token_in_cached_context_count: number;
+
+  declare token_out_count: number;
+  declare token_out_reasoning_count: number;
+  declare token_out_audio_count: number;
+  declare token_out_image_count: number;
+
+  declare long_context_token_out_count: number;
+  declare long_context_token_out_reasoning_count: number;
+  declare long_context_token_out_audio_count: number;
+  declare long_context_token_out_image_count: number;
+
   declare agent_id: number;
   declare connector_id: number;
 }
@@ -51,14 +65,62 @@ PsModelUsage.init(
     token_in_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
-    },
-    token_out_count: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
+      defaultValue: 0,
     },
     token_in_cached_context_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_in_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_in_cached_context_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    token_out_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    token_out_reasoning_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    token_out_audio_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    token_out_image_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_out_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_out_reasoning_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_out_audio_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_out_image_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
     },
     agent_id: {
       type: DataTypes.INTEGER,

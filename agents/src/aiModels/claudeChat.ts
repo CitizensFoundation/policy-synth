@@ -2,11 +2,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { ContentBlock } from "@anthropic-ai/sdk/resources/messages/messages.js";
-
+import { PsAiModel } from "../dbModels/aiModel.js";
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
   private maxThinkingTokens?: number;
-  private config: PsAiModelConfig;
+  config: PsAiModelConfig;
 
   constructor(config: PsAiModelConfig) {
     const {
@@ -14,7 +14,7 @@ export class ClaudeChat extends BaseChatModel {
       modelName = "claude-3-opus-20240229",
       maxTokensOut = 4096,
     } = config;
-    super(modelName, maxTokensOut);
+    super(config, modelName, maxTokensOut);
     this.maxThinkingTokens = config.maxThinkingTokens;
     this.client = new Anthropic({ apiKey });
     this.config = config;
@@ -24,7 +24,7 @@ export class ClaudeChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function
-  ) {
+  ): Promise<PsBaseModelReturnParameters | undefined> {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
@@ -101,6 +101,7 @@ export class ClaudeChat extends BaseChatModel {
       console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       let tokensIn = response.usage.input_tokens;
       let tokensOut = response.usage.output_tokens;
+      let cachedInTokens = response.usage.cache_creation_input_tokens;
 
       //TODO: Fix this properly
       if ((response.usage as any).cache_creation_input_tokens) {
@@ -111,8 +112,9 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn += (response.usage as any).cache_read_input_tokens * 0.1;
       }
       return {
-        tokensIn: Math.round(tokensIn),
-        tokensOut: Math.round(tokensOut),
+        tokensIn: tokensIn,
+        tokensOut: tokensOut,
+        cachedInTokens: cachedInTokens ?? 0,
         content: this.getTextTypeFromContent(response.content),
       };
     }

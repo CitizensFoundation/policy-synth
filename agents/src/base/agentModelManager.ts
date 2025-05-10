@@ -91,6 +91,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         maxThinkingTokens: this.maxThinkingTokens,
         modelType: modelType,
         modelSize: modelSize,
+        prices: {} as any,
       };
 
       switch (modelProvider.toLowerCase()) {
@@ -180,6 +181,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         maxThinkingTokens: this.maxThinkingTokens,
         modelType: modelType,
         modelSize: modelSize,
+        prices: model.configuration.prices,
       };
 
       this.logger.debug(
@@ -285,6 +287,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
       modelType,
       modelSize,
+      prices: {} as any, // TODO: Get fallback model into database
     };
 
     // Construct ephemeral model
@@ -473,7 +476,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     "content management policy",
     "response was blocked due to prohibited_content",
     "prohibited_content",
-    "not allowed by our safety system"
+    "not allowed by our safety system",
   ];
 
   static isProhibitedContentError = (err: any) => {
@@ -531,9 +534,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
 
         if (results) {
-          const { tokensIn, tokensOut, content } = results;
+          const { tokensIn, tokensOut, cachedInTokens, content } = results;
 
-          await this.saveTokenUsage(modelType, modelSize, tokensIn, tokensOut);
+          await this.saveTokenUsage(
+            model.config.prices,
+            modelType,
+            modelSize,
+            tokensIn,
+            cachedInTokens ?? 0,
+            tokensOut
+          );
 
           if (options.parseJson) {
             let parsedJson: any;
@@ -631,11 +641,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               );
 
               if (fallbackResults) {
-                const { tokensIn, tokensOut, content } = fallbackResults;
+                const { tokensIn, tokensOut, cachedInTokens, content } = fallbackResults;
                 await this.saveTokenUsage(
+                  model.config.prices,
                   modelType,
                   modelSize,
                   tokensIn,
+                  cachedInTokens ?? 0,
                   tokensOut
                 );
                 return options.parseJson
@@ -680,7 +692,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   private async sleepBeforeRetry(retryCount: number) {
-    const sleepTime = 4500 + Math.max(retryCount-1,0) * 5000;
+    const sleepTime = 4500 + Math.max(retryCount - 1, 0) * 5000;
     const cappedTime = Math.min(sleepTime, 90000);
     this.logger.debug(`Sleeping ${cappedTime}ms before next attempt`);
     return new Promise((resolve) => setTimeout(resolve, cappedTime));
@@ -712,9 +724,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   public async saveTokenUsage(
+    prices: PsBaseModelPriceConfiguration,
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     tokensIn: number,
+    cachedInTokens: number,
     tokensOut: number
   ) {
     // Check for usage tracking disable
@@ -746,6 +760,27 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const PsModelUsage = cachedPsModelUsage;
     const sequelize = cachedSequelize;
 
+    let longContextTokenIn = 0;
+    let longContextTokenInCached = 0;
+    let longContextTokenOut = 0;
+
+    if (
+      prices &&
+      prices.longContextTokenThreshold &&
+      tokensIn >= prices.longContextTokenThreshold
+    ) {
+      longContextTokenIn = cachedInTokens ? tokensIn - cachedInTokens : tokensIn;
+      longContextTokenOut = tokensOut;
+      longContextTokenInCached = cachedInTokens ?? 0;
+      tokensIn = 0;
+      tokensOut = 0;
+      cachedInTokens = 0;
+    } else {
+      if (cachedInTokens) {
+        tokensIn = tokensIn - cachedInTokens;
+      }
+    }
+
     try {
       await sequelize.transaction(async (t: Transaction) => {
         const [usage, created] = await PsModelUsage.findOrCreate({
@@ -756,7 +791,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           defaults: {
             token_in_count: tokensIn,
             token_out_count: tokensOut,
-            token_in_cached_context_count: 0,
+            token_in_cached_context_count: cachedInTokens,
+            long_context_token_in_count: longContextTokenIn,
+            long_context_token_out_count: longContextTokenOut,
+            long_context_token_in_cached_count: longContextTokenInCached,
             model_id: finalModelId,
             agent_id: this.agentId,
             user_id: this.userId,
@@ -769,6 +807,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             {
               token_in_count: tokensIn,
               token_out_count: tokensOut,
+              token_in_cached_context_count: cachedInTokens,
+              long_context_token_in_count: longContextTokenIn,
+              long_context_token_out_count: longContextTokenOut,
+              long_context_token_in_cached_count: longContextTokenInCached,
             },
             { transaction: t }
           );

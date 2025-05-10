@@ -20,6 +20,7 @@ const anthropicSonnetConfig: PsAiModelConfiguration = {
   prices: {
     costInTokensPerMillion: 3,
     costOutTokensPerMillion: 15,
+    costInCachedContextTokensPerMillion: 1.5,
     currency: "USD"
   },
   maxTokensOut: 8000,
@@ -43,6 +44,7 @@ const openAiGpt4oConfig: PsAiModelConfiguration = {
   prices: {
     costInTokensPerMillion: 5,
     costOutTokensPerMillion: 15,
+    costInCachedContextTokensPerMillion: 2.5,
     currency: "USD"
   },
   maxTokensOut: 4096,
@@ -58,6 +60,7 @@ const openAiGpt4oMiniConfig: PsAiModelConfiguration = {
   prices: {
     costInTokensPerMillion: 0.15,
     costOutTokensPerMillion: 0.6,
+    costInCachedContextTokensPerMillion: 0.075,
     currency: "USD"
   },
   maxTokensOut: 16000,

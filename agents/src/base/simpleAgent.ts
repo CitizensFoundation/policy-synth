@@ -113,6 +113,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
           : 0.5),
       modelType: process.env.AI_MODEL_TYPE as PsAiModelType,
       modelSize: process.env.AI_MODEL_SIZE as PsAiModelSize,
+      prices: {} as any,
     };
 
     switch (process.env.AI_MODEL_PROVIDER.toLowerCase()) {

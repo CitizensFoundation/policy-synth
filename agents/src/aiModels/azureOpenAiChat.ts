@@ -2,8 +2,7 @@ import { AzureOpenAI } from "openai";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-
-
+import { PsAiModel } from "../dbModels/aiModel.js";
 
 interface PsModelMessage {
   role: "system" | "developer" | "user" | "assistant";
@@ -17,7 +16,7 @@ export class AzureOpenAiChat extends BaseChatModel {
   private temperature: number = 0.7;
 
   constructor(config: PsAzureAiModelConfig) {
-    super(config.modelName || "gpt-4", config.maxTokensOut || 4096);
+    super(config, config.modelName || "gpt-4", config.maxTokensOut || 4096);
 
     const scope = "https://cognitiveservices.azure.com/.default";
     const credential = new DefaultAzureCredential();
