@@ -1,6 +1,6 @@
 import { Sequelize, DataTypes, Model, Optional, BelongsToGetAssociationMixin } from 'sequelize';
-import { sequelize } from './index';
-import { Topic } from './topic.model';
+import { sequelize } from './index.js';
+import { Topic } from './topic.model.js';
 
 // Define ENUM for question types
 export enum QAPairQuestionType {

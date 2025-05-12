@@ -1,5 +1,5 @@
-import { CountryLink } from '../models/countryLink.model';
-import { Topic } from '../models/topic.model';
+import { CountryLink } from '../models/countryLink.model.js';
+import { Topic } from '../models/topic.model.js';
 
 interface LinkCreateDTO {
     topicId: number;

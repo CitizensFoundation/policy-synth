@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@policysynth/api/controllers/baseController.js';
 import WebSocket from 'ws';
-import { Topic } from '../models/topic.model'; // Assuming model exists
-import { authMiddleware, roleGuard } from '../middlewares/authMiddleware';
+import { Topic } from '../models/topic.model.js'; // Assuming model exists
+import { authMiddleware, roleGuard } from '../middlewares/authMiddleware.js';
 import { Sequelize } from 'sequelize'; // Import Sequelize
 
 export class TopicController extends BaseController {

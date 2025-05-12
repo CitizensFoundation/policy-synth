@@ -4,7 +4,7 @@ import WebSocket from "ws";
 import path from "path";
 import XLSX from "xlsx";
 import fs from "fs/promises";
-import { QAPair } from "../models/qaPair.model";
+import { QAPair } from "../models/qaPair.model.js";
 import { GenerationConfig, Content } from "@google/generative-ai";
 
 const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.0-pro-exp-02-05";

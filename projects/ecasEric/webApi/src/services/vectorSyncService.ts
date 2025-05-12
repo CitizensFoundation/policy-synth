@@ -1,4 +1,4 @@
-import { QAPair } from '../models/qaPair.model';
+import { QAPair } from '../models/qaPair.model.js';
 
 // Placeholder for actual vector database client (e.g., Weaviate, Pinecone)
 // const vectorDBClient = null;

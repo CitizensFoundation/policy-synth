@@ -1,8 +1,8 @@
 import { Sequelize, DataTypes, Model, Optional, BelongsToGetAssociationMixin, fn, col, Op } from 'sequelize';
-import { sequelize } from './index';
-import { QAPair } from './qaPair.model';
-import { AdminUser } from './adminUser.model';
-import { ChatSession } from './chatSession.model'; // Assuming ChatSession model exists
+import { sequelize } from './index.js';
+import { QAPair } from './qaPair.model.js';
+import { AdminUser } from './adminUser.model.js';
+import { ChatSession } from './chatSession.model.js'; // Assuming ChatSession model exists
 
 interface ReviewAttributes {
   id: number;

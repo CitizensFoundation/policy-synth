@@ -1,5 +1,5 @@
 import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from './index';
+import { sequelize } from './index.js';
 import bcrypt from 'bcrypt';
 
 interface AdminUserAttributes {

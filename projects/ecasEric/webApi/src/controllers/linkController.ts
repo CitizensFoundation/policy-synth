@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@policysynth/api/controllers/baseController.js';
 import WebSocket from 'ws';
-import { authMiddleware, roleGuard } from '../middlewares/authMiddleware';
+import { authMiddleware, roleGuard } from '../middlewares/authMiddleware.js';
 import { LinkService } from '../services/linkService.js';
 
 export class LinkController extends BaseController {

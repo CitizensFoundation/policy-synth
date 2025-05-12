@@ -5,6 +5,7 @@
     "module": "ESNext",
     "moduleResolution": "node",
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "lib": [ "es2018" ],
     "outDir": "ts-out/",
     "allowSyntheticDefaultImports": true,

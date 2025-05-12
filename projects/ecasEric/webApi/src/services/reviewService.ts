@@ -1,7 +1,7 @@
-import { Review } from '../models/review.model';
-import { AdminUser } from '../models/adminUser.model';
-import { QAPair } from '../models/qaPair.model';
-import { Topic } from '../models/topic.model';
+import { Review } from '../models/review.model.js';
+import { AdminUser } from '../models/adminUser.model.js';
+import { QAPair } from '../models/qaPair.model.js';
+import { Topic } from '../models/topic.model.js';
 import { Op } from 'sequelize';
 
 interface ReviewCreateDTO {

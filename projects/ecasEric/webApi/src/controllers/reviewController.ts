@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@policysynth/api/controllers/baseController.js';
 import WebSocket from 'ws';
-import { authMiddleware, roleGuard } from '../middlewares/authMiddleware'; // Use roleGuard for admin-only routes
+import { authMiddleware, roleGuard } from '../middlewares/authMiddleware.js'; // Use roleGuard for admin-only routes
 import { ReviewService } from '../services/reviewService.js';
 import { stringify } from 'csv-stringify'; // For CSV export
 

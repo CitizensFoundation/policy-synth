@@ -1,4 +1,4 @@
-import { AdminUser } from '../models/adminUser.model';
+import { AdminUser } from '../models/adminUser.model.js';
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 

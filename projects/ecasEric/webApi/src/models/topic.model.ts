@@ -1,5 +1,5 @@
 import { Sequelize, DataTypes, Model, Optional } from 'sequelize';
-import { sequelize } from './index'; // Adjust path as necessary
+import { sequelize } from './index.js'; // Adjust path as necessary
 
 interface TopicAttributes {
   id: number;

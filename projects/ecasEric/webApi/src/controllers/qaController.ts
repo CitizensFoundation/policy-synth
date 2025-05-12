@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { BaseController } from '@policysynth/api/controllers/baseController.js';
 import WebSocket from 'ws';
-import { authMiddleware, roleGuard } from '../middlewares/authMiddleware';
+import { authMiddleware, roleGuard } from '../middlewares/authMiddleware.js';
 import { QaService } from '../services/qaService.js';
 import multer from 'multer';
 

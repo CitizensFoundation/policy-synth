@@ -1,5 +1,5 @@
-import { QAPair, QAPairQuestionType } from '../models/qaPair.model';
-import { Topic } from '../models/topic.model';
+import { QAPair, QAPairQuestionType } from '../models/qaPair.model.js';
+import { Topic } from '../models/topic.model.js';
 import XLSX from 'xlsx';
 // import { vectorSyncService } from './vectorSyncService'; // Import when ready
 
