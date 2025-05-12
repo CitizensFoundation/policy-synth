@@ -3,6 +3,7 @@ config/config.json
 staticHomeHTML/
 backups/
 dist/
+ts-out/
 cache/
 ingestion/cache
 oldCache/

@@ -1,4 +1,4 @@
-import { AdminUser } from './src/models/adminUser.model';
+import { AdminUser } from './models/adminUser.model';
 import * as dotenv from 'dotenv';
 
 dotenv.config(); // Load .env variables
