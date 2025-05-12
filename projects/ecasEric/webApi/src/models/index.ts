@@ -33,6 +33,12 @@ if (config.use_env_variable) {
   );
 }
 
+sequelize.sync().then(() => {
+  console.log('Database & tables created!');
+}).catch((error) => {
+  console.error('Unable to create tables, error:', error);
+} );
+
 interface Db {
   sequelize: Sequelize;
   Sequelize: typeof Sequelize;
