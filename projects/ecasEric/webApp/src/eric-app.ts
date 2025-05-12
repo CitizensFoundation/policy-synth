@@ -1,6 +1,6 @@
 import { html, css } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
-import { PsRouter } from '@policysynth/webapp/base/router/router.js';
+import { PsRouter } from './base/router/router.js';
 
 import '@material/web/slider/slider.js';
 import '@material/web/iconbutton/outlined-icon-button.js';
@@ -10,24 +10,18 @@ import { MdMenu } from '@material/web/menu/menu.js';
 import '@material/web/menu/menu-item.js';
 
 import './eric-chatbot.js';
-import { PolicySynthWebApp } from '@policysynth/webapp/ps-app.js';
+import { PolicySynthWebApp } from './base/ps-app.js';
 import { ResearchServerApi } from './researchServerApi.js';
 import { EcasEricChatBot } from './eric-chatbot.js';
 import { PropertyValueMap } from '@lit/reactive-element';
+import { authStoreInstance } from './services/authStore.js';
+
+import './admin/admin-dashboard.js';
 
 type SavedChat = {
   serverMemoryId: string;
   questionSnippet: string;
 };
-
-// Adjust interface if needed based on actual API response
-// Assuming PsSimpleChatLog is the correct type from the API/base class
-interface PsSimpleChatLog {
-  sender: 'user' | 'assistant' | 'bot'; // Adjust as per actual usage
-  message: string;
-  date?: Date; // Optional depending on usage
-  type?: string; // Might exist
-}
 
 // ... SavedChat, Topic interfaces ...
 interface Topic {
@@ -37,6 +31,8 @@ interface Topic {
     description?: string;
     language?: string;
 }
+
+const renderAdmin = true;
 
 @customElement('eric-chatbot-app')
 export class EcasYeaChatBotApp extends PolicySynthWebApp {
@@ -406,6 +402,15 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     }
 
     return formattedTime;
+  }
+  override render() {
+    if (renderAdmin) {
+      return html`
+       <admin-dashboard></admin-dashboard>
+      `;
+    } else {
+      return super.render();
+    }
   }
 
 

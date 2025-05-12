@@ -2,7 +2,7 @@ import { LitElement, html, css, PropertyValueMap } from 'lit';
 import { customElement, property, query, state } from 'lit/decorators.js';
 import { nothing, TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { PsChatAssistant } from '@policysynth/webapp/chatBot/ps-chat-assistant.js';
+import { PsChatAssistant } from './base/ps-chat-assistant.js';
 
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/progress/circular-progress.js';
@@ -68,8 +68,16 @@ export class EcasEricChatBot extends PsChatAssistant {
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
     if (changedProperties.has('chatLogFromServer') && this.chatLogFromServer) {
-      this.chatLog = this.chatLogFromServer;
+      this.chatLog = this.chatLogFromServer as PsAiChatWsMessage[];
     }
+  }
+
+  addChatBotError(error: string) {
+    this.chatLog.push({
+      sender: 'bot',
+      message: error,
+      type: 'error'
+    });
   }
 
   override async sendChatMessage() {
@@ -114,8 +122,8 @@ export class EcasEricChatBot extends PsChatAssistant {
     }
   }
 
-  override renderChatItem(item: any, index: number): TemplateResult {
-    const baseChatItem = super.renderChatItem(item, index);
+ renderChatItem(item: any, index: number): TemplateResult {
+    let baseChatItem = html`<div>${item.message}</div>`;
 
     if (item.sender === 'bot') {
         const isLastMessageInLog = index === (this.chatLog.length - 1);
@@ -140,7 +148,7 @@ export class EcasEricChatBot extends PsChatAssistant {
     return baseChatItem;
   }
 
-  override addMessageToChatLog(message: string, sender: 'user' | 'bot' | 'assistant', type?: string | undefined, votingData?: any): void {
+ /* override addMessageToChatLog(message: string, sender: 'user' | 'bot' | 'assistant', type?: string | undefined, votingData?: any): void {
       if (sender === 'user') {
           this.currentRatingForLastAnswer = 0;
       }
@@ -155,19 +163,18 @@ export class EcasEricChatBot extends PsChatAssistant {
         this.currentRatingForLastAnswer = 0;
         this.requestUpdate();
     }
-  }
+  }*/
 
   override reset() {
     super.reset();
     this.currentRatingForLastAnswer = 0;
   }
 
-  override getWsPayload(): object {
-    const basePayload = super.getWsPayload();
-    return {
-      ...basePayload,
+   getWsPayload(): object {
+    const basePayload = {
       topicId: this.currentTopicId,
       memoryId: this.serverMemoryId
-    };
+    }
+    return basePayload;
   }
 }

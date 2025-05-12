@@ -1,6 +1,5 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
-import { connect } from 'pwa-helpers/connect-mixin.js'; // If using Redux/similar store pattern
 import { authStoreInstance } from '../services/authStore.js';
 
 // Import Admin components (placeholders for now)
@@ -11,8 +10,8 @@ import './link-manager.js';
 import './review-manager.js';
 
 // Import Material Web Components
-import '@material/web/navigationbar/navigation-bar.js';
-import '@material/web/navigationtab/navigation-tab.js';
+import '@material/web/labs/navigationbar/navigation-bar.js';
+import '@material/web/labs/navigationtab/navigation-tab.js';
 import '@material/web/iconbutton/icon-button.js';
 import '@material/web/icon/icon.js';
 import '@material/web/button/text-button.js';
@@ -141,7 +140,9 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
     // Use the authStateCounter to trigger re-renders when auth changes
     this.authStateCounter;
 
-    if (!authStoreInstance.isLoggedIn()) {
+    const isLoggedIn = false;
+
+    if (isLoggedIn && !authStoreInstance.isLoggedIn()) {
       // This component shouldn't be rendered if not logged in,
       // but as a fallback, redirect.
       // The router in eric-app.ts should handle the initial guard.
