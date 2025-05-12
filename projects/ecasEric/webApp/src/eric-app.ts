@@ -17,6 +17,7 @@ import { PropertyValueMap } from '@lit/reactive-element';
 import { authStoreInstance } from './services/authStore.js';
 
 import './admin/admin-dashboard.js';
+import './admin/admin-login.js';
 
 type SavedChat = {
   serverMemoryId: string;
@@ -405,9 +406,16 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
   override render() {
     if (renderAdmin) {
-      return html`
-       <admin-dashboard></admin-dashboard>
-      `;
+      if (window.location.pathname.includes('/admin/login')) {
+        return html`
+        <admin-login></admin-login>
+       `;
+      } else {
+        return html`
+        <admin-dashboard></admin-dashboard>
+       `;
+
+      }
     } else {
       return super.render();
     }

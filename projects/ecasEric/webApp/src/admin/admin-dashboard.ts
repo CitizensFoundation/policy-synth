@@ -61,7 +61,7 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
     }
     md-navigation-tab {
         margin-bottom: 8px;
-         --md-navigation-tab-label-text-font: var(--md-sys-typescale-body-large-font);
+         --md-navigation-tab-label-text-font: var(--md-sys-typescale-body-medium-font);
     }
     .spacer {
         flex-grow: 1;
@@ -82,29 +82,29 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
           label="Topics"
           ?active=${this.selectedView === 'topics'}
           @click=${() => (this.selectedView = 'topics')}>
-             <md-icon slot="activeIcon">category</md-icon>
-             <md-icon slot="inactiveIcon">category</md-icon>
+             <md-icon slot="active-icon">category</md-icon>
+             <md-icon slot="inactive-icon">category</md-icon>
           </md-navigation-tab>
         <md-navigation-tab
           label="Q&A Pairs"
           ?active=${this.selectedView === 'qa'}
           @click=${() => (this.selectedView = 'qa')}>
-             <md-icon slot="activeIcon">quiz</md-icon>
-             <md-icon slot="inactiveIcon">quiz</md-icon>
+             <md-icon slot="active-icon">quiz</md-icon>
+             <md-icon slot="inactive-icon">quiz</md-icon>
           </md-navigation-tab>
         <md-navigation-tab
           label="Country Links"
           ?active=${this.selectedView === 'links'}
           @click=${() => (this.selectedView = 'links')}>
-             <md-icon slot="activeIcon">link</md-icon>
-             <md-icon slot="inactiveIcon">link</md-icon>
+             <md-icon slot="active-icon">link</md-icon>
+             <md-icon slot="inactive-icon">link</md-icon>
           </md-navigation-tab>
         <md-navigation-tab
           label="Reviews"
           ?active=${this.selectedView === 'reviews'}
           @click=${() => (this.selectedView = 'reviews')}>
-             <md-icon slot="activeIcon">rate_review</md-icon>
-             <md-icon slot="inactiveIcon">rate_review</md-icon>
+             <md-icon slot="active-icon">rate_review</md-icon>
+             <md-icon slot="inactive-icon">rate_review</md-icon>
           </md-navigation-tab>
           <div class="spacer"></div>
           <md-text-button class="logout-button" @click=${this.handleLogout}>
@@ -142,7 +142,7 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
 
     const isLoggedIn = false;
 
-    if (isLoggedIn && !authStoreInstance.isLoggedIn()) {
+    if (!authStoreInstance.isLoggedIn()) {
       // This component shouldn't be rendered if not logged in,
       // but as a fallback, redirect.
       // The router in eric-app.ts should handle the initial guard.

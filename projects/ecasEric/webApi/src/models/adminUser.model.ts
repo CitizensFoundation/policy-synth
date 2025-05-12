@@ -10,13 +10,16 @@ interface AdminUserAttributes {
 }
 
 // Password is not stored, so it's not in attributes
-interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id'> {}
+interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id'> {
+  password?: string; // Add optional password field for creation
+}
 
 class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttributes> implements AdminUserAttributes {
   public id!: number;
   public email!: string;
   public passwordHash!: string;
   public role!: 'admin' | 'editor';
+  public password?: string; // Add optional property for hooks
 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -57,14 +60,16 @@ AdminUser.init(
     sequelize,
     hooks: {
       beforeCreate: async (user) => {
-        const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
-        user.passwordHash = await bcrypt.hash(user.passwordHash, saltRounds);
+        if (user.password) { // Check if password was provided
+          const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
+          user.passwordHash = await bcrypt.hash(user.password, saltRounds); // Hash the plain password
+        }
       },
       beforeUpdate: async (user) => {
-        // Hash password only if it was changed
-        if (user.changed('passwordHash')) {
-           const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
-          user.passwordHash = await bcrypt.hash(user.passwordHash, saltRounds);
+        // Hash password only if it was provided via the temporary field during update
+        if (user.password) {
+          const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
+          user.passwordHash = await bcrypt.hash(user.password, saltRounds);
         }
       },
     },

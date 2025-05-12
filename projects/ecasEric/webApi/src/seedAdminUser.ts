@@ -1,4 +1,4 @@
-import { AdminUser } from './models/adminUser.model';
+import { AdminUser } from './models/adminUser.model.js';
 import * as dotenv from 'dotenv';
 
 dotenv.config(); // Load .env variables
@@ -25,7 +25,8 @@ const seedAdmin = async () => {
       // Password hashing is handled by the model hook
       await AdminUser.create({
         email: adminEmail,
-        passwordHash: adminPassword, // Pass plain password to be hashed by hook
+        password: adminPassword, // Pass plain password via 'password' field
+        passwordHash: '', // Add dummy value to satisfy TS
         role: 'admin', // Ensure the role is admin
       });
       console.log(`Admin user ${adminEmail} created successfully.`);
