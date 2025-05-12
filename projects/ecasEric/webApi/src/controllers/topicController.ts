@@ -81,8 +81,44 @@ export class TopicController extends BaseController {
   };
 
   private updateTopic = async (req: Request, res: Response) => {
-    // TODO: Implement topic update logic
-    res.status(501).send('Not Implemented');
+    const { id } = req.params;
+    const { title, slug, description, language } = req.body;
+
+    try {
+      const topicId = parseInt(id, 10);
+      if (isNaN(topicId)) {
+        return res.status(400).send('Invalid topic ID');
+      }
+
+      const topic = await Topic.findByPk(topicId);
+
+      if (!topic) {
+        return res.status(404).send('Topic not found');
+      }
+
+      // Prepare update data, excluding undefined fields to avoid overwriting with null
+      const updateData = {}; // Let TypeScript infer the type
+      if (title !== undefined) (updateData as any).title = title; // Use type assertion for assignment
+      if (slug !== undefined) (updateData as any).slug = slug;
+      if (description !== undefined) (updateData as any).description = description;
+      if (language !== undefined) (updateData as any).language = language;
+
+      // Only update if there is data to update
+      if (Object.keys(updateData).length === 0) {
+          return res.status(400).send('No update data provided');
+      }
+
+      await topic.update(updateData);
+
+      res.status(200).json(topic); // Return the updated topic
+    } catch (error: any) {
+       if (error.name === 'SequelizeUniqueConstraintError') { // Check by error.name
+            console.error('Error updating topic (Unique Constraint):', error);
+            return res.status(409).send('Topic with this slug already exists.'); // 409 Conflict
+        }
+      console.error(`Error updating topic ${id}:`, error);
+      res.status(500).send('Internal Server Error');
+    }
   };
 
   private deleteTopic = async (req: Request, res: Response) => {
