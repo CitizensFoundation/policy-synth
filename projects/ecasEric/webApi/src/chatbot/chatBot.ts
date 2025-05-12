@@ -4,6 +4,8 @@ import WebSocket from "ws";
 import path from "path";
 import XLSX from "xlsx";
 import fs from "fs/promises";
+import { QAPair } from "../models/qaPair.model";
+import { GenerationConfig, Content } from "@google/generative-ai";
 
 const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.0-pro-exp-02-05";
 //const aiModel = "gemini-2.0-flash";
@@ -15,7 +17,7 @@ export class EcasYeaChatBot extends PsBaseChatBot {
   mainSreamingSystemPrompt = (context: string) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) - a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
 
   <ABOUT_THIS_PROJECT>
-Q&A on the theme: EU Residence right of third country nationals who are EU citizen’s family members including the following 5 subtopics:
+Q&A on the theme: EU Residence right of third country nationals who are EU citizen's family members including the following 5 subtopics:
 - The notion of family member
 - Conditions of the right to stay
 - Formalities
@@ -32,7 +34,7 @@ Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark
 
 <BASIC_INFORMATION_ABOUT_EU_ECONOMIC_AREA>
 The European Economic Area (EEA):
-The EEA includes EU countries and also Iceland, Liechtenstein and Norway. It allows them to be part of the EU’s single market.
+The EEA includes EU countries and also Iceland, Liechtenstein and Norway. It allows them to be part of the EU's single market.
 
 Switzerland is not an EU or EEA member but is part of the single market. This means Swiss nationals have the same rights to live and work in the UK as other EEA nationals.
 </BASIC_INFORMATION_ABOUT_EU_ECONOMIC_AREA>
@@ -55,7 +57,7 @@ ${context}
 - If relevant external links are in your context always show those to the user but never show the user links not in the text.
 - Use simple language not legal language.
 - Show the user useful links in correct markdown format.
-- Refuse politely to answer questions that are not in your context and that are not on the topic of EU Residence right of third country nationals who are EU citizen’s family member.
+- Refuse politely to answer questions that are not in your context and that are not on the topic of EU Residence right of third country nationals who are EU citizen's family member.
 </IMPORTANT_INSTRUCTIONS>
 `;
 
@@ -92,28 +94,21 @@ Your thoughtful answer in markdown:
     answer: string;
   }[];
 
+  currentTopicId: number | undefined;
+
   constructor(
     wsClientId: string,
     wsClients: Map<string, WebSocket>,
-    memoryId?: string
+    memoryId?: string,
+    topicId?: number
   ) {
     super(wsClientId, wsClients, memoryId, "gemini", aiModel);
+    this.currentTopicId = topicId;
     if (this.geminiClient) {
       this.geminiModel = this.geminiClient.getGenerativeModel({
         model: aiModel,
-        systemInstruction: this.mainSreamingSystemPrompt(
-          JSON.stringify(this.searchContext!, null, 2)
-        ),
+        // System prompt is set dynamically later
       });
-    }
-    this.setupSearchContext();
-  }
-
-  async setupSearchContext() {
-    try {
-      this.searchContext = await this.getChunksFromXlsx("ecas2.xlsx");
-    } catch (err) {
-      console.error(`Error in setupSearchContext: ${err}`);
     }
   }
 
@@ -132,33 +127,6 @@ Your thoughtful answer in markdown:
     } else {
       console.error("No wsClientSocket found");
     }
-  }
-
-  async getChunksFromXlsx(filePath: string) {
-    // Convert filePath to absolute if not already
-    const absoluteFilePath = path.resolve(filePath);
-
-    // Read the Excel file
-    const workbook = XLSX.readFile(absoluteFilePath);
-
-    // Assuming the data is in the first sheet
-    const firstSheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[firstSheetName];
-
-    // Convert sheet to JSON, explicitly stating the expected format
-    // Since there's no header, every row is treated as data
-    const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as [
-      string,
-      string
-    ][];
-
-    // Map rows to desired format without skipping any rows
-    const chunks = rows
-      .filter(([question, answer]) => question && answer) // Checks if both question and answer are not empty or undefined
-      .map(([question, answer]) => ({ question, answer }));
-
-    //console.log(JSON.stringify(chunks, null, 2));
-    return chunks;
   }
 
   async loadCountryLinksInfo(country: string) {
@@ -187,107 +155,165 @@ Your thoughtful answer in markdown:
     }
   }
 
-  async ecasYeaConversation(chatLog: PsSimpleChatLog[]) {
-    // Save the chat log into memory
-    await this.setChatLog(chatLog);
+  async loadQaPairsForTopic(topicId: number | undefined): Promise<{ question: string; answer: string }[]> {
+    if (!topicId) {
+      console.warn("No topic ID specified, using legacy XLSX loading as fallback.");
+      // Fallback to legacy method if no topic ID
+      try {
+        const absoluteFilePath = path.resolve("ecas2.xlsx");
+        const workbook = XLSX.readFile(absoluteFilePath);
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as [string, string][];
+        const chunks = rows
+          .filter(([question, answer]) => question && answer)
+          .map(([question, answer]) => ({ question, answer }));
+        console.log(`Loaded ${chunks.length} Q&A pairs from XLSX fallback.`);
+        return chunks;
+      } catch (err) {
+        console.error(`Error in XLSX fallback loading: ${err}`);
+        return [];
+      }
+    }
+    try {
+      const qaPairs = await QAPair.findAll({
+        where: { topicId: topicId },
+        attributes: ['question', 'answer'], // Only fetch necessary fields
+        raw: true, // Get plain objects
+      });
+      console.log(`Loaded ${qaPairs.length} Q&A pairs for topic ${topicId}`);
+      return qaPairs as { question: string; answer: string }[];
+    } catch (error) {
+      console.error(`Error loading Q&A pairs for topic ${topicId}:`, error);
+      return [];
+    }
+  }
 
-    // Extract the user’s latest message and the previous conversation
-    const userLastMessage = chatLog[chatLog.length - 1].message;
-    console.log(`userLastMessage: ${userLastMessage}`);
-
-    const chatLogWithoutLastUserMessage = chatLog.slice(0, -1);
-    console.log(
-      `chatLogWithoutLastUserMessage: ${JSON.stringify(
-        chatLogWithoutLastUserMessage,
-        null,
-        2
-      )}`
-    );
-
-    this.sendAgentStart("Evaluating user question...");
-    //@ts-ignore
-    const router = new PsRagRouter(undefined, this.memory as any, 0, 100);
-    const routingData = await router.getRoutingData(
-      userLastMessage,
-      JSON.stringify(chatLogWithoutLastUserMessage)
-    );
-
-    let countryLinksInfo;
-
-    const euSignpostsInfo = await this.loadEuSignpostsInfo();
-
-    if (routingData.countryUserIsAskingAbout) {
-      countryLinksInfo = await this.loadCountryLinksInfo(
-        routingData.countryUserIsAskingAbout
-      );
+  async streamResponse(prompt: string | Content | (string | Content)[], chatHistory: Content[]) {
+    if (!this.geminiModel) {
+      console.error('Gemini model is not initialized.');
+      this.sendToClient('bot', 'Error: AI Model not initialized.', 'error');
+      return;
     }
 
-    this.sendAgentStart("Reasoning...");
-    /*
-      const vectorSearch = new PsRagVectorSearch(undefined, this.memory as any, 0, 100);
-      const searchContext = await vectorSearch.search(userLastMessage);
-    */
-
-    console.log("In ECAS YEA conversation");
-
-    const finalUserQuestionText = userLastMessage;
-
-    // Build the user prompt using the custom user prompt template.
-    const userPrompt = this.mainStreamingUserPrompt(
-      finalUserQuestionText,
-      countryLinksInfo,
-      euSignpostsInfo
-    );
-
-    console.log(`userPrompt: ${userPrompt}`);
-
-    // Build Gemini chat history from previous messages.
-    // Convert "bot" sender to "model" and "user" remains "user".
-    let geminiHistory = chatLogWithoutLastUserMessage.map(
-      (message: PsSimpleChatLog) => ({
-        role: message.sender === "assistant" ? "model" : "user",
-        parts: [{ text: message.message }],
-      })
-    );
-
-    console.log(`geminiHistory: ${JSON.stringify(geminiHistory, null, 2)}`);
-
-    /*const simplePairs = searchContext.data.Get.EcasYeaRagDocumentChunk.map(
-      (c: any) => ({
-        question: c.question,
-        answer: c.answer,
-      })
-    );
-    console.log(JSON.stringify(simplePairs, null, 2));*/
-
-    // Create a Gemini chat session with the prior conversation
-    const chat = this.geminiModel!.startChat({ history: geminiHistory });
+    this.sendAgentStart("Generating response...");
 
     try {
-      // Send the current user message as a stream.
-      const result = await chat.sendMessageStream(userPrompt);
+      const chat = this.geminiModel.startChat({ history: chatHistory });
+      const result = await chat.sendMessageStream(prompt);
+
       this.sendToClient("bot", "", "start");
       let botMessage = "";
       for await (const chunk of result.stream) {
-        const chunkText = chunk.text();
-        this.sendToClient("bot", chunkText);
-        botMessage += chunkText;
+          if (chunk.text) {
+            const chunkText = chunk.text();
+            // Make sure chunkText is not empty before sending
+            if (chunkText && chunkText.trim() !== "") {
+              this.sendToClient("bot", chunkText);
+            }
+            botMessage += chunkText;
+          } else {
+            console.warn("Received chunk without text content.")
+          }
       }
+
       // Save the bot's response to memory
       this.memory.chatLog!.push({
-        sender: "bot",
+        sender: "assistant", // Ensure sender is 'assistant' for memory
         message: botMessage,
       });
       await this.saveMemoryIfNeeded();
       this.sendToClient("bot", "", "end");
-    } catch (err) {
-      console.error(`Error in ECAS YEA chatbot: ${err}`);
-      this.sendToClient(
-        "bot",
-        "There has been an error, please retry",
-        "error"
-      );
+    } catch (error: any) {
+      console.error(`Error streaming response: ${error}`, error);
+      // Attempt to parse GoogleGenerativeAI errors if possible
+      let errorMessage = "An error occurred while generating the response.";
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      this.sendToClient("bot", `Error: ${errorMessage}`, "error");
       this.sendToClient("bot", "", "end");
     }
+  }
+
+  async ecasYeaConversation(chatLog: PsSimpleChatLog[]) {
+    await this.setChatLog(chatLog);
+    const userLastMessage = chatLog[chatLog.length - 1].message;
+    const chatLogWithoutLastUserMessage = chatLog.slice(0, -1);
+
+    console.log(`User Message: ${userLastMessage}`);
+    console.log(`Using Topic ID: ${this.currentTopicId}`);
+
+    this.sendAgentStart("Loading context...");
+    this.searchContext = await this.loadQaPairsForTopic(this.currentTopicId);
+
+    if (!this.searchContext || this.searchContext.length === 0) {
+        const errorMsg = this.currentTopicId
+          ? `I could not find any Q&A content for the selected topic (ID: ${this.currentTopicId}). Please try another topic or contact an administrator.`
+          : "Please select a topic first before asking a question.";
+        this.sendToClient("bot", errorMsg, "error"); // Use sendToClient for errors
+        console.error(`No search context found for topic ${this.currentTopicId}`);
+        return;
+    }
+
+    // Dynamically set the system prompt with the loaded context
+    if (this.geminiClient && this.geminiModel) {
+      // Re-initialize model with new system instruction for this conversation
+      this.geminiModel = this.geminiClient.getGenerativeModel({
+        model: aiModel,
+        systemInstruction: this.mainSreamingSystemPrompt(
+          JSON.stringify(this.searchContext, null, 2)
+        ),
+        // Add safety settings if needed
+      });
+    } else {
+        this.sendToClient("bot", "Error: AI model not initialized properly.", "error"); // Use sendToClient
+        console.error("Gemini client or model not available");
+        return;
+    }
+
+    this.sendAgentStart("Analyzing query...");
+    // Correct PsRagRouter instantiation (assuming it takes memory)
+    // If it requires more params, adjust based on its definition
+    //@ts-ignore - Assuming BaseChatBot handles memory correctly
+    const router = new PsRagRouter(this.memory);
+    const routingData = await router.getRoutingData(
+        userLastMessage,
+        JSON.stringify(chatLogWithoutLastUserMessage)
+      );
+
+    console.log(`Routing data: ${JSON.stringify(routingData, null, 2)}`);
+
+    let countryLinksInfo: string | undefined;
+    if (routingData.countryUserIsAskingAbout) {
+        this.sendAgentStart(`Loading links for ${routingData.countryUserIsAskingAbout}...`);
+        countryLinksInfo = await this.loadCountryLinksInfo(routingData.countryUserIsAskingAbout);
+    } else {
+        // Fallback regex check if router doesn't find country
+        const RelevantCountryRegEx = /\b(Austria|Belgium|Bulgaria|Croatia|Cyprus|Czech Republic|Denmark|Estonia|Finland|France|Germany|Greece|Hungary|Ireland|Italy|Latvia|Lithuania|Luxembourg|Malta|Netherlands|Poland|Portugal|Romania|Slovakia|Slovenia|Spain|Sweden)\b/i;
+        const relevantCountry = RelevantCountryRegEx.exec(userLastMessage);
+        if (relevantCountry) {
+            console.log(`Fallback regex detected country: ${relevantCountry[0]}`);
+            this.sendAgentStart(`Loading links for ${relevantCountry[0]}...`);
+            countryLinksInfo = await this.loadCountryLinksInfo(relevantCountry[0]);
+        }
+    }
+
+    const euSignpostsInfo = await this.loadEuSignpostsInfo();
+
+    // Convert chat history to Gemini format
+    const history: Content[] = chatLogWithoutLastUserMessage.map(
+        (msg: PsSimpleChatLog): Content => ({
+          role: msg.sender === "user" ? "user" : "model",
+          parts: [{ text: msg.message }],
+        })
+      );
+
+    // Call the new streaming method
+    await this.streamResponse(this.mainStreamingUserPrompt(
+        userLastMessage,
+        countryLinksInfo,
+        euSignpostsInfo
+      ), history);
   }
 }

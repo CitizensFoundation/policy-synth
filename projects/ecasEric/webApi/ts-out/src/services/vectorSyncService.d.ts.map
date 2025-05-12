@@ -1,0 +1,1 @@
+{"version":3,"file":"vectorSyncService.d.ts","sourceRoot":"","sources":["../../../src/services/vectorSyncService.ts"],"names":[],"mappings":"AAKA,cAAM,iBAAiB;IACb,eAAe,CAAC,QAAQ,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;IA6BhD,eAAe,CAAC,QAAQ,EAAE,MAAM,GAAG,OAAO,CAAC,IAAI,CAAC;CA0BzD;AAED,eAAO,MAAM,iBAAiB,mBAA0B,CAAC"}

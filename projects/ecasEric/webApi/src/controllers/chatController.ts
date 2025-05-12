@@ -47,12 +47,24 @@ export class ChatController extends BaseController {
     const chatLog = req.body.chatLog;
     const wsClientId = req.body.wsClientId;
     const memoryId = req.body.memoryId;
+    const topicId = req.body.topicId;
     let saveChatLog: PsSimpleChatLog[] | undefined;
 
     console.log(`ecasYeaConversation chatLog: ${JSON.stringify(chatLog, null, 2)}`);
+    console.log(`ecasYeaConversation topicId: ${topicId}`);
+
+    if (!wsClientId) {
+      res.status(400).send("wsClientId is required");
+      return;
+    }
+
+    if (topicId !== undefined && typeof topicId !== 'number') {
+       res.status(400).send("Invalid topicId format, must be a number");
+       return;
+    }
 
     try {
-      const bot = new EcasYeaChatBot(wsClientId, this.wsClients, memoryId);
+      const bot = new EcasYeaChatBot(wsClientId, this.wsClients, memoryId, topicId);
       if (memoryId) {
         const memory = await bot.getLoadedMemory();
         if (memory) {
@@ -65,14 +77,15 @@ export class ChatController extends BaseController {
     } catch (error) {
       console.log(error);
       res.sendStatus(500);
+      return;
     }
 
     console.log(
-      `LiveResearchChatController for id ${wsClientId} initialized chatLog of length ${chatLog?.length}`
+      `ChatController for id ${wsClientId} initialized chatLog of length ${chatLog?.length} for topic ${topicId}`
     );
 
     if (saveChatLog) {
-      res.send(saveChatLog);
+      res.status(200).send({ chatLog: saveChatLog });
     } else {
       res.sendStatus(200);
     }

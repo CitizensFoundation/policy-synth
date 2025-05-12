@@ -9,6 +9,7 @@
   "license": "MIT",
   "dependencies": {
     "@policysynth/webapp": "^1.2.1",
+    "jwt-decode": "^4.0.0",
     "rollup-plugin-commonjs": "^10.1.0"
   },
   "scripts": {
@@ -73,6 +74,7 @@
     "rollup-plugin-terser": "^7.0.2",
     "rollup-plugin-workbox": "^6.2.0",
     "sinon": "^15.0.1",
+    "ts-node": "^10.9.2",
     "tslib": "^2.4.0",
     "typescript": "~4.9.5"
   },

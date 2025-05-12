@@ -1,5 +1,5 @@
 import { html, css } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { PsRouter } from '@policysynth/webapp/base/router/router.js';
 
 import '@material/web/slider/slider.js';
@@ -19,6 +19,24 @@ type SavedChat = {
   serverMemoryId: string;
   questionSnippet: string;
 };
+
+// Adjust interface if needed based on actual API response
+// Assuming PsSimpleChatLog is the correct type from the API/base class
+interface PsSimpleChatLog {
+  sender: 'user' | 'assistant' | 'bot'; // Adjust as per actual usage
+  message: string;
+  date?: Date; // Optional depending on usage
+  type?: string; // Might exist
+}
+
+// ... SavedChat, Topic interfaces ...
+interface Topic {
+    id: number;
+    slug: string;
+    title: string;
+    description?: string;
+    language?: string;
+}
 
 @customElement('eric-chatbot-app')
 export class EcasYeaChatBotApp extends PolicySynthWebApp {
@@ -41,8 +59,9 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   @property({ type: String })
   serverMemoryId: string | undefined;
 
+  // Change type to PsSimpleChatLog[]
   @property({ type: Array })
-  chatLogFromServer: PsAiChatWsMessage[] = [];
+  chatLogFromServer: PsSimpleChatLog[] = [];
 
   @property({ type: String })
   llmTotalCost = '$0.000';
@@ -60,6 +79,15 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   estimatedSecondsPerPage = 40;
 
   serverApi: ResearchServerApi;
+
+  @state()
+  private loading = false; // Add loading state
+  @state()
+  private authStateCounter = authStoreInstance.updateCounter;
+  @state()
+  private availableTopics: Topic[] = [];
+  @state()
+  private selectedTopicId: number | undefined;
 
   constructor() {
     super();
@@ -209,42 +237,29 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
 
   async getChatLogFromServer() {
-    const chatBotElemement = this.$$(
-      'eric-chat-bot'
-    ) as EcasEricChatBot;
-    if (
-      chatBotElemement &&
-      chatBotElemement.chatLog.length == 0 &&
-      this.serverMemoryId
-    ) {
-      if (this.privateChatLogs && !this.isChatLogIdValid(this.serverMemoryId)) {
-        console.error('Access denied: Chat log ID is not in the saved list.', this.serverMemoryId);
-        return; // Prevent access if ID is not valid
-      }
-
-      const { chatLog, totalCosts } = await this.serverApi.getChatLogFromServer(
-        this.serverMemoryId
-      );
-      if (totalCosts) {
-        this.setCost(totalCosts);
-      }
-      if (chatLog) {
-        //TODO: Fix this sender hack, should be consistent
-        this.chatLogFromServer = chatLog.map((chatLogItem: any) => {
-          return {
-            ...chatLogItem,
-            date: new Date(chatLogItem.date),
-            sender: ['assistant', 'bot'].includes(chatLogItem.sender)
-              ? 'bot'
-              : 'you',
-          };
-        });
-        this.requestUpdate();
-      } else {
-        console.error('No chat log from server');
+    if (this.serverMemoryId && this.isChatLogIdValid(this.serverMemoryId)) {
+      this.loading = true;
+      try {
+        // Assuming serverApi.getChatLogFromServer returns { chatLog: PsSimpleChatLog[], totalCosts: number }
+        const history = await this.serverApi.getChatLogFromServer(
+          this.serverMemoryId
+        );
+        if (history && history.chatLog) {
+          // Assign directly if type matches
+          this.chatLogFromServer = history.chatLog;
+          this.llmTotalCost = history.totalCosts ? `$${history.totalCosts.toFixed(3)}` : '$0.000';
+          this.startTimer();
+        } else {
+          this.serverMemoryId = undefined;
+        }
+      } catch (error) {
+        console.error('Error fetching chat log:', error);
+        this.serverMemoryId = undefined;
+      } finally {
+        this.loading = false;
       }
     } else {
-      console.error('No serverMemoryId');
+       this.serverMemoryId = undefined;
     }
   }
 
