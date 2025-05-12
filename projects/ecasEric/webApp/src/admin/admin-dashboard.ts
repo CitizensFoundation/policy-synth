@@ -77,7 +77,7 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
   renderSidebar() {
     return html`
       <div class="sidebar">
-        <h2>Admin Panel</h2>
+        <h2>ECAS Admin Panel</h2>
         <md-navigation-tab
           label="Topics"
           ?active=${this.selectedView === 'topics'}

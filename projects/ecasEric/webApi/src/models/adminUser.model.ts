@@ -10,23 +10,25 @@ interface AdminUserAttributes {
 }
 
 // Password is not stored, so it's not in attributes
-interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id'> {
-  password?: string; // Add optional password field for creation
-}
+interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id'> {}
 
 class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttributes> implements AdminUserAttributes {
+  // Declare fields for TS and to satisfy implements, Sequelize handles them.
   public id!: number;
   public email!: string;
   public passwordHash!: string;
   public role!: 'admin' | 'editor';
-  public password?: string; // Add optional property for hooks
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  // No temporary password?: string; field needed
 
-  // Method to compare password
+  // Keep methods
   public async validatePassword(password: string): Promise<boolean> {
-    return await bcrypt.compare(password, this.passwordHash);
+    const storedHash = this.getDataValue('passwordHash');
+    if (!password || !storedHash) {
+        console.error('validatePassword: Missing password or stored hash');
+        return false;
+    }
+    return await bcrypt.compare(password, storedHash);
   }
 }
 
@@ -60,18 +62,17 @@ AdminUser.init(
     sequelize,
     hooks: {
       beforeCreate: async (user) => {
-        if (user.password) { // Check if password was provided
+        const plainPassword = user.getDataValue('passwordHash');
+        if (plainPassword && typeof plainPassword === 'string' && plainPassword.length > 0) {
           const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
-          user.passwordHash = await bcrypt.hash(user.password, saltRounds); // Hash the plain password
+          const hash = await bcrypt.hash(plainPassword, saltRounds);
+          user.setDataValue('passwordHash', hash);
+        } else {
+          console.error('Password hash (plain password) missing or invalid during user creation hook!');
+          throw new Error('A valid password is required to create a user.');
         }
       },
-      beforeUpdate: async (user) => {
-        // Hash password only if it was provided via the temporary field during update
-        if (user.password) {
-          const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS || '10');
-          user.passwordHash = await bcrypt.hash(user.password, saltRounds);
-        }
-      },
+      // beforeUpdate hook removed
     },
   }
 );

@@ -82,7 +82,7 @@ export class AdminLogin extends LitElement {
   render() {
     return html`
       <div class="login-card">
-        <h1>Admin Login</h1>
+        <h1>ECAS Admin Login</h1>
         <md-outlined-text-field
           label="Email"
           type="email"

@@ -25,8 +25,8 @@ const seedAdmin = async () => {
       // Password hashing is handled by the model hook
       await AdminUser.create({
         email: adminEmail,
-        password: adminPassword, // Pass plain password via 'password' field
-        passwordHash: '', // Add dummy value to satisfy TS
+        // Pass plain password directly to passwordHash field, hook will hash it
+        passwordHash: adminPassword,
         role: 'admin', // Ensure the role is admin
       });
       console.log(`Admin user ${adminEmail} created successfully.`);
