@@ -62,10 +62,22 @@ export class TopicController extends BaseController {
   };
 
   private createTopic = async (req: Request, res: Response) => {
-    // TODO: Implement topic creation logic
-    // Example: const { title, slug, description, language } = req.body;
-    // const newTopic = await Topic.create({ title, slug, description, language });
-    res.status(501).send('Not Implemented');
+    try {
+      const { title, slug, description, language } = req.body;
+      if (!title || !slug) {
+        return res.status(400).send('Missing required fields: title and slug');
+      }
+      const newTopic = await Topic.create({ title, slug, description, language });
+      res.status(201).json(newTopic);
+    } catch (error: any) { // Added :any to error for broader compatibility in catch
+        // Check if the error is a Sequelize UniqueConstraintError
+        if (error.name === 'SequelizeUniqueConstraintError') { // Check by error.name
+            console.error('Error creating topic (Unique Constraint):', error);
+            return res.status(409).send('Topic with this slug already exists.'); // 409 Conflict
+        }
+      console.error('Error creating topic:', error);
+      res.status(500).send('Internal Server Error');
+    }
   };
 
   private updateTopic = async (req: Request, res: Response) => {
