@@ -794,7 +794,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             token_in_cached_context_count: cachedInTokens,
             long_context_token_in_count: longContextTokenIn,
             long_context_token_out_count: longContextTokenOut,
-            long_context_token_in_cached_count: longContextTokenInCached,
+            long_context_token_in_cached_context_count: longContextTokenInCached,
             model_id: finalModelId,
             agent_id: this.agentId,
             user_id: this.userId,
@@ -810,7 +810,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               token_in_cached_context_count: cachedInTokens,
               long_context_token_in_count: longContextTokenIn,
               long_context_token_out_count: longContextTokenOut,
-              long_context_token_in_cached_count: longContextTokenInCached,
+              long_context_token_in_cached_context_count: longContextTokenInCached,
             },
             { transaction: t }
           );
