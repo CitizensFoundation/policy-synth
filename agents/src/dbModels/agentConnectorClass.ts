@@ -1,29 +1,51 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
 import { User } from "./ypUser.js";
+import { AgentConnectorClassUsers } from "./agentConnectorClassUser.js";
+import { AgentConnectorClassAdmins } from "./agentConnectorClassAdmin.js";
+import { PsAgentRegistry } from "./agentRegistry.js";
+import { AgentRegistryConnectors } from "./agentRegistryConnector.js";
+import { PsAgentConnector } from "./agentConnector.js";
+
+// Define attributes based on typical usage and migration tables
+export interface PsAgentConnectorClassAttributes {
+  id: number;
+  uuid: string;
+  class_base_id: string;
+  user_id: number;
+  created_at: Date;
+  updated_at: Date;
+  name: string;
+  version: number;
+  configuration: PsAgentConnectorConfiguration;
+  available: boolean;
+}
 
 interface PsAgentConnectorClassCreationAttributes
   extends Optional<
     PsAgentConnectorClassAttributes,
-    "id" | "uuid" | "created_at" | "updated_at"
+    "id" | "uuid" | "class_base_id" | "created_at" | "updated_at"
   > {}
 
 export class PsAgentConnectorClass
-  extends Model<PsAgentConnectorClassAttributes, PsAgentConnectorClassCreationAttributes>
+  extends Model<
+    PsAgentConnectorClassAttributes,
+    PsAgentConnectorClassCreationAttributes
+  >
   implements PsAgentConnectorClassAttributes
 {
   declare id: number;
   declare uuid: string;
-  declare user_id: number;
   declare class_base_id: string;
+  declare user_id: number;
   declare created_at: Date;
   declare updated_at: Date;
   declare name: string;
   declare version: number;
-  declare available: boolean;
   declare configuration: PsAgentConnectorConfiguration;
+  declare available: boolean;
 
-  // Associations
+  // Associations (adjust as needed)
   declare Users?: User[];
   declare Admins?: User[];
 
@@ -34,6 +56,7 @@ export class PsAgentConnectorClass
   declare setUsers: (users: User[]) => Promise<void>;
   declare removeUser: (user: User) => Promise<void>;
   declare removeUsers: (users: User[]) => Promise<void>;
+  declare hasUser: (user: User) => Promise<boolean>;
 
   declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
   declare addAdmins: (users: User[]) => Promise<void>;
@@ -41,6 +64,7 @@ export class PsAgentConnectorClass
   declare setAdmins: (users: User[]) => Promise<void>;
   declare removeAdmin: (user: User) => Promise<void>;
   declare removeAdmins: (users: User[]) => Promise<void>;
+  declare hasAdmin: (user: User) => Promise<boolean>;
 }
 
 PsAgentConnectorClass.init(
@@ -54,6 +78,7 @@ PsAgentConnectorClass.init(
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
       allowNull: false,
+      unique: true,
     },
     class_base_id: {
       type: DataTypes.UUID,
@@ -82,53 +107,39 @@ PsAgentConnectorClass.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-    available: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-    },
     configuration: {
       type: DataTypes.JSONB,
+      allowNull: false,
+    },
+    available: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
     },
   },
   {
     sequelize,
     tableName: "ps_agent_connector_classes",
-    indexes: [
-      {
-        fields: ["uuid"],
-        unique: true
-      },
-      {
-        fields: ["class_base_id"],
-      },
-      {
-        fields: ["class_base_id","version"],
-      },
-      {
-        fields: ["user_id"],
-      },
-      {
-        fields: ["name"],
-      },
-      {
-        fields: ["version"],
-      },
-    ],
     timestamps: true,
     underscored: true,
+    indexes: [
+      { fields: ["uuid"], unique: true },
+      { fields: ["class_base_id"] },
+      { fields: ["class_base_id", "version"] },
+      { fields: ["user_id"] },
+      { fields: ["name"] },
+      { fields: ["version"] },
+    ],
   }
 );
 
 (PsAgentConnectorClass as any).associate = (models: any) => {
-  // Define associations
   PsAgentConnectorClass.belongsTo(models.User, {
     foreignKey: "user_id",
-    as: "Owner",
+    as: "Owner", // Assuming an Owner association
   });
 
   PsAgentConnectorClass.belongsToMany(models.User, {
-    through: "AgentConnectorClassUsers",
+    through: AgentConnectorClassUsers,
     foreignKey: "agent_connector_class_id",
     otherKey: "user_id",
     as: "Users",
@@ -136,21 +147,23 @@ PsAgentConnectorClass.init(
   });
 
   PsAgentConnectorClass.belongsToMany(models.User, {
-    through: "AgentConnectorClassAdmins",
+    through: AgentConnectorClassAdmins,
     foreignKey: "agent_connector_class_id",
     otherKey: "user_id",
     as: "Admins",
     timestamps: false,
   });
 
+  // Association with PsAgentRegistry through AgentRegistryConnectors
   PsAgentConnectorClass.belongsToMany(models.PsAgentRegistry, {
-    through: "AgentRegistryConnectors",
+    through: AgentRegistryConnectors, // Use the imported model
     as: "Registry",
     foreignKey: "ps_agent_connector_class_id",
     otherKey: "ps_agent_registry_id",
-    timestamps: true,
+    timestamps: false, // Join table model handles its own timestamps
   });
 
+  // Add other associations if they exist, e.g., with PsAgentConnector
   PsAgentConnectorClass.hasMany(models.PsAgentConnector, {
     foreignKey: "class_id",
     as: "Connectors",

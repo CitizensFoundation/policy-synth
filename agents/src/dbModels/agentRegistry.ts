@@ -2,6 +2,8 @@ import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
 import { PsAgentClass } from "./agentClass.js";
 import { PsAgentConnectorClass } from "./agentConnectorClass.js";
+import { AgentRegistryAgents } from "./agentRegistryAgent.js"; // Direct import
+import { AgentRegistryConnectors } from "./agentRegistryConnector.js"; // Direct import
 
 interface PsAgentRegistryCreationAttributes
   extends Optional<
@@ -79,18 +81,18 @@ PsAgentRegistry.init(
 
 (PsAgentRegistry as any).associate = (models: any) => {
   PsAgentRegistry.belongsToMany(models.PsAgentClass, {
-    through: "AgentRegistryAgents",
+    through: AgentRegistryAgents, // Use the direct import here
     as: "Agents",
     foreignKey: "ps_agent_registry_id",
     otherKey: "ps_agent_class_id",
-    timestamps: true,
+    timestamps: false, // The join table model (AgentRegistryAgents) manages its own timestamps
   });
 
   PsAgentRegistry.belongsToMany(models.PsAgentConnectorClass, {
-    through: "AgentRegistryConnectors",
+    through: AgentRegistryConnectors, // Use the direct import here
     as: "Connectors",
     foreignKey: "ps_agent_registry_id",
     otherKey: "ps_agent_connector_class_id",
-    timestamps: true,
+    timestamps: false, // The join table model (AgentRegistryConnectors) manages its own timestamps
   });
 };

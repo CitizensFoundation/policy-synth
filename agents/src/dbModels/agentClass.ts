@@ -1,6 +1,9 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "./sequelize.js";
 import { User } from "./ypUser.js";
+import { AgentRegistryAgents } from "./agentRegistryAgent.js";
+import { AgentClassUsers } from "./agentClassUser.js";
+import { AgentClassAdmins } from "./agentClassAdmin.js";
 
 interface PsAgentClassAttributesCreation
   extends Optional<
@@ -24,26 +27,26 @@ export class PsAgentClass
   declare available: boolean;
 
   // Associations
- declare Users?: User[];
- declare Admins?: User[];
+  declare Users?: User[];
+  declare Admins?: User[];
 
- // Association methods
- declare addUser: (user: User, obj?: any | undefined) => Promise<void>;
- declare addUsers: (users: User[]) => Promise<void>;
- declare getUsers: () => Promise<User[]>;
- declare setUsers: (users: User[]) => Promise<void>;
- declare removeUser: (user: User) => Promise<void>;
- declare removeUsers: (users: User[]) => Promise<void>;
+  // Association methods
+  declare addUser: (user: User, obj?: any | undefined) => Promise<void>;
+  declare addUsers: (users: User[]) => Promise<void>;
+  declare getUsers: () => Promise<User[]>;
+  declare setUsers: (users: User[]) => Promise<void>;
+  declare removeUser: (user: User) => Promise<void>;
+  declare removeUsers: (users: User[]) => Promise<void>;
 
- declare hasUser: (user: User) => Promise<boolean>;
- declare hasAdmin: (user: User) => Promise<boolean>;
+  declare hasUser: (user: User) => Promise<boolean>;
+  declare hasAdmin: (user: User) => Promise<boolean>;
 
- declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
- declare addAdmins: (users: User[]) => Promise<void>;
- declare getAdmins: () => Promise<User[]>;
- declare setAdmins: (users: User[]) => Promise<void>;
- declare removeAdmin: (user: User) => Promise<void>;
- declare removeAdmins: (users: User[]) => Promise<void>;
+  declare addAdmin: (user: User, obj?: any | undefined) => Promise<void>;
+  declare addAdmins: (users: User[]) => Promise<void>;
+  declare getAdmins: () => Promise<User[]>;
+  declare setAdmins: (users: User[]) => Promise<void>;
+  declare removeAdmin: (user: User) => Promise<void>;
+  declare removeAdmins: (users: User[]) => Promise<void>;
 }
 
 PsAgentClass.init(
@@ -125,7 +128,7 @@ PsAgentClass.init(
   });
 
   PsAgentClass.belongsToMany(models.User, {
-    through: "AgentClassUsers",
+    through: AgentClassUsers,
     foreignKey: "agent_class_id",
     otherKey: "user_id",
     as: "Users",
@@ -133,7 +136,7 @@ PsAgentClass.init(
   });
 
   PsAgentClass.belongsToMany(models.User, {
-    through: "AgentClassAdmins",
+    through: AgentClassAdmins,
     foreignKey: "agent_class_id",
     otherKey: "user_id",
     as: "Admins",
@@ -141,11 +144,11 @@ PsAgentClass.init(
   });
 
   PsAgentClass.belongsToMany(models.PsAgentRegistry, {
-    through: "AgentRegistryAgents",
+    through: AgentRegistryAgents,
     as: "Registry",
     foreignKey: "ps_agent_class_id",
     otherKey: "ps_agent_registry_id",
-    timestamps: true,
+    timestamps: false,
   });
 
   PsAgentClass.hasMany(models.PsAgent, {
