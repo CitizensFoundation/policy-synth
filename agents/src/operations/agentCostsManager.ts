@@ -203,6 +203,8 @@ export class AgentCostManager {
           tokenInCachedContextCount:
             modelUsage.token_in_cached_context_count || 0,
           longContextTokenInCount: modelUsage.long_context_token_in_count || 0,
+          longContextTokenOutCount:
+            modelUsage.long_context_token_out_count || 0,
           longContextTokenInCachedContextCount:
             modelUsage.long_context_token_in_cached_context_count || 0,
           tokenOutCount:

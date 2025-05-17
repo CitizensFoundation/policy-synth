@@ -143,6 +143,24 @@ export class GoogleGeminiChat extends BaseChatModel {
       this.logger.debug(`Messages:\n${JSON.stringify(messages, null, 2)}`);
     }
 
+    /**
+     * Helper: robust extraction of "tokens out".
+     * Google / Vertex omit candidatesTokenCount for some (esp. long-context)
+     * calls – but totalTokenCount is still returned.
+     */
+    const getTokensOut = (usage?: any) => {
+      if (!usage) return 0;
+      if (usage.candidatesTokenCount != null) return usage.candidatesTokenCount;
+      if (usage.totalTokenCount != null && usage.promptTokenCount != null) {
+        return (
+          usage.totalTokenCount -
+          usage.promptTokenCount -
+          (usage.toolUsePromptTokenCount ?? 0)
+        );
+      }
+      return 0;
+    };
+
     // 1. Extract system messages & combine them
     const systemContent = messages
       .filter((m) => m.role === "system" || m.role === "developer") // Include developer role as per original
@@ -276,7 +294,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         //console.log(`VERTEX RESPONSE: ${JSON.stringify(response, null, 2)}`);
         return {
           tokensIn: response.usageMetadata?.promptTokenCount ?? 0,
-          tokensOut: response.usageMetadata?.candidatesTokenCount ?? 0,
+          tokensOut: getTokensOut(response.usageMetadata),
           cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
           content: content,
         };
@@ -287,7 +305,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         //console.log(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
         return {
           tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
-          tokensOut: result.response.usageMetadata?.candidatesTokenCount ?? 0,
+          tokensOut: getTokensOut(result.response.usageMetadata),
           cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
           content,
         };

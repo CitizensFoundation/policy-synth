@@ -408,6 +408,7 @@ interface PsDetailedAgentCostResults {
   tokenInCount: number;
   tokenInCachedContextCount: number;
   longContextTokenInCount: number;
+  longContextTokenOutCount: number;
   longContextTokenInCachedContextCount: number;
   tokenOutCount: number;
   costIn: number;
