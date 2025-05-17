@@ -219,6 +219,12 @@ export class AgentCostManager {
             costs.costInCached +
             costs.costInLong +
             costs.costInCachedLong,
+          costInNormal: costs.costInNormal,
+          costInCached: costs.costInCached,
+          costInLong: costs.costInLong,
+          costInCachedLong: costs.costInCachedLong,
+          costOutNormal: costs.costOutNormal,
+          costOutLong: costs.costOutLong,
           costOut: costs.costOutNormal + costs.costOutLong,
           totalCost: costs.totalCost,
           // Optionally, include detailed breakdown:

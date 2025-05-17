@@ -406,10 +406,19 @@ interface PsDetailedAgentCostResults {
   agentName: string;
   aiModelName: string;
   tokenInCount: number;
+  tokenInCachedContextCount: number;
+  longContextTokenInCount: number;
+  longContextTokenInCachedContextCount: number;
   tokenOutCount: number;
   costIn: number;
   costOut: number;
   totalCost: number;
+  costInNormal: number;
+  costInCached: number;
+  costInLong: number;
+  costInCachedLong: number;
+  costOutNormal: number;
+  costOutLong: number;
 }
 
 /* Examples of structured questions for agent classes (for AI programmers)

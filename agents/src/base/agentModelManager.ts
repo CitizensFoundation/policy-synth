@@ -167,7 +167,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
       if (!apiKeyConfig) {
         this.logger.warn(
-          `API key configuration not found for model ${model.id}`
+          `API key configuration not found for model ${model.id} ${modelType} ${modelSize} ${modelKey}`
         );
         continue;
       }
