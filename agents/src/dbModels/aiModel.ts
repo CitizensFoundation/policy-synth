@@ -1,5 +1,6 @@
 import { DataTypes, Model, Optional, Sequelize } from "sequelize";
 import { sequelize } from "./sequelize.js";
+import { AgentModels } from "./agentModel.js";
 
 interface PsAiModelCreationAttributes
   extends Optional<
@@ -79,3 +80,13 @@ PsAiModel.init(
     underscored: true,
   }
 );
+
+(PsAiModel as any).associate = (models: any) => {
+  PsAiModel.belongsToMany(models.PsAgent, {
+    through: AgentModels,
+    foreignKey: "ai_model_id",
+    otherKey: "agent_id",
+    as: "Agents",
+    timestamps: false,
+  });
+};

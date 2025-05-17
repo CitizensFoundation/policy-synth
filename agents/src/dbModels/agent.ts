@@ -5,6 +5,9 @@ import { User } from "./ypUser.js";
 import { Group } from "./ypGroup.js";
 import { PsAgentConnector } from "./agentConnector.js";
 import { PsAiModel } from "./aiModel.js";
+import { AgentModels } from "./agentModel.js";
+import { AgentInputConnectors } from "./agentInputConnector.js";
+import { AgentOutputConnectors } from "./agentOutputConnector.js";
 
 interface PsAgentCreationAttributes
   extends Optional<
@@ -185,7 +188,7 @@ PsAgent.init(
   });
 
   PsAgent.belongsToMany(models.PsAiModel, {
-    through: "AgentModels",
+    through: AgentModels,
     foreignKey: "agent_id",
     otherKey: 'ai_model_id',
     as: "AiModels",
@@ -194,7 +197,7 @@ PsAgent.init(
 
   // Through a join table
   PsAgent.belongsToMany(models.PsAgentConnector, {
-    through: "AgentInputConnectors",
+    through: AgentInputConnectors,
     foreignKey: "agent_id",
     otherKey: "connector_id",
     as: "InputConnectors",
@@ -202,7 +205,7 @@ PsAgent.init(
   });
 
   PsAgent.belongsToMany(models.PsAgentConnector, {
-    through: "AgentOutputConnectors",
+    through: AgentOutputConnectors,
     foreignKey: "agent_id",
     otherKey: "connector_id",
     as: "OutputConnectors",
