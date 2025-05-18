@@ -163,6 +163,9 @@ export class AgentCostManager {
           long_context_token_in_count: parseInt(
             row.long_context_token_in_count || "0"
           ),
+          long_context_token_out_count: parseInt(
+            row.long_context_token_out_count || "0"
+          ),
           long_context_token_in_cached_context_count: parseInt(
             row.long_context_token_in_cached_context_count || "0"
           ),
@@ -172,9 +175,6 @@ export class AgentCostManager {
           ),
           token_out_audio_count: parseInt(row.token_out_audio_count || "0"),
           token_out_image_count: parseInt(row.token_out_image_count || "0"),
-          long_context_token_out_count: parseInt(
-            row.long_context_token_out_count || "0"
-          ),
           long_context_token_out_reasoning_count: parseInt(
             row.long_context_token_out_reasoning_count || "0"
           ),
@@ -382,6 +382,7 @@ export class AgentCostManager {
           mu.token_out_count,
           mu.token_in_cached_context_count,
           mu.long_context_token_in_count,
+          mu.long_context_token_out_count,
           mu.long_context_token_in_cached_context_count,
           mu.token_out_reasoning_count,
           mu.token_out_audio_count,
