@@ -17,6 +17,7 @@ import {
 import { BaseChatModel } from "./baseChatModel.js";
 import { types } from "util";
 import { PsAiModel } from "../dbModels/aiModel.js";
+import { appendFile } from "fs/promises";
 
 export class GoogleGeminiChat extends BaseChatModel {
   private useVertexAi: boolean;
@@ -133,6 +134,40 @@ export class GoogleGeminiChat extends BaseChatModel {
       threshold: HarmBlockThreshold.BLOCK_NONE,
     },
   ];
+
+  private async debugTokenCounts(
+    tokensIn: number,
+    tokensOut: number,
+    cachedInTokens: number
+  ) {
+    if (!process.env.DEBUG_TOKENS_COUNTS_TO_CSV_FILE) {
+      return;
+    }
+
+    const prices = this.config?.prices;
+    let longContextTokensIn = 0;
+    let longContextTokensOut = 0;
+
+    if (
+      prices?.longContextTokenThreshold &&
+      tokensIn >= prices.longContextTokenThreshold
+    ) {
+      longContextTokensIn = cachedInTokens ? tokensIn - cachedInTokens : tokensIn;
+      longContextTokensOut = tokensOut;
+      tokensIn = 0;
+      tokensOut = 0;
+      cachedInTokens = 0;
+    } else if (cachedInTokens) {
+      tokensIn = tokensIn - cachedInTokens;
+    }
+
+    const line = `${this.modelName},${tokensIn},${tokensOut},${longContextTokensIn},${longContextTokensOut},${cachedInTokens}\n`;
+    try {
+      await appendFile("/tmp/geminiTokenDebug.csv", line);
+    } catch (err) {
+      this.logger.error(`Failed to write token debug data: ${err}`);
+    }
+  }
 
   async generate(
     messages: PsModelMessage[],
@@ -292,10 +327,15 @@ export class GoogleGeminiChat extends BaseChatModel {
           throw new Error(`Vertex AI Error: ${errorMessage}`);
         }
         //console.log(`VERTEX RESPONSE: ${JSON.stringify(response, null, 2)}`);
+        const tokensIn = response.usageMetadata?.promptTokenCount ?? 0;
+        const tokensOut = getTokensOut(response.usageMetadata);
+        const cachedInTokens =
+          result.response.usageMetadata?.cachedContentTokenCount ?? 0;
+        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
         return {
-          tokensIn: response.usageMetadata?.promptTokenCount ?? 0,
-          tokensOut: getTokensOut(response.usageMetadata),
-          cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
           content: content,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
@@ -303,10 +343,15 @@ export class GoogleGeminiChat extends BaseChatModel {
         const result = await chat.sendMessage(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
         const content = result.response.text();
         //console.log(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
+        const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
+        const tokensOut = getTokensOut(result.response.usageMetadata);
+        const cachedInTokens =
+          result.response.usageMetadata?.cachedContentTokenCount ?? 0;
+        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
         return {
-          tokensIn: result.response.usageMetadata?.promptTokenCount ?? 0,
-          tokensOut: getTokensOut(result.response.usageMetadata),
-          cachedInTokens: result.response.usageMetadata?.cachedContentTokenCount ?? 0,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
           content,
         };
       } else {
