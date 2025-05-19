@@ -1,88 +1,89 @@
 # OpenAiChat
 
-A class for interacting with OpenAI's chat models, providing both streaming and non-streaming completions, as well as token estimation for prompt messages. This class extends `BaseChatModel` and is designed to be used as a backend for AI chat agents in the PolicySynth Agents framework.
+A class for interacting with OpenAI's chat models (such as GPT-4, GPT-4o, GPT-3.5, etc.) in a structured and configurable way. It extends the `BaseChatModel` and provides methods for generating completions (with or without streaming) and estimating token usage for a given set of messages.
 
 **File:** `@policysynth/agents/aiModels/openAiChat.js`
-
----
 
 ## Properties
 
 | Name         | Type                  | Description                                                                                  |
 |--------------|-----------------------|----------------------------------------------------------------------------------------------|
-| client       | OpenAI                | The OpenAI API client instance.                                                              |
+| client       | OpenAI                | The OpenAI API client instance used to make requests.                                        |
 | modelConfig  | PsOpenAiModelConfig   | The configuration object for the OpenAI model, including API key, model name, and parameters.|
-
----
 
 ## Constructor
 
-### `constructor(config: PsOpenAiModelConfig)`
+```typescript
+constructor(config: PsOpenAiModelConfig)
+```
 
-Creates a new instance of `OpenAiChat`.
-
-- **Parameters:**
-  - `config` (`PsOpenAiModelConfig`): The configuration for the OpenAI model, including API key, model name, max tokens, temperature, etc.
+- **config**: `PsOpenAiModelConfig`  
+  The configuration object for the OpenAI model, including API key, model name, temperature, max tokens, etc.
 
 **Behavior:**
-- Uses the provided API key, or falls back to the `PS_AGENT_OPENAI_API_KEY` environment variable if set.
+- If the environment variable `PS_AGENT_OPENAI_API_KEY` is set, it overrides the API key in the config.
 - Initializes the OpenAI client and stores the model configuration.
-
----
 
 ## Methods
 
-| Name                                 | Parameters                                                                                                    | Return Type | Description                                                                                                   |
-|-------------------------------------- |---------------------------------------------------------------------------------------------------------------|-------------|---------------------------------------------------------------------------------------------------------------|
-| `generate`                           | `messages: PsModelMessage[]`, `streaming?: boolean`, `streamingCallback?: Function`                           | `Promise<any>` | Generates a chat completion from OpenAI. Supports both streaming and non-streaming modes.                     |
-| `getEstimatedNumTokensFromMessages`   | `messages: PsModelMessage[]`                                                                                  | `Promise<number>` | Estimates the number of tokens in the provided messages for the current model.                                |
+| Name                                | Parameters                                                                                                    | Return Type                              | Description                                                                                                    |
+|------------------------------------- |--------------------------------------------------------------------------------------------------------------|------------------------------------------|----------------------------------------------------------------------------------------------------------------|
+| generate                            | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function                                | Promise<PsBaseModelReturnParameters \| undefined> | Generates a chat completion from the OpenAI model. Supports both streaming and non-streaming modes.           |
+| getEstimatedNumTokensFromMessages    | messages: PsModelMessage[]                                                                                   | Promise<number>                          | Estimates the number of tokens that the given messages will consume for the current model.                     |
 
 ---
 
 ### Method Details
 
-#### `async generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function): Promise<any>`
+#### `generate`
 
-Generates a chat completion using the OpenAI API.
+```typescript
+async generate(
+  messages: PsModelMessage[],
+  streaming?: boolean,
+  streamingCallback?: Function
+): Promise<PsBaseModelReturnParameters | undefined>
+```
 
-- **Parameters:**
-  - `messages`: Array of chat messages (`PsModelMessage[]`) to send to the model.
-  - `streaming`: (Optional) If `true`, uses OpenAI's streaming API and calls `streamingCallback` for each token.
-  - `streamingCallback`: (Optional) Function to call with each streamed token.
+- **messages**: `PsModelMessage[]`  
+  An array of messages (with `role` and `message` fields) to send to the model.
+- **streaming**: `boolean` (optional)  
+  If `true`, enables streaming responses (calls the callback with each token).
+- **streamingCallback**: `Function` (optional)  
+  Callback function to receive streamed tokens.
 
-- **Returns:**  
-  - If `streaming` is `true`, returns `void` (results are sent via callback).
-  - If `streaming` is `false` or omitted, returns an object:
-    ```typescript
-    {
-      tokensIn: number,         // Adjusted input tokens (with cache discount)
-      tokensOut: number,        // Output tokens
-      cacheRatio: number,       // % of input tokens that were cached
-      content: string,          // The generated content
-    }
-    ```
+**Returns:**  
+A promise that resolves to a `PsBaseModelReturnParameters` object (or `undefined` if streaming), which includes:
+- `tokensIn`: Number of input tokens.
+- `tokensOut`: Number of output tokens.
+- `cachedInTokens`: Number of cached context tokens (if available).
+- `content`: The generated content.
+- `reasoningTokens`: Number of reasoning tokens (if available).
+- `audioTokens`: Number of audio tokens (if available).
 
-- **Behavior:**
-  - Converts messages to OpenAI's expected format.
-  - Handles special logic for "small" models (e.g., "o1 mini") and system messages.
-  - Logs debug information if enabled.
-  - For streaming, emits each token to the callback.
-  - For non-streaming, returns the full response and token usage details.
+**Behavior:**
+- Converts messages to OpenAI's expected format.
+- Handles special logic for "small" models (e.g., "o1 mini") and system messages.
+- Logs debug information if enabled.
+- If streaming is enabled, calls the callback with each streamed token.
+- If not streaming, returns the full response and token usage details.
 
----
+#### `getEstimatedNumTokensFromMessages`
 
-#### `async getEstimatedNumTokensFromMessages(messages: PsModelMessage[]): Promise<number>`
+```typescript
+async getEstimatedNumTokensFromMessages(
+  messages: PsModelMessage[]
+): Promise<number>
+```
 
-Estimates the number of tokens that the given messages will consume for the current model.
+- **messages**: `PsModelMessage[]`  
+  An array of messages to estimate token usage for.
 
-- **Parameters:**
-  - `messages`: Array of chat messages (`PsModelMessage[]`).
+**Returns:**  
+A promise that resolves to the estimated number of tokens the messages will consume for the current model.
 
-- **Returns:**  
-  - `Promise<number>`: The estimated total number of tokens.
-
-- **Behavior:**
-  - Uses the `tiktoken` library to encode each message and sum their token counts.
+**Behavior:**
+- Uses the `tiktoken` library to encode each message and sum the token counts.
 
 ---
 
@@ -96,9 +97,8 @@ const config = {
   modelName: 'gpt-4o',
   maxTokensOut: 4096,
   temperature: 0.7,
-  modelType: 'textReasoning', // PsAiModelType.TextReasoning
-  modelSize: 'large',         // PsAiModelSize.Large
-  reasoningEffort: 'medium'
+  modelType: 'textReasoning',
+  modelSize: 'large'
 };
 
 const openAiChat = new OpenAiChat(config);
@@ -110,31 +110,22 @@ const messages = [
 
 // Non-streaming usage
 const result = await openAiChat.generate(messages);
-console.log(result.content); // "The capital of France is Paris."
+console.log(result?.content); // "The capital of France is Paris."
 
 // Streaming usage
 await openAiChat.generate(messages, true, (token) => {
   process.stdout.write(token);
 });
 
-// Estimate tokens
-const tokenCount = await openAiChat.getEstimatedNumTokensFromMessages(messages);
-console.log(`Estimated tokens: ${tokenCount}`);
+// Estimate token usage
+const estimatedTokens = await openAiChat.getEstimatedNumTokensFromMessages(messages);
+console.log(`Estimated tokens: ${estimatedTokens}`);
 ```
 
 ---
 
-## Notes
-
+**Note:**  
 - The class supports both streaming and non-streaming completions.
-- Special handling is included for "small" OpenAI models (e.g., "o1 mini") to optimize prompt formatting.
-- Token usage is adjusted to account for cached context tokens (with a 50% discount).
-- Debug logging is available and can be enabled via environment variables.
-- The class is intended for use as a backend for agent-based chat systems in PolicySynth.
-
----
-
-**See also:**  
-- [`BaseChatModel`](./baseChatModel.js)
-- [`PsOpenAiModelConfig`](../aiModelTypes.js)
-- [`PsModelMessage`](see AllTypeDefsUsedInProject)
+- Handles special logic for "small" models and system messages to optimize prompt formatting.
+- Uses environment variable `PS_AGENT_OPENAI_API_KEY` if present, for security and flexibility.
+- Returns detailed token usage statistics for cost tracking and analysis.

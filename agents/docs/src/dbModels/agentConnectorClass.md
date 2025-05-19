@@ -1,89 +1,113 @@
 # PsAgentConnectorClass
 
-The `PsAgentConnectorClass` class represents the agent connector class model in the database. It extends the Sequelize `Model` class and implements the `PsAgentConnectorClassAttributes` interface.
+Represents a connector class for PolicySynth agents, defining the metadata, configuration, and associations for a type of agent connector. This class is used to manage reusable connector definitions, including their configuration, versioning, and user/admin access.
+
+**File:** `@policysynth/agents/dbModels/agentConnectorClass.js`
 
 ## Properties
 
-| Name           | Type                             | Description                                      |
-|----------------|----------------------------------|--------------------------------------------------|
-| id             | number                           | Primary key, auto-incremented.                   |
-| uuid           | string                           | Unique identifier for the agent connector class. |
-| user_id        | number                           | ID of the user who created the agent connector class. |
-| class_base_id  | string                           | Base ID for the class.                           |
-| created_at     | Date                             | Timestamp when the record was created.           |
-| updated_at     | Date                             | Timestamp when the record was last updated.      |
-| name           | string                           | Name of the agent connector class.               |
-| version        | number                           | Version of the agent connector class.            |
-| available      | boolean                          | Availability status of the agent connector class.|
-| configuration  | PsAgentConnectorConfiguration    | Configuration details of the agent connector class. |
-
-## Methods
+| Name             | Type                                | Description                                                                                 |
+|------------------|-------------------------------------|---------------------------------------------------------------------------------------------|
+| id               | number                              | Primary key. Auto-incremented integer ID.                                                   |
+| uuid             | string                              | Universally unique identifier for the connector class instance.                             |
+| class_base_id    | string                              | UUID representing the base class identity (for versioning and grouping).                    |
+| user_id          | number                              | ID of the user who created/owns this connector class.                                       |
+| created_at       | Date                                | Timestamp when the connector class was created.                                             |
+| updated_at       | Date                                | Timestamp when the connector class was last updated.                                        |
+| name             | string                              | Name of the connector class.                                                                |
+| version          | number                              | Version number of the connector class (for versioning/upgrades).                            |
+| configuration    | PsAgentConnectorConfiguration       | JSON configuration object describing the connector (see below for structure).               |
+| available        | boolean                             | Indicates if the connector class is available for use.                                      |
+| Users            | User[] (optional)                   | Users with access to this connector class (many-to-many association).                       |
+| Admins           | User[] (optional)                   | Admin users for this connector class (many-to-many association).                            |
 
 ### Association Methods
 
-| Name         | Parameters                | Return Type | Description                                      |
-|--------------|---------------------------|-------------|--------------------------------------------------|
-| addUser      | user: User, obj?: any     | Promise<void> | Adds a user to the agent connector class.        |
-| addUsers     | users: User[]             | Promise<void> | Adds multiple users to the agent connector class.|
-| getUsers     |                           | Promise<User[]> | Retrieves users associated with the agent connector class. |
-| setUsers     | users: User[]             | Promise<void> | Sets users for the agent connector class.        |
-| removeUser   | user: User                | Promise<void> | Removes a user from the agent connector class.   |
-| removeUsers  | users: User[]             | Promise<void> | Removes multiple users from the agent connector class. |
-| addAdmin     | user: User, obj?: any     | Promise<void> | Adds an admin to the agent connector class.      |
-| addAdmins    | users: User[]             | Promise<void> | Adds multiple admins to the agent connector class. |
-| getAdmins    |                           | Promise<User[]> | Retrieves admins associated with the agent connector class. |
-| setAdmins    | users: User[]             | Promise<void> | Sets admins for the agent connector class.       |
-| removeAdmin  | user: User                | Promise<void> | Removes an admin from the agent connector class. |
-| removeAdmins | users: User[]             | Promise<void> | Removes multiple admins from the agent connector class. |
+| Name           | Parameters                | Return Type         | Description                                                      |
+|----------------|--------------------------|---------------------|------------------------------------------------------------------|
+| addUser        | user: User, obj?: any     | Promise<void>       | Add a user to the connector class.                               |
+| addUsers       | users: User[]             | Promise<void>       | Add multiple users.                                              |
+| getUsers       |                          | Promise<User[]>     | Get all users associated.                                        |
+| setUsers       | users: User[]             | Promise<void>       | Set the users (replace all).                                     |
+| removeUser     | user: User                | Promise<void>       | Remove a user.                                                   |
+| removeUsers    | users: User[]             | Promise<void>       | Remove multiple users.                                           |
+| hasUser        | user: User                | Promise<boolean>    | Check if a user is associated.                                   |
+| addAdmin       | user: User, obj?: any     | Promise<void>       | Add an admin user.                                               |
+| addAdmins      | users: User[]             | Promise<void>       | Add multiple admin users.                                        |
+| getAdmins      |                          | Promise<User[]>     | Get all admin users.                                             |
+| setAdmins      | users: User[]             | Promise<void>       | Set the admin users (replace all).                               |
+| removeAdmin    | user: User                | Promise<void>       | Remove an admin user.                                            |
+| removeAdmins   | users: User[]             | Promise<void>       | Remove multiple admin users.                                     |
+| hasAdmin       | user: User                | Promise<boolean>    | Check if a user is an admin.                                     |
+
+## Sequelize Model Options
+
+- **Table Name:** `ps_agent_connector_classes`
+- **Timestamps:** true (uses `created_at` and `updated_at`)
+- **Indexes:** On `uuid` (unique), `class_base_id`, `class_base_id+version`, `user_id`, `name`, `version`
+- **Associations:**
+  - Belongs to `User` as `Owner`
+  - Many-to-many with `User` as `Users` (via `AgentConnectorClassUsers`)
+  - Many-to-many with `User` as `Admins` (via `AgentConnectorClassAdmins`)
+  - Many-to-many with `PsAgentRegistry` as `Registry` (via `AgentRegistryConnectors`)
+  - Has many `PsAgentConnector` as `Connectors`
+
+## PsAgentConnectorConfiguration Structure
+
+The `configuration` property is a JSON object with the following structure:
+
+| Name         | Type                       | Description                                                      |
+|--------------|----------------------------|------------------------------------------------------------------|
+| name         | string                     | Name of the connector.                                           |
+| classType    | string                     | Type of the connector class.                                     |
+| description  | string                     | Description of the connector.                                    |
+| imageUrl     | string                     | URL to an image representing the connector.                      |
+| iconName     | string                     | Icon name for UI display.                                        |
+| questions    | YpStructuredQuestionData[] | Array of structured questions for configuration.                 |
+| hasPublicAccess | boolean                 | Whether the connector is public.                                 |
 
 ## Example
 
 ```typescript
 import { PsAgentConnectorClass } from '@policysynth/agents/dbModels/agentConnectorClass.js';
-import { User } from './ypUser.js';
+import { User } from '@policysynth/agents/dbModels/ypUser.js';
 
-// Example usage of PsAgentConnectorClass
-async function exampleUsage() {
-  // Create a new agent connector class
-  const newConnectorClass = await PsAgentConnectorClass.create({
-    name: 'Example Connector',
-    user_id: 1,
-    class_base_id: 'example-base-id',
-    version: 1,
-    available: true,
-    configuration: {
-      name: 'Example Connector',
-      classType: 'exampleType',
-      description: 'This is an example connector class.',
-      imageUrl: 'https://example.com/image.png',
-      iconName: 'exampleIcon',
-      questions: [],
-      hasPublicAccess: true,
-    },
-  });
+// Creating a new connector class
+const connectorClass = await PsAgentConnectorClass.create({
+  name: "Google Docs Connector",
+  user_id: 1,
+  version: 1,
+  configuration: {
+    name: "Google Docs",
+    classType: "googleDocs",
+    description: "Connector for Google Docs",
+    imageUrl: "https://example.com/image.png",
+    iconName: "docs",
+    questions: [
+      {
+        uniqueId: "googleDocsId",
+        text: "Document ID",
+        type: "textField",
+        maxLength: 200,
+        required: false
+      }
+    ],
+    hasPublicAccess: true
+  },
+  available: true
+});
 
-  // Add a user to the connector class
-  const user = await User.findByPk(1);
-  if (user) {
-    await newConnectorClass.addUser(user);
-  }
+// Adding a user to the connector class
+const user = await User.findByPk(2);
+await connectorClass.addUser(user);
 
-  // Retrieve users associated with the connector class
-  const users = await newConnectorClass.getUsers();
-  console.log(users);
-}
-
-exampleUsage();
+// Getting all admin users
+const admins = await connectorClass.getAdmins();
 ```
 
-## Associations
+## Notes
 
-The `PsAgentConnectorClass` model has the following associations:
-
-- **Belongs to** `User` as `Owner`
-- **Belongs to many** `User` as `Users` through `AgentConnectorClassUsers`
-- **Belongs to many** `User` as `Admins` through `AgentConnectorClassAdmins`
-- **Belongs to many** `PsAgentRegistry` as `Registry` through `AgentRegistryConnectors`
-- **Has many** `PsAgentConnector` as `Connectors`
-
-These associations allow the `PsAgentConnectorClass` to be linked with users, admins, agent registries, and agent connectors.
+- The class supports versioning via `class_base_id` and `version`.
+- Associations allow for flexible user/admin management and registry inclusion.
+- The `configuration` field is extensible and supports structured questions for UI-driven configuration.
+- All timestamps are managed by Sequelize.

@@ -1,39 +1,40 @@
 # PolicySynthStandaloneAgent
 
-The `PolicySynthStandaloneAgent` is a standalone agent class for PolicySynth that operates without any database or Redis dependencies. It is designed for environments where persistent storage is not required, and all configuration (including AI model selection) is provided via environment variables or direct instantiation. This agent is ideal for command-line tools, stateless services, or testing scenarios.
+The `PolicySynthStandaloneAgent` is a standalone agent class for PolicySynth that operates without any database or Redis dependencies. It is designed for environments where persistent storage is not required, and all configuration (such as AI model selection) is provided via environment variables or direct instantiation. This agent is ideal for command-line tools, stateless services, or testing scenarios.
 
 ## Properties
 
-| Name          | Type                           | Description                                                                                 |
-|---------------|--------------------------------|---------------------------------------------------------------------------------------------|
-| memory        | `Record<string, unknown>`      | In-memory store for agent state, such as conversation history or temporary data.            |
-| modelManager  | `PsAiModelManager`             | AI model manager instance, initialized without DB models or Redis.                          |
+| Name          | Type                                 | Description                                                                                 |
+|---------------|--------------------------------------|---------------------------------------------------------------------------------------------|
+| memory        | `Record<string, unknown>`            | In-memory store for agent state, such as conversation history or temporary variables.        |
+| modelManager  | `PsAiModelManager`                   | Manages AI model selection and invocation, initialized without DB or Redis dependencies.     |
 
 ## Getters
 
-| Name                | Type                         | Description                                                      |
-|---------------------|-----------------------------|------------------------------------------------------------------|
-| maxModelTokensOut   | `number`                    | Maximum number of output tokens for the model (default: 16384).  |
-| modelTemperature    | `number`                    | Temperature setting for the model (default: 0.7).                |
-| reasoningEffort     | `"low" \| "medium" \| "high"` | Reasoning effort for the model (default: "medium").              |
-| maxThinkingTokens   | `number`                    | Maximum tokens for "thinking" (default: 0).                      |
+| Name                | Type                | Description                                              |
+|---------------------|---------------------|----------------------------------------------------------|
+| maxModelTokensOut   | `number`            | Maximum output tokens for the model (default: 16384).    |
+| modelTemperature    | `number`            | Temperature setting for model randomness (default: 0.7). |
+| reasoningEffort     | `"low" \| "medium" \| "high"` | Reasoning effort for the model (default: "medium").      |
+| maxThinkingTokens   | `number`            | Maximum tokens for "thinking" (default: 0).              |
 
 ## Constructor
 
-```typescript
-constructor(memory: Record<string, unknown> = {})
-```
+| Parameter | Type                      | Description                                      |
+|-----------|---------------------------|--------------------------------------------------|
+| memory    | `Record<string, unknown>` | (Optional) Initial memory object for the agent.   |
 
-- **memory**: Optional initial memory object for the agent's in-memory state.
-
-Initializes the agent, sets up the in-memory store, and configures the model manager with no database or Redis dependencies. Also overrides the model manager's token usage saving to log to the console instead of persisting.
+**Behavior:**  
+- Initializes the agent with an in-memory store.
+- Sets up the `PsAiModelManager` with no DB models or access configuration.
+- Overrides the model manager's token usage saving to log to console instead of persisting.
 
 ## Methods
 
-| Name         | Parameters                                                                                                                                                                                                 | Return Type      | Description                                                                                                   |
-|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|---------------------------------------------------------------------------------------------------------------|
-| process      | none                                                                                                                                                                                                       | `Promise<void>`  | Main processing logic for the agent. Override this method to implement custom agent behavior.                 |
-| callModel    | `modelType: PsAiModelType, modelSize: PsAiModelSize, messages: PsModelMessage[], options?: PsCallModelOptions`                                                                                            | `Promise<any>`   | Delegates a model call to the model manager. Handles message passing and model selection.                     |
+| Name        | Parameters                                                                                                                                                                                                 | Return Type      | Description                                                                                                    |
+|-------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------|----------------------------------------------------------------------------------------------------------------|
+| process     | None                                                                                                                                                                                                       | `Promise<void>`  | Main processing logic for the agent. Override this method to implement custom agent behavior.                  |
+| callModel   | <ul><li>modelType: `PsAiModelType`</li><li>modelSize: `PsAiModelSize`</li><li>messages: `PsModelMessage[]`</li><li>options?: `PsCallModelOptions`</li></ul>           | `Promise<any>`   | Delegates a model call to the model manager. Handles message passing and model invocation.                     |
 
 ### Method Details
 
@@ -42,7 +43,7 @@ Initializes the agent, sets up the in-memory store, and configures the model man
 ```typescript
 async process(): Promise<void>
 ```
-Main processing logic for the standalone agent. By default, it logs a message. Override this method to implement custom agent behavior.
+- Logs the start of processing. Intended to be overridden for custom agent logic.
 
 #### callModel
 
@@ -59,12 +60,8 @@ async callModel(
   }
 ): Promise<any>
 ```
-Delegates the call to the model manager, sending the provided messages to the selected AI model. Supports options for JSON parsing, retry logic, token estimation, and streaming callbacks.
-
-- **modelType**: The type of the AI model to use.
-- **modelSize**: The size of the AI model.
-- **messages**: Array of messages to send to the model.
-- **options**: Optional settings for the model call.
+- Forwards the call to the internal `modelManager` to interact with the AI model.
+- Supports options for JSON parsing, retry limits, token estimation, and streaming callbacks.
 
 ## Example
 
@@ -72,45 +69,34 @@ Delegates the call to the model manager, sending the provided messages to the se
 import { PolicySynthStandaloneAgent } from '@policysynth/agents/base/agentStandalone.js';
 import { PsAiModelType, PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
 
-// Create a new standalone agent with optional initial memory
+// Instantiate the agent with optional initial memory
 const agent = new PolicySynthStandaloneAgent({
-  conversationId: 'abc123'
+  conversationId: "abc123"
 });
 
-// Example: Call an AI model
+// Example: Call a model with a simple message
 const response = await agent.callModel(
-  PsAiModelType.OpenAI,
-  PsAiModelSize.Large,
+  PsAiModelType.OpenAI, // e.g., "openai"
+  PsAiModelSize.Large,  // e.g., "large"
   [
-    { role: 'system', message: 'You are a helpful assistant.' },
-    { role: 'user', message: 'What is the capital of France?' }
+    { role: "user", message: "What is PolicySynth?" }
   ],
   {
     parseJson: false,
     limitedRetries: true,
-    tokenOutEstimate: 50
+    tokenOutEstimate: 100
   }
 );
 
-console.log('Model response:', response);
+console.log("Model response:", response);
 
-// Example: Override process method in a subclass
-class MyCustomAgent extends PolicySynthStandaloneAgent {
-  async process() {
-    // Custom logic here
-    const result = await this.callModel(
-      PsAiModelType.OpenAI,
-      PsAiModelSize.Medium,
-      [{ role: 'user', message: 'Hello, agent!' }]
-    );
-    console.log('Custom process result:', result);
-  }
-}
+// Custom processing logic (override in subclass)
+await agent.process();
 ```
 
 ---
 
 **Note:**  
 - This agent is stateless and does not persist any data outside of its in-memory store.
-- All AI model configuration must be provided via environment variables or direct instantiation.
 - Methods that require database or Redis access are intentionally omitted for standalone operation.
+- All AI model configuration must be provided via environment variables or direct instantiation.

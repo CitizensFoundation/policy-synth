@@ -1,28 +1,39 @@
 # PsAgentRegistry
 
-The `PsAgentRegistry` class represents a registry for agents and connectors in the system. It extends the Sequelize `Model` class and implements the `PsAgentRegistryAttributes` interface.
+Represents a registry of agent and connector classes in the PolicySynth Agents system. This model allows for the grouping and management of available agent and connector classes, supporting many-to-many relationships with both agents and connectors. It is stored in the `ps_agent_registries` table.
+
+**File:** `@policysynth/agents/dbModels/agentRegistry.js`
 
 ## Properties
 
-| Name          | Type                          | Description                                      |
-|---------------|-------------------------------|--------------------------------------------------|
-| id            | number                        | Primary key, auto-incremented.                   |
-| uuid          | string                        | Unique identifier for the registry.              |
-| user_id       | number                        | ID of the user who owns the registry.            |
-| created_at    | Date                          | Timestamp when the registry was created.         |
-| updated_at    | Date                          | Timestamp when the registry was last updated.    |
-| configuration | PsAgentRegistryConfiguration  | Configuration details for the registry.          |
-| Agents        | PsAgentClassAttributes[]      | List of associated agent classes.                |
-| Connectors    | PsAgentConnectorClassAttributes[] | List of associated connector classes.        |
+| Name         | Type                                   | Description                                                                                 |
+|--------------|----------------------------------------|---------------------------------------------------------------------------------------------|
+| id           | number                                 | Primary key. Auto-incremented integer.                                                      |
+| uuid         | string                                 | Universally unique identifier (UUID) for the registry.                                      |
+| user_id      | number                                 | ID of the user who owns or created this registry.                                           |
+| created_at   | Date                                   | Timestamp when the registry was created.                                                    |
+| updated_at   | Date                                   | Timestamp when the registry was last updated.                                               |
+| configuration| PsAgentRegistryConfiguration           | JSONB configuration object for the registry (e.g., supported agents, metadata, etc.).       |
+| Agents       | PsAgentClassAttributes[] (optional)    | Array of associated agent classes (many-to-many).                                           |
+| Connectors   | PsAgentConnectorClassAttributes[] (optional) | Array of associated connector classes (many-to-many).                                  |
 
 ## Methods
 
-| Name           | Parameters                | Return Type | Description                                      |
-|----------------|---------------------------|-------------|--------------------------------------------------|
-| addAgent       | agent: PsAgentClass       | Promise<void> | Adds an agent to the registry.                   |
-| addConnector   | connector: PsAgentConnectorClass | Promise<void> | Adds a connector to the registry.               |
-| removeAgent    | agent: PsAgentClass       | Promise<void> | Removes an agent from the registry.              |
-| removeConnector| connector: PsAgentConnectorClass | Promise<void> | Removes a connector from the registry.          |
+| Name             | Parameters                                 | Return Type         | Description                                                                                 |
+|------------------|--------------------------------------------|---------------------|---------------------------------------------------------------------------------------------|
+| addAgent         | agent: PsAgentClass                        | Promise<void>       | Adds an agent class to the registry.                                                        |
+| addConnector     | connector: PsAgentConnectorClass           | Promise<void>       | Adds a connector class to the registry.                                                     |
+| removeAgent      | agent: PsAgentClass                        | Promise<void>       | Removes an agent class from the registry.                                                   |
+| removeConnector  | connector: PsAgentConnectorClass           | Promise<void>       | Removes a connector class from the registry.                                                |
+
+## Sequelize Model Initialization
+
+- **Table Name:** `ps_agent_registries`
+- **Indexes:** Unique on `uuid`, index on `user_id`
+- **Timestamps:** Enabled (`created_at`, `updated_at`)
+- **Associations:**
+  - `Agents`: Many-to-many with `PsAgentClass` via `AgentRegistryAgents` join table.
+  - `Connectors`: Many-to-many with `PsAgentConnectorClass` via `AgentRegistryConnectors` join table.
 
 ## Example
 
@@ -31,95 +42,36 @@ import { PsAgentRegistry } from '@policysynth/agents/dbModels/agentRegistry.js';
 import { PsAgentClass } from '@policysynth/agents/dbModels/agentClass.js';
 import { PsAgentConnectorClass } from '@policysynth/agents/dbModels/agentConnectorClass.js';
 
-// Example usage of PsAgentRegistry
+// Create a new agent registry
 const registry = await PsAgentRegistry.create({
   user_id: 1,
   configuration: {
-    supportedAgents: []
-  }
+    supportedAgents: [],
+  },
 });
 
-const agent = await PsAgentClass.findByPk(1);
-const connector = await PsAgentConnectorClass.findByPk(1);
+// Add an agent class to the registry
+const agentClass = await PsAgentClass.findByPk(1);
+await registry.addAgent(agentClass);
 
-await registry.addAgent(agent);
-await registry.addConnector(connector);
+// Add a connector class to the registry
+const connectorClass = await PsAgentConnectorClass.findByPk(1);
+await registry.addConnector(connectorClass);
+
+// Remove an agent class from the registry
+await registry.removeAgent(agentClass);
+
+// Remove a connector class from the registry
+await registry.removeConnector(connectorClass);
+
+// Access associated agents and connectors
+const agents = await registry.getAgents();
+const connectors = await registry.getConnectors();
 ```
 
-## Sequelize Initialization
+---
 
-The `PsAgentRegistry` model is initialized with the following schema:
-
-```typescript
-PsAgentRegistry.init(
-  {
-    id: {
-      type: DataTypes.INTEGER,
-      autoIncrement: true,
-      primaryKey: true,
-    },
-    uuid: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
-      allowNull: false,
-    },
-    user_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-    created_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    updated_at: {
-      type: DataTypes.DATE,
-      allowNull: false,
-      defaultValue: DataTypes.NOW,
-    },
-    configuration: {
-      type: DataTypes.JSONB,
-      allowNull: false,
-    },
-  },
-  {
-    sequelize,
-    tableName: "ps_agent_registries",
-    indexes: [
-      {
-        fields: ["uuid"],
-        unique: true,
-      },
-      {
-        fields: ["user_id"],
-      },
-    ],
-    timestamps: true,
-    underscored: true,
-  }
-);
-```
-
-## Associations
-
-The `PsAgentRegistry` model has the following associations:
-
-```typescript
-(PsAgentRegistry as any).associate = (models: any) => {
-  PsAgentRegistry.belongsToMany(models.PsAgentClass, {
-    through: "AgentRegistryAgents",
-    as: "Agents",
-    foreignKey: "ps_agent_registry_id",
-    otherKey: "ps_agent_class_id",
-    timestamps: true,
-  });
-
-  PsAgentRegistry.belongsToMany(models.PsAgentConnectorClass, {
-    through: "AgentRegistryConnectors",
-    as: "Connectors",
-    foreignKey: "ps_agent_registry_id",
-    otherKey: "ps_agent_connector_class_id",
-    timestamps: true,
-  });
-};
-```
+**Note:**  
+- The `configuration` property is a flexible JSONB object, typically containing metadata such as supported agents and connectors.
+- Associations are managed via join tables (`AgentRegistryAgents` and `AgentRegistryConnectors`), allowing for efficient many-to-many relationships.
+- The model uses Sequelize's `timestamps` and `underscored` options for consistent database field naming and auditing.
