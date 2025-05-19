@@ -296,6 +296,24 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     }
   }
 
+  async clearRange(range: string): Promise<void> {
+    const spreadsheetId: string = this.getConfig("googleSheetsId", "");
+    if (!spreadsheetId) {
+      throw new Error("Google Sheets ID is not set.");
+    }
+
+    try {
+      await this.sheets.spreadsheets.values.clear({
+        spreadsheetId,
+        range,
+      });
+      console.log(`Range '${range}' cleared successfully.`);
+    } catch (error) {
+      console.error(`Error clearing range '${range}':`, error);
+      throw error;
+    }
+  }
+
   static getExtraConfigurationQuestions(): YpStructuredQuestionData[] {
     return [
       {
