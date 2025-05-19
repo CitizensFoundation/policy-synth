@@ -161,7 +161,7 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
     }
   }
 
-  async postItems(groupId: number, itesm: []): Promise<boolean> {
+  async postItems(groupId: number, items: []): Promise<boolean> {
     //TODO
     return false;
   }
