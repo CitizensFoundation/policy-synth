@@ -432,3 +432,23 @@ type DeepResearchWebResearchTypes =
   | "jobDescription"
   | "licenseSource"
   | "organization";
+
+interface LicenseEducationRow {
+  licenseType: string;
+  educationRequirement: string;
+}
+
+interface LicenseEducationComparison {
+  licenseType1: string;
+  eduReq1: string;
+  matchedLicenseType2?: string;
+  eduReq2?: string;
+  matchConfidence: number;
+  explanation: string;
+}
+
+interface LicenseEducationComparisonMemory extends JobDescriptionMemoryData {
+  sheet1Rows: LicenseEducationRow[];
+  sheet2Rows: LicenseEducationRow[];
+  comparisons: LicenseEducationComparison[];
+}
