@@ -27,6 +27,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   limitedLLMmaxRetryCount = 3;
   mainLLMmaxRetryCount = 75;
+  modelCallTimeoutMs: number =
+    parseInt(process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000");
 
   constructor(
     aiModels: PsAiModelAttributes[],
@@ -45,6 +47,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     this.maxThinkingTokens = maxThinkingTokens;
     this.userId = userId;
     this.agentId = agentId;
+    this.modelCallTimeoutMs = parseInt(
+      process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000"
+    );
     this.initializeModels(aiModels, accessConfiguration);
   }
 
@@ -89,6 +94,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         maxThinkingTokens: this.maxThinkingTokens,
+        timeoutMs: this.modelCallTimeoutMs,
         modelType: modelType,
         modelSize: modelSize,
         prices: {} as any,
@@ -179,6 +185,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         maxThinkingTokens: this.maxThinkingTokens,
+        timeoutMs:
+          (model.configuration as any).timeoutMs ?? this.modelCallTimeoutMs,
         modelType: modelType,
         modelSize: modelSize,
         prices: model.configuration.prices,
@@ -527,11 +535,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (options.simulateContentErrorForFallbackDebugging) {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
-        const results = await model.generate(
-          messages,
-          !!options.streamingCallbacks,
-          options.streamingCallbacks
-        );
+        const timeoutMs = model.config.timeoutMs ?? this.modelCallTimeoutMs;
+        const results = await Promise.race([
+          model.generate(
+            messages,
+            !!options.streamingCallbacks,
+            options.streamingCallbacks
+          ),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Model call timed out")), timeoutMs)
+          ),
+        ]);
 
         if (results) {
           const { tokensIn, tokensOut, cachedInTokens, content } = results;
@@ -581,6 +595,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
+        if (error.message === "Model call timed out") {
+          retryCount++;
+          this.logger.warn(
+            `Model call timed out, retrying immediately. Attempt #${retryCount}`
+          );
+          continue;
+        }
         let tooMany429s = false;
         if (
           options.fallbackModelProvider &&
@@ -634,11 +655,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               console.log(
                 `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
               );
-              const fallbackResults = await fallbackEphemeral.generate(
-                messages,
-                !!options.streamingCallbacks,
-                options.streamingCallbacks
-              );
+              const timeoutMs =
+                fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
+              const fallbackResults = await Promise.race([
+                fallbackEphemeral.generate(
+                  messages,
+                  !!options.streamingCallbacks,
+                  options.streamingCallbacks
+                ),
+                new Promise((_, reject) =>
+                  setTimeout(
+                    () => reject(new Error("Model call timed out")),
+                    timeoutMs
+                  )
+                ),
+              ]);
 
               if (fallbackResults) {
                 const { tokensIn, tokensOut, cachedInTokens, content } = fallbackResults;
