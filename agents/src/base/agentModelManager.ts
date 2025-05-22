@@ -235,7 +235,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   /**
    * Creates a one-off ephemeral model instance, merging overrides from `options`.
-   * If provider is not specified, we’ll reuse the provider from the fallback model
+   * If provider is not specified, we'll reuse the provider from the fallback model
    * or environment. This returns `undefined` if no ephemeral override was requested.
    */
   private createEphemeralModel(
@@ -276,7 +276,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       }
     }
 
-    // We need a provider, name, etc. If user didn’t supply `modelProvider`, reuse fallback’s
+    // We need a provider, name, etc. If user didn't supply `modelProvider`, reuse fallback's
     const fallbackProvider = fallbackModel.provider || ""; // Add a `provider` getter to your BaseChatModel or store it in your config
     const provider = options.modelProvider ?? fallbackProvider;
 
@@ -311,7 +311,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
         break;
       case "azure":
-        // You may want to incorporate fallback’s endpoint and deployment
+        // You may want to incorporate fallback's endpoint and deployment
         // or see if user provided them in `options` somehow
         ephemeralModel = new AzureOpenAiChat({
           ...ephemeralConfig,
@@ -454,7 +454,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     if (!model) {
-      // fallback to “any” model by type
+      // fallback to "any" model by type
       model = this.modelsByType.get(modelType);
       if (model) {
         this.logger.warn(
@@ -516,7 +516,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       maxRetries = options.overrideMaxRetries;
     }
 
-    // Track if we’ve tried the fallback model yet:
+    // Track if we've tried the fallback model yet:
     let usedFallback = false;
 
     // Simple helper to check if error is 5xx or "prohibited content".
@@ -536,7 +536,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
         const timeoutMs = model.config.timeoutMs ?? this.modelCallTimeoutMs;
-        const results = await Promise.race([
+        const results = (await Promise.race([
           model.generate(
             messages,
             !!options.streamingCallbacks,
@@ -545,7 +545,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           new Promise((_, reject) =>
             setTimeout(() => reject(new Error("Model call timed out")), timeoutMs)
           ),
-        ]);
+        ])) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
           const { tokensIn, tokensOut, cachedInTokens, content } = results;
@@ -657,7 +657,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               );
               const timeoutMs =
                 fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
-              const fallbackResults = await Promise.race([
+              const fallbackResults = (await Promise.race([
                 fallbackEphemeral.generate(
                   messages,
                   !!options.streamingCallbacks,
@@ -669,7 +669,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     timeoutMs
                   )
                 ),
-              ]);
+              ])) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
                 const { tokensIn, tokensOut, cachedInTokens, content } = fallbackResults;
