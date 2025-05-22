@@ -536,16 +536,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
         const timeoutMs = model.config.timeoutMs ?? this.modelCallTimeoutMs;
-        const results = (await Promise.race([
-          model.generate(
-            messages,
-            !!options.streamingCallbacks,
-            options.streamingCallbacks
-          ),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Model call timed out")), timeoutMs)
-          ),
-        ])) as PsBaseModelReturnParameters | undefined;
+        const results = (await this.callWithTimeout(
+          model,
+          messages,
+          options.streamingCallbacks,
+          timeoutMs
+        )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
           const { tokensIn, tokensOut, cachedInTokens, content } = results;
@@ -657,19 +653,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               );
               const timeoutMs =
                 fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
-              const fallbackResults = (await Promise.race([
-                fallbackEphemeral.generate(
-                  messages,
-                  !!options.streamingCallbacks,
-                  options.streamingCallbacks
-                ),
-                new Promise((_, reject) =>
-                  setTimeout(
-                    () => reject(new Error("Model call timed out")),
-                    timeoutMs
-                  )
-                ),
-              ])) as PsBaseModelReturnParameters | undefined;
+              const fallbackResults = (await this.callWithTimeout(
+                fallbackEphemeral,
+                messages,
+                options.streamingCallbacks,
+                timeoutMs
+              )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
                 const { tokensIn, tokensOut, cachedInTokens, content } = fallbackResults;
@@ -720,6 +709,30 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       "Unrecoverable Error in runTextModelCall method - no valid response after retries"
     );
     throw new Error("Model call failed after maximum retries");
+  }
+
+  private callWithTimeout(
+    model: BaseChatModel,
+    messages: PsModelMessage[],
+    streamingCallbacks: any,
+    timeoutMs: number
+  ): Promise<PsBaseModelReturnParameters | undefined> {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(
+        () => reject(new Error("Model call timed out")),
+        timeoutMs
+      );
+      model
+        .generate(messages, !!streamingCallbacks, streamingCallbacks)
+        .then((res) => {
+          clearTimeout(timer);
+          resolve(res);
+        })
+        .catch((err) => {
+          clearTimeout(timer);
+          reject(err);
+        });
+    });
   }
 
   private async sleepBeforeRetry(retryCount: number) {
