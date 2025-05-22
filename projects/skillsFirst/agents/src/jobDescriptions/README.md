@@ -39,6 +39,7 @@ Agents that research and analyze licensing and degree requirements, with Google 
 - `imports/` – `SheetsJobDescriptionImportAgent` for loading descriptions from Google Sheets.
 - `exports/` – `SheetsJobDescriptionExportAgent` for pushing analysis results to Sheets.
 - `evals/` – `SheetsComparisonAgent` compares connector outputs.
+- `evals/` – `CompareLicenseEducationAgent` matches professional licence education requirements between two sheets.
 
 ## Queues and Runner
 
@@ -79,6 +80,7 @@ Agents that research and analyze licensing and degree requirements, with Google 
 | `imports/` | Google Sheets import helper |
 | `exports/` | Google Sheets export helper |
 | `evals/` | Evaluation agents (e.g., sheet comparison) |
+| `evals/compareLicenseEducationQueue.ts` | Queue for the CompareLicenseEducationAgent |
 | `runAgents.ts` | Registers agents and connectors |
 | `triggerAgentQueue.ts` | Sample script to enqueue a job |
 
