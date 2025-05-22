@@ -27,6 +27,7 @@ interface PsAiModelConfig {
   temperature?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
   maxThinkingTokens?: number;
+  timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
 }
 
@@ -130,6 +131,7 @@ interface PsAiModelConfiguration {
   defaultTemperature: number;
   limitTPM?: number;
   limitRPM?: number;
+  timeoutMs?: number;
 }
 
 // tablename "ps_ai_models"
