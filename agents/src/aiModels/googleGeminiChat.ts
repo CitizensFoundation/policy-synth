@@ -272,6 +272,7 @@ export class GoogleGeminiChat extends BaseChatModel {
 
     // --- Execute Request ---
     if (streaming) {
+      this.logger.debug(`Streaming request`);
       let aggregated = "";
       if (this.useVertexAi && vertexContents) {
         const streamResult = await (
@@ -300,6 +301,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           content: aggregated,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
+        this.logger.debug(`Google AI Streaming request`);
         const chat = (this.model as GoogleAiGenerativeModel).startChat(); // Needs history if not single turn
         const stream = await chat.sendMessageStream(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
         let done = false;
@@ -326,7 +328,9 @@ export class GoogleGeminiChat extends BaseChatModel {
       }
     } else {
       // Non-streaming
+      this.logger.debug(`Non-streaming request`);
       if (this.useVertexAi && vertexContents) {
+        this.logger.debug(`Vertex AI Final prompt with images count: ${vertexContents.length}`);
         const result: GenerateContentResult = await (
           this.model as VertexAiGenerativeModel
         ).generateContent({ contents: vertexContents });
@@ -357,7 +361,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           content: content,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
-        // --- NEW: if images exist, build a parts array and call generateContent()
+        this.logger.debug(`Google AI Final prompt with images count: ${this.config.promptImages?.length}`);
         if (this.config.promptImages?.length) {
           const parts: Part[] = [
             { text: googleAiFinalPrompt },
@@ -365,6 +369,8 @@ export class GoogleGeminiChat extends BaseChatModel {
               inlineData: { mimeType: img.mimeType, data: img.data },
             })),
           ];
+
+          this.logger.debug(`Google AI Final prompt with images parts: ${parts.length}`);
 
           const result = await (this.model as GoogleAiGenerativeModel).generateContent(parts);
           const content = result.response.text();

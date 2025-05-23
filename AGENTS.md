@@ -8,4 +8,5 @@ dist, ts-out, old
 # Coding rules
 - Everything is written in Typescript
 - Types *.d.ts are loaded automatically both for server and client code
+- Never change package-lock.json directly
 
