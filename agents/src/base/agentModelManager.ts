@@ -295,8 +295,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
       modelType,
       modelSize,
-      prices: {} as any, // TODO: Get fallback model into database
-      promptImages: options.promptImages,
+      prices: {} as any // TODO: Get fallback model into database
     };
 
     // Construct ephemeral model
@@ -541,7 +540,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           model,
           messages,
           options.streamingCallbacks,
-          timeoutMs
+          timeoutMs,
+          options.promptImages
         )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
@@ -637,8 +637,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelTemperature: options.modelTemperature,
                 modelMaxTokens: options.modelMaxTokens,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
-                modelReasoningEffort: options.modelReasoningEffort,
-                promptImages: options.promptImages,
+                modelReasoningEffort: options.modelReasoningEffort
               }
             );
             if (!fallbackEphemeral) {
@@ -659,7 +658,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 fallbackEphemeral,
                 messages,
                 options.streamingCallbacks,
-                timeoutMs
+                timeoutMs,
+                options.promptImages
               )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
@@ -717,7 +717,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     model: BaseChatModel,
     messages: PsModelMessage[],
     streamingCallbacks: any,
-    timeoutMs: number
+    timeoutMs: number,
+    media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
@@ -725,7 +726,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         timeoutMs
       );
       model
-        .generate(messages, !!streamingCallbacks, streamingCallbacks)
+        .generate(messages, !!streamingCallbacks, streamingCallbacks, media)
         .then((res) => {
           clearTimeout(timer);
           resolve(res);

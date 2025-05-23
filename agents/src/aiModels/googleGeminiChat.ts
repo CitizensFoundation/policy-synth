@@ -75,7 +75,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     }
   }
 
-  private buildVertexContents(messages: PsModelMessage[]): Content[] {
+  private buildVertexContents(
+    messages: PsModelMessage[],
+    media?: { mimeType: string; data: string }[]
+  ): Content[] {
     const contents: Content[] = [];
     for (const msg of messages) {
       // Skip system/developer messages as they are handled by systemInstruction
@@ -87,9 +90,9 @@ export class GoogleGeminiChat extends BaseChatModel {
       contents.push({ role, parts: [{ text: msg.message }] });
     }
 
-    // --- NEW: append inline image parts if provided
-    if (this.config.promptImages?.length) {
-      for (const img of this.config.promptImages) {
+    // --- NEW: append inline media parts if provided
+    if (media?.length) {
+      for (const img of media) {
         contents.push({
           role: "user",
           parts: [
@@ -190,7 +193,8 @@ export class GoogleGeminiChat extends BaseChatModel {
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: (chunk: string) => void
+    streamingCallback?: (chunk: string) => void,
+    media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(`Messages:\n${JSON.stringify(messages, null, 2)}`);
@@ -243,7 +247,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     let googleAiFinalPrompt: string | undefined;
 
     if (this.useVertexAi) {
-      vertexContents = this.buildVertexContents(messages);
+      vertexContents = this.buildVertexContents(messages, media);
       this.logger.debug(
         `Vertex AI Contents:\n${JSON.stringify(vertexContents, null, 2)}`
       );
@@ -361,11 +365,13 @@ export class GoogleGeminiChat extends BaseChatModel {
           content: content,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
-        this.logger.debug(`Google AI Final prompt with images count: ${this.config.promptImages?.length}`);
-        if (this.config.promptImages?.length) {
+        this.logger.debug(
+          `Google AI Final prompt with media count: ${media?.length}`
+        );
+        if (media?.length) {
           const parts: Part[] = [
             { text: googleAiFinalPrompt },
-            ...this.config.promptImages.map((img) => ({
+            ...media.map((img) => ({
               inlineData: { mimeType: img.mimeType, data: img.data },
             })),
           ];
