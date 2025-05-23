@@ -29,6 +29,17 @@ interface PsAiModelConfig {
   maxThinkingTokens?: number;
   timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
+  /**
+   * Optional list of images to prepend to the user's prompt when you're
+   * talking to a multimodal Gemini model (e.g. gemini-1.5-flash).
+   *
+   * For each image supply the MIME type and a base-64-encoded string of
+   * the bytes you want sent as inline data.
+   */
+  promptImages?: {
+    mimeType: string;
+    data: string;
+  }[];
 }
 
 interface PsCallModelOptions {

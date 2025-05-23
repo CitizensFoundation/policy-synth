@@ -86,6 +86,24 @@ export class GoogleGeminiChat extends BaseChatModel {
       const role = msg.role === "assistant" ? "model" : "user";
       contents.push({ role, parts: [{ text: msg.message }] });
     }
+
+    // --- NEW: append inline image parts if provided
+    if (this.config.promptImages?.length) {
+      for (const img of this.config.promptImages) {
+        contents.push({
+          role: "user",
+          parts: [
+            {
+              inlineData: {
+                mimeType: img.mimeType,
+                data: img.data,
+              },
+            },
+          ],
+        });
+      }
+    }
+
     return contents;
   }
 
@@ -339,6 +357,24 @@ export class GoogleGeminiChat extends BaseChatModel {
           content: content,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
+        // --- NEW: if images exist, build a parts array and call generateContent()
+        if (this.config.promptImages?.length) {
+          const parts: Part[] = [
+            { text: googleAiFinalPrompt },
+            ...this.config.promptImages.map((img) => ({
+              inlineData: { mimeType: img.mimeType, data: img.data },
+            })),
+          ];
+
+          const result = await (this.model as GoogleAiGenerativeModel).generateContent(parts);
+          const content = result.response.text();
+          const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
+          const tokensOut = getTokensOut(result.response.usageMetadata);
+          const cachedInTokens = result.response.usageMetadata?.cachedContentTokenCount ?? 0;
+          await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
+          return { tokensIn, tokensOut, cachedInTokens, content };
+        }
+
         const chat = (this.model as GoogleAiGenerativeModel).startChat(); // Needs history if not single turn
         const result = await chat.sendMessage(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
         const content = result.response.text();
