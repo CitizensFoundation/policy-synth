@@ -23,7 +23,8 @@ export class ClaudeChat extends BaseChatModel {
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: Function
+    streamingCallback?: Function,
+    media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +

@@ -19,7 +19,8 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
   abstract generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: Function
+    streamingCallback?: Function,
+    media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined>;
 
   truncateXmlTags(text: string, maxChars = 500): string {

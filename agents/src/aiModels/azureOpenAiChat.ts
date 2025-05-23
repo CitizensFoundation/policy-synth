@@ -35,7 +35,8 @@ export class AzureOpenAiChat extends BaseChatModel {
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: (chunk: string) => void
+    streamingCallback?: (chunk: string) => void,
+    media?: { mimeType: string; data: string }[]
   ) {
     const chatMessages = messages.map((msg) => ({
       role: msg.role,

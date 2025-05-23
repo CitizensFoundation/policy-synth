@@ -29,10 +29,6 @@ interface PsAiModelConfig {
   maxThinkingTokens?: number;
   timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
-  promptImages?: {
-    mimeType: string;
-    data: string;
-  }[];
 }
 
 interface PsCallModelOptions {

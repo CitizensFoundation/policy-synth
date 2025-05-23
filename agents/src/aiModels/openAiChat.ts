@@ -30,7 +30,8 @@ export class OpenAiChat extends BaseChatModel {
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: Function
+    streamingCallback?: Function,
+    media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     // 1. Convert messages to OpenAI format
     let formattedMessages = messages.map((msg) => ({
