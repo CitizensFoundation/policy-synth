@@ -296,6 +296,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       modelType,
       modelSize,
       prices: {} as any, // TODO: Get fallback model into database
+      promptImages: options.promptImages,
     };
 
     // Construct ephemeral model
@@ -637,6 +638,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelMaxTokens: options.modelMaxTokens,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
+                promptImages: options.promptImages,
               }
             );
             if (!fallbackEphemeral) {
