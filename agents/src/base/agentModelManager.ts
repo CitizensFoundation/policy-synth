@@ -27,8 +27,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   limitedLLMmaxRetryCount = 3;
   mainLLMmaxRetryCount = 75;
-  modelCallTimeoutMs: number =
-    parseInt(process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000");
+  modelCallTimeoutMs: number = parseInt(
+    process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000"
+  );
 
   constructor(
     aiModels: PsAiModelAttributes[],
@@ -295,7 +296,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
       modelType,
       modelSize,
-      prices: {} as any // TODO: Get fallback model into database
+      prices: {} as any, // TODO: Get fallback model into database
     };
 
     // Construct ephemeral model
@@ -637,7 +638,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelTemperature: options.modelTemperature,
                 modelMaxTokens: options.modelMaxTokens,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
-                modelReasoningEffort: options.modelReasoningEffort
+                modelReasoningEffort: options.modelReasoningEffort,
               }
             );
             if (!fallbackEphemeral) {
@@ -663,7 +664,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
-                const { tokensIn, tokensOut, cachedInTokens, content } = fallbackResults;
+                const { tokensIn, tokensOut, cachedInTokens, content } =
+                  fallbackResults;
                 await this.saveTokenUsage(
                   model.config.prices,
                   modelType,
@@ -816,7 +818,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       prices.longContextTokenThreshold &&
       tokensIn >= prices.longContextTokenThreshold
     ) {
-      longContextTokenIn = cachedInTokens ? tokensIn - cachedInTokens : tokensIn;
+      longContextTokenIn = cachedInTokens
+        ? tokensIn - cachedInTokens
+        : tokensIn;
       longContextTokenOut = tokensOut;
       longContextTokenInCached = cachedInTokens ?? 0;
       tokensIn = 0;
@@ -841,7 +845,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             token_in_cached_context_count: cachedInTokens,
             long_context_token_in_count: longContextTokenIn,
             long_context_token_out_count: longContextTokenOut,
-            long_context_token_in_cached_context_count: longContextTokenInCached,
+            long_context_token_in_cached_context_count:
+              longContextTokenInCached,
             model_id: finalModelId,
             agent_id: this.agentId,
             user_id: this.userId,
@@ -857,7 +862,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               token_in_cached_context_count: cachedInTokens,
               long_context_token_in_count: longContextTokenIn,
               long_context_token_out_count: longContextTokenOut,
-              long_context_token_in_cached_context_count: longContextTokenInCached,
+              long_context_token_in_cached_context_count:
+                longContextTokenInCached,
             },
             { transaction: t }
           );
@@ -867,6 +873,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.info(
         `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId}`
       );
+      if (finalModelId === -1) {
+        this.logger.error(
+          `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId} but model is ephemeral `
+        );
+      }
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);
