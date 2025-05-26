@@ -557,7 +557,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     // Simple helper to check if error is 5xx or "prohibited content".
     const is5xxError = (err: any) => {
-      if (err?.response?.status >= 500 && err?.response?.status < 600) {
+      if (
+        (err?.response?.status >= 500 && err?.response?.status < 600) ||
+        err?.message?.includes("500 Internal Server Error") ||
+        err?.includes("500 Internal Server Error")
+      ) {
         this.logDetailedServerError(model, err, messages);
         return true;
       }
