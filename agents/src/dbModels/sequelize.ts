@@ -56,11 +56,10 @@ if (process.env.NODE_ENV === "production") {
           underscored: true,
         },
         dialectModule: pg,
+        // Explicitly disable SSL in development to avoid forcing SSL
+        // connections when using local credentials.
         dialectOptions: {
-          ssl: {
-            require: false,
-            rejectUnauthorized: false,
-          },
+          ssl: false,
         },
         logging: process.env.NODE_ENV !== "production" ? logQuery : false,
       }
