@@ -497,6 +497,41 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  private logDetailedServerError(
+    model: BaseChatModel,
+    error: any,
+    messages: PsModelMessage[]
+  ) {
+    try {
+      const status = error?.response?.status ?? error.status;
+      const statusText = error?.response?.statusText ?? "";
+      this.logger.error(
+        `5xx error from model ${model.modelName}: ${status} ${statusText} - ${error.message}`
+      );
+      if (error?.response?.data) {
+        const data =
+          typeof error.response.data === "string"
+            ? error.response.data
+            : JSON.stringify(error.response.data, null, 2);
+        this.logger.error(`Response body: ${data}`);
+      }
+      if (error?.response?.headers) {
+        this.logger.error(
+          `Response headers: ${JSON.stringify(error.response.headers, null, 2)}`
+        );
+      }
+      if (error.stack) {
+        this.logger.error(error.stack);
+      }
+      const prompt = model.prettyPrintPromptMessages(
+        messages.map((m) => ({ role: m.role, content: m.message }))
+      );
+      this.logger.error(`Prompt leading to error:\n${prompt}`);
+    } catch (logErr) {
+      this.logger.error(`Failed to log detailed server error: ${logErr}`);
+    }
+  }
+
   /**
    * Actually does the call against the chosen model,
    * with your retry logic, parseJson, usage tracking, etc.
@@ -521,8 +556,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     let usedFallback = false;
 
     // Simple helper to check if error is 5xx or "prohibited content".
-    const is5xxError = (err: any) =>
-      err?.response?.status >= 500 && err?.response?.status < 600;
+    const is5xxError = (err: any) => {
+      if (err?.response?.status >= 500 && err?.response?.status < 600) {
+        this.logDetailedServerError(model, err, messages);
+        return true;
+      }
+      return false;
+    };
 
     const isUnknownError = (err: any) => {
       if (!err.message) return false;
