@@ -62,6 +62,7 @@ interface JobDescriptionMemoryData extends PsAgentMemoryData {
   rewritingBuckets?: { [bucket: string]: JobDescription[] };
   additionalGeneralContext?: string;
   researchPlan?: string;
+  educationRequirementResearchResults?: import("../legalResearch/types.js").EducationRequirementResearchRow[];
 }
 
 /**
