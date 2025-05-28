@@ -5,7 +5,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   licenseType: string = ""; // reused for job title
 
-  searchInstructions = `Search for official statutes, regulations, or government job classification documents that describe mandatory education requirements for the job title.`;
+  searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents, court decisions, or similar official legally binding documents produced by New Jersey government or the U.S. government that describe or otherwise contain mandatory education requirement for the job title. Include  materials from non-government sources only if they include a citation or direct reference to an official government source.`;
 
   rankingInstructions = `Prioritize results that explicitly mention legal or regulatory education requirements for the job title.`;
 
