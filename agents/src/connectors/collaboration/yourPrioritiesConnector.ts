@@ -296,6 +296,43 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     return posts;
   }
 
+  async postPoint(
+    groupId: number,
+    postId: number,
+    userId: number,
+    value: number,
+    content: string
+  ): Promise<YpPointData> {
+    await this.login();
+
+    const pointData = {
+      post_id: postId,
+      user_id: userId,
+      value,
+      content,
+    };
+
+    try {
+      const response = await requestWithRetry(() =>
+        axios.post(
+          `${this.serverBaseUrl}/points/${groupId}${
+            this.agentFabricUserId ? `?agentFabricUserId=${this.agentFabricUserId}` : ""
+          }`,
+          pointData,
+          {
+            headers: this.getHeaders(),
+          }
+        )
+      );
+
+      return response.data as YpPointData;
+    } catch (error) {
+      console.error("Error posting point:", error);
+      throw new Error("Failed to post point.");
+    }
+  }
+
+
   async vote(postId: number, value: number): Promise<void> {
     console.log("Voting on post...");
 

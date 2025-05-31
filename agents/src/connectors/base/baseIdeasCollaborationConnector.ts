@@ -10,6 +10,13 @@ export abstract class PsBaseIdeasCollaborationConnector extends PsBaseConnector 
     imageLocalPath: string | undefined
   ): Promise<YpPostData>;
   abstract vote(itemId: number, value: number): Promise<void>;
+  abstract postPoint(
+    groupId: number,
+    postId: number,
+    userId: number,
+    value: number,
+    content: string
+  ): Promise<YpPointData>;
 
   abstract getGroupPosts(groupId: number): Promise<YpPostData[]>;
 

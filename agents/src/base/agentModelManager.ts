@@ -560,7 +560,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       if (
         (err?.response?.status >= 500 && err?.response?.status < 600) ||
         err?.message?.includes("500 Internal Server Error") ||
-        (typeof err === "string" && err.includes("500 Internal Server Error"))
+        (typeof err === "string" && err.includes("500 Internal Server Error")) ||
+        (typeof err === "string" && err.includes("503 Service Unavailable"))
       ) {
         this.logDetailedServerError(model, err, messages);
         return true;
