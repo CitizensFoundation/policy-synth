@@ -19,3 +19,36 @@ This folder contains helper agents used by `JobDescriptionRewriterAgent` to rewr
 4. **Export** – `JobDescriptionPairExporter` writes the pairs to a Google Doc.
 
 Queue configuration for running these agents is defined in `rewriteAgentQueue.ts` in the parent directory.
+
+## Enabling Parallel Checks
+
+`ParallelCheckAgents` is disabled by default inside `JobDescriptionRewriterMasterAgent`.
+To run the validation step set `doParallelCheck` to `true` in `rewriterMasterAgent.ts`
+before starting the queue.
+
+Below is a simplified example of the queue definition:
+
+```ts
+import { PolicySynthAgentQueue } from "@policysynth/agents/base/agentQueue.js";
+import { JobDescriptionRewriterAgent } from "./rewriterAgent.js";
+
+export class JobDescriptionRewriterQueue extends PolicySynthAgentQueue {
+  get agentQueueName(): string {
+    return "JOB_DESCRIPTION_REWRITING";
+  }
+
+  get processors() {
+    return [{ processor: JobDescriptionRewriterAgent, weight: 100 }];
+  }
+}
+```
+
+### Environment variables
+
+The following variables influence the rewriting pipeline:
+
+- `REDIS_AGENT_URL` – Redis connection string used by the queues.
+- `MAX_WEBRESEARCH_URLS_TO_FETCH_PARALLEL` – controls how many pages the
+  `WebPageScanner` fetches concurrently.
+- `PS_DEBUG_AI_MESSAGES` – when set, logs the prompts sent to the AI model.
+- `FIRECRAWL_API_KEY` – API key required for Firecrawl based extraction.
