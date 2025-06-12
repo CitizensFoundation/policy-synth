@@ -2,19 +2,19 @@
 
 import { fileURLToPath } from "url";
 import { PsBaseAgentRunner } from "@policysynth/agents/base/agentRunner.js";
-import { JobDescriptionAnalysisQueue } from "./analysisAgentQueue.js";
-import { JobDescriptionAnalysisAgent } from "./analysisAgent.js";
+import { JobDescriptionAnalysisQueue } from "./jobDescriptions/analysisAgentQueue.js";
+import { JobDescriptionAnalysisAgent } from "./jobDescriptions/analysisAgent.js";
 import { PsGoogleDocsConnector } from "@policysynth/agents/connectors/documents/googleDocsConnector.js";
 import { PsGoogleSheetsConnector } from "@policysynth/agents/connectors/sheets/googleSheetsConnector.js";
 import { PsGoogleDriveConnector } from "@policysynth/agents/connectors/drive/googleDrive.js";
-import { SheetsComparisonAgent } from "./evals/compareSheets.js";
-import { JobDescriptionCompareSheetsQueue } from "./evals/compareAgentQueue.js";
-import { JobDescriptionRewriterAgent } from "./rewriterAgent.js";
-import { JobDescriptionRewriterQueue } from "./rewriteAgentQueue.js";
-import { JobTitleLicenseDegreeAnalysisQueue } from "./licenceDegrees/licenceAnalysisQueue.js";
-import { JobTitleLicenseDegreeAnalysisAgent } from "./licenceDegrees/licenceAnalysisAgent.js";
-import { CompareLicenseEducationQueue } from "./evals/compareLicenseEducationQueue.js";
-import { CompareLicenseEducationAgent } from "./evals/compareLicenseEducation.js";
+import { SheetsComparisonAgent } from "./jobDescriptions/evals/compareSheets.js";
+import { JobDescriptionCompareSheetsQueue } from "./jobDescriptions/evals/compareAgentQueue.js";
+import { JobDescriptionRewriterAgent } from "./jobDescriptions/rewriterAgent.js";
+import { JobDescriptionRewriterQueue } from "./jobDescriptions/rewriteAgentQueue.js";
+import { JobTitleLicenseDegreeAnalysisQueue } from "./jobDescriptions/licenceDegrees/licenceAnalysisQueue.js";
+import { JobTitleLicenseDegreeAnalysisAgent } from "./jobDescriptions/licenceDegrees/licenceAnalysisAgent.js";
+import { CompareLicenseEducationQueue } from "./jobDescriptions/evals/compareLicenseEducationQueue.js";
+import { CompareLicenseEducationAgent } from "./jobDescriptions/evals/compareLicenseEducation.js";
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
   protected agentClasses: PsAgentClassCreationAttributes[];
   protected connectorClasses: PsAgentConnectorClassCreationAttributes[];

@@ -14,8 +14,8 @@ import pLimit from "p-limit";
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_BASE_ID = "2f7e2bd8-education-research";
-  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_VERSION = 1;
+  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_BASE_ID = "7eb4d482-1fcb-400c-a877-070305c9b661";
+  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_VERSION = 2;
 
   constructor(agent: PsAgent, memory: JobDescriptionMemoryData, start: number, end: number) {
     super(agent, memory, start, end);
