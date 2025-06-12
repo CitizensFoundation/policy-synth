@@ -47,3 +47,28 @@ These helpers contain no AI model calls – they simply move data in and out of 
 
 Queue files exist to schedule these agents but are intentionally omitted here.
 
+## Usage
+
+1. **Register a Google Sheets connector.** The `runAgents.ts` script sets up
+   `PsGoogleSheetsConnector` so the agents can read and write spreadsheets.
+2. **Build the project** and compile the TypeScript sources:
+   ```bash
+   npm install
+   npm run build
+   ```
+3. **Start the agent runner** which registers all classes and connectors:
+   ```bash
+   node ts-out/jobDescriptions/runAgents.js
+   ```
+4. **Schedule jobs** on the queue defined in
+   [`licenceAnalysisQueue.ts`](licenceAnalysisQueue.ts) or enqueue them manually
+   using `triggerAgentQueue.ts`.
+
+### Optional Configuration
+
+- **Sheet name** – Set `worksheetName` in the agent memory to read from a
+  different tab than the default `Sheet1`.
+- **Ranking parameters** – `rankResults.ts` uses pairwise Elo scoring. You can
+  tweak the number of comparisons or weights in that file to change the ranking
+  behaviour.
+
