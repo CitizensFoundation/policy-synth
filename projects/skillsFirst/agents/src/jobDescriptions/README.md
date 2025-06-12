@@ -4,13 +4,25 @@
 
 This folder contains a collection of agents used to analyze, rewrite and export job descriptions. The workflow identifies education requirements, performs deep research and exports the results to Google Sheets or Docs. It also includes utilities for rewriting job descriptions to roughly a 10th‑grade reading level.
 
+### Prerequisites
+
+Set the following environment variables before running the agents:
+
+- `YP_USER_ID_FOR_AGENT_CREATION` – numeric ID of the user that owns created agents and connectors.
+- `OPENAI_API_KEY` – API key used for language‑model calls.
+- `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_API_CX_ID` – credentials for Google Custom Search.
+- `AZURE_BING_SEARCH_KEY` – optional Bing search key for web research.
+- `FIRECRAWL_API_KEY` – optional key for deep web crawling.
+
+For Google Sheets, Docs and Drive connectors create a service account and store the JSON credentials and spreadsheet ID in each connector's configuration.
+
 ## Agent Descriptions
 
 - **JobDescriptionAnalysisAgent** – orchestrates the overall analysis workflow. It calls the review agents and triggers multi‑level handling when necessary.
 - **JobDescriptionRewriterAgent** – rewrites descriptions and exports pairs of original/revised text. `JobDescriptionRewriterQueue` schedules this work.
 - **JobDescriptionMultiLevelAnalysisAgent** – processes job descriptions that contain multiple job levels by splitting and re‑running the analysis chain.
 
-### Review agents (`reviewAgents/`)
+### Review agents ([`reviewAgents/`](reviewAgents/README.md))
 
 - `DetermineCollegeDegreeStatusAgent`
 - `DetermineProfessionalLicenseRequirementAgent`
@@ -107,15 +119,15 @@ After all descriptions are processed, it invokes
 `JobDescriptionMultiLevelAnalysisAgent` to split multi‑level postings and finally
 `SheetsJobDescriptionExportAgent` to upload the results.
 
-### Deep research utilities (`deepResearch/`)
+### Deep research utilities ([`deepResearch/`](deepResearch/README.md))
 
 Agents for search query generation, ranking, web page scanning and content ranking. They help gather evidence from the web when analyzing job descriptions.
 
-### Rewriting helpers (`rewriting/`)
+### Rewriting helpers ([`rewriting/`](rewriting/README.md))
 
 Utility agents for difference analysis, bucketing similar jobs, running parallel checks and exporting rewritten documents.
 
-### License‑degree analysis (`licenceDegrees/`)
+### License‑degree analysis ([`licenceDegrees/`](licenceDegrees/README.md))
 
 Agents that research and analyze licensing and degree requirements, with Google Sheets import/export helpers.
 
@@ -148,6 +160,12 @@ Agents that research and analyze licensing and degree requirements, with Google 
    ```bash
    node ts-out/jobDescriptions/triggerAgentQueue.js
    ```
+4. Example invocation with connector registration:
+   ```bash
+   YP_USER_ID_FOR_AGENT_CREATION=123 OPENAI_API_KEY=sk-...
+   GOOGLE_SEARCH_API_KEY=<key> GOOGLE_SEARCH_API_CX_ID=<id> \
+   ts-node src/jobDescriptions/runAgents.ts
+   ```
 
 ## Directory Reference
 
@@ -158,10 +176,10 @@ Agents that research and analyze licensing and degree requirements, with Google 
 | `rewriterAgent.ts` | Rewrites job descriptions |
 | `rewriteAgentQueue.ts` | Queue used by the rewriter agent |
 | `multiLevel/` | Agents for multi‑level job descriptions |
-| `reviewAgents/` | Degree, license and readability checks |
-| `deepResearch/` | Web search and ranking utilities |
-| `rewriting/` | Rewriting helper agents |
-| `licenceDegrees/` | Licence and degree analysis agents |
+| [`reviewAgents/`](reviewAgents/README.md) | Degree, license and readability checks |
+| [`deepResearch/`](deepResearch/README.md) | Web search and ranking utilities |
+| [`rewriting/`](rewriting/README.md) | Rewriting helper agents |
+| [`licenceDegrees/`](licenceDegrees/README.md) | Licence and degree analysis agents |
 | `imports/` | Google Sheets import helper |
 | `exports/` | Google Sheets export helper |
 | `evals/` | Evaluation agents (e.g., sheet comparison) |
