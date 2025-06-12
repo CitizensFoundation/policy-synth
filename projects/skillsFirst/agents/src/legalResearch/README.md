@@ -12,7 +12,9 @@ This folder contains agents that find official evidence of college degree requir
 
 ## Queues
 
-No BullMQ queues are defined in this folder.
+- **EducationRequirementsDeepResearchQueue** – schedules
+  `EducationRequirementsBarrierDeepResearchAgent` jobs using the queue name
+  `EDUCATION_REQUIREMENTS_DEEP_RESEARCH`.
 
 ## Environment Variables
 

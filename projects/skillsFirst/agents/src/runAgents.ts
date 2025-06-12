@@ -15,6 +15,8 @@ import { JobTitleLicenseDegreeAnalysisQueue } from "./jobDescriptions/licenceDeg
 import { JobTitleLicenseDegreeAnalysisAgent } from "./jobDescriptions/licenceDegrees/licenceAnalysisAgent.js";
 import { CompareLicenseEducationQueue } from "./jobDescriptions/evals/compareLicenseEducationQueue.js";
 import { CompareLicenseEducationAgent } from "./jobDescriptions/evals/compareLicenseEducation.js";
+import { EducationRequirementsDeepResearchQueue } from "./legalResearch/educationRequirementsQueue.js";
+import { EducationRequirementsBarrierDeepResearchAgent } from "./legalResearch/educationRequirementsBarrierDeepResearchAgent.js";
 export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
   protected agentClasses: PsAgentClassCreationAttributes[];
   protected connectorClasses: PsAgentConnectorClassCreationAttributes[];
@@ -27,6 +29,7 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
       new JobDescriptionRewriterQueue(),
       new JobTitleLicenseDegreeAnalysisQueue(),
       new CompareLicenseEducationQueue(),
+      new EducationRequirementsDeepResearchQueue(),
     ];
 
     this.agentClasses = [
@@ -35,6 +38,7 @@ export class JobDescriptionAgentRunner extends PsBaseAgentRunner {
       JobDescriptionRewriterAgent.getAgentClass(),
       JobTitleLicenseDegreeAnalysisAgent.getAgentClass(),
       CompareLicenseEducationAgent.getAgentClass(),
+      EducationRequirementsBarrierDeepResearchAgent.getAgentClass(),
     ];
 
     this.connectorClasses = [
