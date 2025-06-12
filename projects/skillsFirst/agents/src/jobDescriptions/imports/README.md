@@ -16,3 +16,47 @@
 3. **Headers** – The sheet must use the same two‑row header format as produced by `SheetsJobDescriptionExportAgent` so the importer can reconstruct each field correctly.
 
 After configuring a connector and sheet, call the import methods to load job descriptions into memory for further processing.
+
+## Example
+
+The snippet below assumes you have already run `runAgents.ts` once so the Google
+Sheets connector is registered. It loads job descriptions from the first
+registered sheet connector:
+
+```ts
+import { SheetsJobDescriptionImportAgent } from "./sheetsImport.js";
+import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
+
+async function run() {
+  const agent = await PsAgent.findOne({ include: ["InputConnectors"] });
+  if (!agent) throw new Error("Agent not found");
+
+  const importAgent = new SheetsJobDescriptionImportAgent(
+    agent,
+    {},
+    0,
+    100,
+    "Sheet1"
+  );
+  const data = await importAgent.importJobDescriptions();
+  console.log(`Loaded ${data.jobDescriptions.length} from ${data.connectorName}`);
+}
+
+run().catch(console.error);
+```
+
+### Sheet Header Format
+
+The sheet must use a two-row header. The first row contains full object paths
+while the second row has short names:
+
+| Row 1 (full path)                                           | Row 2 (short)    |
+| ----------------------------------------------------------- | ---------------- |
+| `agentId`                                                   | `agentId`        |
+| `titleCode`                                                 | `titleCode`      |
+| `degreeAnalysis.needsCollegeDegree`                         | `needsCollegeDegree` |
+| `degreeAnalysis.degreeRequirementStatus.isDegreeMandatory`  | `isDegreeMandatory`  |
+| `readingLevelGradeAnalysis.readabilityLevel`                | `readabilityLevel`   |
+
+Within the overall workflow defined in `../runAgents.ts`, this import agent runs
+before the analysis and export steps to populate the in-memory job descriptions.
