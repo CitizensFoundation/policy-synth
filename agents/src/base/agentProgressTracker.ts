@@ -37,7 +37,7 @@ export class PsProgressTracker extends PolicySynthAgentBase {
             `Loaded status from Redis: ${statusDataString} from key: ${this.redisStatusKey}`
           );*/
         } else {
-          this.logger.error("No status data found!");
+          this.logger.info("No status data found");
         }
       } catch (error) {
         this.logger.error("Error initializing agent status");

@@ -92,7 +92,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           "Research official sources supporting college degree requirements for job titles",
         queueName: "EDUCATION_REQUIREMENTS_DEEP_RESEARCH",
         imageUrl:
-          "https://aoi-storage-production.citizens.is/dl/b0235e4818d5c15a4b9f4dac59eb749--retina-1.png",
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6ee8390b-7a66-4692-baf0-f74c394004c0.png",
         iconName: "education_requirements_deep_research",
         capabilities: ["analysis", "text processing"],
         requestedAiModelSizes: [PsAiModelSize.Small, PsAiModelSize.Medium, PsAiModelSize.Large],

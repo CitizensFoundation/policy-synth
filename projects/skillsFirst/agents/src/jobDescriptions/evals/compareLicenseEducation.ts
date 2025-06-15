@@ -160,7 +160,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
   }
 
   async process(): Promise<void> {
-    await this.updateRangedProgress(0, "Starting license education comparison");
+    await this.updateRangedProgress(0, "Starting license comparison");
 
     const sheet1Rows = await this.readRows(this.sheet1Connector, this.sheet1Name);
     const sheet2Rows = await this.readRows(this.sheet2Connector, this.sheet2Name);
