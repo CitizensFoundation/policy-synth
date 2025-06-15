@@ -8,7 +8,7 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@yrpri/webapp": "^9.0.126",
+    "@yrpri/webapp": "^9.0.132",
     "jwt-decode": "^4.0.0",
     "marked": "^15.0.11"
   },

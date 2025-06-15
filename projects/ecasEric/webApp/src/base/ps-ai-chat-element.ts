@@ -225,51 +225,6 @@ export class PsAiChatElement extends YpBaseElement {
     `;
   }
 
-  renderInfo() {
-    if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
-      const data = this.wsMessage.data as any;
-      if (data.name === 'sourceDocuments') {
-        console.error(JSON.stringify(data));
-        return html`<div
-          class="layout horizontal  wrap sourceDocumentsContainer"
-        >
-          ${data.message.map(
-            document => html`
-              <md-elevated-button
-                class="sourceButton"
-                @click=${() => this.fire('ps-open-source-dialog', document)}
-              >
-                <div class="layout horizontal sourceContainer">
-                  <img
-                    src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
-                      document.url
-                    )}&sz=24"
-                    slot="icon"
-                    width="24"
-                    height="24"
-                    class="sourceFavIcon"
-                  />
-                  <div class="documentShortDescription">
-                    ${this.shortenText(
-                      `${this.capitalizeFirstLetter(document.title)}: ${
-                        document.description
-                      }`,
-                      65
-                    )}
-                  </div>
-                </div>
-              </md-elevated-button>
-            `
-          )}
-        </div>`;
-      } else {
-        return nothing;
-      }
-    } else {
-      return nothing;
-    }
-  }
-
   renderUser(): any {
     return html`
       <div class="userChatDialog layout horizontal user-message">
@@ -346,7 +301,7 @@ export class PsAiChatElement extends YpBaseElement {
     } else if (this.sender === 'bot' && this.type === 'noStreaming') {
       return this.renderNoStreaming();
     } else if (this.sender === 'bot' && this.type === 'info') {
-      return this.renderInfo();
+      return nothing;
     } else if (this.sender === 'bot') {
       return this.renderChatGPT();
     }
