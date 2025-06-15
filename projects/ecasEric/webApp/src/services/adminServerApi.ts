@@ -160,6 +160,12 @@ export class AdminServerApi extends YpServerApi {
     return await this.fetchWrapper(`${this.baseUrlPath}/topics`) as TopicData[];
   }
 
+  async getTopic(idOrSlug: string | number): Promise<TopicData> {
+    return await this.fetchWrapper(
+      `${this.baseUrlPath}/topics/${idOrSlug}`
+    ) as TopicData;
+  }
+
   async createTopic(topicData: Omit<TopicData, 'id'>): Promise<TopicData> {
     return await this.fetchWrapper(`${this.baseUrlPath}/topics`, {
       method: 'POST',
