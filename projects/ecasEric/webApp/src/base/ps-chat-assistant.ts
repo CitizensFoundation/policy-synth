@@ -520,6 +520,12 @@ export class PsChatAssistant extends PsStreamingLlmBase {
               hasTrailingIcon
               id="chatInput"
               rows="3"
+              @keyup="${(e: KeyboardEvent) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  this.sendChatMessage();
+                }
+              }}"
               @focus="${() => (this.inputIsFocused = true)}"
               @blur="${() => (this.inputIsFocused = true)}"
               .label="${this.textInputLabel}"

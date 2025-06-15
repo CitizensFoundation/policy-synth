@@ -48,7 +48,7 @@ export class EcasEricChatBot extends PsChatAssistant {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.defaultInfoMessage = this.t("Hello I'm Eric, your EU rights assistant. How can I help?");
+    this.defaultInfoMessage = this.t("Hello I'm Eric. How can I help?");
     this.textInputLabel = this.t('Your question about EU rights');
     this.ownServerApi = new this.serverApiClass();
   }

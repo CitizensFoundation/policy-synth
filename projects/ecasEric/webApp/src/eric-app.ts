@@ -284,7 +284,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   handleServerMemoryIdCreated(event: CustomEvent) {
     this.serverMemoryId = event.detail;
     const path = `/chat/${this.serverMemoryId}`;
-    history.pushState({}, '',path);
+    //history.pushState({}, '',path);
     this.saveChatToLocalStorage();
   }
 
@@ -295,7 +295,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     ) as EcasEricChatBot).reset();
     await this.getChatLogFromServer();
     const path = `/chat/${this.serverMemoryId}`;
-    history.pushState({}, '', path);
+    //history.pushState({}, '', path);
     this.requestUpdate();
   }
 

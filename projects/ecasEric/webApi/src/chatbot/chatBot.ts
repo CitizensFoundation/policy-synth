@@ -43,11 +43,14 @@ export class EcasYeaChatBot extends PsBaseChatBot {
   // Enable persistence
   persistMemory = true;
 
-  mainSreamingSystemPrompt = (
+  mainStreamingSystemPrompt = (
     topicTitle: string,
-    topicDescription: string,
-    context: string
-  ) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre). You help users with questions about **${topicTitle}**. ${topicDescription}
+    topicContext: string
+  ) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre). You help users with questions about **${topicTitle}**.
+
+<TOPIC_CONTEXT>
+${topicContext}
+</TOPIC_CONTEXT>
 
 <BASIC_INFORMATION_ABOUT_EU_COUNTRIES>
 The EU countries are:
@@ -60,10 +63,6 @@ The EEA includes EU countries and also Iceland, Liechtenstein and Norway. It all
 
 Switzerland is not an EU or EEA member but is part of the single market. This means Swiss nationals have the same rights to live and work in the UK as other EEA nationals.
 </BASIC_INFORMATION_ABOUT_EU_ECONOMIC_AREA>
-
-<QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
-${context}
-</QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
 
 <IMPORTANT_INSTRUCTIONS>
 - The user will ask a question and we have provided a <QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>, to provide a thoughtful answer from, do not reference those directly as the user will not see them.
@@ -86,24 +85,20 @@ ${context}
 
   mainStreamingUserPrompt = (
     latestQuestion: string,
-    countryLinksInfo: string | undefined,
-    euSignpostsInfo: string | undefined
+    questionAnswerContext: string,
+    countryLinksInfo: string | undefined
   ) =>
     `${
-  euSignpostsInfo
-    ? `<POSSIBLY_RELEVANT_EU_SIGNPOSTS_INFO>
-${euSignpostsInfo}
-</POSSIBLY_RELEVANT_EU_SIGNPOSTS_INFO>`
-    : ""
-}
-
-${
   countryLinksInfo
     ? `<COUNTRY_LINKS_INFO_POSSIBLY_RELEVANT_TO_THE_USER_QUESTION>
 ${countryLinksInfo}
 </COUNTRY_LINKS_INFO_POSSIBLY_RELEVANT_TO_THE_USER_QUESTION>`
     : ""
 }
+
+<QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
+${questionAnswerContext}
+</QUESTIONS_WITH_ANSWERS_AS_CONTEXT_TO_ANSWER_USERS_QUESTION_FROM>
 
 <LATEST_USER_QUESTION>
 ${latestQuestion}
@@ -173,19 +168,6 @@ Your thoughtful answer in markdown:
     }
   }
 
-  async loadEuSignpostsInfo() {
-    try {
-      const euSignpostsInfo = await fs.readFile(
-        `countryInfo/eu_signposts.txt`,
-        "utf8"
-      );
-      return euSignpostsInfo;
-    } catch (err) {
-      console.error(`Error in loadEuSignpostsInfo: ${err}`);
-      return undefined;
-    }
-  }
-
   async loadQaPairsForTopic(topicId: number | undefined): Promise<{ question: string; answer: string }[]> {
     if (!topicId) {
       console.warn("No topic ID specified, using legacy XLSX loading as fallback.");
@@ -217,9 +199,9 @@ Your thoughtful answer in markdown:
 
     try {
       const chat = this.geminiModel.startChat({ history: chatHistory });
-      console.log(`Prompt: ${prompt}`);
+      //console.log(`Prompt: ${prompt}`);
       const result = await chat.sendMessageStream(prompt);
-      console.log(`Result: ${result}`);
+      //console.log(`Result: ${result}`);
 
       this.sendToClient("bot", "", "start");
       let botMessage = "";
@@ -275,13 +257,22 @@ Your thoughtful answer in markdown:
     }
 
     let topicTitle = "";
-    let topicDescription = "";
+    let topicContext = "";
     if (this.currentTopicId) {
       const topic = await Topic.findByPk(this.currentTopicId);
       if (topic) {
-        topicTitle = topic.title;
-        topicDescription = topic.description || "";
+        console.log(`Topic: ${JSON.stringify(topic, null, 2)}`);
+        topicTitle = topic.get('title') || "";
+        topicContext = topic.get('description') || "";
+      } else {
+        console.error(`No topic found for ID: ${this.currentTopicId}`);
+        this.sendToClient("bot", "Error: No topic found.", "error");
+        return;
       }
+    } else {
+      console.error(`No topic ID specified.`);
+      this.sendToClient("bot", "Error: No topic ID specified.", "error");
+      return;
     }
 
     if (!this.searchContext || this.searchContext.length === 0) {
@@ -293,16 +284,22 @@ Your thoughtful answer in markdown:
         return;
     }
 
+    console.log(`Topic title: ${topicTitle}`);
+    console.log(`Topic context: ${topicContext}`);
+
+    const systemInstruction = this.mainStreamingSystemPrompt(
+      topicTitle,
+      topicContext
+    );
+
+    console.log(`System instruction: ${systemInstruction}`);
+
     // Dynamically set the system prompt with the loaded context
     if (this.geminiClient && this.geminiModel) {
       // Re-initialize model with new system instruction for this conversation
       this.geminiModel = this.geminiClient.getGenerativeModel({
         model: aiModel,
-        systemInstruction: this.mainSreamingSystemPrompt(
-          topicTitle,
-          topicDescription,
-          JSON.stringify(this.searchContext, null, 2)
-        ),
+        systemInstruction: systemInstruction,
         // Add safety settings if needed
       });
     } else {
@@ -315,7 +312,7 @@ Your thoughtful answer in markdown:
     // Correct PsRagRouter instantiation (assuming it takes memory)
     // If it requires more params, adjust based on its definition
     //@ts-ignore - Assuming BaseChatBot handles memory correctly
-    const router = new PsRagRouter(this.memory, topicTitle, topicDescription);
+    const router = new PsRagRouter(this.memory, topicTitle, topicContext);
     const routingData = await router.getRoutingData(
         userLastMessage,
         JSON.stringify(chatLogWithoutLastUserMessage)
@@ -338,8 +335,6 @@ Your thoughtful answer in markdown:
         }
     }
 
-    const euSignpostsInfo = await this.loadEuSignpostsInfo();
-
     // Convert chat history to Gemini format
     const history: Content[] = chatLogWithoutLastUserMessage.map(
         (msg: PsSimpleChatLog): Content => ({
@@ -351,8 +346,8 @@ Your thoughtful answer in markdown:
     // Call the new streaming method
     await this.streamResponse(this.mainStreamingUserPrompt(
         userLastMessage,
-        countryLinksInfo,
-        euSignpostsInfo
+        JSON.stringify(this.searchContext, null, 2),
+        countryLinksInfo
       ), history);
   }
 }
