@@ -17,6 +17,11 @@ import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 
+export interface LagavitiDocumentSourcesWsData {
+  name: string;
+  message: any[];
+}
+
 @customElement('ps-ai-chat-element')
 export class PsAiChatElement extends YpBaseElement {
   @property({ type: String })
@@ -26,7 +31,7 @@ export class PsAiChatElement extends YpBaseElement {
   wsMessage!: PsAiChatWsMessage;
 
   @property({ type: String })
-  updateMessage: string;
+  updateMessage!: string;
 
   @property({ type: String })
   sender!: 'you' | 'bot';
@@ -118,6 +123,243 @@ export class PsAiChatElement extends YpBaseElement {
       }
     }
   };
+
+
+  get isError() {
+    return this.type == 'error' || this.type == 'moderation_error';
+  }
+
+  renderCGImage() {
+    return html` <md-icon class="robotIcon">smart_toy</md-icon> `;
+  }
+
+  renderRoboImage() {
+    return html` <md-icon class="robotIcon">person</md-icon> `;
+  }
+
+  renderJson() {
+    return html``;
+  }
+
+
+  shortenText(text: string, maxLength: number) {
+    if (text.length > maxLength) {
+      return text.substr(0, maxLength) + '...';
+    } else {
+      return text;
+    }
+  }
+
+  capitalizeFirstLetter(text: string): string {
+    if (text.length === 0) return text;
+
+    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  }
+
+  stripDomainForFacIcon(url: string) {
+    let domain = url.split('/')[2];
+    console.error(`Domain is ${domain}`);
+    return domain;
+  }
+
+
+  parseFollowUpQuestions() {
+    this.followUpQuestionsRaw = this.followUpQuestionsRaw.replace(
+      /<<([^>>]+)>>/g,
+      (match, content) => {
+        this.followUpQuestions.push(content);
+        return '';
+      }
+    );
+  }
+
+  override updated(
+    changedProperties: Map<string | number | symbol, unknown>
+  ): void {
+    super.updated(changedProperties);
+    if (
+      changedProperties.has('followUpQuestionsRaw') &&
+      this.followUpQuestionsRaw
+    ) {
+      this.parseFollowUpQuestions();
+    }
+  }
+
+  renderChatGPT(): any {
+    return html`
+      <div class="layout vertical chatGPTDialogContainer">
+        <div
+          class="chatGPTDialog layout vertical bot-message"
+          ?error="${this.isError}"
+        >
+          <div class="layout ${this.wide ? 'horizontal' : 'vertical'}">
+            <div class="layout vertical chatImage">${this.renderCGImage()}</div>
+            <div class="layout vertical chatText">
+              ${resolveMarkdown(this.message, {
+                includeImages: true,
+                includeCodeBlockClassNames: true,
+                handleJsonBlocks: true,
+                targetElement: this,
+              })}
+              ${this.jsonLoading
+                ? html`<div class="layout horizontal center-center">
+                    <md-circular-progress indeterminate></md-circular-progress>
+                  </div>`
+                : nothing}
+            </div>
+          </div>
+          ${this.renderJson()}
+        </div>
+        ${this.followUpQuestions && this.followUpQuestions.length > 0
+          ? html`
+              <div class="layout horizontal followup-question-container wrap">
+                <md-icon class="followUpQuestionMark">contact_support</md-icon
+                >${this.followUpQuestions.map(
+                  question => html`
+                    <md-outlined-button
+                      class="followup-question"
+                      .label="${question}"
+                      @click="${() => this.fire('followup-question', question)}"
+                    ></md-outlined-button>
+                  `
+                )}
+              </div>
+            `
+          : nothing}
+      </div>
+    `;
+  }
+
+  renderInfo() {
+    if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
+      const data = this.wsMessage.data as LagavitiDocumentSourcesWsData;
+      if (data.name === 'sourceDocuments') {
+        console.error(JSON.stringify(data));
+        return html`<div
+          class="layout horizontal  wrap sourceDocumentsContainer"
+        >
+          ${data.message.map(
+            document => html`
+              <md-elevated-button
+                class="sourceButton"
+                @click=${() => this.fire('ps-open-source-dialog', document)}
+              >
+                <div class="layout horizontal sourceContainer">
+                  <img
+                    src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
+                      document.url
+                    )}&sz=24"
+                    slot="icon"
+                    width="24"
+                    height="24"
+                    class="sourceFavIcon"
+                  />
+                  <div class="documentShortDescription">
+                    ${this.shortenText(
+                      `${this.capitalizeFirstLetter(document.title)}: ${
+                        document.description
+                      }`,
+                      65
+                    )}
+                  </div>
+                </div>
+              </md-elevated-button>
+            `
+          )}
+        </div>`;
+      } else {
+        return nothing;
+      }
+    } else {
+      return nothing;
+    }
+  }
+
+  renderUser(): any {
+    return html`
+      <div class="userChatDialog layout horizontal user-message">
+        <div class="layout vertical chatImage">${this.renderRoboImage()}</div>
+        <div class="layout vertical chatText chatTextUser">
+          ${resolveMarkdown(this.message, {
+            includeImages: true,
+            includeCodeBlockClassNames: true,
+            handleJsonBlocks: true,
+            targetElement: this,
+          })}
+        </div>
+      </div>
+    `;
+  }
+
+  renderNoStreaming() {
+    return html`${this.spinnerActive
+        ? html`<svg class="progress-ring" width="28" height="28">
+            <circle
+              class="progress-ring__circle"
+              ?spinnerActive="${this.spinnerActive}"
+              stroke="blue"
+              stroke-width="2"
+              fill="transparent"
+              r="10"
+              cx="12"
+              cy="12"
+            />
+          </svg>`
+        : html`<md-icon class="doneIcon">done</md-icon>`}
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
+        ${this.message}
+        ${this.updateMessage ? html`- ${this.updateMessage}` : nothing}
+      </div> `;
+  }
+
+  renderThinking() {
+    return html`${this.spinnerActive
+        ? html`<svg class="progress-ring" width="28" height="28">
+            <circle
+              class="progress-ring__circle"
+              ?spinnerActive="${this.spinnerActive}"
+              stroke="blue"
+              stroke-width="2"
+              fill="transparent"
+              r="10"
+              cx="12"
+              cy="12"
+            />
+          </svg>`
+        : html`<md-icon class="doneIcon">done</md-icon>`}
+      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
+        ${this.getThinkingText()}
+      </div> `;
+  }
+
+  getThinkingText() {
+    //TODO: Fix this activate i18n
+    if (this.detectedLanguage == 'es') {
+      return 'Mõeldes...';
+    } else if (this.detectedLanguage == 'is') {
+      return 'Hugsa...';
+    } else {
+      return 'Thinking...';
+    }
+  }
+
+  renderMessage() {
+    if (this.sender === 'you') {
+      return this.renderUser();
+    } else if (this.sender === 'bot' && this.type === 'thinking') {
+      return this.renderThinking();
+    } else if (this.sender === 'bot' && this.type === 'noStreaming') {
+      return this.renderNoStreaming();
+    } else if (this.sender === 'bot' && this.type === 'info') {
+      return this.renderInfo();
+    } else if (this.sender === 'bot') {
+      return this.renderChatGPT();
+    }
+  }
+
+  override render() {
+    return html`${this.renderMessage()} `;
+  }
 
   static override get styles() {
     return [
@@ -401,239 +643,5 @@ export class PsAiChatElement extends YpBaseElement {
          }
       `,
     ];
-  }
-
-  get isError() {
-    return this.type == 'error' || this.type == 'moderation_error';
-  }
-
-  renderCGImage() {
-    return html` <md-icon class="robotIcon">smart_toy</md-icon> `;
-  }
-
-  renderRoboImage() {
-    return html` <md-icon class="robotIcon">person</md-icon> `;
-  }
-
-  renderJson() {
-    return html``;
-  }
-
-  renderInfo() {
-    if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
-      const data = this.wsMessage.data as any;
-      if (data.name === 'sourceDocuments') {
-        console.error(JSON.stringify(data));
-        return html`<div
-          class="layout horizontal  wrap sourceDocumentsContainer"
-        >
-          ${data.message.map(
-            (document: any) => html`
-              <md-elevated-button
-                class="sourceButton"
-                @click=${() => this.fire('ps-open-source-dialog', document)}
-              >
-                <div class="layout horizontal sourceContainer">
-                  <img
-                    src="https://www.google.com/s2/favicons?domain=${this.stripDomainForFacIcon(
-                      document.url
-                    )}&sz=24"
-                    slot="icon"
-                    width="24"
-                    height="24"
-                    class="sourceFavIcon"
-                  />
-                  <div class="documentShortDescription">
-                    ${this.shortenText(
-                      `${this.capitalizeFirstLetter(document.title)}: ${
-                        document.description
-                      }`,
-                      65
-                    )}
-                  </div>
-                </div>
-              </md-elevated-button>
-            `
-          )}
-        </div>`;
-      } else {
-        return nothing;
-      }
-    } else {
-      return nothing;
-    }
-  }
-
-  shortenText(text: string, maxLength: number) {
-    if (text.length > maxLength) {
-      return text.substr(0, maxLength) + '...';
-    } else {
-      return text;
-    }
-  }
-
-  capitalizeFirstLetter(text: string): string {
-    if (text.length === 0) return text;
-
-    return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
-  }
-
-  stripDomainForFacIcon(url: string) {
-    let domain = url.split('/')[2];
-    console.error(`Domain is ${domain}`);
-    return domain;
-  }
-
-  renderChatGPT(): any {
-    return html`
-      <div class="layout vertical chatGPTDialogContainer">
-        <div
-          class="chatGPTDialog layout vertical bot-message"
-          ?error="${this.isError}"
-        >
-          <div class="layout ${this.wide ? 'horizontal' : 'vertical'}">
-            <div class="layout vertical chatImage">${this.renderCGImage()}</div>
-            <div class="layout vertical chatText">
-              ${resolveMarkdown(this.message, {
-                includeImages: true,
-                includeCodeBlockClassNames: true,
-                handleJsonBlocks: true,
-                targetElement: this,
-              })}
-              ${this.jsonLoading
-                ? html`<div class="layout horizontal center-center">
-                    <md-circular-progress indeterminate></md-circular-progress>
-                  </div>`
-                : nothing}
-            </div>
-          </div>
-          ${this.renderJson()}
-        </div>
-        ${this.followUpQuestions && this.followUpQuestions.length > 0
-          ? html`
-              <div class="layout horizontal followup-question-container wrap">
-                <md-icon class="followUpQuestionMark">contact_support</md-icon
-                >${this.followUpQuestions.map(
-                  question => html`
-                    <md-outlined-button
-                      class="followup-question"
-                      .label="${question}"
-                      @click="${() => this.fire('followup-question', question)}"
-                    ></md-outlined-button>
-                  `
-                )}
-              </div>
-            `
-          : nothing}
-      </div>
-    `;
-  }
-
-  parseFollowUpQuestions() {
-    this.followUpQuestionsRaw = this.followUpQuestionsRaw.replace(
-      /<<([^>>]+)>>/g,
-      (match, content) => {
-        this.followUpQuestions.push(content);
-        return '';
-      }
-    );
-  }
-
-  override updated(
-    changedProperties: Map<string | number | symbol, unknown>
-  ): void {
-    super.updated(changedProperties);
-    if (
-      changedProperties.has('followUpQuestionsRaw') &&
-      this.followUpQuestionsRaw
-    ) {
-      this.parseFollowUpQuestions();
-    }
-  }
-
-  renderUser(): any {
-    return html`
-      <div class="userChatDialog layout horizontal user-message">
-        <div class="layout vertical chatImage">${this.renderRoboImage()}</div>
-        <div class="layout vertical chatText chatTextUser">
-          ${resolveMarkdown(this.message, {
-            includeImages: true,
-            includeCodeBlockClassNames: true,
-            handleJsonBlocks: true,
-            targetElement: this,
-          })}
-        </div>
-      </div>
-    `;
-  }
-
-  renderNoStreaming() {
-    return html`${this.spinnerActive
-        ? html`<svg class="progress-ring" width="28" height="28">
-            <circle
-              class="progress-ring__circle"
-              ?spinnerActive="${this.spinnerActive}"
-              stroke="blue"
-              stroke-width="2"
-              fill="transparent"
-              r="10"
-              cx="12"
-              cy="12"
-            />
-          </svg>`
-        : html`<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
-        ${this.message}
-        ${this.updateMessage ? html`- ${this.updateMessage}` : nothing}
-      </div> `;
-  }
-
-  renderThinking() {
-    return html`${this.spinnerActive
-        ? html`<svg class="progress-ring" width="28" height="28">
-            <circle
-              class="progress-ring__circle"
-              ?spinnerActive="${this.spinnerActive}"
-              stroke="blue"
-              stroke-width="2"
-              fill="transparent"
-              r="10"
-              cx="12"
-              cy="12"
-            />
-          </svg>`
-        : html`<md-icon class="doneIcon">done</md-icon>`}
-      <div class="thinkingText" ?spinnerActive="${this.spinnerActive}">
-        ${this.getThinkingText()}
-      </div> `;
-  }
-
-  getThinkingText() {
-    //TODO: Fix this activate i18n
-    if (this.detectedLanguage == 'es') {
-      return 'Mõeldes...';
-    } else if (this.detectedLanguage == 'is') {
-      return 'Hugsa...';
-    } else {
-      return 'Thinking...';
-    }
-  }
-
-  renderMessage() {
-    if (this.sender === 'you') {
-      return this.renderUser();
-    } else if (this.sender === 'bot' && this.type === 'thinking') {
-      return this.renderThinking();
-    } else if (this.sender === 'bot' && this.type === 'noStreaming') {
-      return this.renderNoStreaming();
-    } else if (this.sender === 'bot' && this.type === 'info') {
-      return this.renderInfo();
-    } else if (this.sender === 'bot') {
-      return this.renderChatGPT();
-    }
-  }
-
-  override render() {
-    return html` ${this.renderMessage()} `;
   }
 }
