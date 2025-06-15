@@ -3,6 +3,13 @@ import { PsIngestionConstants } from "../ingestion/ingestionConstants.js";
 import { PolicySynthStandaloneAgent } from "@policysynth/agents/base/agentStandalone.js";
 
 export class PsRagRouter extends PolicySynthStandaloneAgent {
+  constructor(
+    memory: any,
+    private topicTitle: string = "",
+    private topicDescription: string = ""
+  ) {
+    super(memory);
+  }
 
   override get modelTemperature() {
     return 0.0;
@@ -13,7 +20,11 @@ export class PsRagRouter extends PolicySynthStandaloneAgent {
   }
 
 systemMessage = (chatHistory: string) =>
-this.createSystemMessage(`You are an expert user question analyzer for a RAG based chatbot. We will use the information to decide what documents to retrieve for the user through a vector database search.
+this.createSystemMessage(`You are an expert user question analyzer for a RAG based chatbot. The chatbot focuses on "${this.topicTitle}". Use the topic description below when rewriting the user's question.
+
+Topic description: ${this.topicDescription}
+
+We will use the information to decide what documents to retrieve for the user through a vector database search.
 
 Instructions:
 - Always keep a track of what topic you are discussing with the user from your chat history and include that topic in the "rewrittenUserQuestionForVectorDatabaseSearch" JSON field.
@@ -22,16 +33,6 @@ Instructions:
 
 Your conversation history with the user:
 ${chatHistory}
-
-About this project:
-Q&A on the theme: EU Residence right of third country nationals who are EU citizen’s family members including the following 5 subtopics:
-
-The notion of family member
-Conditions of the right to stay
-Formalities
-Permanent residence
-Equal treatment
-The questions are not classified by sub-topic, as questions can (and often do in YEA) cover several sub-topics. They are therefore classified by type of question: legal information, legal advice and legal assistance.
 
 The EU countries are:
 Austria, Belgium, Bulgaria, Croatia, Republic of Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Hungary, Ireland, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Poland, Portugal, Romania, Slovakia, Slovenia, Spain and Sweden.

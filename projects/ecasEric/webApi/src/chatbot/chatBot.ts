@@ -1,31 +1,53 @@
 import { PsBaseChatBot } from "@policysynth/api/base/chat/baseChatBot.js";
 import { PsRagRouter } from "./router.js";
 import WebSocket from "ws";
-import path from "path";
-import XLSX from "xlsx";
 import fs from "fs/promises";
 import { QAPair } from "../models/qaPair.model.js";
+import { Topic } from "../models/topic.model.js";
+import { LinkService } from "../services/linkService.js";
 import { GenerationConfig, Content } from "@google/generative-ai";
 
 const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.5-pro-preview-06-05";
 //const aiModel = "gemini-2.0-flash";
 
+const COUNTRY_SLUG_TO_CODE: Record<string, string> = {
+  austria: "AT",
+  belgium: "BE",
+  croatia: "HR",
+  cyprus: "CY",
+  czech_republic: "CZ",
+  denmark: "DK",
+  estonia: "EE",
+  finland: "FI",
+  france: "FR",
+  germany: "DE",
+  greece: "GR",
+  hungary: "HU",
+  ireland: "IE",
+  italy: "IT",
+  latvia: "LV",
+  lithuania: "LT",
+  luxembourg: "LU",
+  malta: "MT",
+  poland: "PL",
+  portugal: "PT",
+  romania: "RO",
+  slovakia: "SK",
+  slovenia: "SI",
+  spain: "ES",
+  sweden: "SE",
+  the_netherlands: "NL",
+};
+
 export class EcasYeaChatBot extends PsBaseChatBot {
   // Enable persistence
   persistMemory = true;
 
-  mainSreamingSystemPrompt = (context: string) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre) - a friendly AI that helps users find answers to their questions based on a database of previously asked questions with answers.
-
-  <ABOUT_THIS_PROJECT>
-Q&A on the theme: EU Residence right of third country nationals who are EU citizen's family members including the following 5 subtopics:
-- The notion of family member
-- Conditions of the right to stay
-- Formalities
-- Permanent residence
-- Equal treatment
-
-The questions in your context are not classified by sub-topic, as questions can (and often do in YEA) cover several sub-topics. They are therefore classified by type of question: legal information, legal advice and legal assistance.
-</ABOUT_THIS_PROJECT>
+  mainSreamingSystemPrompt = (
+    topicTitle: string,
+    topicDescription: string,
+    context: string
+  ) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre). You help users with questions about **${topicTitle}**. ${topicDescription}
 
 <BASIC_INFORMATION_ABOUT_EU_COUNTRIES>
 The EU countries are:
@@ -58,6 +80,7 @@ ${context}
 - Use simple language not legal language.
 - Show the user useful links in correct markdown format.
 - Refuse politely to answer questions that are not in your context and that are not on the topic of EU Residence right of third country nationals who are EU citizen's family member.
+- Refuse politely to answer questions that are not in your context and that are not related to ${topicTitle}.
 </IMPORTANT_INSTRUCTIONS>
 `;
 
@@ -129,13 +152,21 @@ Your thoughtful answer in markdown:
     }
   }
 
-  async loadCountryLinksInfo(country: string) {
+  private linkService = new LinkService();
+
+  async loadCountryLinksInfo(countrySlug: string) {
+    if (!this.currentTopicId) return undefined;
+    const slug = countrySlug.toLowerCase().replace(/\s+/g, "_");
+    const code = COUNTRY_SLUG_TO_CODE[slug];
+    if (!code) return undefined;
     try {
-      const countryInfo = await fs.readFile(
-        `countryInfo/${country}.txt`,
-        "utf8"
-      );
-      return countryInfo;
+      const links = await this.linkService.list(this.currentTopicId, code);
+      if (!links || links.length === 0) {
+        return undefined;
+      }
+      return links
+        .map((l) => `- [${l.title || l.url}](${l.url})`)
+        .join("\n");
     } catch (err) {
       console.error(`Error in loadCountryLinksInfo: ${err}`);
       return undefined;
@@ -243,6 +274,16 @@ Your thoughtful answer in markdown:
       return;
     }
 
+    let topicTitle = "";
+    let topicDescription = "";
+    if (this.currentTopicId) {
+      const topic = await Topic.findByPk(this.currentTopicId);
+      if (topic) {
+        topicTitle = topic.title;
+        topicDescription = topic.description || "";
+      }
+    }
+
     if (!this.searchContext || this.searchContext.length === 0) {
         const errorMsg = this.currentTopicId
           ? `I could not find any Q&A content for the selected topic (ID: ${this.currentTopicId}). Please try another topic or contact an administrator.`
@@ -258,6 +299,8 @@ Your thoughtful answer in markdown:
       this.geminiModel = this.geminiClient.getGenerativeModel({
         model: aiModel,
         systemInstruction: this.mainSreamingSystemPrompt(
+          topicTitle,
+          topicDescription,
           JSON.stringify(this.searchContext, null, 2)
         ),
         // Add safety settings if needed
@@ -272,7 +315,7 @@ Your thoughtful answer in markdown:
     // Correct PsRagRouter instantiation (assuming it takes memory)
     // If it requires more params, adjust based on its definition
     //@ts-ignore - Assuming BaseChatBot handles memory correctly
-    const router = new PsRagRouter(this.memory);
+    const router = new PsRagRouter(this.memory, topicTitle, topicDescription);
     const routingData = await router.getRoutingData(
         userLastMessage,
         JSON.stringify(chatLogWithoutLastUserMessage)
