@@ -1,24 +1,24 @@
-import { html, css } from 'lit';
-import { customElement, property, query, state } from 'lit/decorators.js';
-import { PsRouter } from './base/router/router.js';
+import { html, css } from "lit";
+import { customElement, property, query, state } from "lit/decorators.js";
+import { PsRouter } from "./base/router/router.js";
 
-import '@material/web/slider/slider.js';
-import '@material/web/iconbutton/outlined-icon-button.js';
+import "@material/web/slider/slider.js";
+import "@material/web/iconbutton/outlined-icon-button.js";
 
-import '@material/web/menu/menu.js';
-import { MdMenu } from '@material/web/menu/menu.js';
-import '@material/web/menu/menu-item.js';
+import "@material/web/menu/menu.js";
+import { MdMenu } from "@material/web/menu/menu.js";
+import "@material/web/menu/menu-item.js";
 
-import './eric-chatbot.js';
-import { PolicySynthWebApp } from './base/ps-app.js';
-import { ResearchServerApi } from './researchServerApi.js';
-import { EcasEricChatBot } from './eric-chatbot.js';
-import { PropertyValueMap } from '@lit/reactive-element';
-import { authStoreInstance } from './services/authStore.js';
-import { adminServerApi } from './services/adminServerApi.js';
+import "./eric-chatbot.js";
+import { PolicySynthWebApp } from "./base/ps-app.js";
+import { ResearchServerApi } from "./researchServerApi.js";
+import { EcasEricChatBot } from "./eric-chatbot.js";
+import { PropertyValueMap } from "@lit/reactive-element";
+import { authStoreInstance } from "./services/authStore.js";
+import { adminServerApi } from "./services/adminServerApi.js";
 
-import './admin/admin-dashboard.js';
-import './admin/admin-login.js';
+import "./admin/admin-dashboard.js";
+import "./admin/admin-login.js";
 
 type SavedChat = {
   serverMemoryId: string;
@@ -27,21 +27,20 @@ type SavedChat = {
 
 // ... SavedChat, Topic interfaces ...
 interface Topic {
-    id: number;
-    slug: string;
-    title: string;
-    description?: string;
-    language?: string;
+  id: number;
+  slug: string;
+  title: string;
+  description?: string;
+  language?: string;
 }
 
-const shouldRenderAdmin = () =>
-  window.location.pathname.startsWith('/admin');
+const shouldRenderAdmin = () => window.location.pathname.startsWith("/admin");
 
-@customElement('eric-chatbot-app')
+@customElement("eric-chatbot-app")
 export class EcasYeaChatBotApp extends PolicySynthWebApp {
-  themeColor = '#004f9f';
-  localStorageThemeColorKey = 'md3-ecas-eric-theme-color';
-  localeStorageChatsKey= "ecas-eric-chats-v1"
+  themeColor = "#1D42D9";
+  localStorageThemeColorKey = "md3-ecas-eric-theme-color-v3";
+  localeStorageChatsKey = "ecas-eric-chats-v3";
 
   @property({ type: Number })
   numberOfSelectQueries = 5;
@@ -63,10 +62,10 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   chatLogFromServer: PsSimpleChatLog[] = [];
 
   @property({ type: String })
-  llmTotalCost = '$0.000';
+  llmTotalCost = "$0.000";
 
   @property({ type: String })
-  runningTime = '0h 0m 0s';
+  runningTime = "0h 0m 0s";
 
   @property({ type: Array })
   savedChats: SavedChat[] = [];
@@ -105,9 +104,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
 
   saveChatToLocalStorage(): void {
-    const chatBotElement = this.$$(
-      'eric-chat-bot'
-    ) as EcasEricChatBot;
+    const chatBotElement = this.$$("eric-chat-bot") as EcasEricChatBot;
     if (
       chatBotElement &&
       chatBotElement.chatLog &&
@@ -119,7 +116,10 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         questionSnippet,
       };
       this.savedChats.push(newChat);
-      localStorage.setItem(this.localeStorageChatsKey, JSON.stringify(this.savedChats));
+      localStorage.setItem(
+        this.localeStorageChatsKey,
+        JSON.stringify(this.savedChats)
+      );
     }
   }
 
@@ -129,7 +129,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
 
   openMenu() {
-    const menu = this.$$('#usage-menu') as MdMenu;
+    const menu = this.$$("#usage-menu") as MdMenu;
     menu.open = true;
   }
 
@@ -147,7 +147,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
           >
           <md-menu id="usage-menu" anchor="usage-anchor">
             ${this.savedChats.map(
-              chat => html`
+              (chat) => html`
                 <md-menu-item
                   @click="${() => this.loadChatLog(chat.serverMemoryId)}"
                 >
@@ -165,9 +165,28 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     return [
       ...super.styles,
       css`
+        .boldEcas {
+          font-weight: 600;
+        }
+
         simple-chat-bot {
           width: 100vw;
           height: 100%;
+        }
+
+        .topHeader {
+          margin-top: 32px;
+          max-width: 1100px;
+          width: 100%;
+        }
+
+        eric-chat-bot {
+          max-width: 1000px;
+        }
+
+        .ecasTopLeft {
+          font-size: 16px;
+          color: #1d42d9;
         }
 
         .themeToggle {
@@ -218,11 +237,11 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   override router: PsRouter = new PsRouter(this, [
     {
-      path: '/:slug',
+      path: "/:slug",
       render: this.renderApp.bind(this),
     },
     {
-      path: '*',
+      path: "*",
       render: this.renderApp.bind(this),
     },
   ]);
@@ -242,7 +261,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
       this.getChatLogFromServer();
     }
 
-    const slug = this.router.params['slug'];
+    const slug = this.router.params["slug"];
     if (slug) {
       this.handleSlugChange(slug);
     } else {
@@ -261,24 +280,28 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         if (history && history.chatLog) {
           // Assign directly if type matches
           this.chatLogFromServer = history.chatLog;
-          this.llmTotalCost = history.totalCosts ? `$${history.totalCosts.toFixed(3)}` : '$0.000';
+          this.llmTotalCost = history.totalCosts
+            ? `$${history.totalCosts.toFixed(3)}`
+            : "$0.000";
           this.startTimer();
         } else {
           this.serverMemoryId = undefined;
         }
       } catch (error) {
-        console.error('Error fetching chat log:', error);
+        console.error("Error fetching chat log:", error);
         this.serverMemoryId = undefined;
       } finally {
         this.loading = false;
       }
     } else {
-       this.serverMemoryId = undefined;
+      this.serverMemoryId = undefined;
     }
   }
 
   isChatLogIdValid(serverMemoryId: string): boolean {
-    return this.savedChats.some(chat => chat.serverMemoryId === serverMemoryId);
+    return this.savedChats.some(
+      (chat) => chat.serverMemoryId === serverMemoryId
+    );
   }
 
   handleServerMemoryIdCreated(event: CustomEvent) {
@@ -290,9 +313,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   private async loadChatLog(serverMemoryId: string): Promise<void> {
     this.serverMemoryId = serverMemoryId;
-    (this.$$(
-      'eric-chat-bot'
-    ) as EcasEricChatBot).reset();
+    (this.$$("eric-chat-bot") as EcasEricChatBot).reset();
     await this.getChatLogFromServer();
     const path = `/chat/${this.serverMemoryId}`;
     //history.pushState({}, '', path);
@@ -317,42 +338,48 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
       this.selectedTopicId = topic.id;
       this.topicNotFound = false;
     } catch (e) {
-      console.warn('Topic not found for slug:', slug);
+      console.warn("Topic not found for slug:", slug);
       this.selectedTopicId = undefined;
       this.topicNotFound = true;
     }
   }
+
   renderApp() {
     if (this.topicNotFound) {
       return html`<p>Topic not found</p>`;
     }
 
     return html` <div class="layout vertical">
-      <div class="layout horizontal center-center themeToggle">
-        <img src="https://ecas.org/wp-content/uploads/2022/10/ECAS-logo.png" style="height: 90px;margin: 32px;"/>
-        <div class="flex"></div>
-        <div style="margin-top: 32px;">
-          ${this.renderSavedChatsDropdown()}
-          <md-outlined-button
-            class="menuButton"
-            @click="${this.reset}"
-            >${this.t('New chat')}</md-outlined-button
-          >
+      <div class="layout horizontal center-center">
+        <div class="layout horizontal center-center topHeader">
+          <img
+            src="https://yp-eu-assets.citizens.is/ecas/logo.svg"
+            style="height: 50px;margin: 32px;"
+          />
+          <div class="flex"></div>
+          <div style="margin-top: 32px;" hidden>
+            <md-outlined-button class="menuButton" @click="${this.reset}"
+              >${this.t("New chat")}</md-outlined-button
+            >
+          </div>
+          <div class="flex"></div>
+          <div class="layout horizontal ecasTopLeft" style="margin-left: 32px">
+            <span class="boldEcas">E</span>CAS &nbsp; <span class="boldEcas">R</span>ights &nbsp; <span class="boldEcas">I</span>nformation &nbsp; <span class="boldEcas">C</span>entre</span>
+          </div>
         </div>
-        <div class="flex"></div>
-        <div class="layout horizontal" style="margin-left: 32px">${this.renderThemeToggle(true)}</div>
       </div>
-      <eric-chat-bot
-        @llm-total-cost-update=${this.handleCostUpdate}
-        @server-memory-id-created=${this.handleServerMemoryIdCreated}
-        @start-process=${this.startTimer}
-        @stop-process=${this.stopTimer}
-        @reset-chat=${this.reset}
-        .serverMemoryId=${this.serverMemoryId}
-        .chatLogFromServer=${this.chatLogFromServer}
-        .currentTopicId=${this.selectedTopicId}
-      ></eric-chat-bot>
-
+      <div class="layout horizontal center-center">
+        <eric-chat-bot
+          @llm-total-cost-update=${this.handleCostUpdate}
+          @server-memory-id-created=${this.handleServerMemoryIdCreated}
+          @start-process=${this.startTimer}
+          @stop-process=${this.stopTimer}
+          @reset-chat=${this.reset}
+          .serverMemoryId=${this.serverMemoryId}
+          .chatLogFromServer=${this.chatLogFromServer}
+          .currentTopicId=${this.selectedTopicId}
+        ></eric-chat-bot>
+      </div>
     </div>`;
   }
 
@@ -384,14 +411,14 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
       this.runningTimeInterval = null;
     }
     this.startTime = null;
-    this.runningTime = '0h 0m 0s';
+    this.runningTime = "0h 0m 0s";
   }
 
   reset() {
-    (this.$$('eric-chat-bot') as EcasEricChatBot).reset();
+    (this.$$("eric-chat-bot") as EcasEricChatBot).reset();
     this.serverMemoryId = undefined;
     this.chatLogFromServer = undefined;
-    history.pushState({}, '', '');
+    history.pushState({}, "", "");
     this.selectedTopicId = undefined;
     this.topicNotFound = false;
     this.setCost(0);
@@ -420,7 +447,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   updated(changedProperties: Map<string | number | symbol, unknown>): void {
     super.updated(changedProperties);
-    const slug = this.router.params['slug'];
+    const slug = this.router.params["slug"];
     if (slug !== this.currentSlug) {
       this.handleSlugChange(slug);
     }
@@ -458,20 +485,13 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   }
   override render() {
     if (shouldRenderAdmin()) {
-      if (window.location.pathname.includes('/admin/login')) {
-        return html`
-        <admin-login></admin-login>
-       `;
+      if (window.location.pathname.includes("/admin/login")) {
+        return html` <admin-login></admin-login> `;
       } else {
-        return html`
-        <admin-dashboard></admin-dashboard>
-       `;
-
+        return html` <admin-dashboard></admin-dashboard> `;
       }
     } else {
       return super.render();
     }
   }
-
-
 }

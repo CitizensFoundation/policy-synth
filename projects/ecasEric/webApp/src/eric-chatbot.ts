@@ -48,8 +48,8 @@ export class EcasEricChatBot extends PsChatAssistant {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.defaultInfoMessage = this.t("Hello I'm Eric. How can I help?");
-    this.textInputLabel = this.t('Your question about EU rights');
+    this.defaultInfoMessage = undefined;
+    this.textInputLabel = this.t("Ask me anything, I'm here to help");
     this.ownServerApi = new this.serverApiClass();
   }
 
@@ -59,7 +59,7 @@ export class EcasEricChatBot extends PsChatAssistant {
       css`
         .chat-window {
           height: 78vh;
-          width: 100vw;
+          width: 1000px;
         }
       `,
     ];

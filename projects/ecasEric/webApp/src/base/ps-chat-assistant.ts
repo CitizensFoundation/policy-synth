@@ -21,6 +21,8 @@ import { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field
 import { BaseChatBotServerApi } from "./BaseChatBotApi.js";
 import "./ps-ai-chat-element.js";
 import { PsStreamingLlmBase } from "./ps-streaming-llm-base.js";
+import "./ps-input-dialog.js";
+import { PsInputDialog } from "./ps-input-dialog.js";
 
 const PROMPT_DEBUG = true;
 
@@ -220,6 +222,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
    * from PsStreamingLlmBase to ensure consistent handling & reconnection.
    */
   async sendChatMessage() {
+    debugger;
     const message = this.chatInputField?.value?.trim() || "";
     if (!message) return;
 
@@ -477,69 +480,41 @@ export class PsChatAssistant extends PsStreamingLlmBase {
 
   renderChatInput() {
     return html`
-      ${this.showCleanupButtonAtBottom
-        ? html`
-            <md-outlined-icon-button
-              class="restartButton"
-              @click="${() => this.fire("reset-chat")}"
-              ><md-icon>refresh</md-icon></md-outlined-icon-button
-            >
-          `
-        : nothing}
-      ${this.onlyUseTextField || this.chatLog.length > 1
-        ? html`
-            <md-outlined-text-field
-              class="textInput"
-              type="text"
-              hasTrailingIcon
-              id="chatInput"
-              rows="${this.chatLog.length > 1 ? "1" : "3"}"
-              @focus="${() => (this.inputIsFocused = true)}"
-              @blur="${() => (this.inputIsFocused = true)}"
-              @keyup="${(e: KeyboardEvent) => {
-                if (e.key === "Enter") {
-                  this.sendChatMessage();
-                }
-              }}"
-              .label="${this.textInputLabel}"
-            >
-              <md-icon
-                class="sendIcon"
-                @click="${this.sendChatMessage}"
-                slot="trailing-icon"
-                id="sendButton"
-                ?input-is-focused="${this.inputIsFocused}"
-                >send</md-icon
-              >
-            </md-outlined-text-field>
-          `
-        : html`
-            <md-outlined-text-field
-              class="textInput"
-              type="textarea"
-              hasTrailingIcon
-              id="chatInput"
-              rows="3"
-              @keyup="${(e: KeyboardEvent) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  this.sendChatMessage();
-                }
-              }}"
-              @focus="${() => (this.inputIsFocused = true)}"
-              @blur="${() => (this.inputIsFocused = true)}"
-              .label="${this.textInputLabel}"
-            >
-              <md-icon
-                class="sendIcon"
-                @click="${this.sendChatMessage}"
-                slot="trailing-icon"
-                id="sendButton"
-                ?input-is-focused="${this.inputIsFocused}"
-                >send</md-icon
-              ></md-outlined-text-field
-            >
-          `}
+      <div class="layout vertical">
+        <div class="layout horizontal tagLine">
+          Let me help you navigate EU telework laws.
+        </div>
+        <ps-input-dialog
+          class="textInput"
+          type="textarea"
+          hasTrailingIcon
+          id="chatInput"
+          rows="5"
+          @keyup="${(e: KeyboardEvent) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              this.sendChatMessage();
+            }
+          }}"
+          @focus="${() => (this.inputIsFocused = true)}"
+          @blur="${() => (this.inputIsFocused = true)}"
+          .label="${this.textInputLabel}"
+        ></ps-input-dialog>
+      </div>
+    `;
+  }
+
+  renderWelcome() {
+    return html`
+      <div class="layout vertical center-center">
+        <div class="layout horizontal  welcomeInfo">
+          <div class="bigEricWelcome">Hello I’m Eric, your assistant.</div>
+          <div class="flex"></div>
+          <div class="bottomRightInfo">
+            Supporting fair & informed telework across the EU
+          </div>
+        </div>
+      </div>
     `;
   }
 
@@ -575,6 +550,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
                 ></ps-ai-chat-element>
               `
             )}
+          ${this.chatLog.length == 0 ? this.renderWelcome() : nothing}
         </div>
         <div class="layout horizontal center-center chat-input">
           ${this.renderChatInput()}
@@ -587,23 +563,33 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     return [
       super.styles,
       css`
-        md-textfield {
-          width: 600px;
-          --mdc-theme-primary: var(--md-sys-color-primary);
-          --mdc-text-field-ink-color: var(--md-sys-color-on-surface);
-          --mdc-text-area-outlined-hover-border-color: var(
-            --md-sys-color-on-surface
-          );
-          --mdc-text-area-outlined-idle-border-color: var(
-            --md-sys-color-on-surface
-          );
-          --mdc-notched-outline-border-color: var(
-            --md-sys-color-on-surface-variant
-          );
+        .welcomeInfo {
+          max-width: 790px;
         }
 
-        md-outlined-text-field {
-          width: 350px;
+        .tagLine {
+          font-size: 16px;
+          font-weight: 400;
+          margin-bottom: 24px;
+        }
+
+        .bigEricWelcome {
+          font-size: 72px;
+          font-weight: bold;
+          color: #50c5b7;
+          width: 345px;
+          margin-right: 130px;
+        }
+
+        .bottomRightInfo {
+          color: #1d42d9;
+          font-size: 24px;
+          width: 223px;
+          text-align: right;
+          align-self: flex-end;
+          font-weight: 500;
+          margin-left: 130px;
+          margin-bottom: 16px;
         }
 
         .infoMessage {
@@ -615,17 +601,19 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           flex-direction: column;
           height: 75vh;
           width: 100%;
-          max-width: 1200px;
+          max-width: 1000px;
           margin: 0 auto;
           border-radius: 10px;
           overflow: hidden;
         }
+
         .chat-messages {
           display: flex;
           flex-direction: column;
           flex: 1;
           padding: 20px;
           overflow-y: scroll;
+          scrollbar-color: #fff3f2 #fbe4dc;
         }
 
         .you-chat-element {
@@ -700,12 +688,13 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           flex: 1;
           border-radius: 10px;
           border: none;
-          padding: 10px;
+          padding: 32px;
           margin: 16px;
           margin-bottom: 16px;
           margin-left: 8px;
           margin-right: 8px;
-          width: 650px;
+          width: 770px;
+          background-color: #fff3f2;
         }
 
         @media (max-width: 960px) {

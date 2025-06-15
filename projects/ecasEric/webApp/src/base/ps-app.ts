@@ -58,10 +58,10 @@ export class PolicySynthWebApp extends YpBaseElement {
   currentError: string | undefined;
 
   @property({ type: String })
-  localStorageThemeColorKey = "lv-theme-color-v2";
+  localStorageThemeColorKey = "lv-theme-color-v3";
 
   @property({ type: String })
-  themeColor = "#df2302";
+  themeColor = "#fbe4dc";
 
   @property({ type: String })
   themePrimaryColor = "#000000";
@@ -203,9 +203,7 @@ export class PolicySynthWebApp extends YpBaseElement {
         ? window.matchMedia("(prefers-color-scheme: dark)").matches
         : this.themeDarkMode;
 
-    if (this.isAppleDevice) {
-      // TODO: Seeing some cases where this.themeColor is the string "undefined"
-      const color =
+        const color =
         !this.themeColor || this.themeColor !== "undefined"
           ? this.themeColor
           : this.themePrimaryColor;
@@ -224,9 +222,7 @@ export class PolicySynthWebApp extends YpBaseElement {
       ]);
 
       applyTheme(theme, { target: document.body, dark: isDark });
-    } else {
-      applyThemeWithContrast(document, themeCss);
-    }
+
   }
 
   snackbarclosed() {

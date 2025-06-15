@@ -382,7 +382,7 @@ export class PsAiChatElement extends YpBaseElement {
 
         .chatGPTDialog {
           color: var(--md-sys-color-on-surface);
-          background-color: var(--md-sys-color-surface);
+          background-color: #fbe4dc;
           padding: 8px;
           margin: 16px;
           line-height: 1.5;
@@ -497,7 +497,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .thinkingText {
-          margin-top: 4px;
+          margin-top: 8px;
           margin-left: 6px;
           color: var(--md-sys-color-secondary);
         }
@@ -509,6 +509,7 @@ export class PsAiChatElement extends YpBaseElement {
         .doneIcon {
           margin-left: 16px;
           margin-right: 4px;
+          margin-top: 4px;
           color: var(--md-sys-color-secondary);
           font-size: 28px;
         }
