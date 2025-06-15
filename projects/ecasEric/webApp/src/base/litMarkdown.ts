@@ -119,9 +119,8 @@ export class MarkdownDirective extends AsyncDirective {
     }
 
     new Promise<string>((resolve, reject) => {
-      //@ts-ignore
-      marked.parse(rawMarkdown, (error: any, result: any) => {
-        if (error) return reject(error);
+      try {
+        const result = marked.parse(rawMarkdown);
 
         const cssStyles = `
           table {
@@ -191,9 +190,10 @@ export class MarkdownDirective extends AsyncDirective {
           </style>
           ${result}
         `;
-
         resolve(formattedMarkdown);
-      });
+      } catch (error) {
+        reject(error);
+      }
     })
       .then(rawHTML => {
         rawHTML = rawHTML.replace(/<a href="/g, '<a target="_blank" href="');
