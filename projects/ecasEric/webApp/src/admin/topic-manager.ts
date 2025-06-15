@@ -250,7 +250,7 @@ export class TopicManager extends LitElement {
           <tr>
             <th>Title</th>
             <th>Slug</th>
-            <th>Description</th>
+            <th>Context</th>
             <th>Language</th>
             <th>Actions</th>
           </tr>
@@ -296,7 +296,7 @@ export class TopicManager extends LitElement {
             </md-outlined-text-field>
             <md-outlined-text-field
                 type="textarea"
-                label="Description (Optional)"
+                label="Full context for the topic"
                 rows="3"
                 .value=${this.newDescription}
                 @input=${(e: any) => this.newDescription = e.target.value}>
