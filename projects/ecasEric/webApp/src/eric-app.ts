@@ -15,6 +15,7 @@ import { ResearchServerApi } from './researchServerApi.js';
 import { EcasEricChatBot } from './eric-chatbot.js';
 import { PropertyValueMap } from '@lit/reactive-element';
 import { authStoreInstance } from './services/authStore.js';
+import { adminServerApi } from './services/adminServerApi.js';
 
 import './admin/admin-dashboard.js';
 import './admin/admin-login.js';
@@ -85,6 +86,10 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
   private availableTopics: Topic[] = [];
   @state()
   private selectedTopicId: number | undefined;
+  @state()
+  private topicNotFound = false;
+
+  private currentSlug: string | undefined;
 
   constructor() {
     super();
@@ -212,6 +217,10 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   override router: PsRouter = new PsRouter(this, [
     {
+      path: '/:slug',
+      render: this.renderApp.bind(this),
+    },
+    {
       path: '*',
       render: this.renderApp.bind(this),
     },
@@ -230,6 +239,13 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     }
     if (this.serverMemoryId) {
       this.getChatLogFromServer();
+    }
+
+    const slug = this.router.params['slug'];
+    if (slug) {
+      this.handleSlugChange(slug);
+    } else {
+      this.handleSlugChange(undefined);
     }
   }
 
@@ -282,7 +298,34 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     this.requestUpdate();
   }
 
+  private async handleSlugChange(slug: string | undefined) {
+    if (slug === this.currentSlug) {
+      return;
+    }
+    this.currentSlug = slug;
+
+    if (!slug) {
+      this.selectedTopicId = undefined;
+      this.topicNotFound = false;
+      return;
+    }
+
+    try {
+      const topic = await adminServerApi.getTopic(slug);
+      this.availableTopics = [topic];
+      this.selectedTopicId = topic.id;
+      this.topicNotFound = false;
+    } catch (e) {
+      console.warn('Topic not found for slug:', slug);
+      this.selectedTopicId = undefined;
+      this.topicNotFound = true;
+    }
+  }
   renderApp() {
+    if (this.topicNotFound) {
+      return html`<p>Topic not found</p>`;
+    }
+
     return html` <div class="layout vertical">
       <div class="layout horizontal center-center themeToggle">
         <img src="https://ecas.org/wp-content/uploads/2022/10/ECAS-logo.png" style="height: 90px;margin: 32px;"/>
@@ -309,6 +352,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         .numberOfSelectQueries=${this.numberOfSelectQueries}
         .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
         .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
+        .currentTopicId=${this.selectedTopicId}
       ></eric-chat-bot>
 
     </div>`;
@@ -350,6 +394,8 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     this.serverMemoryId = undefined;
     this.chatLogFromServer = undefined;
     history.pushState({}, '', '');
+    this.selectedTopicId = undefined;
+    this.topicNotFound = false;
     this.setCost(0);
   }
 
@@ -372,6 +418,14 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
 
   updatePercentOfResults(event: any) {
     this.percentOfTopResultsToScan = event.currentTarget.value / 100;
+  }
+
+  updated(changedProperties: Map<string | number | symbol, unknown>): void {
+    super.updated(changedProperties);
+    const slug = this.router.params['slug'];
+    if (slug !== this.currentSlug) {
+      this.handleSlugChange(slug);
+    }
   }
 
   get totalSearchResults() {
