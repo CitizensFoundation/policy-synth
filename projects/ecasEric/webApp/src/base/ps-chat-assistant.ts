@@ -547,6 +547,7 @@ export class PsChatAssistant extends YpBaseElement {
     this.chatInputField!.value = '';
     this.sendButton!.disabled = false;
     //this.sendButton!.innerHTML = this.t('Thinking...');
+
     setTimeout(() => {
       this.chatInputField!.blur();
     });

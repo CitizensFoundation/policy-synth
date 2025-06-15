@@ -85,7 +85,17 @@ export class EcasEricChatBot extends PsChatAssistant {
       this.addChatBotError(this.t('Please select a topic first.'));
       return;
     }
-    super.sendChatMessage();
+
+    const userMessage = this.chatInputField!.value;
+    this.addUserChatBotMessage(userMessage);
+
+    const serverApi = new ResearchServerApi();
+    await serverApi.conversation(
+      this.serverMemoryId,
+      this.simplifiedChatLog,
+      this.wsClientId,
+      this.currentTopicId
+    );
   }
 
   async sha256(text: string): Promise<string> {

@@ -349,9 +349,6 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         @reset-chat=${this.reset}
         .serverMemoryId=${this.serverMemoryId}
         .chatLogFromServer=${this.chatLogFromServer}
-        .numberOfSelectQueries=${this.numberOfSelectQueries}
-        .percentOfTopQueriesToSearch=${this.percentOfTopQueriesToSearch}
-        .percentOfTopResultsToScan=${this.percentOfTopResultsToScan}
         .currentTopicId=${this.selectedTopicId}
       ></eric-chat-bot>
 

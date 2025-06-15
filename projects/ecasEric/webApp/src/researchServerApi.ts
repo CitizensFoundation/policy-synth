@@ -18,9 +18,7 @@ export class ResearchServerApi extends YpServerApi {
     memoryId: string | undefined,
     chatLog: PsSimpleChatLog[],
     wsClientId: string,
-    numberOfSelectQueries: number,
-    percentOfTopQueriesToSearch: number,
-    percentOfTopResultsToScan: number
+    topicId: number
   ): Promise<void> {
     return this.fetchWrapper(
       this.baseUrlPath + `/rd_chat/`,
@@ -29,10 +27,8 @@ export class ResearchServerApi extends YpServerApi {
         body: JSON.stringify({
           wsClientId,
           chatLog: chatLog,
-          numberOfSelectQueries,
-          percentOfTopQueriesToSearch,
-          percentOfTopResultsToScan,
-          memoryId
+          memoryId,
+          topicId
         }),
       },
       false

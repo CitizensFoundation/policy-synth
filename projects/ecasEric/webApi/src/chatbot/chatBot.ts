@@ -159,21 +159,7 @@ Your thoughtful answer in markdown:
     if (!topicId) {
       console.warn("No topic ID specified, using legacy XLSX loading as fallback.");
       // Fallback to legacy method if no topic ID
-      try {
-        const absoluteFilePath = path.resolve("ecas2.xlsx");
-        const workbook = XLSX.readFile(absoluteFilePath);
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as [string, string][];
-        const chunks = rows
-          .filter(([question, answer]) => question && answer)
-          .map(([question, answer]) => ({ question, answer }));
-        console.log(`Loaded ${chunks.length} Q&A pairs from XLSX fallback.`);
-        return chunks;
-      } catch (err) {
-        console.error(`Error in XLSX fallback loading: ${err}`);
-        return [];
-      }
+      throw new Error("No topic ID specified");
     }
     try {
       const qaPairs = await QAPair.findAll({
@@ -245,7 +231,14 @@ Your thoughtful answer in markdown:
     console.log(`Using Topic ID: ${this.currentTopicId}`);
 
     this.sendAgentStart("Loading context...");
-    this.searchContext = await this.loadQaPairsForTopic(this.currentTopicId);
+
+    try {
+      this.searchContext = await this.loadQaPairsForTopic(this.currentTopicId);
+    } catch (error) {
+      console.error(`Error loading Q&A pairs for topic ${this.currentTopicId}:`, error);
+      this.sendToClient("bot", "Error: Could not load Q&A pairs for topic.", "error");
+      return;
+    }
 
     if (!this.searchContext || this.searchContext.length === 0) {
         const errorMsg = this.currentTopicId
