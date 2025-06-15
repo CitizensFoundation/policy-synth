@@ -260,7 +260,13 @@ export class TopicManager extends LitElement {
             <tr>
               <td title="${item.title}">${item.title}</td>
               <td title="${item.slug}">${item.slug}</td>
-              <td class="description" title="${item.description}">${item.description || '-'}</td>
+              <td class="description" title="${item.description}">
+                ${item.description
+                  ? item.description.length > 200
+                    ? item.description.substring(0, 200) + '...'
+                    : item.description
+                  : '-'}
+              </td>
               <td>${languageOptions.find(l => l.code === item.language)?.name || item.language}</td>
               <td class="actions">
                 <md-icon-button title="Edit Topic" @click=${() => this.openDialog(item)}><md-icon>edit</md-icon></md-icon-button>
