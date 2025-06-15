@@ -17,11 +17,6 @@ import { MdCheckbox } from '@material/web/checkbox/checkbox.js';
 import { BaseChatBotServerApi } from './BaseChatBotApi.js';
 import { YpBaseElement } from '@yrpri/webapp/common/yp-base-element.js';
 
-export interface LagavitiDocumentSourcesWsData {
-  name: string;
-  message: any[];
-}
-
 @customElement('ps-ai-chat-element')
 export class PsAiChatElement extends YpBaseElement {
   @property({ type: String })
@@ -232,7 +227,7 @@ export class PsAiChatElement extends YpBaseElement {
 
   renderInfo() {
     if (this.wsMessage && this.wsMessage.data && this.wsMessage.data) {
-      const data = this.wsMessage.data as LagavitiDocumentSourcesWsData;
+      const data = this.wsMessage.data as any;
       if (data.name === 'sourceDocuments') {
         console.error(JSON.stringify(data));
         return html`<div
