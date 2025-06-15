@@ -338,7 +338,7 @@ Your thoughtful answer in markdown:
     // Convert chat history to Gemini format
     const history: Content[] = chatLogWithoutLastUserMessage.map(
         (msg: PsSimpleChatLog): Content => ({
-          role: msg.sender === "user" ? "user" : "model",
+          role: msg.sender === "user" || msg.sender === "you" ? "user" : "model",
           parts: [{ text: msg.message }],
         })
       );
