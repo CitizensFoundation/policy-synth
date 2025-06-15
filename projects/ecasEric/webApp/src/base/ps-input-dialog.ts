@@ -20,7 +20,7 @@ export class PsInputDialog extends YpBaseElement {
   private _isSendButtonDisabled = true;
 
   @property({ type: Boolean })
-  private isDisabled = false;
+  isDisabled = false;
 
   @property({ type: Number })
   private conversationGroupId = 0;
@@ -32,7 +32,7 @@ export class PsInputDialog extends YpBaseElement {
   private _chatTextarea?: PsInputTextArea;
 
   renderAnimatedLogo() {
-    if (this._isSendButtonDisabled) {
+    if (this.isDisabled) {
       return html`
         <img
           class="animatedLogo"
@@ -66,7 +66,7 @@ export class PsInputDialog extends YpBaseElement {
           @input=${this._handleInput}
           ?readonly=${this.isDisabled}
           placeholder=${this.isDisabled
-            ? "Vinn að svari"
+            ? "Working on answer..."
             : "Ask me anything, I'm here to help"}
         ></ps-input-text-area>
         <div class="actions">
@@ -133,7 +133,7 @@ export class PsInputDialog extends YpBaseElement {
 
     this.value = messageText;
 
-    this.fire("chat-message", messageText);
+    this.isDisabled = true;
 
     this._chatTextarea?.clear();
   }
@@ -207,6 +207,7 @@ export class PsInputDialog extends YpBaseElement {
           padding: 4px;
           margin-bottom: 12px;
           margin-right: 12px;
+          cursor: pointer;
         }
       `,
     ];

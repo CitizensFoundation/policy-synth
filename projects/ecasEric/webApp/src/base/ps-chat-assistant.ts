@@ -69,7 +69,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
   chatElements?: PsAiChatElement[];
 
   @query("#chatInput")
-  chatInputField?: MdOutlinedTextField;
+  chatInputField?: PsInputDialog;
 
   @query("#chat-window")
   chatWindow?: HTMLElement;
@@ -228,7 +228,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
 
     // Reset the text field
     this.chatInputField!.value = "";
-    this.sendButton!.disabled = false;
+    this.chatInputField!.isDisabled = true;
 
     // Use the raw string approach for the server protocol:
     // e.g., {sender: 'you', type: 'start', message: '...'}
@@ -378,8 +378,8 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           this.lastChatUiElement.stopJsonLoading();
         }
         this.chatLog[this.chatLog.length - 1].debug = wsMessage.debug;
-        this.sendButton!.disabled = false;
-        this.sendButton!.innerHTML = this.t("Send");
+        this.streamingEnded();
+
         this.infoMessage = this.defaultInfoMessage;
         break;
       case "message":
@@ -478,10 +478,14 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     return domain;
   }
 
+  streamingEnded() {
+    this.chatInputField!.isDisabled = false;
+  }
+
   renderChatInput() {
     return html`
       <div class="layout vertical">
-        <div class="layout horizontal tagLine">
+        <div class="layout horizontal tagLine" ?hidden="${this.chatLog.length > 0}">
           Let me help you navigate EU telework laws.
         </div>
         <ps-input-dialog
