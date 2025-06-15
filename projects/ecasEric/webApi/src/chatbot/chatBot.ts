@@ -7,7 +7,7 @@ import fs from "fs/promises";
 import { QAPair } from "../models/qaPair.model.js";
 import { GenerationConfig, Content } from "@google/generative-ai";
 
-const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.0-pro-exp-02-05";
+const aiModel = process.env.PS_AI_CHAT_MODEL_NAME || "gemini-2.5-pro-preview-06-05";
 //const aiModel = "gemini-2.0-flash";
 
 export class EcasYeaChatBot extends PsBaseChatBot {
@@ -186,10 +186,13 @@ Your thoughtful answer in markdown:
 
     try {
       const chat = this.geminiModel.startChat({ history: chatHistory });
+      console.log(`Prompt: ${prompt}`);
       const result = await chat.sendMessageStream(prompt);
+      console.log(`Result: ${result}`);
 
       this.sendToClient("bot", "", "start");
       let botMessage = "";
+      console.log(`Streaming response...`);
       for await (const chunk of result.stream) {
           if (chunk.text) {
             const chunkText = chunk.text();

@@ -161,9 +161,9 @@ export class PsChatAssistant extends YpBaseElement {
       window.location.hostname === 'localhost' ||
       window.location.hostname === '192.1.168'
     ) {
-      wsEndpoint = `ws://${window.location.hostname}:${this.defaultDevWsPort}`;
+      wsEndpoint = `ws://${window.location.hostname}:${this.defaultDevWsPort}/ws`;
     } else {
-      wsEndpoint = `wss://${window.location.hostname}:443`;
+      wsEndpoint = `wss://${window.location.hostname}:443/ws`;
     }
 
     try {

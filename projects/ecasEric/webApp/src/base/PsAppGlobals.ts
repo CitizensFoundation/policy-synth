@@ -20,6 +20,9 @@ export class PsAppGlobals extends YpAppGlobals {
 
   constructor(serverApi: PsServerApi) {
     super(serverApi, true);
+    this.theme = {
+
+    } as any;
     this.currentRunningAgentId = undefined;
     this.parseQueryString();
     //this.earlName = this.getEarlName();
@@ -58,6 +61,10 @@ export class PsAppGlobals extends YpAppGlobals {
 
   getConnectorInstance(connectorId: number): PsAgentConnectorAttributes | undefined {
     return this.connectorsInstanceRegistry.get(connectorId);
+  }
+
+  hasStaticTheme = (): boolean => {
+    return window.location.search.includes('theme=static');
   }
 
   getEarlName = (): string | null => {

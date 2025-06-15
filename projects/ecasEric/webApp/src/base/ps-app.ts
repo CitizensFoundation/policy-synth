@@ -37,6 +37,9 @@ import { PsRouter } from "./router/router.js";
 
 import { styles } from "./ps-app.css.js";
 
+import { PsServerApi } from "./PsServerApi.js";
+import { PsAppGlobals } from "./PsAppGlobals.js";
+
 @customElement("ps-app")
 export class PolicySynthWebApp extends YpBaseElement {
   @property({ type: Object })
@@ -98,6 +101,9 @@ export class PolicySynthWebApp extends YpBaseElement {
     } else {
       this.themeHighContrast = false;
     }
+
+    const serverApi = new PsServerApi();
+    window.appGlobals = new PsAppGlobals(serverApi);
 
     //window.psAppGlobals.activity('pageview');
 

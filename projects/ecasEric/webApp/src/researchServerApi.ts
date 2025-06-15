@@ -15,7 +15,7 @@ export class ResearchServerApi extends YpServerApi {
   }
 
   public conversation(
-    memoryId: string | undefined,
+    memoryId: string,
     chatLog: PsSimpleChatLog[],
     wsClientId: string,
     topicId: number
@@ -26,8 +26,8 @@ export class ResearchServerApi extends YpServerApi {
         method: 'PUT',
         body: JSON.stringify({
           wsClientId,
-          chatLog: chatLog,
           memoryId,
+          chatLog: chatLog,
           topicId
         }),
       },

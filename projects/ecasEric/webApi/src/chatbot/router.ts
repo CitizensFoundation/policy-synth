@@ -92,8 +92,7 @@ Your JSON classification:
     const routingInformation: PsRagRoutingResponse = await this.callModel(
       PsAiModelType.Text,
       PsAiModelSize.Medium,
-      [this.systemMessage(chatHistory), this.userMessage(userQuestion)],
-      true
+      [this.systemMessage(chatHistory), this.userMessage(userQuestion)]
     );
 
     console.log(`Routing information: ${JSON.stringify(routingInformation, null, 2)}`)

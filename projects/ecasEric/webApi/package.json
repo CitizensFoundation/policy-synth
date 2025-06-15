@@ -9,7 +9,7 @@
   "license": "MIT",
   "type": "module",
   "dependencies": {
-    "@policysynth/api": "^1.2.9",
+    "@policysynth/api": "^1.2.13",
     "bcrypt": "^6.0.0",
     "csv-stringify": "^6.5.2",
     "dotenv": "^16.5.0",
@@ -17,7 +17,8 @@
     "multer": "^1.4.5-lts.2",
     "pg": "^8.16.0",
     "sequelize": "^6.37.7",
-    "sequelize-cli": "^6.6.3"
+    "sequelize-cli": "^6.6.3",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "start": "nodemon -e ts ts-out/server.js",
