@@ -1,4 +1,4 @@
-version: '3.9'
+version: "3.9"
 
 x-collective-policy-synth-common: &collective-policy-synth-common
   env_file: .env
@@ -23,11 +23,33 @@ x-collective-policy-synth-common: &collective-policy-synth-common
       max-size: "25m"
 
 services:
+  # ────────────────────────────────────────────
+  # Databases
+  # ────────────────────────────────────────────
+  postgres_db:
+    image: postgres:17-alpine
+    restart: always
+    network_mode: host
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localdev}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-file: "10"
+        max-size: "25m"
+
   redis_db:
     image: redis:6.2.13-alpine
     restart: always
-    ports:
-      - '6379:6379'
     network_mode: host
     volumes:
       - redis-db-data:/data
@@ -46,7 +68,13 @@ services:
       - webserver:/home
       - client-app-dist:/usr/src/webApps/collective-policy-synth/dist
     healthcheck:
-      test: ["CMD", "curl", "-f", "https://${FULL_HOSTNAME}/api/project/healthcheck"]
+      test:
+        [
+          "CMD",
+          "curl",
+          "-f",
+          "https://${FULL_HOSTNAME}/api/project/healthcheck",
+        ]
       interval: 30s
       timeout: 20s
       retries: 3
@@ -54,20 +82,28 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-file: "2000"
+        max-file: "100"
         max-size: "25m"
 
   collective-policy-synth-1:
     <<: *collective-policy-synth-common
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
     environment:
       - PORT=4078
-
+      # make the app find Postgres on host-mode networking.
+      # Most Node/Postgres drivers accept e.g. PGHOST, DATABASE_URL, etc.
+      - PGHOST=127.0.0.1
+      - PGPORT=5432
+      - PGUSER=${POSTGRES_USER:-app}
+      - PGPASSWORD=${POSTGRES_PASSWORD:-localdev}
+      - PGDATABASE=${POSTGRES_DB:-appdb}
+    healthcheck:
+      test:
+        ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
 
 volumes:
   webserver:
   client-app-dist:
   redis-db-data:
     driver: local
-
+  postgres-data:
+    driver: local
