@@ -387,8 +387,10 @@ export class GoogleGeminiChat extends BaseChatModel {
           return { tokensIn, tokensOut, cachedInTokens, content };
         }
 
-        const chat = (this.model as GoogleAiGenerativeModel).startChat(); // Needs history if not single turn
-        const result = await chat.sendMessage(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
+        const chat = (this.model as GoogleAiGenerativeModel).startChat({
+          safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone
+        });
+        const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();
         //console.log(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
         const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
