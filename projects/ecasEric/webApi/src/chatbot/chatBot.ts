@@ -4,6 +4,7 @@ import WebSocket from "ws";
 import fs from "fs/promises";
 import { QAPair } from "../models/qaPair.model.js";
 import { Topic } from "../models/topic.model.js";
+import { ChatSession } from "../models/chatSession.model.js";
 import { LinkService } from "../services/linkService.js";
 import { GenerationConfig, Content } from "@google/generative-ai";
 
@@ -149,6 +150,30 @@ Your thoughtful answer in markdown:
 
   private linkService = new LinkService();
 
+  private async syncChatSession() {
+    try {
+      if (!this.memoryId) return;
+      let chatSession = await ChatSession.findOne({
+        where: { legacyMemoryId: this.memoryId },
+      });
+      if (!chatSession) {
+        await ChatSession.create({
+          legacyMemoryId: this.memoryId,
+          topicId: this.currentTopicId,
+          chatLogJson: this.memory.chatLog,
+        });
+      } else {
+        chatSession.set({
+          chatLogJson: this.memory.chatLog,
+          topicId: chatSession.topicId || this.currentTopicId,
+        });
+        await chatSession.save();
+      }
+    } catch (err) {
+      console.error(`Error syncing ChatSession: ${err}`);
+    }
+  }
+
   async loadCountryLinksInfo(countrySlug: string) {
     if (!this.currentTopicId) return undefined;
     const slug = countrySlug.toLowerCase().replace(/\s+/g, "_");
@@ -225,6 +250,7 @@ Your thoughtful answer in markdown:
         message: botMessage,
       });
       await this.saveMemoryIfNeeded();
+      await this.syncChatSession();
       this.sendToClient("bot", "", "end");
     } catch (error: any) {
       console.error(`Error streaming response: ${error}`, error);
