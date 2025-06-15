@@ -34,7 +34,8 @@ interface Topic {
     language?: string;
 }
 
-const renderAdmin = true;
+const shouldRenderAdmin = () =>
+  window.location.pathname.startsWith('/admin');
 
 @customElement('eric-chatbot-app')
 export class EcasYeaChatBotApp extends PolicySynthWebApp {
@@ -456,7 +457,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
     return formattedTime;
   }
   override render() {
-    if (renderAdmin) {
+    if (shouldRenderAdmin()) {
       if (window.location.pathname.includes('/admin/login')) {
         return html`
         <admin-login></admin-login>
