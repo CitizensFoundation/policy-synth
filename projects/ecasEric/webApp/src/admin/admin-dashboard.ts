@@ -8,6 +8,7 @@ import './topic-manager.js';
 import './qa-manager.js';
 import './link-manager.js';
 import './review-manager.js';
+import './chat-session-manager.js';
 
 // Import Material Web Components
 import '@material/web/labs/navigationbar/navigation-bar.js';
@@ -105,9 +106,16 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
           @click=${() => (this.selectedView = 'reviews')}>
              <md-icon slot="active-icon">rate_review</md-icon>
              <md-icon slot="inactive-icon">rate_review</md-icon>
-          </md-navigation-tab>
-          <div class="spacer"></div>
-          <md-text-button class="logout-button" @click=${this.handleLogout}>
+        </md-navigation-tab>
+        <md-navigation-tab
+          label="Chat Sessions"
+          ?active=${this.selectedView === 'chats'}
+          @click=${() => (this.selectedView = 'chats')}>
+             <md-icon slot="active-icon">forum</md-icon>
+             <md-icon slot="inactive-icon">forum</md-icon>
+        </md-navigation-tab>
+        <div class="spacer"></div>
+        <md-text-button class="logout-button" @click=${this.handleLogout}>
               Logout
               <md-icon slot="icon">logout</md-icon>
             </md-text-button>
@@ -125,6 +133,8 @@ export class AdminDashboard extends LitElement { // Consider connect(store)(LitE
         return html`<link-manager></link-manager>`;
       case 'reviews':
         return html`<review-manager></review-manager>`;
+      case 'chats':
+        return html`<chat-session-manager></chat-session-manager>`;
       default:
         return html`<div>Select a section</div>`;
     }
