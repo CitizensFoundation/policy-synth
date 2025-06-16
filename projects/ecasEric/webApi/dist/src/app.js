@@ -9,6 +9,7 @@ export class EcasYeaServerApi extends PolicySynthApiApp {
         console.log(`__dirname: ${__dirname}`);
         this.app.use(express.static(path.join(__dirname, "../webApp/dist")));
         this.app.use("/chat*", express.static(path.join(__dirname, "../webApp/dist")));
+        this.app.use("/telework*", express.static(path.join(__dirname, "../webApp/dist")));
     }
 }
 //# sourceMappingURL=app.js.map
