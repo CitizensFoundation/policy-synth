@@ -20,5 +20,10 @@ export class EcasYeaServerApi extends PolicySynthApiApp {
       "/chat*",
       express.static(path.join(__dirname, "../webApp/dist"))
     );
+
+    this.app.use(
+      "/telework*",
+      express.static(path.join(__dirname, "../webApp/dist"))
+    );
   }
 }

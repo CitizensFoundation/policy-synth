@@ -8,7 +8,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
     dockerfile: projects/ecasEric/webApi/docker/policy-synth/Dockerfile
   image: policy-synth-ecas-eric:current
   volumes:
-    - client-app-dist:/usr/src/webApps/dist
+    - client-app-dist:/home/node/app/webApp/dist
   command: node dist/src/server.js
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
@@ -37,7 +37,7 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $POSTGRES_USER -d $POSTGRES_DB"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d eric_production"]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -61,12 +61,14 @@ services:
     build:
       context: ./webserver/
       dockerfile: Dockerfile
+    depends_on:
+      - collective-policy-synth-1
     #ports:
     #  - "80:80"
     #  - "443:443"
     volumes:
       - webserver:/home
-      - client-app-dist:/usr/src/webApps/collective-policy-synth/dist
+      - client-app-dist:/home/node/app/webApp/dist
     healthcheck:
       test:
         [
