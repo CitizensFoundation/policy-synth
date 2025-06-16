@@ -89,6 +89,23 @@ export interface ReviewListResponse {
     count: number;
 }
 
+// --- Chat Session Interfaces ---
+export interface ChatSessionData {
+    id: number;
+    topicId?: number;
+    userId?: string;
+    chatLogJson?: any;
+    legacyMemoryId?: string;
+    createdAt?: string;
+    updatedAt?: string;
+    Reviews?: ReviewData[];
+}
+
+export interface ChatSessionListResponse {
+    rows: ChatSessionData[];
+    count: number;
+}
+
 export class AdminServerApi extends YpServerApi {
   constructor(urlPath: string = '/api') {
     super();
@@ -266,6 +283,19 @@ export class AdminServerApi extends YpServerApi {
     return await this.fetchWrapper(`${this.baseUrlPath}/links/${id}`, {
         method: 'DELETE',
     }, true, 'link-delete-error', false) as { message: string };
+  }
+
+  // --- Chat Session ---
+  async listChatSessions(page = 1, pageSize = 20): Promise<ChatSessionListResponse> {
+    const params = new URLSearchParams();
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
+    const query = params.toString();
+    return await this.fetchWrapper(`${this.baseUrlPath}/chat-sessions?${query}`) as ChatSessionListResponse;
+  }
+
+  async getChatSession(id: number): Promise<ChatSessionData> {
+    return await this.fetchWrapper(`${this.baseUrlPath}/chat-sessions/${id}`) as ChatSessionData;
   }
 
   // --- Review CRUD ---

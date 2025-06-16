@@ -5,6 +5,7 @@ import { TopicController } from './controllers/topicController.js';
 import { QAController } from './controllers/qaController.js';
 import { LinkController } from './controllers/linkController.js';
 import { ReviewController } from './controllers/reviewController.js';
+import { ChatSessionController } from './controllers/chatSessionController.js';
 import { AnalyticsController } from '@policysynth/api/controllers/analyticsController.js';
 import WebSocket from 'ws';
 
@@ -15,6 +16,7 @@ export const getControllers = (wsClients: Map<string, WebSocket>) => [
   new QAController(wsClients),
   new LinkController(wsClients),
   new ReviewController(wsClients),
+  new ChatSessionController(wsClients),
   new AnalyticsController(wsClients), // Existing controller
 ];
 
@@ -26,5 +28,6 @@ export const controllerClasses = [
   QAController,
   LinkController,
   ReviewController,
+  ChatSessionController,
   AnalyticsController, // Existing controller
 ];
