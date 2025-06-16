@@ -10,7 +10,8 @@
   "dependencies": {
     "@yrpri/webapp": "^9.0.132",
     "jwt-decode": "^4.0.0",
-    "marked": "^15.0.11"
+    "marked": "^15.0.11",
+    "rollup-plugin-polyfill-node": "^0.13.0"
   },
   "scripts": {
     "copyInLocalAgents": "cp -R ../../../../agents/ts-out/* ./node_modules/@policysynth/agents/;cp ../../../../agents/src/*.d.ts ./node_modules/@policysynth/agents/;",
@@ -33,7 +34,7 @@
   },
   "type": "module",
   "devDependencies": {
-   "@babel/plugin-transform-runtime": "^7.27.1",
+    "@babel/plugin-transform-runtime": "^7.27.1",
     "@babel/preset-env": "^7.27.1",
     "@babel/runtime": "^7.27.1",
     "@custom-elements-manifest/analyzer": "^0.10.4",
