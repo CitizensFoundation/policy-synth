@@ -27,4 +27,4 @@ ENV PORT=4078
 
 EXPOSE 4078
 
-CMD [ "node", "ts-out/server.js" ]
+CMD [ "node", "dist/src/server.js" ]

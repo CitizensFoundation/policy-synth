@@ -32,7 +32,7 @@
     "destroyWeaviateRagChunk": "node ts-out/vectorstore/tools/destroyRagChunk.js",
     "destroyWeaviateRagDocument": "node ts-out/vectorstore/tools/destroyRagDocument.js",
     "dev:debug": "nodemon --config nodemon.json --inspect-brk ./ts-out/server.js",
-    "build": "tsc --project ./ --outDir ./ts-out",
+    "build": "tsc --project ./ --outDir ./dist",
     "prepublishOnly": "npm run build",
     "db:seed:admin": "ts-node seedAdminUser.ts"
   },

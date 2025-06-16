@@ -9,7 +9,7 @@ x-collective-policy-synth-common: &collective-policy-synth-common
   image: policy-synth-ecas-eric:current
   volumes:
     - client-app-dist:/usr/src/webApps/dist
-  command: node ts-out/server.js
+  command: node dist/src/server.js
   healthcheck:
     test: ["CMD", "curl", "-f", "http://localhost:4078/api/project/healthcheck"]
     interval: 30s
