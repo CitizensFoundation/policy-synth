@@ -1,5 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
+import { resolveMarkdown } from '../base/litMarkdown.js';
 import { adminServerApi, ChatSessionData, TopicData, ReviewCreateDTO } from '../services/adminServerApi.js';
 import '@material/web/button/outlined-button.js';
 import '@material/web/button/filled-button.js';
@@ -233,7 +234,21 @@ export class ChatSessionManager extends LitElement {
         <div slot="content">
           ${this.currentSession ? html`
             <div class="chat-log">
-              ${Array.isArray(this.currentSession.chatLogJson) ? this.currentSession.chatLogJson.map((line: any) => html`<div class="chat-line"><b>${line.sender}:</b> ${line.message}</div>`) : ''}
+              ${Array.isArray(this.currentSession.chatLogJson)
+                ? this.currentSession.chatLogJson.map(
+                    (line: any) => html`
+                      <div class="chat-line">
+                        <b>${line.sender}:</b>
+                        ${line.sender === 'assistant' || line.sender === 'bot'
+                          ? html`${resolveMarkdown(line.message, {
+                              includeImages: true,
+                              includeCodeBlockClassNames: true,
+                            })}`
+                          : html`${line.message}`}
+                      </div>
+                    `
+                  )
+                : ''}
             </div>
             <label>Rating: ${this.renderRating(this.reviewRating)}</label>
             <md-slider min="1" max="5" step="1" .value=${this.reviewRating} @change=${(e: any) => this.reviewRating = Number(e.target.value)} ticks labelled></md-slider>
