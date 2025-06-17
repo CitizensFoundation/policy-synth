@@ -22,15 +22,18 @@ interface JobRow {
 }
 
 /** Result returned by the LLM */
-interface DegreeComparisonResult {
+interface LicenseComparisonResult {
   profession: string;
+  sheet1EducationRequirement: string;
+  sheet2EducationRequirement?: string;
   matchedJobName?: string;
   explanation: string;
+  likelyMatchingEducationRequirements: boolean;
 }
 
 export class CompareLicenseEducationAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData & {
-    results?: DegreeComparisonResult[];
+    results?: LicenseComparisonResult[];
     llmErrors?: string[];
   };
 
@@ -224,7 +227,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         `You will be given a profession and its required degree from Sheet One.\n` +
         `You also have a list of job descriptions from Sheet Two that require a college degree with their education requirements.\n` +
         `Find the best matching job description from Sheet Two.\n` +
-        `Return JSON with keys: profession, matchedJobName, explanation.`;
+        `Return JSON with keys: profession, matchedJobName, sheet2EducationRequirement, likelyMatchingEducationRequirements, explanation.`;
 
       const messages = [
         this.createSystemMessage(
@@ -238,8 +241,11 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
           PsAiModelType.TextReasoning,
           PsAiModelSize.Large,
           messages
-        )) as DegreeComparisonResult;
-        (this.memory.results ?? []).push(result);
+        )) as LicenseComparisonResult;
+        (this.memory.results ?? []).push({
+          ...result,
+          sheet1EducationRequirement: row.degree,
+        });
       } catch (err: any) {
         const msg = `LLM error for profession ${row.profession}: ${err.message}`;
         this.logger.error(msg);
@@ -256,11 +262,25 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     await this.outputConnector.addSheetIfNotExists(this.outputSheetName);
 
     const rows: string[][] = [
-      ["profession", "matchedJobName", "explanation"],
+      [
+        "profession",
+        "sheet1EducationRequirement",
+        "sheet2EducationRequirement",
+        "likelyMatchingEducationRequirements",
+        "matchedJobName",
+        "explanation",
+      ],
     ];
 
     for (const r of this.memory.results ?? []) {
-      rows.push([r.profession, r.matchedJobName ?? "", r.explanation]);
+      rows.push([
+        r.profession,
+        r.sheet1EducationRequirement,
+        r.sheet2EducationRequirement ?? "",
+        r.likelyMatchingEducationRequirements ? "true" : "false",
+        r.matchedJobName ?? "",
+        r.explanation,
+      ]);
     }
 
     await this.updateSheetInChunks(rows);
