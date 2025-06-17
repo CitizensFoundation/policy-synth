@@ -17,21 +17,21 @@ interface ReviewAttributes {
 interface ReviewCreationAttributes extends Optional<ReviewAttributes, 'id' | 'qaPairId' | 'chatSessionId' | 'answerHash' | 'notes' | 'reviewerId'> {}
 
 class Review extends Model<ReviewAttributes, ReviewCreationAttributes> implements ReviewAttributes {
-  public id!: number;
-  public qaPairId?: number;
-  public chatSessionId?: number;
-  public answerHash?: string;
-  public rating!: number;
-  public notes?: string;
-  public reviewerId?: number;
+  declare id: number;
+  declare qaPairId?: number;
+  declare chatSessionId?: number;
+  declare answerHash?: string;
+  declare rating: number;
+  declare notes?: string;
+  declare reviewerId?: number;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
   // Association mixins
-  public getQAPair!: BelongsToGetAssociationMixin<QAPair>;
-  public getChatSession!: BelongsToGetAssociationMixin<ChatSession>;
-  public getReviewer!: BelongsToGetAssociationMixin<AdminUser>;
+  declare getQAPair: BelongsToGetAssociationMixin<QAPair>;
+  declare getChatSession: BelongsToGetAssociationMixin<ChatSession>;
+  declare getReviewer: BelongsToGetAssociationMixin<AdminUser>;
 
   // Static method for aggregation
   static async aggregateForQaPair(qaPairId: number): Promise<{ avgRating: number | null; count: number }> {

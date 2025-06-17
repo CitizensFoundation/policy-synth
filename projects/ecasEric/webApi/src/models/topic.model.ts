@@ -12,14 +12,14 @@ interface TopicAttributes {
 interface TopicCreationAttributes extends Optional<TopicAttributes, 'id' | 'description'> {}
 
 class Topic extends Model<TopicAttributes, TopicCreationAttributes> implements TopicAttributes {
-  public id!: number;
-  public slug!: string;
-  public title!: string;
-  public description?: string;
-  public language!: string;
+  declare id: number;
+  declare slug: string;
+  declare title: string;
+  declare description?: string;
+  declare language: string;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 }
 
 Topic.init(

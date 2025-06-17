@@ -13,11 +13,11 @@ interface AdminUserAttributes {
 interface AdminUserCreationAttributes extends Optional<AdminUserAttributes, 'id'> {}
 
 class AdminUser extends Model<AdminUserAttributes, AdminUserCreationAttributes> implements AdminUserAttributes {
-  // Declare fields for TS and to satisfy implements, Sequelize handles them.
-  public id!: number;
-  public email!: string;
-  public passwordHash!: string;
-  public role!: 'admin' | 'editor';
+  // Declare fields for TS without initializing them to avoid shadowing Sequelize accessors
+  declare id: number;
+  declare email: string;
+  declare passwordHash: string;
+  declare role: 'admin' | 'editor';
 
   // No temporary password?: string; field needed
 
