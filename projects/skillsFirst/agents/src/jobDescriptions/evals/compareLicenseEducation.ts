@@ -93,6 +93,10 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     return "high";
   }
 
+  override get modelTemperature(): number {
+    return 0.0;
+  }
+
   override get maxModelTokensOut(): number {
     return 20000;
   }
