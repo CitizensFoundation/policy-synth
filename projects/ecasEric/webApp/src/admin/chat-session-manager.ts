@@ -6,6 +6,9 @@ import '@material/web/button/filled-button.js';
 import '@material/web/dialog/dialog.js';
 import '@material/web/progress/circular-progress.js';
 import '@material/web/slider/slider.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
+import '@material/web/textfield/outlined-text-field.js';
 
 @customElement('chat-session-manager')
 export class ChatSessionManager extends LitElement {
@@ -16,6 +19,8 @@ export class ChatSessionManager extends LitElement {
   @state() private page = 1;
   @state() private pageSize = 10;
   @state() private totalItems = 0;
+  @state() private selectedTopicFilter: number | 'all' = 'all';
+  @state() private minRatingFilter = 0;
 
   @state() private dialogOpen = false;
   @state() private currentSession: ChatSessionData | null = null;
@@ -40,7 +45,17 @@ export class ChatSessionManager extends LitElement {
     this.loading = true;
     this.error = null;
     try {
-      const result = await adminServerApi.listChatSessions(this.page, this.pageSize);
+      const params: any = {
+        page: this.page,
+        pageSize: this.pageSize,
+      };
+      if (this.selectedTopicFilter !== 'all') {
+        params.topicId = this.selectedTopicFilter;
+      }
+      if (this.minRatingFilter > 0) {
+        params.minRating = this.minRatingFilter;
+      }
+      const result = await adminServerApi.listChatSessions(params);
       this.sessions = result.rows;
       this.totalItems = result.count;
     } catch (e: any) {
@@ -48,6 +63,18 @@ export class ChatSessionManager extends LitElement {
     } finally {
       this.loading = false;
     }
+  }
+
+  handleTopicFilterChange(e: any) {
+    this.selectedTopicFilter = e.target.value === 'all' ? 'all' : Number(e.target.value);
+    this.page = 1;
+    this.fetchSessions();
+  }
+
+  handleRatingFilterChange(e: any) {
+    this.minRatingFilter = Number(e.target.value);
+    this.page = 1;
+    this.fetchSessions();
   }
 
   openDialog(session: ChatSessionData) {
@@ -114,6 +141,13 @@ export class ChatSessionManager extends LitElement {
       display: block;
       padding: 16px;
     }
+    .top-bar {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -140,6 +174,9 @@ export class ChatSessionManager extends LitElement {
     .pagination span {
       margin: 0 8px;
     }
+    md-slider {
+      min-width: 150px;
+    }
     .chat-log {
       max-height: 300px;
       overflow-y: auto;
@@ -153,6 +190,16 @@ export class ChatSessionManager extends LitElement {
 
   render() {
     return html`
+      <div class="top-bar">
+        <md-outlined-select label="Filter by Topic" @change=${this.handleTopicFilterChange} .value=${this.selectedTopicFilter.toString()}>
+          <md-select-option value="all">All Topics</md-select-option>
+          ${this.topics.map(t => html`<md-select-option value="${t.id}">${t.title}</md-select-option>`)}
+        </md-outlined-select>
+        <div>
+          <label>Min Rating: ${this.minRatingFilter > 0 ? this.renderRating(this.minRatingFilter) : 'Any'}</label>
+          <md-slider min="0" max="5" step="1" .value=${this.minRatingFilter} @change=${this.handleRatingFilterChange} ticks labelled></md-slider>
+        </div>
+      </div>
       ${this.loading ? html`<md-circular-progress indeterminate></md-circular-progress>` : ''}
       ${this.error ? html`<p style="color:red;">Error: ${this.error}</p>` : ''}
       <table>
