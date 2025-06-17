@@ -9,22 +9,28 @@ import {
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 
-/** Simple structure representing a license row */
-interface LicenseRow {
-  licenseType: string;
+/** Row from the first sheet */
+interface ProfessionRow {
+  profession: string;
+  degree: string;
+}
+
+/** Row from the second sheet */
+interface JobRow {
+  name: string;
   educationRequirement: string;
 }
 
 /** Result returned by the LLM */
-interface LicenseComparisonResult {
-  licenseType: string;
-  matchedLicenseType?: string;
+interface DegreeComparisonResult {
+  profession: string;
+  matchedJobName?: string;
   explanation: string;
 }
 
 export class CompareLicenseEducationAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData & {
-    results?: LicenseComparisonResult[];
+    results?: DegreeComparisonResult[];
     llmErrors?: string[];
   };
 
@@ -103,7 +109,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         subCategory: "compareLicenseEducation",
         hasPublicAccess: false,
         description:
-          "Compares professional license education requirements between two sheets",
+          "Compares profession degree requirements with job description education requirements across two sheets",
         queueName: "COMPARE_LICENSE_EDUCATION",
         imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/71844202-56ce-4139-88e2-1cfcab0dd59f.png",
         iconName: "compare_license_education",
@@ -145,25 +151,62 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     ];
   }
 
-  /** Reads A/B columns and returns LicenseRow objects */
-  private async readRows(
+  /**
+   * Reads profession and degree columns from the first sheet. Duplicates are
+   * filtered based on the profession value.
+   */
+  private async readSheet1Rows(
     connector: PsBaseSheetConnector,
     sheetName: string
-  ): Promise<LicenseRow[]> {
-    const range = `${sheetName}!A1:B${this.maxRows}`;
+  ): Promise<ProfessionRow[]> {
+    const range = `${sheetName}!A1:J${this.maxRows}`;
     const rows = await connector.getRange(range);
     if (!rows || rows.length === 0) return [];
-    return rows.slice(1).map((r) => ({
-      licenseType: (r[0] ?? "").toString().trim(),
-      educationRequirement: (r[1] ?? "").toString().trim(),
-    }));
+    const seen = new Set<string>();
+    const result: ProfessionRow[] = [];
+    for (const r of rows.slice(1)) {
+      const profession = (r[3] ?? "").toString().trim();
+      if (!profession || seen.has(profession)) continue;
+      seen.add(profession);
+      const degree = (r[9] ?? "").toString().trim();
+      result.push({ profession, degree });
+    }
+    return result;
+  }
+
+  /**
+   * Reads job name and education requirement from the second sheet, filtering
+   * out rows that do not require a college degree.
+   */
+  private async readSheet2Rows(
+    connector: PsBaseSheetConnector,
+    sheetName: string
+  ): Promise<JobRow[]> {
+    const range = `${sheetName}!A1:W${this.maxRows}`;
+    const rows = await connector.getRange(range);
+    if (!rows || rows.length === 0) return [];
+    const result: JobRow[] = [];
+    for (const r of rows.slice(1)) {
+      const needsCollegeDegree = (r[19] ?? "").toString().toLowerCase();
+      if (needsCollegeDegree !== "true" && needsCollegeDegree !== "yes" && needsCollegeDegree !== "1") continue;
+      const name = (r[11] ?? "").toString().trim();
+      const educationRequirement = (r[22] ?? "").toString().trim();
+      result.push({ name, educationRequirement });
+    }
+    return result;
   }
 
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting license comparison");
 
-    const sheet1Rows = await this.readRows(this.sheet1Connector, this.sheet1Name);
-    const sheet2Rows = await this.readRows(this.sheet2Connector, this.sheet2Name);
+    const sheet1Rows = await this.readSheet1Rows(
+      this.sheet1Connector,
+      this.sheet1Name
+    );
+    const sheet2Rows = await this.readSheet2Rows(
+      this.sheet2Connector,
+      this.sheet2Name
+    );
 
     let count = 0;
     for (const row of sheet1Rows) {
@@ -174,17 +217,18 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       );
 
       const context = sheet2Rows
-        .map((r) => `${r.licenseType} - ${r.educationRequirement}`)
+        .map((r) => `${r.name} - ${r.educationRequirement}`)
         .join("\n");
 
-      const prompt = `You will be given a license type and its education requirement from Sheet One.\n` +
-        `You also have a list of license types and education requirements from Sheet Two.\n` +
-        `Find the best matching license from Sheet Two.\n` +
-        `Return JSON with keys: licenseType, matchedLicenseType, explanation.`;
+      const prompt =
+        `You will be given a profession and its required degree from Sheet One.\n` +
+        `You also have a list of job descriptions from Sheet Two that require a college degree with their education requirements.\n` +
+        `Find the best matching job description from Sheet Two.\n` +
+        `Return JSON with keys: profession, matchedJobName, explanation.`;
 
       const messages = [
         this.createSystemMessage(
-          `${prompt}\n\n<SheetOneLicense>${row.licenseType} - ${row.educationRequirement}</SheetOneLicense>\n` +
+          `${prompt}\n\n<SheetOneProfession>${row.profession} - ${row.degree}</SheetOneProfession>\n` +
             `<SheetTwoRows>\n${context}\n</SheetTwoRows>`
         ),
       ];
@@ -194,10 +238,10 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
           PsAiModelType.TextReasoning,
           PsAiModelSize.Large,
           messages
-        )) as LicenseComparisonResult;
+        )) as DegreeComparisonResult;
         (this.memory.results ?? []).push(result);
       } catch (err: any) {
-        const msg = `LLM error for license ${row.licenseType}: ${err.message}`;
+        const msg = `LLM error for profession ${row.profession}: ${err.message}`;
         this.logger.error(msg);
         (this.memory.llmErrors ?? []).push(msg);
       }
@@ -212,11 +256,11 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     await this.outputConnector.addSheetIfNotExists(this.outputSheetName);
 
     const rows: string[][] = [
-      ["licenseType", "matchedLicenseType", "explanation"],
+      ["profession", "matchedJobName", "explanation"],
     ];
 
     for (const r of this.memory.results ?? []) {
-      rows.push([r.licenseType, r.matchedLicenseType ?? "", r.explanation]);
+      rows.push([r.profession, r.matchedJobName ?? "", r.explanation]);
     }
 
     await this.updateSheetInChunks(rows);
