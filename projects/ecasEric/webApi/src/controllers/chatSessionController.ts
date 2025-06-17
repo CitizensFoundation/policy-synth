@@ -19,11 +19,13 @@ export class ChatSessionController extends BaseController {
   }
 
   private list = async (req: Request, res: Response) => {
-    const { page, pageSize } = req.query;
+    const { page, pageSize, topicId, minRating } = req.query;
     try {
       const result = await this.chatSessionService.list({
         page: page ? Number(page) : 1,
         pageSize: pageSize ? Number(pageSize) : 20,
+        topicId: topicId ? Number(topicId) : undefined,
+        minRating: minRating ? Number(minRating) : undefined,
       });
       res.status(200).json(result);
     } catch (error: any) {

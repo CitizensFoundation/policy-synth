@@ -286,12 +286,14 @@ export class AdminServerApi extends YpServerApi {
   }
 
   // --- Chat Session ---
-  async listChatSessions(page = 1, pageSize = 20): Promise<ChatSessionListResponse> {
-    const params = new URLSearchParams();
-    params.set('page', String(page));
-    params.set('pageSize', String(pageSize));
-    const query = params.toString();
-    return await this.fetchWrapper(`${this.baseUrlPath}/chat-sessions?${query}`) as ChatSessionListResponse;
+  async listChatSessions(params: { page?: number; pageSize?: number; topicId?: number; minRating?: number } = {}): Promise<ChatSessionListResponse> {
+    const query = new URLSearchParams();
+    if (params.page !== undefined) query.set('page', String(params.page));
+    if (params.pageSize !== undefined) query.set('pageSize', String(params.pageSize));
+    if (params.topicId !== undefined) query.set('topicId', String(params.topicId));
+    if (params.minRating !== undefined) query.set('minRating', String(params.minRating));
+    const queryString = query.toString();
+    return await this.fetchWrapper(`${this.baseUrlPath}/chat-sessions${queryString ? '?' + queryString : ''}`) as ChatSessionListResponse;
   }
 
   async getChatSession(id: number): Promise<ChatSessionData> {
