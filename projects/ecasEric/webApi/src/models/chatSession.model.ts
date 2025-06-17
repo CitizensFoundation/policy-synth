@@ -13,14 +13,14 @@ interface ChatSessionAttributes {
 interface ChatSessionCreationAttributes extends Optional<ChatSessionAttributes, 'id' | 'topicId' | 'userId' | 'chatLogJson' | 'legacyMemoryId'> {}
 
 class ChatSession extends Model<ChatSessionAttributes, ChatSessionCreationAttributes> implements ChatSessionAttributes {
-  public id!: number;
-  public topicId?: number;
-  public userId?: string;
-  public chatLogJson?: object;
-  public legacyMemoryId?: string;
+  declare id: number;
+  declare topicId?: number;
+  declare userId?: string;
+  declare chatLogJson?: object;
+  declare legacyMemoryId?: string;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
   // Possible associations to Topic and AdminUser (if userId maps to AdminUser.id)
 }

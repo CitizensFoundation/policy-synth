@@ -13,17 +13,17 @@ interface CountryLinkAttributes {
 interface CountryLinkCreationAttributes extends Optional<CountryLinkAttributes, 'id' | 'title'> {}
 
 class CountryLink extends Model<CountryLinkAttributes, CountryLinkCreationAttributes> implements CountryLinkAttributes {
-  public id!: number;
-  public topicId!: number;
-  public countryCode!: string;
-  public url!: string;
-  public title?: string;
+  declare id: number;
+  declare topicId: number;
+  declare countryCode: string;
+  declare url: string;
+  declare title?: string;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
   // Association mixins
-  public getTopic!: BelongsToGetAssociationMixin<Topic>;
+  declare getTopic: BelongsToGetAssociationMixin<Topic>;
 }
 
 CountryLink.init(

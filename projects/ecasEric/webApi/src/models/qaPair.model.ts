@@ -22,19 +22,19 @@ interface QAPairAttributes {
 interface QAPairCreationAttributes extends Optional<QAPairAttributes, 'id' | 'embeddingUuid' | 'questionType' | 'source'> {}
 
 class QAPair extends Model<QAPairAttributes, QAPairCreationAttributes> implements QAPairAttributes {
-  public id!: number;
-  public topicId!: number;
-  public question!: string;
-  public answer!: string;
-  public embeddingUuid?: string;
-  public questionType?: QAPairQuestionType;
-  public source?: string;
+  declare id: number;
+  declare topicId: number;
+  declare question: string;
+  declare answer: string;
+  declare embeddingUuid?: string;
+  declare questionType?: QAPairQuestionType;
+  declare source?: string;
 
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
+  declare readonly createdAt: Date;
+  declare readonly updatedAt: Date;
 
   // Association mixins
-  public getTopic!: BelongsToGetAssociationMixin<Topic>;
+  declare getTopic: BelongsToGetAssociationMixin<Topic>;
 
   // Placeholder for vector store synchronization hook
   public static addHookForVectorSync(): void {
