@@ -52,6 +52,14 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
     if (options.after) {
       finalQuery += ` after:${options.after}`;
     }
+
+    const extraParams: string[] = [];
+    if (options.dateRestrict) {
+      extraParams.push(`dateRestrict=${encodeURIComponent(options.dateRestrict)}`);
+    }
+    if (options.sort) {
+      extraParams.push(`sort=${encodeURIComponent(options.sort)}`);
+    }
     const outResults: PsSearchResultItem[] = [];
     const maxPerRequest = 10;
 
@@ -65,11 +73,15 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
         numberOfResults - outResults.length
       );
 
-      const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
+      let url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
         finalQuery
       )}&key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${
         process.env.GOOGLE_SEARCH_API_CX_ID
       }&num=${resultsToFetch}&start=${startIndex}`;
+
+      if (extraParams.length > 0) {
+        url += `&${extraParams.join("&")}`;
+      }
 
       try {
         // Use our custom requestWithRetry wrapper

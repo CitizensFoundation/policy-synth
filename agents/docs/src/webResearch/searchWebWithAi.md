@@ -29,7 +29,7 @@ Performs a search using either the Google Search API or the Bing Search API, dep
 
 - `query`: `string` - The search query.
 - `numberOfResults`: `number` - The number of results to fetch.
-- `options?`: `PsSearchOptions` - Optional modifiers such as `before` or `after` dates.
+- `options?`: `PsSearchOptions` - Optional modifiers like `dateRestrict` or `sort` for time filtering. `before` and `after` are still accepted.
 
 #### Returns
 
@@ -66,7 +66,7 @@ const searchAgent = new BaseSearchWebAgentWithAi(agent, memory);
 
 const queries = ["example query 1", "example query 2"];
 const results = await searchAgent.getQueryResults(queries, "uniqueId", 10, {
-  before: "2024/01/01"
+  dateRestrict: "d7"
 });
 
 console.log(results.searchResults);

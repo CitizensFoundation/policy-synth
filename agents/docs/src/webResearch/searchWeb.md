@@ -35,7 +35,7 @@ This method determines which search API to use based on the environment variable
 - **Parameters:**
   - `query`: The search query string.
   - `numberOfResults`: The number of search results to retrieve.
-  - `options?`: Optional `PsSearchOptions` with `before` or `after` date filters.
+  - `options?`: Optional `PsSearchOptions` allowing time filters via `dateRestrict` or `sort` (legacy `before` and `after` supported).
 
 - **Returns:** A promise that resolves to an array of `PsSearchResultItem` containing the search results.
 

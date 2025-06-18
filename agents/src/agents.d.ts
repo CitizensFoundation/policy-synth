@@ -209,6 +209,16 @@ type SearchResultItem = PsSearchResultItem[];
 interface PsSearchOptions {
   before?: string;
   after?: string;
+  /**
+   * Relative date restriction like `d7` for last 7 days
+   * according to Google Custom Search API `dateRestrict` parameter.
+   */
+  dateRestrict?: string;
+  /**
+   * Absolute date range in the format `date:r:YYYYMMDD:YYYYMMDD`
+   * used with the Google Custom Search API `sort` parameter.
+   */
+  sort?: string;
 }
 
 interface PsAgentBaseMemoryData {
