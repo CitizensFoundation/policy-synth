@@ -26,7 +26,7 @@ Performs a search query using the Bing Search API and returns the search results
 
 - `query` (string): The search query string.
 - `numberOfResults` (number): The number of search results to retrieve. The Bing API allows specifying a count up to a certain limit (commonly 50).
-- `options?` (`PsSearchOptions`): Optional search modifiers such as `before` or `after` dates.
+- `options?` (`PsSearchOptions`): Optional modifiers like `dateRestrict` or `sort` for time filtering. `before` and `after` remain supported.
 
 #### Return Type
 
@@ -38,7 +38,7 @@ Performs a search query using the Bing Search API and returns the search results
 import { BingSearchApi } from '@policysynth/agents/webResearch/bingSearchApi.js';
 
 const bingSearch = new BingSearchApi();
-bingSearch.search("example query", 10, { before: "2024/01/01" })
+bingSearch.search("example query", 10, { dateRestrict: "d7" })
   .then(results => {
     console.log(results);
   })

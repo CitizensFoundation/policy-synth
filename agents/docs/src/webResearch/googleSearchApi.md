@@ -20,7 +20,7 @@ The `GoogleSearchApi` class is a specialized agent that extends the `PolicySynth
 
 - `query: string`: The search query string.
 - `numberOfResults: number`: The number of search results to retrieve.
-- `options?: PsSearchOptions`: Optional search modifiers such as `before` or `after` dates.
+- `options?: PsSearchOptions`: Optional search modifiers. Use `dateRestrict` for relative windows (e.g. `d7`) or `sort` with `date:r:YYYYMMDD:YYYYMMDD` for absolute ranges. Legacy `before` and `after` parameters are still supported.
 
 #### Returns
 
@@ -41,7 +41,7 @@ async function exampleUsage() {
     const results = await googleSearchApi.search(
       "liberal democracies: issues and solutions",
       20,
-      { after: "2024/01/01" }
+      { dateRestrict: "d7" }
     );
     console.log("Search results:", results);
   } catch (error) {

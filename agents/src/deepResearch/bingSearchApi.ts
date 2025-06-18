@@ -25,14 +25,26 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
     if (options.after) {
       finalQuery += ` after:${options.after}`;
     }
+    const extraParams: string[] = [];
+    if (options.dateRestrict) {
+      extraParams.push(`dateRestrict=${encodeURIComponent(options.dateRestrict)}`);
+    }
+    if (options.sort) {
+      extraParams.push(`sort=${encodeURIComponent(options.sort)}`);
+    }
     // Bing API allows specifying count up to a certain limit (commonly 50)
     // For simplicity, we assume numberOfResults <= 50. If needed, multiple calls could be implemented similarly to Google.
     const maxBingResults = numberOfResults > 50 ? 50 : numberOfResults;
+    let url =
+      `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${maxBingResults}&q=` +
+      encodeURIComponent(finalQuery);
+    if (extraParams.length > 0) {
+      url += `&${extraParams.join("&")}`;
+    }
+
     const requestParams: AxiosRequestConfig = {
       method: "GET",
-      url:
-        `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${maxBingResults}&q=` +
-        encodeURIComponent(finalQuery),
+      url,
       headers: {
         "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY!,
       },
