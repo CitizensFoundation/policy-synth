@@ -12,7 +12,7 @@ The `GoogleSearchApi` class is a specialized agent that extends the `PolicySynth
 
 | Name       | Parameters        | Return Type          | Description                 |
 |------------|-------------------|----------------------|-----------------------------|
-| search     | query: string, numberOfResults: number | Promise<PsSearchResultItem[]> | Performs a search using the Google Custom Search API and returns an array of search results. |
+| search     | query: string, numberOfResults: number, options?: PsSearchOptions | Promise<PsSearchResultItem[]> | Performs a search using the Google Custom Search API and returns an array of search results. |
 
 ### Method: `search`
 
@@ -20,6 +20,7 @@ The `GoogleSearchApi` class is a specialized agent that extends the `PolicySynth
 
 - `query: string`: The search query string.
 - `numberOfResults: number`: The number of search results to retrieve.
+- `options?: PsSearchOptions`: Optional search modifiers such as `before` or `after` dates.
 
 #### Returns
 
@@ -39,7 +40,8 @@ async function exampleUsage() {
   try {
     const results = await googleSearchApi.search(
       "liberal democracies: issues and solutions",
-      20
+      20,
+      { after: "2024/01/01" }
     );
     console.log("Search results:", results);
   } catch (error) {

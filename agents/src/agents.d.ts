@@ -206,6 +206,11 @@ interface PsSearchResultItem extends PsEloRateable {
 
 type SearchResultItem = PsSearchResultItem[];
 
+interface PsSearchOptions {
+  before?: string;
+  after?: string;
+}
+
 interface PsAgentBaseMemoryData {
   startTime?: number;
 }

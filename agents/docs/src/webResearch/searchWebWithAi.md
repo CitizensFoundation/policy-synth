@@ -29,6 +29,7 @@ Performs a search using either the Google Search API or the Bing Search API, dep
 
 - `query`: `string` - The search query.
 - `numberOfResults`: `number` - The number of results to fetch.
+- `options?`: `PsSearchOptions` - Optional modifiers such as `before` or `after` dates.
 
 #### Returns
 
@@ -47,6 +48,7 @@ Fetches search results for a list of queries and deduplicates the results based 
 - `queriesToSearch`: `string[]` - An array of search queries.
 - `id`: `string` - An identifier used to track seen URLs.
 - `numberOfResults`: `number` (optional) - The number of results to fetch per query. Defaults to 10.
+- `options?`: `PsSearchOptions` - Optional modifiers forwarded to the search API.
 
 #### Returns
 
@@ -63,7 +65,9 @@ const memory = {/* memory initialization */};
 const searchAgent = new BaseSearchWebAgentWithAi(agent, memory);
 
 const queries = ["example query 1", "example query 2"];
-const results = await searchAgent.getQueryResults(queries, "uniqueId");
+const results = await searchAgent.getQueryResults(queries, "uniqueId", 10, {
+  before: "2024/01/01"
+});
 
 console.log(results.searchResults);
 ```
