@@ -15,8 +15,16 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
 
   public async search(
     query: string,
-    numberOfResults: number
+    numberOfResults: number,
+    options: PsSearchOptions = {}
   ): Promise<PsSearchResultItem[]> {
+    let finalQuery = query;
+    if (options.before) {
+      finalQuery += ` before:${options.before}`;
+    }
+    if (options.after) {
+      finalQuery += ` after:${options.after}`;
+    }
     // Bing API allows specifying count up to a certain limit (commonly 50)
     // For simplicity, we assume numberOfResults <= 50. If needed, multiple calls could be implemented similarly to Google.
     const maxBingResults = numberOfResults > 50 ? 50 : numberOfResults;
@@ -24,7 +32,7 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
       method: "GET",
       url:
         `https://api.cognitive.microsoft.com/bing/v7.0/search?count=${maxBingResults}&q=` +
-        encodeURIComponent(query),
+        encodeURIComponent(finalQuery),
       headers: {
         "Ocp-Apim-Subscription-Key": this.SUBSCRIPTION_KEY!,
       },
@@ -72,7 +80,7 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
         // Once the call is successful, no more retries are needed
         retry = false;
       } catch (e: any) {
-        this.logger.error(`Failed to get search data for ${query}`);
+        this.logger.error(`Failed to get search data for ${finalQuery}`);
         this.logger.error("Bing Search Error: " + e.message);
         this.logger.error(e);
         retryCount++;

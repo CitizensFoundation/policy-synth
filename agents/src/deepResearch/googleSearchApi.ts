@@ -42,8 +42,16 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
 
   public async search(
     query: string,
-    numberOfResults: number
+    numberOfResults: number,
+    options: PsSearchOptions = {}
   ): Promise<PsSearchResultItem[]> {
+    let finalQuery = query;
+    if (options.before) {
+      finalQuery += ` before:${options.before}`;
+    }
+    if (options.after) {
+      finalQuery += ` after:${options.after}`;
+    }
     const outResults: PsSearchResultItem[] = [];
     const maxPerRequest = 10;
 
@@ -58,7 +66,7 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
       );
 
       const url = `https://www.googleapis.com/customsearch/v1?q=${encodeURIComponent(
-        query
+        finalQuery
       )}&key=${process.env.GOOGLE_SEARCH_API_KEY}&cx=${
         process.env.GOOGLE_SEARCH_API_CX_ID
       }&num=${resultsToFetch}&start=${startIndex}`;

@@ -12,8 +12,8 @@ The `BaseSearchWebAgent` class is designed to perform web searches using either 
 
 | Name            | Parameters                                      | Return Type                  | Description                                                                 |
 |-----------------|-------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| callSearchApi   | query: string, numberOfResults: number          | Promise<PsSearchResultItem[]>| Calls the appropriate search API (Google or Bing) based on available keys.  |
-| getQueryResults | queriesToSearch: string[], id: string, numberOfResults: number = 10 | Promise<{ searchResults: PsSearchResultItem[] }> | Retrieves search results for a list of queries, ensuring no duplicate URLs. |
+| callSearchApi   | query: string, numberOfResults: number, options?: PsSearchOptions          | Promise<PsSearchResultItem[]>| Calls the appropriate search API (Google or Bing) based on available keys.  |
+| getQueryResults | queriesToSearch: string[], id: string, numberOfResults: number = 10, options?: PsSearchOptions | Promise<{ searchResults: PsSearchResultItem[] }> | Retrieves search results for a list of queries, ensuring no duplicate URLs. |
 
 ## Example
 
@@ -35,6 +35,7 @@ This method determines which search API to use based on the environment variable
 - **Parameters:**
   - `query`: The search query string.
   - `numberOfResults`: The number of search results to retrieve.
+  - `options?`: Optional `PsSearchOptions` with `before` or `after` date filters.
 
 - **Returns:** A promise that resolves to an array of `PsSearchResultItem` containing the search results.
 
@@ -48,6 +49,7 @@ This method performs searches for a list of queries and returns the combined res
   - `queriesToSearch`: An array of search query strings.
   - `id`: A unique identifier used to track seen URLs.
   - `numberOfResults`: The number of search results to retrieve per query (default is 10).
+  - `options?`: Optional `PsSearchOptions` forwarded to the search API.
 
 - **Returns:** A promise that resolves to an object containing the `searchResults`, which is an array of `PsSearchResultItem`.
 
