@@ -24,11 +24,11 @@ interface JobRow {
 /** Result returned by the LLM */
 interface LicenseComparisonResult {
   profession: string;
-  sheet1EducationRequirement: string;
-  sheet2EducationRequirement?: string;
+  wvuSheetEducationRequirement: string;
+  skillsFirstEducationRequirement?: string;
   matchedJobName?: string;
   explanation: string;
-  likelyMatchingEducationRequirements: boolean;
+  isLikelyMatchingEducationRequirements: boolean;
 }
 
 export class CompareLicenseEducationAgent extends PolicySynthAgent {
@@ -45,7 +45,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
   private sheet2Name: string;
   private outputSheetName: string;
 
-  private readonly maxRows = 1000;
+  private readonly maxRows = 4500;
   private readonly chunkSize = 200;
 
   private static readonly COMPARE_LICENSE_EDUCATION_CLASS_BASE_ID =
@@ -118,7 +118,8 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         description:
           "Compares profession degree requirements with job description education requirements across two sheets",
         queueName: "COMPARE_LICENSE_EDUCATION",
-        imageUrl: "https://aoi-storage-production.citizens.is/ypGenAi/community/1/71844202-56ce-4139-88e2-1cfcab0dd59f.png",
+        imageUrl:
+          "https://aoi-storage-production.citizens.is/ypGenAi/community/1/71844202-56ce-4139-88e2-1cfcab0dd59f.png",
         iconName: "compare_license_education",
         capabilities: ["analysis", "text processing"],
         requestedAiModelSizes: [
@@ -195,9 +196,10 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     const result: JobRow[] = [];
     for (const r of rows.slice(1)) {
       const needsCollegeDegree = (r[19] ?? "").toString().toLowerCase();
-      if (needsCollegeDegree !== "true" && needsCollegeDegree !== "yes" && needsCollegeDegree !== "1") continue;
+      const error = (r[13] ?? "").toString().toLowerCase();
+      if (error) continue;
       const name = (r[11] ?? "").toString().trim();
-      const educationRequirement = (r[22] ?? "").toString().trim();
+      const educationRequirement = (r[20] ?? "").toString().trim();
       result.push({ name, educationRequirement });
     }
     return result;
@@ -228,16 +230,19 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         .join("\n");
 
       const prompt =
-        `You will be given a profession and its required degree from Sheet One.\n` +
-        `You also have a list of job descriptions from Sheet Two that require a college degree with their education requirements.\n` +
-        `Find the best matching job description from Sheet Two.\n` +
-        `Return JSON with keys: profession, matchedJobName, sheet2EducationRequirement, likelyMatchingEducationRequirements, explanation.`;
+        `You will be given a profession and its required degree from the WVU Sheet.\n` +
+        `You also have a list of job descriptions from Skills First Sheet that require a college degree with their education requirements.\n` +
+        `Find the best matching job description from Skills First Sheet by the name of the job.\n` +
+        `If none of the job descriptions match, then return none in the fields but with a short explanation.\n` +
+        `Return JSON with keys: profession, matchedJobName, skillsFirstEducationRequirement, isLikelyMatchingEducationRequirements, explanation.`;
+
+      const userMessage = `<SkillsFirstSheetRows>\n${context}\n</SkillsFirstSheetRows>\n\n<WvuSheetProfessionAndDegreeRequirement>${row.profession} - ${row.degree}</WvuSheetProfessionAndDegreeRequirement>\n`;
+
+      //console.log(userMessage);
 
       const messages = [
-        this.createSystemMessage(
-          `${prompt}\n\n<SheetOneProfession>${row.profession} - ${row.degree}</SheetOneProfession>\n` +
-            `<SheetTwoRows>\n${context}\n</SheetTwoRows>`
-        ),
+        this.createSystemMessage(`${prompt}`),
+        this.createHumanMessage(userMessage),
       ];
 
       try {
@@ -248,7 +253,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         )) as LicenseComparisonResult;
         (this.memory.results ?? []).push({
           ...result,
-          sheet1EducationRequirement: row.degree,
+          wvuSheetEducationRequirement: row.degree,
         });
       } catch (err: any) {
         const msg = `LLM error for profession ${row.profession}: ${err.message}`;
@@ -268,9 +273,9 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     const rows: string[][] = [
       [
         "profession",
-        "sheet1EducationRequirement",
-        "sheet2EducationRequirement",
-        "likelyMatchingEducationRequirements",
+        "wvuSheetEducationRequirement",
+        "skillsFirstEducationRequirement",
+        "isLikelyMatchingEducationRequirements",
         "matchedJobName",
         "explanation",
       ],
@@ -279,9 +284,9 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     for (const r of this.memory.results ?? []) {
       rows.push([
         r.profession,
-        r.sheet1EducationRequirement,
-        r.sheet2EducationRequirement ?? "",
-        r.likelyMatchingEducationRequirements ? "true" : "false",
+        r.wvuSheetEducationRequirement,
+        r.skillsFirstEducationRequirement ?? "",
+        r.isLikelyMatchingEducationRequirements ? "true" : "false",
         r.matchedJobName ?? "",
         r.explanation,
       ]);
