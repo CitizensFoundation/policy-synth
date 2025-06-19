@@ -27,6 +27,14 @@ export class PsInputTextArea extends LitElement {
       line-height: 1.25;
     }
 
+    @media (max-width: 600px) {
+      .textarea {
+        width: 100%;
+        max-width: 100%;
+        margin-left: 0;
+      }
+    }
+
     .textarea::placeholder {
       color: #111;
     }
