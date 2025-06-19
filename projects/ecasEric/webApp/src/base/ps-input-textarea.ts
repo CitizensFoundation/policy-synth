@@ -29,8 +29,7 @@ export class PsInputTextArea extends LitElement {
 
     @media (max-width: 600px) {
       .textarea {
-        width: 100%;
-        max-width: 100%;
+        max-width: 80vw;
         margin-left: 0;
       }
     }

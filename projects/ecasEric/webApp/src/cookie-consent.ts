@@ -13,10 +13,11 @@ export class CookieConsent extends LitElement {
     super.connectedCallback();
     const consent = localStorage.getItem('ga_consent');
     this.visible = consent === null;
+    this.hidden = !this.visible;
   }
 
   private updateAnalytics(granted: boolean) {
-    const gaId = 'G-XXXXXXXXXX';
+    const gaId = 'G-Q262VRGMB3';
     (window as any)['ga-disable-' + gaId] = !granted;
     if (typeof (window as any).gtag === 'function') {
       (window as any).gtag('consent', 'update', {
@@ -29,12 +30,14 @@ export class CookieConsent extends LitElement {
     localStorage.setItem('ga_consent', 'granted');
     this.updateAnalytics(true);
     this.visible = false;
+    this.hidden = true;
   }
 
   private deny() {
     localStorage.setItem('ga_consent', 'denied');
     this.updateAnalytics(false);
     this.visible = false;
+    this.hidden = true;
   }
 
   static styles = css`
@@ -80,7 +83,7 @@ export class CookieConsent extends LitElement {
     if (!this.visible) {
       return nothing;
     }
-    return html`
+    return html`<div class="cookie-consent"></div>
       <span class="text"
         >To provide the best experiences, we use technologies like cookies to
         store and/or access device information. Giving your consent allows us to

@@ -164,6 +164,12 @@ export class PsInputDialog extends YpBaseElement {
           margin-left: 8px;
         }
 
+        @media (max-width: 600px) {
+          .animatedLogo {
+            margin-right: 16px;
+          }
+        }
+
         :host {
           margin-bottom: 16px;
         }

@@ -443,7 +443,6 @@ export class PsChatAssistant extends PsStreamingLlmBase {
   }
 
   handleSendMessage(event: CustomEvent) {
-    debugger;
     this.sendChatMessage();
   }
 
@@ -570,6 +569,12 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           margin-bottom: 24px;
         }
 
+        @media (max-width: 600px) {
+          .tagLine {
+            margin-left: 24px;
+          }
+        }
+
         .bigEricWelcome {
           font-size: 72px;
           font-weight: bold;
@@ -613,6 +618,9 @@ export class PsChatAssistant extends PsStreamingLlmBase {
             font-size: 24px;
             margin: 16px;
             margin-left: 0;
+            text-align: right;
+            width: 100%;
+            margin-top: 48px;
           }
         }
 
