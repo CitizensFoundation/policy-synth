@@ -443,12 +443,8 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     this.chatLog = [...this.chatLog, data];
   }
 
-  followUpQuestion(event: CustomEvent) {
-    this.chatInputField!.value = event.detail;
-    this.sendChatMessage();
-  }
-
   handleSendMessage(_event: CustomEvent) {
+    debugger;
     this.sendChatMessage();
   }
 
@@ -499,12 +495,6 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           id="chatInput"
           rows="5"
           @send-message="${this.handleSendMessage}"
-          @keyup="${(e: KeyboardEvent) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              this.sendChatMessage();
-            }
-          }}"
           @focus="${() => (this.inputIsFocused = true)}"
           @blur="${() => (this.inputIsFocused = true)}"
           .label="${this.textInputLabel}"
@@ -546,7 +536,6 @@ export class PsChatAssistant extends PsStreamingLlmBase {
                 <ps-ai-chat-element
                   ?thinking="${chatElement.type === "thinking" ||
                   chatElement.type === "noStreaming"}"
-                  @followup-question="${this.followUpQuestion}"
                   @ps-open-source-dialog="${this.openSourceDialog}"
                   .clusterId="${this.clusterId}"
                   class="chatElement ${chatElement.sender}-chat-element"

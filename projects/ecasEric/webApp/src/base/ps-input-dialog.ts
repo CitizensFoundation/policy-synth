@@ -138,6 +138,7 @@ export class PsInputDialog extends YpBaseElement {
     this._chatTextarea?.clear();
 
     if (messageText.length > 0) {
+      debugger;
       this.fire("send-message", { message: messageText });
     }
   }
