@@ -184,6 +184,12 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
           max-width: 1000px;
         }
 
+        @media (max-width: 600px) {
+          eric-chat-bot {
+            max-width: 100%;
+          }
+        }
+
         .ecasTopLeft {
           font-size: 16px;
           color: #1d42d9;

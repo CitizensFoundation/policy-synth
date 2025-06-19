@@ -175,6 +175,12 @@ export class PsInputDialog extends YpBaseElement {
           transition: opacity 0.3s;
         }
 
+        @media (max-width: 600px) {
+          .chatInput {
+            width: 100%;
+          }
+        }
+
         .chatInput.is-disabled {
           opacity: 0.8;
         }

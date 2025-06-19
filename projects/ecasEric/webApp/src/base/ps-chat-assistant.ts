@@ -701,6 +701,14 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           background-color: #fff3f2;
         }
 
+        @media (max-width: 600px) {
+          md-outlined-text-field {
+            width: 100%;
+            margin-left: 0;
+            margin-right: 0;
+          }
+        }
+
         @media (max-width: 960px) {
           .restartButton {
             margin-left: 8px;
