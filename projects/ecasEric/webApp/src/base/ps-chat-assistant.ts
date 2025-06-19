@@ -222,7 +222,6 @@ export class PsChatAssistant extends PsStreamingLlmBase {
    * from PsStreamingLlmBase to ensure consistent handling & reconnection.
    */
   async sendChatMessage() {
-    debugger;
     const message = this.chatInputField?.value?.trim() || "";
     if (!message) return;
 
@@ -443,7 +442,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     this.chatLog = [...this.chatLog, data];
   }
 
-  handleSendMessage(_event: CustomEvent) {
+  handleSendMessage(event: CustomEvent) {
     debugger;
     this.sendChatMessage();
   }
@@ -507,7 +506,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     return html`
       <div class="layout vertical center-center">
         <div class="layout horizontal welcomeInfo">
-          <div class="bigEricWelcome">Hello I’m Eric, your assistant.</div>
+          <div class="bigEricWelcome">Hello I'm Eric, your assistant.</div>
           <div class="flex"></div>
           <div class="bottomRightInfo">
             Supporting fair & informed telework across the EU

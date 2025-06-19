@@ -128,7 +128,7 @@ export class PsInputDialog extends YpBaseElement {
     return messageText.length > 1;
   }
 
-  private _onSend() {
+  private async _onSend() {
     const messageText = this._chatTextarea?.value.trim() || "";
 
     this.value = messageText;
@@ -138,8 +138,14 @@ export class PsInputDialog extends YpBaseElement {
     this._chatTextarea?.clear();
 
     if (messageText.length > 0) {
-      debugger;
-      this.fire("send-message", { message: messageText });
+      this.dispatchEvent(
+        new CustomEvent("send-message", {
+          detail: { message: messageText },
+          bubbles: true,
+          composed: true,
+        })
+      );
+      // this.fireGlobal("send-message", { message: messageText });
     }
   }
 
