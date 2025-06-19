@@ -448,6 +448,10 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     this.sendChatMessage();
   }
 
+  handleSendMessage(_event: CustomEvent) {
+    this.sendChatMessage();
+  }
+
   reset() {
     this.chatLog = [];
     // Let the base class handle closing & resetting
@@ -494,6 +498,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           hasTrailingIcon
           id="chatInput"
           rows="5"
+          @send-message="${this.handleSendMessage}"
           @keyup="${(e: KeyboardEvent) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();

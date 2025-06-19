@@ -136,6 +136,10 @@ export class PsInputDialog extends YpBaseElement {
     this.isDisabled = true;
 
     this._chatTextarea?.clear();
+
+    if (messageText.length > 0) {
+      this.fire("send-message", { message: messageText });
+    }
   }
 
   private _onStopWorkflow() {
