@@ -25,6 +25,23 @@
 
     <link rel="icon" type="image/png" sizes="256x256" href="https://ecas.org/favicon-32x32.png">
 
+    <!-- Google Analytics -->
+    <script async="" src="https://www.googletagmanager.com/gtag/js?id=G-Q262VRGMB3"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      if (localStorage.getItem('ga_consent') === 'granted') {
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+      } else {
+        window['ga-disable-G-Q262VRGMB3'] = true;
+        gtag('consent', 'update', { analytics_storage: 'denied' });
+      }
+      gtag('config', 'G-Q262VRGMB3');
+    </script>
+
     <base href="/">
 
     <style>
@@ -46,6 +63,10 @@
         --md-sys-typescale-headline-font: "Bricolage Grotesque", sans-serif;
         --md-sys-typescale-title-font: "Bricolage Grotesque", sans-serif;
       }
+
+      [hidden] {
+        display: none !important;
+      }
     </style>
 
     <title>ECAS Chatbot</title>
@@ -53,8 +74,10 @@
 
   <body>
     <eric-chatbot-app></eric-chatbot-app>
+    <cookie-consent></cookie-consent>
+    
     
     
   
 
-<script type="module" src="/GxXZSHT9.js"></script><script type="module" src="/BfsK2cSP.js"></script></body></html>
+<script type="module" src="/BlUw6KCA.js"></script><script type="module" src="/ZypqttUU.js"></script><script type="module" src="/BfsK2cSP.js"></script></body></html>

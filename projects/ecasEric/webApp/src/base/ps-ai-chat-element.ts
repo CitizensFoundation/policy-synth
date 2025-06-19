@@ -125,7 +125,10 @@ export class PsAiChatElement extends YpBaseElement {
   }
 
   renderCGImage() {
-    return html` <md-icon class="robotIcon">smart_toy</md-icon> `;
+    return html`<img
+    class="robotIcon"
+    src="https://s3.eu-west-1.amazonaws.com/yp-eu-assets.citizens.is/ecas/logoMark+1.svg"
+  />`;
   }
 
   renderRoboImage() {
@@ -324,7 +327,8 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .robotIcon {
-          --md-icon-size: 34px;
+          width: 34px;
+          height: 34px;
         }
 
         .chatText {
