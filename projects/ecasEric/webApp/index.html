@@ -59,6 +59,26 @@
       href="https://ecas.org/favicon-32x32.png"
     />
 
+    <!-- Google Analytics -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"
+    ></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() {
+        dataLayer.push(arguments);
+      }
+      gtag('js', new Date());
+      if (localStorage.getItem('ga_consent') === 'granted') {
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+      } else {
+        window['ga-disable-G-XXXXXXXXXX'] = true;
+        gtag('consent', 'update', { analytics_storage: 'denied' });
+      }
+      gtag('config', 'G-XXXXXXXXXX');
+    </script>
+
     <base href="/" />
 
     <style>
@@ -87,7 +107,9 @@
 
   <body>
     <eric-chatbot-app></eric-chatbot-app>
+    <cookie-consent></cookie-consent>
     <script type="module" src="./ts-out/src/eric-app.js"></script>
+    <script type="module" src="./ts-out/src/cookie-consent.js"></script>
     <script type="module">
       if (!window.ElementInternals) {
         import("./node_modules/element-internals-polyfill/dist/index.js");
