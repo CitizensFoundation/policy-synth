@@ -195,6 +195,12 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
           color: #1d42d9;
         }
 
+        @media (max-width: 600px) {
+          .ecasTopLeft {
+            display: none !important;
+          }
+        }
+
         .themeToggle {
           margin-bottom: 12px;
         }

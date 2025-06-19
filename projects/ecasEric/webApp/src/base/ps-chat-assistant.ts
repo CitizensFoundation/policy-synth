@@ -484,7 +484,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
 
   renderChatInput() {
     return html`
-      <div class="layout vertical">
+      <div class="layout vertical chatInputContainer">
         <div class="layout horizontal tagLine" ?hidden="${this.chatLog.length > 0}">
           Let me help you navigate EU telework laws.
         </div>
@@ -511,7 +511,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
   renderWelcome() {
     return html`
       <div class="layout vertical center-center">
-        <div class="layout horizontal  welcomeInfo">
+        <div class="layout horizontal welcomeInfo">
           <div class="bigEricWelcome">Hello I’m Eric, your assistant.</div>
           <div class="flex"></div>
           <div class="bottomRightInfo">
@@ -585,6 +585,25 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           margin-right: 130px;
         }
 
+        @media (max-width: 600px) {
+          .bigEricWelcome {
+            font-size: 32px;
+            width: 300px;
+            margin-right: 0;
+          }
+
+          .chatInputContainer {
+            width: 100%;
+            align-self: center;
+            margin-right: 32px;
+            margin-left: 8px;
+          }
+
+          .welcomeInfo {
+            flex-wrap: wrap;
+          }
+        }
+
         .bottomRightInfo {
           color: #1d42d9;
           font-size: 24px;
@@ -594,6 +613,14 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           font-weight: 500;
           margin-left: 130px;
           margin-bottom: 16px;
+        }
+
+        @media (max-width: 600px) {
+          .bottomRightInfo {
+            font-size: 24px;
+            margin: 16px;
+            margin-left: 0;
+          }
         }
 
         .infoMessage {
@@ -644,6 +671,10 @@ export class PsChatAssistant extends PsStreamingLlmBase {
         @media (max-width: 600px) {
           .you-chat-element {
             margin-right: 0;
+          }
+
+          .chat-input {
+            padding: 0;
           }
         }
 
