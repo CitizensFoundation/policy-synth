@@ -42,6 +42,7 @@
   ],
   "type": "module",
   "dependencies": {
+    "@airbrake/node": "^2.1.9",
     "@anthropic-ai/sdk": "^0.50.3",
     "@azure/identity": "^4.9.1",
     "@google-cloud/vertexai": "^1.10.0",

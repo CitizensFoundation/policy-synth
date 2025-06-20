@@ -1,23 +1,41 @@
 import winston from "winston";
 import { jsonrepair } from "jsonrepair";
 import { encoding_for_model } from "tiktoken";
+import { AirbrakeTransport } from "./winstonAirbrake";
 
 export class PolicySynthAgentBase {
   logger: winston.Logger;
   timeStart: number = Date.now();
 
   constructor() {
+    const transports: winston.transport[] = [
+      new winston.transports.Console({
+        format: winston.format.combine(
+          winston.format.colorize(),
+          winston.format.simple()
+        ),
+      }),
+    ];
+
+    if (process.env.AIRBRAKE_PROJECT_ID && process.env.AIRBRAKE_PROJECT_KEY) {
+      transports.push(
+        new AirbrakeTransport({
+          level: "error",
+          projectId: +process.env.AIRBRAKE_PROJECT_ID,
+          projectKey: process.env.AIRBRAKE_PROJECT_KEY,
+          environment: process.env.NODE_ENV,
+        })
+      );
+    }
+
     this.logger = winston.createLogger({
-      level: process.env.WORKER_LOG_LEVEL || "debug",
-      format: winston.format.json(),
-      transports: [
-        new winston.transports.Console({
-          format: winston.format.combine(
-            winston.format.colorize(),
-            winston.format.simple()
-          ),
-        }),
-      ],
+      level: process.env.WINSTON_LOG_LEVEL || "debug",
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.errors({ stack: true }),
+        winston.format.json()
+      ),
+      transports: transports,
     });
   }
 
@@ -53,30 +71,36 @@ export class PolicySynthAgentBase {
 
     if (this.getJsonBlock(response)) {
       response = this.getJsonBlock(response) as string;
-      this.logger.debug('Extracted JSON from code block');
+      this.logger.debug("Extracted JSON from code block");
     } else {
       response = response.replace("```json", "").trim();
       if (response.endsWith("```")) {
         response = response.substring(0, response.length - 3);
       }
-      this.logger.debug('Cleaned JSON string');
+      this.logger.debug("Cleaned JSON string");
     }
 
     try {
       const parsed = JSON.parse(response);
-      this.logger.info('Successfully parsed JSON');
+      this.logger.info("Successfully parsed JSON");
       return parsed as T;
     } catch (error) {
       this.logger.warn(`Error parsing JSON: ${(error as Error).message}`);
       try {
-        this.logger.info('Attempting to repair JSON');
+        this.logger.info("Attempting to repair JSON");
         const repairedJson = this.repairJson(response);
         const parsed = JSON.parse(repairedJson);
-        this.logger.info('Successfully parsed repaired JSON');
+        this.logger.info("Successfully parsed repaired JSON");
         return parsed as T;
       } catch (repairError) {
-        this.logger.error(`Failed to repair JSON: ${(repairError as Error).message}`);
-        throw new Error(`Unable to parse JSON: ${(repairError as Error).message}\nOriginal JSON: ${response}`);
+        this.logger.error(
+          `Failed to repair JSON: ${(repairError as Error).message}`
+        );
+        throw new Error(
+          `Unable to parse JSON: ${
+            (repairError as Error).message
+          }\nOriginal JSON: ${response}`
+        );
       }
     }
   }
