@@ -4,8 +4,9 @@ import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
-import { Transaction } from "sequelize";
+import { Transaction, Op } from "sequelize";
 import { sequelize } from "../dbModels/index.js";
+import { PsAiModel } from "../dbModels/aiModel.js";
 import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
@@ -238,11 +239,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
    * If provider is not specified, we'll reuse the provider from the fallback model
    * or environment. This returns `undefined` if no ephemeral override was requested.
    */
-  private createEphemeralModel(
+  private async createEphemeralModel(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
     options: PsCallModelOptions
-  ): BaseChatModel | undefined {
+  ): Promise<BaseChatModel | undefined> {
     // Determine if user actually wants ephemeral overrides
     const isOverrideRequested =
       options.modelProvider != null && options.modelName != null;
@@ -283,26 +284,55 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     // We need a provider, name, etc. If user didn't supply `modelProvider`, reuse fallback's
-    const fallbackProvider = fallbackModel.provider || ""; // Add a `provider` getter to your BaseChatModel or store it in your config
+    const fallbackProvider = (fallbackModel as any).provider || "";
     const provider = options.modelProvider ?? fallbackProvider;
 
     // Figure out the best API key for that provider:
     const apiKey = this.getApiKeyForProvider(provider);
 
+    // Try to load model configuration from database for cost reporting
+    let dbModel: PsAiModel | null = null;
+    try {
+      dbModel = await PsAiModel.findOne({
+        where: {
+          [Op.and]: [
+            sequelize.literal(`configuration->>'provider' = '${provider}'`),
+            sequelize.literal(`configuration->>'model' = '${options.modelName}'`),
+          ],
+        },
+      });
+      if (dbModel) {
+        this.logger.info(
+          `Loaded ephemeral model from DB: ${provider} ${options.modelName}`
+        );
+      } else {
+        this.logger.warn(
+          `Ephemeral model ${provider} ${options.modelName} not found in DB`
+        );
+      }
+    } catch (err) {
+      this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
+    }
+
+    const dbConfig = dbModel?.configuration as PsAiModelConfiguration | undefined;
+
     // Merge ephemeral config
     const ephemeralConfig: PsAiModelConfig = {
       apiKey,
-      modelName: options.modelName ?? fallbackModel.modelName,
+      modelName: options.modelName ?? (dbConfig?.model ?? fallbackModel.modelName),
       provider: provider,
-      maxTokensOut: options.modelMaxTokens ?? this.maxModelTokensOut,
-      temperature: options.modelTemperature ?? this.modelTemperature,
+      maxTokensOut:
+        options.modelMaxTokens ?? dbConfig?.maxTokensOut ?? this.maxModelTokensOut,
+      temperature:
+        options.modelTemperature ?? dbConfig?.defaultTemperature ?? this.modelTemperature,
       reasoningEffort:
         options.modelReasoningEffort ?? (this.reasoningEffort as any),
       maxThinkingTokens:
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
-      modelType,
-      modelSize,
-      prices: {} as any, // TODO: Get fallback model into database
+      modelType: dbConfig?.type ?? modelType,
+      modelSize: dbConfig?.modelSize ?? modelSize,
+      timeoutMs: dbConfig?.timeoutMs ?? this.modelCallTimeoutMs,
+      prices: dbConfig?.prices ?? (fallbackModel as any).config?.prices ?? ({} as any),
     };
 
     // Construct ephemeral model
@@ -339,6 +369,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
         return undefined;
     }
+
+    if (dbModel) {
+      (ephemeralModel as any).dbModelId = dbModel.id;
+    }
+
+    (ephemeralModel as any).provider = provider;
 
     return ephemeralModel;
   }
@@ -402,7 +438,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     options: PsCallModelOptions
   ) {
     // 1) Check for ephemeral override
-    const ephemeralModel = this.createEphemeralModel(
+    const ephemeralModel = await this.createEphemeralModel(
       modelType,
       modelSize,
       options
@@ -411,8 +447,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       // If ephemeral model is requested, just use it
       return await this.runTextModelCall(
         ephemeralModel,
-        modelType,
-        modelSize,
+        (ephemeralModel as any).config?.modelType ?? modelType,
+        (ephemeralModel as any).config?.modelSize ?? modelSize,
         messages,
         options
       );
@@ -613,7 +649,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             modelSize,
             tokensIn,
             cachedInTokens ?? 0,
-            tokensOut
+            tokensOut,
+            (model as any).dbModelId
           );
 
           if (options.parseJson) {
@@ -688,7 +725,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             usedFallback = true;
 
             // Create ephemeral fallback with user-supplied fallback provider/name:
-            const fallbackEphemeral = this.createEphemeralModel(
+            const fallbackEphemeral = await this.createEphemeralModel(
               options.fallbackModelType ?? modelType,
               modelSize,
               {
@@ -726,12 +763,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 const { tokensIn, tokensOut, cachedInTokens, content } =
                   fallbackResults;
                 await this.saveTokenUsage(
-                  model.config.prices,
-                  modelType,
-                  modelSize,
+                  fallbackEphemeral.config.prices,
+                  (fallbackEphemeral as any).config?.modelType ?? modelType,
+                  (fallbackEphemeral as any).config?.modelSize ?? modelSize,
                   tokensIn,
                   cachedInTokens ?? 0,
-                  tokensOut
+                  tokensOut,
+                  (fallbackEphemeral as any).dbModelId
                 );
                 return options.parseJson
                   ? this.parseJsonResponse(content.trim())
@@ -837,7 +875,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     modelSize: PsAiModelSize,
     tokensIn: number,
     cachedInTokens: number,
-    tokensOut: number
+    tokensOut: number,
+    modelIdOverride?: number
   ) {
     // Check for usage tracking disable
     const disableUsageTracking =
@@ -854,8 +893,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const model = this.models.get(modelKey);
     const modelId = this.modelIds.get(modelKey);
 
-    // If ephemeral or missing, fallback to -1 or bail
-    const finalModelId = modelId ?? -1; // -1 for ephemeral or not found
+    // If modelIdOverride is provided use it, otherwise fall back to map
+    const finalModelId = modelIdOverride ?? modelId ?? -1; // -1 for ephemeral or not found
 
     let longContextTokenIn = 0;
     let longContextTokenInCached = 0;
