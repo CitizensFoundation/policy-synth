@@ -134,8 +134,8 @@ Your new improved compressed text:
     while (!validated && retryCount < this.maxCompressionRetries) {
       try {
         if (currentValidationResults && lastCompressedData) {
-          console.log(`\n\nRetrying compression ${retryCount}\n\n`);
-          console.log(
+          this.logger.info(`\n\nRetrying compression ${retryCount}\n\n`);
+          this.logger.info(
             this.compressionRetryUserMessage(
               uncompressedData,
               lastCompressedData,
@@ -184,7 +184,7 @@ Your new improved compressed text:
 
         lastCompressedData = compressedText;
 
-        console.log(`\nCompressed text:\n${lastCompressedData}\n\n`);
+        this.logger.info(`\nCompressed text:\n${lastCompressedData}\n\n`);
 
         validated = validationResults.valid;
 
@@ -192,13 +192,13 @@ Your new improved compressed text:
 
         if (!validated) {
           currentValidationResults = validationResults.validationTextResults;
-          console.warn(
+          this.logger.warn(
             `\nCompression Validation failed ${retryCount}:\n\n${currentValidationResults}\n\n`
           );
         }
       } catch (error) {
         retryCount++;
-        console.warn(`Compression failed ${retryCount}: ${error}`);
+        this.logger.warn(`Compression failed ${retryCount}: ${error}`);
       }
     }
 
@@ -267,7 +267,7 @@ Your new improved compressed text:
         !completionValidation.includes(this.completionValidationSuccessMessage)
       ) {
         previousValidationResults += `${completionValidation}\n`;
-        console.warn(
+        this.logger.warn(
           `Chunk summary completionValidation failed: ${completionValidation}`
         );
       }*/
@@ -277,7 +277,7 @@ Your new improved compressed text:
         )
       ) {
         currentValidationResults += `${correctnessValidation}\n`;
-        console.warn(
+        this.logger.warn(
           `Chunk summary correctnessValidation failed: ${correctnessValidation}`
         );
       }
@@ -287,7 +287,7 @@ Your new improved compressed text:
         )
       ) {
         currentValidationResults += `${hallucinationValidation}\n`;
-        console.warn(
+        this.logger.warn(
           `Chunk summary hallucinationValidation failed: ${hallucinationValidation}`
         );
       }

@@ -1,6 +1,7 @@
 import { DataTypes, Model, Optional, Transaction } from "sequelize";
 import { sequelize } from "./sequelize.js";
 import * as crypto from "crypto";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 interface PsPrivateAccessStoreConfiguration {
   maxBudget: {
@@ -408,7 +409,7 @@ PsPrivateAccessStore.init(
 const PsPrivateAccessStoreProxy = new Proxy(PsPrivateAccessStore, {
   get(target: typeof PsPrivateAccessStore, prop: string | symbol) {
     if (["findAll", "findOne", "findByPk"].includes(prop as string)) {
-      console.warn(
+      PolicySynthAgentBase.logger.warn(
         `Warning: Attempted to use unsecured method ${String(
           prop
         )}. Use incrementUsageAndGetApiKey instead.`

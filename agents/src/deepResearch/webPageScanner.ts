@@ -56,7 +56,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
       entityIndex
     );
 
-    console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
+    this.logger.debug(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
 
     const analysis = await this.callLLM(
       "web-get-pages",
@@ -64,7 +64,7 @@ export class WebPageScanner extends BaseGetWebPagesAgent {
       true
     ) as any; //TODO: Use <T>
 
-    console.log(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
+    this.logger.debug(`getAIAnalysis analysis: ${JSON.stringify(analysis, null, 2)}`);
     return analysis;
   }
 

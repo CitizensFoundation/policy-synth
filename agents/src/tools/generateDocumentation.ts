@@ -1,4 +1,5 @@
 import * as glob from 'glob';
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 const renderSystemPrompt = (path: string, allTypeDefsData: string) => `
 You are a detail oriented document generator that generates API documentation in the standard Markdown API documentation format.
@@ -128,7 +129,7 @@ function generateMarkdownFromTree(tree: any, depth = 0, basePath = 'src/') {
 
 function generateDocsReadme() {
   const tree = buildDirectoryTree(docsDir);
-  console.log(JSON.stringify(tree, null, 2));
+  PolicySynthAgentBase.logger.info(JSON.stringify(tree, null, 2));
   const markdown = generateMarkdownFromTree(tree);
   fs.writeFileSync(path.join(docsDir, 'README.md'), `${indexHeader}${markdown}`);
 }
@@ -164,7 +165,7 @@ function getAllTypeDefContents(rootDir: string): string {
 
 async function generateDocumentation(fileList: string[]): Promise<void> {
   const allTypedefContents = getAllTypeDefContents(rootDir);
-  console.log(`AllTypeDefs: ${allTypedefContents}`);
+  PolicySynthAgentBase.logger.info(`AllTypeDefs: ${allTypedefContents}`);
   for (const file of fileList) {
     const content = fs.readFileSync(file, 'utf8');
     const checksum = generateChecksum(content);
@@ -178,11 +179,11 @@ async function generateDocumentation(fileList: string[]): Promise<void> {
     let relativePath = file.replace(rootDir, '').replace("/src/","").replace(".ts",".js");
     relativePath = `@policysynth/agents/${relativePath}`;
 
-    console.log(`REL: ${relativePath}`);
+    PolicySynthAgentBase.logger.info(`REL: ${relativePath}`);
 
     if (checksum !== existingChecksum) {
       try {
-        console.log(`${file}:`);
+        PolicySynthAgentBase.logger.info(`${file}:`);
         const completion = await openaiClient.chat.completions.create({
           model: "gpt-4.1",
           temperature: 0.0,
@@ -192,7 +193,7 @@ async function generateDocumentation(fileList: string[]): Promise<void> {
 
         let docContent = completion.choices[0].message.content;
 
-        console.log(docContent);
+        PolicySynthAgentBase.logger.info(docContent);
         docContent = docContent!.replace(/```markdown\s+/g, '');
 
         const docFilePath = file.replace(rootDir, docsDir).replace('.ts', '.md');
@@ -204,13 +205,13 @@ async function generateDocumentation(fileList: string[]): Promise<void> {
 
         fs.writeFileSync(docFilePath, docContent);
         fs.writeFileSync(checksumFile, checksum); // Save the new checksum
-        console.log(`Documentation generated for ${file}`);
+        PolicySynthAgentBase.logger.info(`Documentation generated for ${file}`);
       } catch (error) {
-        console.error(`Error generating documentation for ${file}:`, error);
+        PolicySynthAgentBase.logger.error(`Error generating documentation for ${file}:`, error);
         process.exit(1);
       }
     } else {
-      console.log(`Skipping documentation generation for ${file}, no changes detected.`);
+      PolicySynthAgentBase.logger.info(`Skipping documentation generation for ${file}, no changes detected.`);
     }
   }
 }
@@ -222,4 +223,4 @@ async function main(): Promise<void> {
   generateDocsReadme();
 }
 
-main().then(() => console.log('Documentation generation complete.'));
+main().then(() => PolicySynthAgentBase.logger.info('Documentation generation complete.'));

@@ -42,7 +42,7 @@ export class PolicySynthAgentBase {
     });
   }
 
-  protected static get logger(): winston.Logger {
+  static get logger(): winston.Logger {
     return PolicySynthAgentBase._rootLogger.child({ component: this.name });
   }
 

@@ -4,14 +4,15 @@ import safe from "colors";
 import path, { dirname, join } from "path";
 import _ from "lodash";
 import { fileURLToPath } from "url";
+import { PolicySynthAgentBase } from "../base/agentBase";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const logQuery = (query: any, options: any) => {
-  console.debug(safe.bgGreen(new Date().toLocaleString()));
-  console.debug(safe.bgYellow(options.bind));
-  console.debug(safe.bgBlue(query));
+  PolicySynthAgentBase.logger.debug(safe.bgGreen(new Date().toLocaleString()));
+  PolicySynthAgentBase.logger.debug(safe.bgYellow(options.bind));
+  PolicySynthAgentBase.logger.debug(safe.bgBlue(query));
   return options;
 };
 
@@ -65,20 +66,20 @@ if (process.env.NODE_ENV === "production") {
       }
     );
   } else {
-    console.error("NO DATABASE FOUND");
+    PolicySynthAgentBase.logger.error("NO DATABASE FOUND");
   }
 }
 
 const connectToDatabase = async () => {
   try {
     await sequelize.authenticate();
-    console.log(
+    PolicySynthAgentBase.logger.debug(
       "Connection to the database has been established successfully."
     );
     //await sequelize.sync(); // Sync all models
-    console.log("All models were synchronized successfully.");
+    PolicySynthAgentBase.logger.debug("All models were synchronized successfully.");
   } catch (error) {
-    console.error("Unable to connect to the database:", error);
+    PolicySynthAgentBase.logger.error("Unable to connect to the database:", error);
     process.exit(1); // Exit the process with failure
   }
 };

@@ -1,4 +1,5 @@
 import { initializeModels, models } from "../dbModels/index.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 import { User } from "../dbModels/ypUser.js";
 import { Group } from "../dbModels/ypGroup.js";

@@ -136,7 +136,7 @@ YOUR EVALUATION: `);
     review: string | undefined,
     lastJson: LlmDocumentChunksStrategy[] | undefined
   ) {
-    console.log("Generating chunking strategy...");
+    this.logger.info("Generating chunking strategy...");
     let lastJsonText = "";
     try {
       lastJsonText = JSON.stringify(lastJson, null, 2);
@@ -154,17 +154,17 @@ YOUR EVALUATION: `);
       false
     )) as string;
 
-    console.log(`Raw chunking strategy: ${chunkingStrategy}`);
+    this.logger.info(`Raw chunking strategy: ${chunkingStrategy}`);
 
     const lastChunkingStrategyJson = this.parseJsonFromLlmResponse(
       chunkingStrategy
     ) as LlmDocumentChunksStrategy[];
 
-    console.log(
+    this.logger.info(
       `JSON strategy: ${JSON.stringify(lastChunkingStrategyJson, null, 2)}`
     );
 
-    console.log("Reviewing chunking strategy...");
+    this.logger.info("Reviewing chunking strategy...");
 
     const chunkingStrategyReview = (await this.callLLM(
       "ingestion-agent",
@@ -175,7 +175,7 @@ YOUR EVALUATION: `);
       false
     )) as string;
 
-    console.log(`Chunking strategy: ${chunkingStrategyReview}`);
+    this.logger.info(`Chunking strategy: ${chunkingStrategyReview}`);
 
     return {
       chunkingStrategy,
@@ -206,7 +206,7 @@ YOUR EVALUATION: `);
     isSubChunk: boolean = false,
     totalLinesInChunk?: number
   ) {
-    console.log(
+    this.logger.info(
       `Splitting document into chunks...(isSubChunk: ${isSubChunk}) (totalLinesInChunk: ${totalLinesInChunk})`
     );
     if (!isSubChunk) {
@@ -219,14 +219,14 @@ YOUR EVALUATION: `);
     let chunkingStrategyReview: string | undefined;
 
     while (!validated && retryCount < this.maxSplitRetries) {
-      console.log(`Processing chunk...`);
+      this.logger.info(`Processing chunk...`);
       let dataWithLineNumber = data
         .split("\n")
         .map((line, index) => `${index + 1}: ${line}`)
         .join("\n");
 
-      if (isSubChunk) console.log(`Sub Chunk Data with line numbers:\n`);
-      else console.log(`Chunk Data with line numbers:\n`);
+      if (isSubChunk) this.logger.info(`Sub Chunk Data with line numbers:\n`);
+      else this.logger.info(`Chunk Data with line numbers:\n`);
 
       this.logShortLines(dataWithLineNumber);
 
@@ -239,7 +239,7 @@ YOUR EVALUATION: `);
         chunkingStrategyReview = llmResults.chunkingStrategyReview;
         lastChunkingStrategyJson = llmResults.lastChunkingStrategyJson;
 
-        console.log(
+        this.logger.info(
           `Strategy validatation results: ${
             chunkingStrategyReview.trim().toUpperCase().indexOf("PASSES") > -1
           }`
@@ -252,9 +252,9 @@ YOUR EVALUATION: `);
           llmResults.chunkingStrategy.length
         ) {
           validated = true;
-          console.log(`Chunking strategy validated.`);
+          this.logger.info(`Chunking strategy validated.`);
           for (let i = 0; i < lastChunkingStrategyJson.length; i++) {
-            console.log(
+            this.logger.info(
               `Processing chunk ${i + 1} of ${lastChunkingStrategyJson.length}`
             );
             const strategy = lastChunkingStrategyJson[i];
@@ -271,12 +271,12 @@ YOUR EVALUATION: `);
                 dataWithLineNumber.split("\n").length;
             }
 
-            console.log(
+            this.logger.info(
               `Start line for chunk ${i + 1}: ${startLine} endline: ${endLine}`
             );
 
             const chunkSize = endLine - startLine + 1;
-            console.log(
+            this.logger.info(
               `Calculated chunk size for chunk ${i + 1}: ${chunkSize} lines`
             );
 
@@ -295,12 +295,12 @@ YOUR EVALUATION: `);
               .join("\n");
 
             if (chunkSize > this.maxChunkLinesLength) {
-              console.log(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
+              this.logger.info(`Chunk ${i + 1} is oversized (${chunkSize} lines)`);
               const oversizedChunkContent = finalData; // Using finalData directly.
 
               const totalLinesInOversizedChunk =
                 oversizedChunkContent.split("\n").length;
-              console.log(
+              this.logger.info(
                 `Creating subchunks startline ${startLine}, endline ${endLine}, totalLinesInOversizedChunk ${totalLinesInOversizedChunk}`
               );
 
@@ -309,7 +309,7 @@ YOUR EVALUATION: `);
                 true,
                 totalLinesInOversizedChunk
               );
-              console.log(
+              this.logger.info(
                 `Completed processing subchunks for chunk ${i + 1}. Received ${
                   subChunks ? subChunks.length : 0
                 } subchunks.`
@@ -318,20 +318,20 @@ YOUR EVALUATION: `);
               strategy.subChunks = [];
               strategy.subChunks.push(...subChunks!);
             } else {
-              console.log(
+              this.logger.info(
                 `Chunk ${
                   i + 1
                 } is within size limits (${chunkSize} lines), no need for subchunking.`
               );
               strategy.chunkData = finalData;
 
-              //console.log(JSON.stringify(strategy, null, 2))
+              //this.logger.info(JSON.stringify(strategy, null, 2))
             }
           }
         }
         if (!validated) {
           retryCount++;
-          console.warn(
+          this.logger.warn(
             `Validation attempt failed, retrying... (${retryCount})`
           );
         }
@@ -347,8 +347,8 @@ YOUR EVALUATION: `);
             this.normalizeLineBreaks(aggregatedChunkData);
           const normalizedOriginalData = this.normalizeLineBreaks(data);
 
-          //console.log(`Original chunk data:\n${normalizedOriginalData}\n`)
-          //console.log(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
+          //this.logger.info(`Original chunk data:\n${normalizedOriginalData}\n`)
+          //this.logger.info(`Aggregated chunk data:\n${normalizedAggregatedData}\n`)
 
           if (normalizedAggregatedData !== normalizedOriginalData) {
             const diff = this.generateDiff(
@@ -361,7 +361,7 @@ YOUR EVALUATION: `);
             );
             validated = false;
           } else {
-            console.log(
+            this.logger.info(
               "Validation passed: Normalized chunk data matches the normalized original data."
             );
           }
@@ -372,7 +372,7 @@ YOUR EVALUATION: `);
       }
     }
 
-    //console.log(JSON.stringify(lastChunkingStrategyJson, null, 2));
+    //this.logger.info(JSON.stringify(lastChunkingStrategyJson, null, 2));
 
     return lastChunkingStrategyJson;
   }

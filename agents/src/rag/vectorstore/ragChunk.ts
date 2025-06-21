@@ -32,7 +32,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
 
      private static getWeaviateKey(): string {
       const key = process.env.WEAVIATE_APIKEY || "";  // Provide a default empty string if the key is undefined
-      console.log(`Weaviate API Key: ${key ? 'Retrieved successfully' : 'Not found or is empty'}`);
+      this.logger.info(`Weaviate API Key: ${key ? 'Retrieved successfully' : 'Not found or is empty'}`);
       return key;
     }
 
@@ -52,7 +52,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
         .classCreator()
         .withClass(classObj)
         .do();
-      console.log(res);
+      this.logger.info(res);
     } catch (err) {
       this.logger.error(`Error creating schema: ${err}`);
     }
@@ -61,7 +61,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
   async showScheme() {
     try {
       const res = await PsRagChunkVectorStore.client.schema.getter().do();
-      console.log(JSON.stringify(res, null, 2));
+      this.logger.info(JSON.stringify(res, null, 2));
     } catch (err) {
       this.logger.error(`Error showing schema: ${err}`);
     }
@@ -73,7 +73,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
         .classDeleter()
         .withClassName("RagDocumentChunk")
         .do();
-      console.log(res);
+      this.logger.info(res);
     } catch (err) {
       this.logger.error(`Error deleting schema: ${err}`);
     }
@@ -88,7 +88,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
       .withLimit(100)
       .do();
 
-    console.log(JSON.stringify(res, null, 2));
+    this.logger.info(JSON.stringify(res, null, 2));
     return res;
   }
 
@@ -107,7 +107,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
   }
 
   async postChunk(chunkData: PsRagChunk): Promise<string | undefined> {
-    console.log(`Posting chunk ${chunkData.title}`);
+    this.logger.info(`Posting chunk ${chunkData.title}`);
 
     return this.retry(
       async () => {

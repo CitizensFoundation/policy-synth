@@ -2,6 +2,7 @@ import { PsAgentClass } from "../dbModels/agentClass.js";
 import { initializeModels } from "../dbModels/index.js";
 import { sequelize } from "../dbModels/sequelize.js";
 import { User } from "../dbModels/ypUser.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 // Function to add a user to multiple agent classes as a regular user or admin
 async function addUserToAgentClasses(
@@ -20,14 +21,14 @@ async function addUserToAgentClasses(
     });
 
     if (agentClasses.length === 0) {
-      console.error("No agent classes found with the given class_base_id");
+      PolicySynthAgentBase.logger.error("No agent classes found with the given class_base_id");
       return;
     }
 
     // Find the user
     const user = await User.findByPk(userId);
     if (!user) {
-      console.error("User not found");
+      PolicySynthAgentBase.logger.error("User not found");
       return;
     }
 
@@ -41,23 +42,23 @@ async function addUserToAgentClasses(
         // Add the user to the agent class with the specified role
         if (role === "user") {
           await agentClass.addUser(user);
-          console.log(
+          PolicySynthAgentBase.logger.info(
             `User ${userId} added as user to agent class ${agentClass.id}`
           );
         } else if (role === "admin") {
           await agentClass.addAdmin(user);
-          console.log(
+          PolicySynthAgentBase.logger.info(
             `User ${userId} added as admin to agent class ${agentClass.id}`
           );
         }
       } else {
-        console.log(
+        PolicySynthAgentBase.logger.info(
           `User ${userId} already has ${role} access to agent class ${agentClass.id}`
         );
       }
     }
   } catch (error) {
-    console.error("Error adding user to agent classes:", error);
+    PolicySynthAgentBase.logger.error("Error adding user to agent classes:", error);
   } finally {
     await sequelize.close();
   }
@@ -66,7 +67,7 @@ async function addUserToAgentClasses(
 // Parse command line arguments
 const args = process.argv.slice(2);
 if (args.length !== 3) {
-  console.error(
+  PolicySynthAgentBase.logger.error(
     "Usage: ts-node addUserToAgentClasses.ts <agentClassBaseId> <userId> <role>"
   );
   process.exit(1);
@@ -75,7 +76,7 @@ if (args.length !== 3) {
 const [agentClassBaseId, userId, role] = args;
 
 if (role !== "user" && role !== "admin") {
-  console.error('Role must be either "user" or "admin"');
+  PolicySynthAgentBase.logger.error('Role must be either "user" or "admin"');
   process.exit(1);
 }
 

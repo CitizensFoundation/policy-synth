@@ -1,3 +1,4 @@
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 
 export class PsClassificationAgent extends PsBaseValidationAgent {
@@ -24,7 +25,7 @@ export class PsClassificationAgent extends PsBaseValidationAgent {
     const nextAgent = this.routes.get(classificationResult.classification);
 
     classificationResult.nextAgent = nextAgent;
-    console.log(`Classification: ${classificationResult.nextAgent?.name}`)
+    PolicySynthAgentBase.logger.info(`Classification: ${classificationResult.nextAgent?.name}`)
 
     return classificationResult;
   }

@@ -97,7 +97,7 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
               try {
                 isoDate = new Date(date).toISOString();
               } catch (error) {
-                console.error(`Error converting date ${date} to ISO string:`, error);
+                this.logger.error(`Error converting date ${date} to ISO string:`, error);
               }
             }
 
@@ -110,7 +110,7 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
             };
 
             outResults.push(entry);
-            console.log(JSON.stringify(entry, null, 2));
+            this.logger.debug(JSON.stringify(entry, null, 2));
 
             // If we have reached the requested numberOfResults, break early
             if (outResults.length >= numberOfResults) {
@@ -118,10 +118,10 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
             }
           }
         } else {
-          console.log("No results found for this chunk.");
+          this.logger.info("No results found for this chunk.");
         }
       } catch (error) {
-        console.error("An error occurred:", error);
+        this.logger.error("An error occurred:", error);
         throw error;
       }
 

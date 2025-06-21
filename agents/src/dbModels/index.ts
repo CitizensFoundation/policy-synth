@@ -12,6 +12,7 @@ import { PsAiModel } from "./aiModel.js";
 import { PsExternalApi } from "./externalApis.js";
 
 import { sequelize } from "./sequelize.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 interface Models {
   [key: string]: any;
@@ -34,8 +35,6 @@ const models: Models = {
 
 const initializeModels = async () => {
   try {
-    console.debug(`All Models Loaded Init`);
-
     // Call associate method to set up associations
     for (const modelName of Object.keys(models)) {
       if (models[modelName].associate) {
@@ -45,14 +44,14 @@ const initializeModels = async () => {
 
     if (process.env.FORCE_DB_SYNC || process.env.NODE_ENV === "development") {
       sequelize.sync().then(async () => {
-        console.debug("Policy Synth database synced successfully.");
+        PolicySynthAgentBase.logger.debug("Policy Synth database synced successfully.");
       });
     }
 
-    console.debug("All models initialized successfully.");
+    PolicySynthAgentBase.logger.debug("All models initialized successfully.");
 
   } catch (error) {
-    console.error("Error initializing models:", error);
+    PolicySynthAgentBase.logger.error("Error initializing models:", error);
     process.exit(1); // Exit the process with failure
   }
 };

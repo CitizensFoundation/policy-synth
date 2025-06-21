@@ -1,3 +1,4 @@
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { PsBaseValidationAgent } from "./baseValidationAgent.js";
 
 export class PsParallelValidationAgent extends PsBaseValidationAgent {
@@ -21,7 +22,7 @@ export class PsParallelValidationAgent extends PsBaseValidationAgent {
     // Aggregate results
     const aggregatedResult = this.aggregateResults(results);
 
-    console.log(`Aggregated Results: ${aggregatedResult.isValid} ${JSON.stringify(aggregatedResult.validationErrors)}`)
+    PolicySynthAgentBase.logger.info(`Aggregated Results: ${aggregatedResult.isValid} ${JSON.stringify(aggregatedResult.validationErrors)}`)
 
     aggregatedResult.nextAgent = this.options.nextAgent;
 

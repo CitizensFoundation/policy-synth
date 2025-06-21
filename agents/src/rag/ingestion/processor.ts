@@ -45,7 +45,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     this.loadFileMetadata()
       .then(() => {
-        console.log("Metadata loaded");
+        this.logger.info("Metadata loaded");
       })
       .catch((err) => {
         this.logger.error("Failed to load file metadata:", err);
@@ -206,16 +206,16 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const chunkIdentifier = `${documentId}-${chunk.chunkIndex}-${chunk.chapterIndex}`;
       // Check if this chunk has already been processed
       if (processedChunks.has(chunkIdentifier)) {
-        console.log(`Skipping already processed chunk ${chunkIdentifier}`);
+        this.logger.info(`Skipping already processed chunk ${chunkIdentifier}`);
         return processedChunks.get(chunkIdentifier)!.id;
       } else {
-        console.log(`Processing chunk ${chunkIdentifier}`);
+        this.logger.info(`Processing chunk ${chunkIdentifier}`);
       }
 
       // Mark this chunk as processed to prevent duplicate processing
       processedChunks.set(chunkIdentifier, chunk);
 
-      console.log(
+      this.logger.info(
         `\n\n\n\n1. importantContextChunkIndexes ${JSON.stringify(
           chunk.importantContextChunkIndexes
         )}`
@@ -227,7 +227,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       chunk.id = chunkId;
 
-      console.log(`Posted chunk ${chunkId} for document ${documentId}`);
+      this.logger.info(`Posted chunk ${chunkId} for document ${documentId}`);
 
       // Add cross reference to the document
       const documentBeacon = `weaviate://localhost/RagDocument/${documentId}`;
@@ -253,8 +253,8 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         allSiblingChunksIncludingMe &&
         allSiblingChunksIncludingMe.length > 1
       ) {
-        console.log(`Processing sibling chunks for ${chunkId}`);
-        console.log(
+        this.logger.info(`Processing sibling chunks for ${chunkId}`);
+        this.logger.info(
           `4. importantContextChunkIndexes ${JSON.stringify(
             chunk.importantContextChunkIndexes
           )}`
@@ -263,7 +263,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         const allSiblingChunksWithIds = [];
         for (const subChunk of allSiblingChunksIncludingMe) {
           if (subChunk.chapterIndex != chunk.chapterIndex) {
-            console.log(
+            this.logger.info(
               `Bottom level loop: Processing sibling chunk ${
                 subChunk.chapterIndex
               } current chunk.subChunks: ${chunk.subChunks?.map(
@@ -285,13 +285,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               );
             }
           } else {
-            console.log(
+            this.logger.info(
               `Skipping myself ${subChunk.chapterIndex} for ${chunk.chapterIndex}`
             );
           }
         }
 
-        console.log(
+        this.logger.info(
           `5. importantContextChunkIndexes ${JSON.stringify(
             chunk.importantContextChunkIndexes
           )}`
@@ -299,7 +299,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
         // Add cross references for sibling chunks
         for (const siblingChunk of allSiblingChunksWithIds) {
-          console.log(`Adding sibling chunk ${siblingChunk.id}`);
+          this.logger.info(`Adding sibling chunk ${siblingChunk.id}`);
           const siblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${siblingChunk.id}`;
           await chunkStore.addCrossReference(
             chunkId,
@@ -309,7 +309,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           );
         }
 
-        console.log(
+        this.logger.info(
           `6. importantContextChunkIndexes ${JSON.stringify(
             chunk.importantContextChunkIndexes
           )}`
@@ -319,11 +319,11 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           chunk.importantContextChunkIndexes &&
           chunk.importantContextChunkIndexes.length > 0
         ) {
-          console.log(
+          this.logger.info(
             `1. Adding relevant sibling chunks for ${chunkId} ${chunk.chapterIndex}`
           );
           for (const sibling of allSiblingChunksWithIds) {
-            console.log(
+            this.logger.info(
               `2. Adding relevant sibling chunks for ${sibling.id} ${sibling.chapterIndex}`
             );
             if (
@@ -331,7 +331,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               chunk.importantContextChunkIndexes.indexOf(sibling.chapterIndex) >
                 -1
             ) {
-              console.log(`3. Adding Relevant sibling chunk ${sibling.id}`);
+              this.logger.info(`3. Adding Relevant sibling chunk ${sibling.id}`);
               const relevantSiblingChunkBeacon = `weaviate://localhost/RagDocumentChunk/${sibling.id}`;
               await chunkStore.addCrossReference(
                 chunkId,
@@ -343,7 +343,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           }
         }
       } else {
-        console.log(
+        this.logger.info(
           `No sibling chunks to process for ${chunkId} length ${
             allSiblingChunksIncludingMe
               ? allSiblingChunksIncludingMe.length
@@ -354,7 +354,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       if (chunk.subChunks) {
         for (const subChunk of chunk.subChunks) {
-          console.log(
+          this.logger.info(
             `Middle Level Loop: Processing subChunk ${subChunk.chapterIndex}`
           );
           await postChunkRecursively(
@@ -378,13 +378,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       const duplicateUrls = await this.countDuplicateUrls(docVals);
 
       if (duplicateUrls > 0) {
-        console.log(
-          docVals.length,
-          " length",
-          docVals,
-          source.hash,
-          source.url
-        );
+        this.logger.info(`Duplicate URLs found for ${source.url} ${source.hash} ${docVals.length} ${duplicateUrls}`);
         continue;
       }
       if (docVals.length > 0) continue;
@@ -397,7 +391,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         if (documentId) {
           if (source.chunks) {
             for (const chunk of source.chunks) {
-              console.log(
+              this.logger.info(
                 `Top Level Loop: Processing chunk ${chunk.chapterIndex} for ${source.url}`
               );
               try {
@@ -436,7 +430,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
   }
 
   async classifyDocuments(allDocumentSourcesWithChunks: PsRagDocumentSource[]) {
-    console.log("Classifying all documents");
+    this.logger.info("Classifying all documents");
     const classifier = new DocumentClassifierAgent();
     await classifier.classifyAllDocuments(
       allDocumentSourcesWithChunks,
@@ -447,7 +441,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     const ranker = new IngestionDocumentRanker();
 
-    console.log("Ranking by relevance");
+    this.logger.info("Ranking by relevance");
     const relevanceRules =
       "Rank the two documents based on the relevance to the project";
     await ranker.rankDocuments(
@@ -459,7 +453,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     await this.saveFileMetadata();
 
-    console.log("Ranking by substance");
+    this.logger.info("Ranking by substance");
     const substanceRules =
       "Rank the two documents based substance and completeness of the information";
 
@@ -475,7 +469,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     let categoryIndex = 1;
 
     for (const category of this.dataLayout.categories) {
-      console.log(`Ranking documents in the ${category} category`);
+      this.logger.info(`Ranking documents in the ${category} category`);
       // Filter documents that fall into the current category
       const documentsInCategory = allDocumentSourcesWithChunks.filter(
         (doc) =>
@@ -485,7 +479,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       // Define a dynamic ELO rating field name based on the category
       const eloRatingFieldName = `category${categoryIndex}EloRating`;
 
-      console.log(
+      this.logger.info(
         `Ranking by relevance within the ${category} category (${eloRatingFieldName})`
       );
 
@@ -516,7 +510,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
       try {
         let weaviateDocumentId = "TBD";
-        console.log(`Processing file: ${filePath}`);
+        this.logger.info(`Processing file: ${filePath}`);
         const parser = new IngestionContentParser();
         const data = await parser.parseFile(filePath);
         metadataEntry = Object.values(this.fileMetadata).find(
@@ -531,7 +525,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           metadataEntry.url.indexOf("youtube") > -1 ||
           metadataEntry.url.indexOf("youtu.be") > -1
         ) {
-          console.log("Skipping youtube video");
+          this.logger.info("Skipping youtube video");
           continue;
         }
 
@@ -543,7 +537,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           reAnalyze ||
           !this.fileMetadata[metadataEntry!.fileId].documentMetaData
         ) {
-          //  console.log(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
+          //  this.logger.info(this.fileMetadata[metadataEntry!.fileId].documentMetaData, metadataEntry!.fileId, "documentMedat")
 
           (await this.docAnalysisAgent.analyze(
             metadataEntry.fileId,
@@ -564,7 +558,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             this.fileMetadata[metadataEntry.fileId].cleanedDocument) ||
           (await this.cleanupAgent.clean(data));
 
-        //console.log(`Cleaned up data: ${cleanedUpData}`);
+        //this.logger.info(`Cleaned up data: ${cleanedUpData}`);
         await this.saveFileMetadata();
 
         if (
@@ -601,7 +595,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           sourceUrls
         );
 
-        console.log(updatedReferences);
+        this.logger.info(updatedReferences);
         */
       }
     }
@@ -635,7 +629,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             return metaTitle ? metaTitle.content : document.title;
           });
 
-          console.log(title); // Log the title to the console
+          this.logger.info(title); // Log the title to the console
 
           const newReference = {
             reference: title || `Link${missingLinkIndex}`,
@@ -680,9 +674,9 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       chunks = metadata.cachedChunkStrategy;
     }
 
-    console.log(JSON.stringify(chunks, null, 2));
+    this.logger.info(JSON.stringify(chunks, null, 2));
 
-    console.log(`Split into ${chunks.length} chunks`);
+    this.logger.info(`Split into ${chunks.length} chunks`);
 
     let masterChunkIndex = 0;
 
@@ -700,15 +694,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           chunk.chunkData
         );
 
-        console.log(
+        this.logger.info(
           `\n\nAnalyzed chunk: ${JSON.stringify(chunkAnalyzeResponse)}`
         );
 
         if (!hasAggregatedChunkData) {
-          console.log(`\nBefore compression:\n${chunk.chunkData}\n`);
+          this.logger.info(`\nBefore compression:\n${chunk.chunkData}\n`);
           chunkAnalyzeResponse.fullCompressedContent =
             await this.chunkCompressor.compress(chunk.chunkData);
-          console.log(
+          this.logger.info(
             `\nAfter compression:\n${chunkAnalyzeResponse.fullCompressedContent}\n\n`
           );
         }
@@ -754,7 +748,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
     cleanedUpData: string,
     weaviateDocumentId: string
   ): Promise<void> {
-    console.log(`Processing file part for fileId: ${fileId}`);
+    this.logger.info(`Processing file part for fileId: ${fileId}`);
 
     this.fileMetadata[fileId].cleanedDocument = cleanedUpData;
 
@@ -766,15 +760,15 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     if (rechunk || !metadata.chunks || metadata.chunks.length === 0) {
       metadata.chunks = [];
-      console.log(`Creating tree chunks for fileId: ${fileId}`);
+      this.logger.info(`Creating tree chunks for fileId: ${fileId}`);
       await this.createTreeChunks(metadata, cleanedUpData);
     } else {
-      console.log(`Chunks already exist for fileId: ${fileId}`);
+      this.logger.info(`Chunks already exist for fileId: ${fileId}`);
     }
 
     await this.saveFileMetadata();
 
-    /*console.log(
+    /*this.logger.info(
       `Metadata after chunking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
 
@@ -782,12 +776,12 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     //  if (reRank || metadata.chunks[0].relevanceEloRating === undefined) {
     if (reRank || metadata.chunks[0].eloRating === undefined) {
-      console.log("in rerank", metadata.chunks[0]);
+      this.logger.info("in rerank", metadata.chunks[0]);
       await this.rankChunks(metadata);
       await this.saveFileMetadata();
     }
 
-    /*console.log(
+    /*this.logger.info(
       `Metadata after ranking:\n${JSON.stringify(metadata, null, 2)}`
     );*/
 
@@ -804,7 +798,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       [] as PsRagChunk[]
     );
 
-    console.log("Ranking by relevance");
+    this.logger.info("Ranking by relevance");
     const relevanceRules =
       "Rank the two chunks based on the relevance to the document";
     await ranker.rankDocumentChunks(
@@ -814,7 +808,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       "relevanceEloRating"
     );
 
-    console.log("Ranking by substance");
+    this.logger.info("Ranking by substance");
     const substanceRules =
       "Rank the two chunks based substance and completeness of the information";
     await ranker.rankDocumentChunks(
@@ -824,7 +818,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       "substanceEloRating"
     );
 
-    console.log("Ranking by quality");
+    this.logger.info("Ranking by quality");
     const qualityRules =
       "Rank the two chunks based on quality of the information";
     await ranker.rankDocumentChunks(
@@ -847,7 +841,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
 
     // Compare current fileMetadata with initialFileMetadata
     for (const [fileId, metadata] of Object.entries(this.fileMetadata)) {
-      console.log(`Checking file ${JSON.stringify(metadata)}`);
+      this.logger.info(`Checking file ${JSON.stringify(metadata)}`);
 
       const initialMetadata = this.initialFileMetadata[fileId];
 
@@ -864,7 +858,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           this.logger.error(`File path missing in metadata for fileId: ${fileId}`);
         }
       } else {
-        console.log(`File ${metadata.filePath} has not been modified`);
+        this.logger.info(`File ${metadata.filePath} has not been modified`);
       }
     }
 
@@ -902,7 +896,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       hash,
     };
 
-    console.log(
+    this.logger.info(
       `Cached file ${relativePath} ${JSON.stringify(
         this.fileMetadata[fileId],
         null,
@@ -975,13 +969,13 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           const cachedLastModified = new Date(metadata.lastModifiedOnServer);
           const fetchedLastModified = new Date(lastModified!);
 
-          console.log(`Last modified: ${lastModified}`);
-          console.log(`Content length: ${contentLength}`);
-          console.log(`Cached last modified: ${cachedLastModified}`);
-          console.log(`Fetched last modified: ${fetchedLastModified}`);
-          console.log(`Metadata lastmod: ${metadata.lastModified}`);
+          this.logger.info(`Last modified: ${lastModified}`);
+          this.logger.info(`Content length: ${contentLength}`);
+          this.logger.info(`Cached last modified: ${cachedLastModified}`);
+          this.logger.info(`Fetched last modified: ${fetchedLastModified}`);
+          this.logger.info(`Metadata lastmod: ${metadata.lastModified}`);
 
-          console.log(
+          this.logger.info(
             `-----> ${fetchedLastModified.getTime()} === ${cachedLastModified.getTime()}`
           );
 
@@ -992,10 +986,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             (fetchedLastModified.getTime() === cachedLastModified.getTime() &&
               contentLength === metadata.size)
           ) {
-            console.log(`Using cached version for ${url}`);
+            this.logger.info(`Using cached version for ${url}`);
             continue; // Skip downloading if the cached file is up to date
           } else {
-            console.log(`Cached file for ${url} is outdated, re-downloading`);
+            this.logger.info(`Cached file for ${url} is outdated, re-downloading`);
           }
         }
 
@@ -1031,7 +1025,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             lastModified || ""
           );
         } else if (!contentType.includes("image")) {
-          console.log(`Downloading content for URL: ${url}`);
+          this.logger.info(`Downloading content for URL: ${url}`);
           const response = await browserPage.goto(url, {
             waitUntil: ["load", "networkidle0"],
           });
@@ -1055,10 +1049,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               lastModified || ""
             );
           } else {
-            console.log(`Failed to fetch content for URL: ${url}`);
+            this.logger.info(`Failed to fetch content for URL: ${url}`);
           }
         } else {
-          console.log(`Skipping download for image URL: ${url}`);
+          this.logger.info(`Skipping download for image URL: ${url}`);
         }
       } catch (error) {
         this.logger.error(`Failed to download content for URL ${url}:`, error);
@@ -1142,7 +1136,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       if (error instanceof Error && "code" in error) {
         const readError = error as { code: string }; // Type assertion
         if (readError.code === "ENOENT") {
-          console.log("File does not exist, initializing empty metadata.");
+          this.logger.info("File does not exist, initializing empty metadata.");
           this.fileMetadata = {}; // Initialize as empty object
         } else {
           // Handle other types of errors that might have occurred during readFile

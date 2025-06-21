@@ -1,3 +1,5 @@
+import { PolicySynthAgentBase } from "../base/agentBase";
+
 export class PsAgentOrchestrator {
   async execute(
     initialAgent: PsValidationAgent,
@@ -7,7 +9,7 @@ export class PsAgentOrchestrator {
     let finalResult: PsValidationAgentResult = { isValid: true };
 
     while (currentAgent) {
-      console.log(`Current agent: ${currentAgent.name}`)
+      PolicySynthAgentBase.logger.info(`Current agent: ${currentAgent.name}`)
       const result = await currentAgent.execute(input);
 
       if (

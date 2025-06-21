@@ -1,3 +1,4 @@
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
 
 export class PsBaseValidationAgent extends PolicySynthSimpleAgentBase {
@@ -72,15 +73,15 @@ export class PsBaseValidationAgent extends PolicySynthSimpleAgentBase {
 
     try {
       result = await this.performExecute();
-      console.log(
+      PolicySynthAgentBase.logger.info(
         `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
       );
 
       result.nextAgent = result.nextAgent || this.options.nextAgent;
     } catch (e) {
       //TODO: Send airbrake error
-      console.error("Unkown system error in validation agent")
-      console.error(e);
+      PolicySynthAgentBase.logger.error("Unkown system error in validation agent")
+      PolicySynthAgentBase.logger.error(e);
       result = {
         isValid: false,
         validationErrors: ["Unkown system error in validation agent"],

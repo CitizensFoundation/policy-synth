@@ -80,14 +80,14 @@ Your refined JSON analysis:
     let metadata = filesMetaData[fileId] || ({} as PsRagDocumentSource);
 
     for (let i = 0; i < dataChunks.length; i++) {
-      console.log(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
+      this.logger.info(`Analyzing chunk ${i + 1} of ${dataChunks.length}`);
       const chunkData = dataChunks[i];
       const documentAnalysis = (await this.callLLM(
         "ingestion-agent",
         this.getFirstMessages(this.systemMessage, this.userMessage(chunkData))
       )) as LlmDocumentAnalysisReponse;
 
-      console.log(
+      this.logger.info(
         `Chunk ${i + 1} results: ${JSON.stringify(documentAnalysis, null, 2)}`
       );
 
@@ -148,7 +148,7 @@ Your refined JSON analysis:
       allOtherReferences: metadata.allOtherReferences,
     };
 
-    console.log(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
+    this.logger.info(`Final analysis results: ${JSON.stringify(refineInput, null, 2)}`);
 
     const refinedMetadata = (await this.callLLM(
       "ingestion-agent",
@@ -158,7 +158,7 @@ Your refined JSON analysis:
       )
     )) as LlmDocumentAnalysisReponse;
 
-    console.log(
+    this.logger.info(
       `Review analysis results: ${JSON.stringify(refinedMetadata, null, 2)}`
     );
 
@@ -180,7 +180,7 @@ Your refined JSON analysis:
       allOtherReferences: metadata.allOtherReferences,
     };
 
-    console.log(
+    this.logger.info(
       `Final refined analysis results: ${JSON.stringify(debugResults, null, 2)}`
     );
 

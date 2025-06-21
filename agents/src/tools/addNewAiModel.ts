@@ -2,6 +2,7 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 import { initializeModels } from "../dbModels/index.js";
 import { connectToDatabase } from "../dbModels/sequelize.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 async function deactivateExistingModels(name: string) {
   const existingModels = await PsAiModel.findAll({
@@ -12,7 +13,7 @@ async function deactivateExistingModels(name: string) {
     model.configuration.active = false;
     model.changed("configuration", true);
     await model.save();
-    console.log(`Deactivated existing model "${name}" with ID: ${model.id}`);
+    PolicySynthAgentBase.logger.info(`Deactivated existing model "${name}" with ID: ${model.id}`);
   }
 }
 
@@ -62,16 +63,16 @@ async function addAiModel(
       configuration,
     });
 
-    console.log(`New AI Model "${name}" created successfully with ID: ${newModel.id}`);
+    PolicySynthAgentBase.logger.info(`New AI Model "${name}" created successfully with ID: ${newModel.id}`);
   } catch (error) {
-    console.error(`Error adding AI model "${name}":`, error);
+    PolicySynthAgentBase.logger.error(`Error adding AI model "${name}":`, error);
   }
 }
 
 // Parse command line arguments
 const args = process.argv.slice(2);
 if (args.length !== 13) {
-  console.error(
+  PolicySynthAgentBase.logger.error(
     "Usage: ts-node addAiModelSeed.ts <name> <organizationId> <userId> <type> <modelSize> <provider> <costInTokensPerMillion> <costOutTokensPerMillion> <currency> <maxTokensOut> <defaultTemperature> <model> <active>"
   );
   process.exit(1);
@@ -96,12 +97,12 @@ const [
 
 // Validate and convert arguments
 if (!Object.values(PsAiModelType).includes(type as PsAiModelType)) {
-  console.error("Invalid AI model type");
+  PolicySynthAgentBase.logger.error("Invalid AI model type");
   process.exit(1);
 }
 
 if (!Object.values(PsAiModelSize).includes(modelSize as PsAiModelSize)) {
-  console.error("Invalid AI model size");
+  PolicySynthAgentBase.logger.error("Invalid AI model size");
   process.exit(1);
 }
 

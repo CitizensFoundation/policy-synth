@@ -21,8 +21,8 @@ export class SearchResultsRanker extends SimplePairwiseRankingsAgent {
     const itemOne = this.allItems![index]![itemOneIndex] as PsSearchResultItem;
     const itemTwo = this.allItems![index]![itemTwoIndex] as PsSearchResultItem;
 
-    console.log(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
-    console.log(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
+    this.logger.debug(`itemOne: ${JSON.stringify(itemOne, null, 2)}`);
+    this.logger.debug(`itemTwo: ${JSON.stringify(itemTwo, null, 2)}`);
 
     const messages = [
       this.createSystemMessage(

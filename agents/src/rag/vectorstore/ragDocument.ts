@@ -46,7 +46,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
 
   private static getWeaviateKey(): string {
     const key = process.env.WEAVIATE_APIKEY || ""; // Provide a default empty string if the key is undefined
-    console.log(
+    this.logger.info(
       `Weaviate API Key: ${
         key ? "Retrieved successfully" : "Not found or is empty"
       }`
@@ -79,7 +79,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
         .classCreator()
         .withClass(classObj)
         .do();
-      console.log(res);
+      this.logger.info(res);
     } catch (err) {
       this.logger.error(`Error creating schema: ${err}`);
     }
@@ -88,7 +88,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
   async showScheme() {
     try {
       const res = await PsRagDocumentVectorStore.client.schema.getter().do();
-      console.log(JSON.stringify(res, null, 2));
+      this.logger.info(JSON.stringify(res, null, 2));
     } catch (err) {
       this.logger.error(`Error creating schema: ${err}`);
     }
@@ -100,7 +100,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
         .classDeleter()
         .withClassName("RagDocument")
         .do();
-      console.log(res);
+      this.logger.info(res);
     } catch (err) {
       this.logger.error(`Error creating schema: ${err}`);
     }
@@ -120,7 +120,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
       .withLimit(100)
       .do();
 
-    console.log(JSON.stringify(res, null, 2));
+    this.logger.info(JSON.stringify(res, null, 2));
     return res;
   }
 
@@ -141,7 +141,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
   async postDocument(
     document: PsRagDocumentSource
   ): Promise<string | undefined> {
-    console.log(`Posting document ${JSON.stringify(document, null, 2)}`);
+    this.logger.info(`Posting document ${JSON.stringify(document, null, 2)}`);
     return this.retry(
       async () => {
         try {
@@ -259,7 +259,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
 
       // Check if results are empty or null and handle accordingly
       if (!results) {
-        console.log(
+        this.logger.info(
           "No documents found. Database might be empty for this query."
         );
         // Handle the empty db scenario here, such as continuing with your process

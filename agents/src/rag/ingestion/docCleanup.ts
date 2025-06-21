@@ -99,7 +99,7 @@ Your one word analysis:
       this.maxCleanupTokenLength
     );
 
-    console.log(JSON.stringify(splitPartsForCleanup, null, 2));
+    this.logger.info(JSON.stringify(splitPartsForCleanup, null, 2));
 
     // Normalize parts by joining short parts with the previous ones
     for (let i = 1; i < splitPartsForCleanup.length; i++) {
@@ -114,7 +114,7 @@ Your one word analysis:
 
     // Define an async function for cleaning each part
     const cleanPart = async (part: string, index: number, total: number) => {
-      console.log(`\n\nCleaning part: ${index + 1} of ${total}\n\n`);
+      this.logger.info(`\n\nCleaning part: ${index + 1} of ${total}\n\n`);
       this.logShortLines(part);
 
       let validated = false;
@@ -133,7 +133,7 @@ Your one word analysis:
         )) as string;
 
         if (referenceAnalysis.indexOf("ONLY_REFERENCES_OR_URLS") > -1) {
-          console.warn(
+          this.logger.warn(
             `\n\nONLY_REFERENCES_OR_URLS:\n${part}\nONLY_REFERENCES_OR_URLS\n\n`
           );
           cleanedPart = "";
@@ -156,7 +156,7 @@ Your one word analysis:
           retryCount++;
 
           if (!validated) {
-            console.warn(`\nValidation failed ${retryCount}\n`);
+            this.logger.warn(`\nValidation failed ${retryCount}\n`);
             validationTextResults = validationResults.validationTextResults;
           }
         }
@@ -197,7 +197,7 @@ Your one word analysis:
     original: string,
     cleaned: string
   ): Promise<{ valid: boolean; validationTextResults: string }> {
-    console.log(`\nValidating cleaned part:\n${cleaned}\n\n`);
+    this.logger.info(`\nValidating cleaned part:\n${cleaned}\n\n`);
     const validations = await Promise.all([
       this.callLLM(
         "ingestion-agent",
@@ -232,7 +232,7 @@ Your one word analysis:
     ] = validations.map((response) => response as string);
 
     const validationTextResults = `${completionValidation} ${correctnessValidation} ${hallucinationValidation}`;
-    console.log(
+    this.logger.info(
       `ņ----------------_> completionValidation: ${validationTextResults}\n\n`
     );
 

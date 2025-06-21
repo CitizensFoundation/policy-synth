@@ -1,3 +1,4 @@
+import { PolicySynthAgentBase } from "../../base/agentBase.js";
 import { PsAgentOrchestrator } from "../agentOrchestrator.js";
 import { PsBaseValidationAgent } from "../baseValidationAgent.js";
 import { PsClassificationAgent } from "../classificationAgent.js";
@@ -322,7 +323,7 @@ parallelAgent.nextAgent = validLogicalStatement;
 
 const result = await agentOrchestrator.execute(parallelAgent, effect);
 
-console.log(
+PolicySynthAgentBase.logger.info(
   `Results: ${result.isValid} ${JSON.stringify(result.validationErrors)}`
 );
 

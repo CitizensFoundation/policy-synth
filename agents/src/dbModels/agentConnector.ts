@@ -98,7 +98,6 @@ PsAgentConnector.init(
 );
 
 (PsAgentConnector as any).associate = (models: any) => {
-  console.debug(`PsAgentConnector.associate ${JSON.stringify(models.PsAgentConnectorClass)}`)
   // Define associations
   PsAgentConnector.belongsTo(models.PsAgentConnectorClass, {
     foreignKey: "class_id",

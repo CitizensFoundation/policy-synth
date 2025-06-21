@@ -12,10 +12,10 @@ export abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
 
   logShortLines(text: string, maxLength = 50) {
     // Split the text into lines
-    // then only console.log the first 100 characters of each line
+    // then only this.logger.info the first 100 characters of each line
     const lines = text.split("\n");
     for (let i = 0; i < lines.length; i++) {
-      console.log(lines[i].substring(0, maxLength));
+      this.logger.info(lines[i].substring(0, maxLength));
     }
   }
 
@@ -83,7 +83,7 @@ export abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
       startIndex = data.indexOf("json```");
     endIndex = data.indexOf("```", startIndex + 6);
 
-    console.log(`JSON PARSE startIndex: ${startIndex}, endIndex: ${endIndex}`);
+    this.logger.info(`JSON PARSE startIndex: ${startIndex}, endIndex: ${endIndex}`);
 
     if (startIndex > -1 && endIndex > -1) {
       let jsonContent = data.substring(startIndex + 7, endIndex).trim();
