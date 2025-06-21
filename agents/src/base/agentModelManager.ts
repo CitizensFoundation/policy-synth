@@ -869,6 +869,117 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     return null;
   }
 
+  /**
+   * Returns the price configuration for a given model call. This will first
+   * check for an explicit model override via `options` and attempt to load that
+   * model configuration from the database. If not found, it will fall back to
+   * the currently loaded models using the same fallback logic as `callTextModel`.
+   */
+  public async getModelPriceConfiguration(
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
+    options: PsCallModelOptions
+  ): Promise<PsBaseModelPriceConfiguration | undefined> {
+    // 1) Ephemeral override - try to fetch config from DB
+    if (options.modelProvider && options.modelName) {
+      try {
+        const dbModel = await PsAiModel.findOne({
+          where: {
+            [Op.and]: [
+              sequelize.literal(
+                `configuration->>'provider' = '${options.modelProvider}'`
+              ),
+              sequelize.literal(
+                `configuration->>'model' = '${options.modelName}'`
+              ),
+            ],
+          },
+        });
+
+        if (dbModel) {
+          const cfg = dbModel.configuration as PsAiModelConfiguration;
+          return cfg.prices;
+        }
+      } catch (err) {
+        this.logger.error(`Error looking up price configuration: ${err}`);
+      }
+    }
+
+    // 2) Fallback model from options
+    if (options.fallbackModelProvider && options.fallbackModelName) {
+      try {
+        const dbFallback = await PsAiModel.findOne({
+          where: {
+            [Op.and]: [
+              sequelize.literal(
+                `configuration->>'provider' = '${options.fallbackModelProvider}'`
+              ),
+              sequelize.literal(
+                `configuration->>'model' = '${options.fallbackModelName}'`
+              ),
+            ],
+          },
+        });
+
+        if (dbFallback) {
+          const cfg = dbFallback.configuration as PsAiModelConfiguration;
+          return cfg.prices;
+        }
+      } catch (err) {
+        this.logger.error(
+          `Error looking up fallback price configuration: ${err}`
+        );
+      }
+    }
+
+    // 3) Use loaded models with fallback by size and type
+    const getFallbackPriority = (size: PsAiModelSize): PsAiModelSize[] => {
+      switch (size) {
+        case PsAiModelSize.Large:
+          return [
+            PsAiModelSize.Large,
+            PsAiModelSize.Medium,
+            PsAiModelSize.Small,
+          ];
+        case PsAiModelSize.Medium:
+          return [
+            PsAiModelSize.Medium,
+            PsAiModelSize.Large,
+            PsAiModelSize.Small,
+          ];
+        case PsAiModelSize.Small:
+          return [
+            PsAiModelSize.Small,
+            PsAiModelSize.Medium,
+            PsAiModelSize.Large,
+          ];
+        default:
+          return [
+            PsAiModelSize.Medium,
+            PsAiModelSize.Large,
+            PsAiModelSize.Small,
+          ];
+      }
+    };
+
+    for (const size of getFallbackPriority(modelSize)) {
+      const key = `${modelType}_${size}`;
+      const model = this.models.get(key);
+      if (model) {
+        return model.config?.prices;
+      }
+    }
+
+    const byType = this.modelsByType.get(modelType);
+    if (byType) {
+      return byType.config?.prices;
+    }
+
+    // Last chance: check environment-initialized model
+    const envModel = this.initializeOneModelFromEnv();
+    return envModel?.config?.prices;
+  }
+
   public async saveTokenUsage(
     prices: PsBaseModelPriceConfiguration,
     modelType: PsAiModelType,
