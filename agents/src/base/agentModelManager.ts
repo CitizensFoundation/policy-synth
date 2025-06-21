@@ -332,7 +332,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       modelType: dbConfig?.type ?? modelType,
       modelSize: dbConfig?.modelSize ?? modelSize,
       timeoutMs: dbConfig?.timeoutMs ?? this.modelCallTimeoutMs,
-      prices: dbConfig?.prices ?? (fallbackModel as any).config?.prices ?? ({} as any),
+      prices: dbConfig?.prices ?? fallbackModel.config?.prices ?? ({} as any),
     };
 
     // Construct ephemeral model
@@ -371,10 +371,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     if (dbModel) {
-      (ephemeralModel as any).dbModelId = dbModel.id;
+      ephemeralModel.dbModelId = dbModel.id;
     }
 
-    (ephemeralModel as any).provider = provider;
+    ephemeralModel.provider = provider;
 
     return ephemeralModel;
   }
@@ -447,8 +447,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       // If ephemeral model is requested, just use it
       return await this.runTextModelCall(
         ephemeralModel,
-        (ephemeralModel as any).config?.modelType ?? modelType,
-        (ephemeralModel as any).config?.modelSize ?? modelSize,
+        ephemeralModel.config?.modelType ?? modelType,
+        ephemeralModel.config?.modelSize ?? modelSize,
         messages,
         options
       );
@@ -650,7 +650,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             tokensIn,
             cachedInTokens ?? 0,
             tokensOut,
-            (model as any).dbModelId
+            model.dbModelId
           );
 
           if (options.parseJson) {
@@ -764,12 +764,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   fallbackResults;
                 await this.saveTokenUsage(
                   fallbackEphemeral.config.prices,
-                  (fallbackEphemeral as any).config?.modelType ?? modelType,
-                  (fallbackEphemeral as any).config?.modelSize ?? modelSize,
+                  fallbackEphemeral.config?.modelType ?? modelType,
+                  fallbackEphemeral.config?.modelSize ?? modelSize,
                   tokensIn,
                   cachedInTokens ?? 0,
                   tokensOut,
-                  (fallbackEphemeral as any).dbModelId
+                  fallbackEphemeral.dbModelId
                 );
                 return options.parseJson
                   ? this.parseJsonResponse(content.trim())

@@ -8,6 +8,7 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
   maxTokensOut: number;
   provider?: string;
   config: PsAiModelConfig;
+  dbModelId?: number;
 
   constructor(config: PsAiModelConfig, modelName: string | TiktokenModel, maxTokensOut = 4096) {
     super();
