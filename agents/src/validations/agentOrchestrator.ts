@@ -1,4 +1,4 @@
-import { PolicySynthAgentBase } from "../base/agentBase";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 export class PsAgentOrchestrator {
   async execute(

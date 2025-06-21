@@ -4,7 +4,7 @@ import safe from "colors";
 import path, { dirname, join } from "path";
 import _ from "lodash";
 import { fileURLToPath } from "url";
-import { PolicySynthAgentBase } from "../base/agentBase";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
