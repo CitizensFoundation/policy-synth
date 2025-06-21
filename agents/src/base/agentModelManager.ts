@@ -5,11 +5,10 @@ import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { Transaction } from "sequelize";
+import { sequelize } from "../dbModels/index.js";
 import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
-
-let cachedPsModelUsage: any;
-let cachedSequelize: any;
+import { PsModelUsage } from "../dbModels/modelUsage.js";
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   models: Map<string, BaseChatModel> = new Map();
@@ -246,8 +245,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   ): BaseChatModel | undefined {
     // Determine if user actually wants ephemeral overrides
     const isOverrideRequested =
-      options.modelProvider != null &&
-      options.modelName != null;
+      options.modelProvider != null && options.modelName != null;
 
     if (!isOverrideRequested) {
       return undefined;
@@ -333,7 +331,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         break;
       default:
         this.logger.warn(
-          `Unsupported ephemeral provider: ${provider} ${modelType} ${modelSize} ${JSON.stringify(options, null, 2)}`
+          `Unsupported ephemeral provider: ${provider} ${modelType} ${modelSize} ${JSON.stringify(
+            options,
+            null,
+            2
+          )}`
         );
         return undefined;
     }
@@ -471,6 +473,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         this.logger.warn(
           `Model not found by size, using default ${modelType} model`
         );
+        selectedModelSize = model.config.modelSize;
       } else {
         throw new Error(`No model available for type ${modelType}`);
       }
@@ -570,7 +573,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       if (
         (err?.response?.status >= 500 && err?.response?.status < 600) ||
         err?.message?.includes("500 Internal Server Error") ||
-        (typeof err === "string" && err.includes("500 Internal Server Error")) ||
+        (typeof err === "string" &&
+          err.includes("500 Internal Server Error")) ||
         (typeof err === "string" && err.includes("503 Service Unavailable"))
       ) {
         this.logDetailedServerError(model, err, messages);
@@ -853,17 +857,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     // If ephemeral or missing, fallback to -1 or bail
     const finalModelId = modelId ?? -1; // -1 for ephemeral or not found
 
-    // Lazy-load usage models
-    if (!cachedPsModelUsage) {
-      const module = await import("../dbModels/modelUsage.js");
-      cachedPsModelUsage = module.PsModelUsage;
-
-      const { sequelize } = await import("../dbModels/sequelize.js");
-      cachedSequelize = sequelize;
-    }
-    const PsModelUsage = cachedPsModelUsage;
-    const sequelize = cachedSequelize;
-
     let longContextTokenIn = 0;
     let longContextTokenInCached = 0;
     let longContextTokenOut = 0;
@@ -885,6 +878,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       if (cachedInTokens) {
         tokensIn = tokensIn - cachedInTokens;
       }
+    }
+
+    if (finalModelId === -1) {
+      this.logger.error(
+        `Token usage not saved in data base (modelId:${finalModelId}) for agent ${this.agentId} but model is ephemeral`
+      );
+      return;
     }
 
     try {
@@ -928,11 +928,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.info(
         `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId}`
       );
-      if (finalModelId === -1) {
-        this.logger.error(
-          `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId} but model is ephemeral `
-        );
-      }
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);

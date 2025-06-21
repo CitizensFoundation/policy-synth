@@ -96,7 +96,7 @@ export class PolicySynthAgentBase {
 
     try {
       const parsed = JSON.parse(response);
-      this.logger.info("Successfully parsed JSON");
+      this.logger.debug("Successfully parsed JSON from AI model");
       return parsed as T;
     } catch (error) {
       this.logger.warn(`Error parsing JSON: ${(error as Error).message}`);
