@@ -261,7 +261,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
       ) {
         const { wonItemIndex, lostItemIndex } = matchResults[nextToApply]!;
 
-        this.logger.info(`Applying prompt ${nextToApply + 1} of ${prompts.length}`);
+        this.logger.debug(`Applying prompt ${nextToApply + 1} of ${prompts.length}`);
 
         if (this.progressFunction) {
           this.progressFunction(`${nextToApply + 1}/${prompts.length}`);
@@ -277,7 +277,7 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
 
         // If it's a tie/invalid, skip Elo update
         if (wonItemIndex === -1 && lostItemIndex === -1) {
-          this.logger.info(`Neither item won, skipping Elo update for prompt ${nextToApply}`);
+          this.logger.debug(`Neither item won, skipping Elo update for prompt ${nextToApply}`);
         } else {
           this.updateElo(subProblemIndex, wonItemIndex, lostItemIndex);
         }

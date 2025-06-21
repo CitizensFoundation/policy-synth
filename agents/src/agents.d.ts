@@ -21,6 +21,7 @@ interface PsAzureAiModelConfig {
 interface PsAiModelConfig {
   apiKey: string;
   modelName?: string;
+  provider?: string;
   maxTokensOut?: number;
   modelType: import("./aiModelTypes.js").PsAiModelType;
   modelSize: import("./aiModelTypes.js").PsAiModelSize;

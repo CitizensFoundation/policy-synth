@@ -246,15 +246,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   ): BaseChatModel | undefined {
     // Determine if user actually wants ephemeral overrides
     const isOverrideRequested =
-      options.modelProvider != null ||
-      options.modelName != null ||
-      options.modelTemperature != null ||
-      options.modelMaxTokens != null ||
-      options.modelMaxThinkingTokens != null ||
-      options.modelReasoningEffort != null;
+      options.modelProvider != null &&
+      options.modelName != null;
 
     if (!isOverrideRequested) {
       return undefined;
+    } else {
+      this.logger.info(
+        `Ephemeral override requested for ${modelType} ${modelSize} ${JSON.stringify(
+          options,
+          null,
+          2
+        )}`
+      );
     }
 
     // Fall back to a known model (or the first model of the same type)
@@ -268,6 +272,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!fallbackModel) {
       // As a last-ditch: might rely on environment
       // You can choose to throw instead if no fallback is found
+      this.logger.warn(
+        `No fallback model found for ephemeral override of ${modelType} ${modelSize}. Trying to initialize one from environment variables.`
+      );
       fallbackModel = this.initializeOneModelFromEnv();
       if (!fallbackModel) {
         this.logger.warn(
@@ -288,6 +295,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const ephemeralConfig: PsAiModelConfig = {
       apiKey,
       modelName: options.modelName ?? fallbackModel.modelName,
+      provider: provider,
       maxTokensOut: options.modelMaxTokens ?? this.maxModelTokensOut,
       temperature: options.modelTemperature ?? this.modelTemperature,
       reasoningEffort:

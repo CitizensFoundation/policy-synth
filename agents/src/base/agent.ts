@@ -191,7 +191,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
         );*/
         return JSON.parse(statusDataString);
       } else {
-        this.logger.warn("No memory data found!");
+        this.logger.debug("No memory data found!");
       }
     } catch (error) {
       this.logger.error("Error loading status from Redis");
