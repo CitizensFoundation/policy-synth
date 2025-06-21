@@ -73,7 +73,7 @@ export class ClaudeChat extends BaseChatModel {
       ] as any[];
 
       if (process.env.PS_PROMPT_DEBUG) {
-        console.debug(
+        this.logger.debug(
           `--------------> Using system message with cache control: ${JSON.stringify(
             requestOptions.system,
             null,
@@ -99,7 +99,7 @@ export class ClaudeChat extends BaseChatModel {
     } else {
       let response;
       response = await this.client.messages.create(requestOptions);
-      console.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
+      this.logger.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       let tokensIn = response.usage.input_tokens;
       let tokensOut = response.usage.output_tokens;
       let cachedInTokens = response.usage.cache_creation_input_tokens;

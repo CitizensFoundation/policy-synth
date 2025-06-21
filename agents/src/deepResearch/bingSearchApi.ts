@@ -67,7 +67,7 @@ export class BingSearchApi extends PolicySynthSimpleAgentBase {
             header.startsWith("bingapis-") ||
             header.startsWith("x-msedge-")
           ) {
-            console.log(`${header}: ${res.headers[header]}`);
+            this.logger.debug(`${header}: ${res.headers[header]}`);
           }
         });
 

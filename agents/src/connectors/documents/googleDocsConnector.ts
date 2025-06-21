@@ -142,7 +142,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
     try {
       this.docs = google.docs({ version: "v1", auth: this.client });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -157,7 +157,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
       const document: docs_v1.Schema$Document = await this.getData(documentId);
       return this.extractText(document.body?.content || []);
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -173,7 +173,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
       const currentDoc = await this.docs.documents.get({ documentId });
       const endIndex = currentDoc.data.body?.content?.length || 1;
 
-      console.log(`Current document length: ${endIndex}`);
+      this.logger.info(`Current document length: ${endIndex}`);
 
       let requests = [];
 
@@ -199,8 +199,8 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         },
       });
 
-      console.log(`Number of update requests: ${requests.length}`);
-      console.log("Requests to be sent:", JSON.stringify(requests, null, 2));
+      this.logger.info(`Number of update requests: ${requests.length}`);
+      this.logger.info("Requests to be sent:", JSON.stringify(requests, null, 2));
 
       // Perform the update
       await this.docs.documents.batchUpdate({
@@ -210,9 +210,9 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         },
       });
 
-      console.log("Document updated successfully");
+      this.logger.info("Document updated successfully");
     } catch (error: any) {
-      console.error("Error updating document:", error);
+      this.logger.error("Error updating document:", error);
       if (error.code === 429) {
         throw new Error("Rate limit exceeded. Please try again later.");
       } else if (error.code >= 500 && error.code < 600) {
@@ -224,14 +224,14 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
   }
 
   async getData(documentId: string): Promise<docs_v1.Schema$Document> {
-    console.log("Getting data for document:", documentId);
+    this.logger.info("Getting data for document:", documentId);
     try {
       const response = await this.docs.documents.get({
         documentId,
       });
       return response.data;
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -490,7 +490,7 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
           return elem.endIndex ? Math.max(max, elem.endIndex) : max;
         }, 1) || 1;
 
-      console.log(`Current document length: ${endIndex}`);
+      this.logger.info(`Current document length: ${endIndex}`);
 
       let requests: docs_v1.Schema$Request[] = [];
 
@@ -513,8 +513,8 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
       // Combine delete request with markdown requests
       requests = requests.concat(markdownRequests);
 
-      console.log(`Number of update requests: ${requests.length}`);
-      console.log("Requests to be sent:", JSON.stringify(requests, null, 2));
+      this.logger.info(`Number of update requests: ${requests.length}`);
+      this.logger.info("Requests to be sent:", JSON.stringify(requests, null, 2));
 
       // Perform the batch update
       await this.docs.documents.batchUpdate({
@@ -524,9 +524,9 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
         },
       });
 
-      console.log("Document updated successfully");
+      this.logger.info("Document updated successfully");
     } catch (error: any) {
-      console.error("Error updating document:", error);
+      this.logger.error("Error updating document:", error);
       if (error.code === 429) {
         throw new Error("Rate limit exceeded. Please try again later.");
       } else if (error.code >= 500 && error.code < 600) {

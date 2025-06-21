@@ -11,8 +11,9 @@ import {
   PsAgentConnectorClass,
   sequelize,
 } from "../dbModels/index.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
-export class AgentManager {
+export class AgentManager extends PolicySynthAgentBase {
   async getAgent(groupId: string) {
     if (!groupId) {
       throw new Error("Group ID is required");
@@ -43,35 +44,35 @@ export class AgentManager {
   }
 
   async getSubAgentMemoryKey(groupId: string, agentId: number): Promise<string | null> {
-    console.log(`Searching for agent with id ${agentId} in group ${groupId}`);
+    this.logger.info(`Searching for agent with id ${agentId} in group ${groupId}`);
 
     // Get the top-level agent for the group
     const topLevelAgent = await this.getAgent(groupId);
 
     if (!topLevelAgent) {
-      console.error("Top-level agent not found for the given group");
+      this.logger.error("Top-level agent not found for the given group");
       throw new Error("Top-level agent not found for the given group");
     }
 
-    console.log("Top-level agent found:", topLevelAgent.id);
+    this.logger.info("Top-level agent found:", topLevelAgent.id);
 
     // Helper function to recursively search for the agent
     const findAgent = (agent: any): any => {
-      console.log(`Checking agent: ${agent.id}`);
+      this.logger.info(`Checking agent: ${agent.id}`);
 
       if (agent.id === agentId) {
-        console.log(`Found matching agent: ${agent.id}`);
+        this.logger.info(`Found matching agent: ${agent.id}`);
         return agent;
       }
 
       if (agent.SubAgents && agent.SubAgents.length > 0) {
-        console.log(`Checking ${agent.SubAgents.length} sub-agents of agent ${agent.id}`);
+        this.logger.info(`Checking ${agent.SubAgents.length} sub-agents of agent ${agent.id}`);
         for (const subAgent of agent.SubAgents) {
           const found = findAgent(subAgent);
           if (found) return found;
         }
       } else {
-        console.log(`Agent ${agent.id} has no sub-agents`);
+        this.logger.info(`Agent ${agent.id} has no sub-agents`);
       }
 
       return null;
@@ -81,15 +82,15 @@ export class AgentManager {
     const foundAgent = findAgent(topLevelAgent) as PsAgent;
 
     if (!foundAgent) {
-      console.error(`Agent with id ${agentId} not found in the group`);
+      this.logger.error(`Agent with id ${agentId} not found in the group`);
       throw new Error(`Agent with id ${agentId} not found in the group`);
     }
 
-    console.log(`Found agent: ${foundAgent.id}`);
+    this.logger.info(`Found agent: ${foundAgent.id}`);
 
     // Return the redisMemoryKey if it exists, otherwise return null
     const memoryKey = `ps:agent:memory:${foundAgent.id}:${foundAgent.uuid}`;
-    console.log(`Memory key for agent ${foundAgent.id}: ${memoryKey}`);
+    this.logger.info(`Memory key for agent ${foundAgent.id}: ${memoryKey}`);
 
     return memoryKey;
   }

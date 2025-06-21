@@ -352,7 +352,6 @@ export class GoogleGeminiChat extends BaseChatModel {
 
           throw new Error(`Vertex AI Error: ${errorMessage}`);
         }
-        //console.log(`VERTEX RESPONSE: ${JSON.stringify(response, null, 2)}`);
         const tokensIn = response.usageMetadata?.promptTokenCount ?? 0;
         const tokensOut = getTokensOut(response.usageMetadata);
         const cachedInTokens =
@@ -392,7 +391,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         });
         const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();
-        //console.log(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
+        //this.logger.debug(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
         const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
         const tokensOut = getTokensOut(result.response.usageMetadata);
         const cachedInTokens =

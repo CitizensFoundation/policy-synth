@@ -25,7 +25,7 @@ export class PsConfigManager extends PolicySynthAgentBase{
       let value: unknown;
       if (this.memory.structuredAnswersOverrides) {
         value = this.getValueFromOverride(uniqueId);
-        console.log(`Value for ${uniqueId}: ${value} from override`);
+        this.logger.debug(`Value for ${uniqueId}: ${value} from override`);
       }
 
       if (!value) {

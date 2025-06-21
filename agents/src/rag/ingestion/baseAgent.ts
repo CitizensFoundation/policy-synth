@@ -89,7 +89,7 @@ export abstract class BaseIngestionAgent extends PolicySynthSimpleAgentBase {
       let jsonContent = data.substring(startIndex + 7, endIndex).trim();
       return JSON.parse(jsonContent);
     } else {
-      console.error(`JSON PARSE ERROR: Could not find JSON content in response ${data}`);
+      this.logger.error(`JSON PARSE ERROR: Could not find JSON content in response ${data}`);
     }
   }
 

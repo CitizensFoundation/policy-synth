@@ -141,7 +141,7 @@ YOUR EVALUATION: `);
     try {
       lastJsonText = JSON.stringify(lastJson, null, 2);
     } catch (e) {
-      console.error(e);
+      this.logger.error(e);
     }
     const chunkingStrategy = (await this.callLLM(
       "ingestion-agent",
@@ -282,7 +282,7 @@ YOUR EVALUATION: `);
 
             // Check if chunk size calculation is logical; otherwise, adjust
             if (chunkSize <= 0) {
-              console.error(
+              this.logger.error(
                 `Warning: Calculated chunk size for chunk ${
                   i + 1
                 } is non-positive, adjusting...`
@@ -355,8 +355,8 @@ YOUR EVALUATION: `);
               normalizedAggregatedData,
               normalizedOriginalData
             );
-            console.error(`Diff: ${diff}`);
-            console.error(
+            this.logger.error(`Diff: ${diff}`);
+            this.logger.error(
               `Validation failed: Normalized chunk data does not match the normalized original data. ${normalizedAggregatedData.length} !== ${normalizedOriginalData.length}`
             );
             validated = false;
@@ -367,7 +367,7 @@ YOUR EVALUATION: `);
           }
         }
       } catch (e) {
-        console.error(e);
+        this.logger.error(e);
         retryCount++;
       }
     }

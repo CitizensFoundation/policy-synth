@@ -59,7 +59,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
   }
 
   inspectDynamicMethods(obj: any, className: string) {
-    console.log(`Inspecting methods for ${className}:`);
+    this.logger.debug(`Inspecting methods for ${className}:`);
 
     const propertyNames = Object.getOwnPropertyNames(
       Object.getPrototypeOf(obj)
@@ -68,13 +68,13 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
     propertyNames.forEach((name) => {
       const property = obj[name];
       if (typeof property === "function" && name !== "constructor") {
-        console.log(`  - ${name}`);
+        this.logger.debug(`  - ${name}`);
       }
     });
 
     Object.keys(obj).forEach((key) => {
       if (typeof obj[key] === "function") {
-        console.log(`  - ${key} (dynamically added)`);
+        this.logger.debug(`  - ${key} (dynamically added)`);
       }
     });
   }

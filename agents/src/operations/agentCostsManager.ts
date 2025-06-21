@@ -1,5 +1,6 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../dbModels/index.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 interface PsCostBreakdown {
   costInNormal: number;
@@ -11,7 +12,7 @@ interface PsCostBreakdown {
   totalCost: number;
 }
 
-export class AgentCostManager {
+export class AgentCostManager extends PolicySynthAgentBase {
   private async getSubAgentIds(rootId: number): Promise<number[]> {
     const allAgentIds: number[] = [];
     const queue: number[] = [rootId];
@@ -234,7 +235,7 @@ export class AgentCostManager {
         };
       });
     } catch (error) {
-      console.error("Error calculating detailed agent costs:", error);
+      this.logger.error("Error calculating detailed agent costs:", error);
       throw new Error("Error calculating detailed agent costs: " + error);
     }
   }
@@ -367,7 +368,7 @@ export class AgentCostManager {
 
       return { agentCosts: агентCosts, totalCost } as PsAgentCostResults;
     } catch (error) {
-      console.error("Error calculating agent costs:", error);
+      this.logger.error("Error calculating agent costs:", error);
       throw Error("Error calculating agent costs: " + error);
     }
   }
@@ -451,7 +452,7 @@ export class AgentCostManager {
 
       return totalAgentCost.toFixed(2);
     } catch (error) {
-      console.error("Error calculating single agent costs:", error);
+      this.logger.error("Error calculating single agent costs:", error);
       throw new Error("Error calculating single agent costs: " + error);
     }
   }

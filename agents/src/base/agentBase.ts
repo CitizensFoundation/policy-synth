@@ -1,13 +1,16 @@
 import winston from "winston";
 import { jsonrepair } from "jsonrepair";
 import { encoding_for_model } from "tiktoken";
-import { AirbrakeTransport } from "./winstonAirbrake";
+import { AirbrakeTransport } from "./winstonAirbrake.js";
 
 export class PolicySynthAgentBase {
-  logger: winston.Logger;
   timeStart: number = Date.now();
 
-  constructor() {
+  private static _rootLogger: winston.Logger = PolicySynthAgentBase.initLogger();
+
+  protected logger!: winston.Logger;
+
+  private static initLogger(): winston.Logger {
     const transports: winston.transport[] = [
       new winston.transports.Console({
         format: winston.format.combine(
@@ -28,15 +31,26 @@ export class PolicySynthAgentBase {
       );
     }
 
-    this.logger = winston.createLogger({
+    return winston.createLogger({
       level: process.env.WINSTON_LOG_LEVEL || "debug",
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.errors({ stack: true }),
         winston.format.json()
       ),
-      transports: transports,
+      transports,
     });
+  }
+
+  protected static get logger(): winston.Logger {
+    return PolicySynthAgentBase._rootLogger.child({ component: this.name });
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────
+  constructor() {
+    // make the instance reuse exactly the same child logger
+    this.logger = (this.constructor as typeof PolicySynthAgentBase).logger;
+    this.timeStart = Date.now();
   }
 
   protected createSystemMessage(content: string): PsModelMessage {

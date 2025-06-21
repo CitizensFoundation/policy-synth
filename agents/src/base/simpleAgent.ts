@@ -288,7 +288,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
         );
       }
     } else {
-      console.warn("Memory is not initialized");
+        this.logger.debug("Memory is not initialized");
     }
   }
 

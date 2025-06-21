@@ -577,7 +577,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     while (retryCount < maxRetries) {
       try {
-        console.log(`Calling ${model.modelName}...`);
+        this.logger.info(`Calling ${model.modelName}...`);
         if (options.simulateContentErrorForFallbackDebugging) {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
@@ -695,7 +695,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
             // Attempt the call with the fallback ephemeral model (no further fallback if this fails)
             try {
-              console.log(
+              this.logger.info(
                 `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
               );
               const timeoutMs =

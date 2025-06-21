@@ -5,8 +5,9 @@ import {
   User,
 } from "../dbModels/index.js";
 import { literal, fn, col, Op, Sequelize } from "sequelize";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
-export class AgentRegistryManager {
+export class AgentRegistryManager extends PolicySynthAgentBase {
   async getActiveAgentClasses(
     userId: number
   ): Promise<PsAgentClassAttributes[]> {
@@ -152,7 +153,7 @@ export class AgentRegistryManager {
       return acc;
     }, [] as PsAgentConnectorClass[]);
 
-    console.log("Latest connectors:", latestConnectors.length);
+    this.logger.info("Latest connectors:", latestConnectors.length);
 
     return latestConnectors;
   }

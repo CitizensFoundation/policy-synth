@@ -205,7 +205,7 @@ Your new improved compressed text:
     if (validated && compressedText) {
       return compressedText;
     } else {
-      console.error("Chunk summary validation failed");
+      this.logger.error("Chunk summary validation failed");
       return uncompressedData;
     }
   }

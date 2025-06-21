@@ -107,7 +107,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
     try {
       this.sheets = google.sheets({ version: "v4", auth: this.client });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -125,7 +125,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
       });
       return response.data.values || [];
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -164,12 +164,12 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
             ],
           },
         });
-        console.log(`Sheet '${sheetName}' added.`);
+        this.logger.info(`Sheet '${sheetName}' added.`);
       } else {
-        console.log(`Sheet '${sheetName}' already exists.`);
+        this.logger.info(`Sheet '${sheetName}' already exists.`);
       }
     } catch (error) {
-      console.error("Error in addSheetIfNotExists:", error);
+      this.logger.error("Error in addSheetIfNotExists:", error);
       throw error;
     }
   }
@@ -196,7 +196,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         },
       });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -231,7 +231,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         },
       });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -252,7 +252,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         },
       });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -270,7 +270,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
       });
       return response.data.values || [];
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -291,7 +291,7 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         },
       });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -307,9 +307,9 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
         spreadsheetId,
         range,
       });
-      console.log(`Range '${range}' cleared successfully.`);
+      this.logger.info(`Range '${range}' cleared successfully.`);
     } catch (error) {
-      console.error(`Error clearing range '${range}':`, error);
+      this.logger.error(`Error clearing range '${range}':`, error);
       throw error;
     }
   }

@@ -9,9 +9,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const logQuery = (query: any, options: any) => {
-  console.log(safe.bgGreen(new Date().toLocaleString()));
-  console.log(safe.bgYellow(options.bind));
-  console.log(safe.bgBlue(query));
+  console.debug(safe.bgGreen(new Date().toLocaleString()));
+  console.debug(safe.bgYellow(options.bind));
+  console.debug(safe.bgBlue(query));
   return options;
 };
 

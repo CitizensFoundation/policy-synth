@@ -9,8 +9,9 @@ import {
 } from "../dbModels/index.js";
 
 import { PsYourPrioritiesConnector } from "../connectors/collaboration/yourPrioritiesConnector.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
-export class AgentConnectorManager {
+export class AgentConnectorManager extends PolicySynthAgentBase {
   public async createConnector(
     agentId: number,
     connectorClassId: number,
@@ -36,7 +37,7 @@ export class AgentConnectorManager {
         throw new Error("Agent or connector class not found");
       }
 
-      console.log(
+      this.logger.info(
         `Creating connector for agent ${agentClass.id} version ${
           agentClass.version
         } ${JSON.stringify(agentClass.configuration, null, 2)}`
@@ -74,7 +75,7 @@ export class AgentConnectorManager {
         process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH &&
         agentClass.configuration.defaultStructuredQuestions
       ) {
-        console.log(`Creating Your Priorities group for agent ${agent.id}`);
+        this.logger.info(`Creating Your Priorities group for agent ${agent.id}`);
         try {
           await this.createYourPrioritiesGroupAndUpdateAgent(
             agent,
@@ -83,28 +84,28 @@ export class AgentConnectorManager {
             type
           );
         } catch (error) {
-          console.error("Error creating group:", error);
+          this.logger.error("Error creating group:", error);
         }
       } else {
         // FUll debug fdor all teh parameters being checked above
-        console.log("agentClass", agentClass);
-        console.log(
+        this.logger.info("agentClass", agentClass);
+        this.logger.info(
           "connectorClass.class_base_id",
           connectorClass.class_base_id
         );
-        console.log(
+        this.logger.info(
           "PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID",
           PsYourPrioritiesConnector.YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID
         );
-        console.log(
+        this.logger.info(
           "process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY",
           process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY
         );
-        console.log(
+        this.logger.info(
           "agentClass.configuration.defaultStructuredQuestions",
           agentClass.configuration.defaultStructuredQuestions
         );
-        console.log("agent.configuration.answers", agent.configuration.answers);
+        this.logger.info("agent.configuration.answers", agent.configuration.answers);
       }
 
       return await PsAgentConnector.findByPk(newConnector.id, {
@@ -183,7 +184,7 @@ export class AgentConnectorManager {
 
       return newGroup;
     } catch (error) {
-      console.error("Error creating group and updating agent:", error);
+      this.logger.error("Error creating group and updating agent:", error);
       throw error;
     }
   }
@@ -310,7 +311,7 @@ export class AgentConnectorManager {
       const result = await response.json();
       return result;
     } catch (error) {
-      console.error("Error creating group:", error);
+      this.logger.error("Error creating group:", error);
       throw error;
     }
   }

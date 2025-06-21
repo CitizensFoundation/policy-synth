@@ -70,7 +70,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
       const data = await fs.readFile(filePath, "utf8");
       classObj = JSON.parse(data);
     } catch (err) {
-      console.error(`Error reading file from disk: ${err}`);
+      this.logger.error(`Error reading file from disk: ${err}`);
       return;
     }
 
@@ -81,7 +81,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
         .do();
       console.log(res);
     } catch (err) {
-      console.error(`Error creating schema: ${err}`);
+      this.logger.error(`Error creating schema: ${err}`);
     }
   }
 
@@ -90,7 +90,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
       const res = await PsRagDocumentVectorStore.client.schema.getter().do();
       console.log(JSON.stringify(res, null, 2));
     } catch (err) {
-      console.error(`Error creating schema: ${err}`);
+      this.logger.error(`Error creating schema: ${err}`);
     }
   }
 
@@ -102,7 +102,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
         .do();
       console.log(res);
     } catch (err) {
-      console.error(`Error creating schema: ${err}`);
+      this.logger.error(`Error creating schema: ${err}`);
     }
   }
 
@@ -156,7 +156,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
           );
           return res.id!;
         } catch (error) {
-          console.error(`Error posting document: ${error}`);
+          this.logger.error(`Error posting document: ${error}`);
         }
       },
       10,
@@ -269,7 +269,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
       return results as PsRagDocumentSourceGraphQlResponse;
     } catch (err) {
       // Handle different errors differently, e.g., schema errors, network errors, etc.
-      console.error("Error while querying documents:", err);
+      this.logger.error("Error while querying documents:", err);
       throw err;
     }
   }
@@ -446,7 +446,7 @@ export class PsRagDocumentVectorStore extends PolicySynthSimpleAgentBase {
 
       return resultsCombined as PsRagChunk[];
     } catch (err) {
-      console.error(err);
+      this.logger.error(err);
       throw err;
     }
   }

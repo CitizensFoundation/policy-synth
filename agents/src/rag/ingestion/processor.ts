@@ -48,7 +48,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         console.log("Metadata loaded");
       })
       .catch((err) => {
-        console.error("Failed to load file metadata:", err);
+        this.logger.error("Failed to load file metadata:", err);
       });
 
     this.cleanupAgent = new DocumentCleanupAgent();
@@ -95,7 +95,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           await this.saveFileMetadata();
         }
       } catch (error) {
-        console.error("Failed to process data layout:", error);
+        this.logger.error("Failed to process data layout:", error);
       } finally {
         await browser.close();
       }
@@ -159,7 +159,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
       );
       dateString = date.toISOString();
     } catch (error) {
-      console.error(`Failed to parse date: ${error} - using Date.now()`);
+      this.logger.error(`Failed to parse date: ${error} - using Date.now()`);
       dateString = new Date().toISOString();
     }
 
@@ -280,7 +280,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
               subChunk.id = subChunkId;
               allSiblingChunksWithIds.push(subChunk);
             } else {
-              console.error(
+              this.logger.error(
                 `Error: Failed to post sibling chunk ${subChunk.chapterIndex} NO CHUNK ID`
               );
             }
@@ -408,7 +408,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
                   source.chunks
                 );
               } catch (error) {
-                console.error(
+                this.logger.error(
                   `Failed to post chunk for document ${
                     source.url
                   }:\n${JSON.stringify(chunk)}`,
@@ -418,10 +418,10 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
             }
           }
         } else {
-          console.error(`Failed to post document ${source.url}`);
+          this.logger.error(`Failed to post document ${source.url}`);
         }
       } catch (error) {
-        console.error(`Failed to post document ${source.url}:\n`, error);
+        this.logger.error(`Failed to post document ${source.url}:\n`, error);
       }
     }
   }
@@ -523,7 +523,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           (meta) => meta.filePath === filePath
         );
         if (!metadataEntry) {
-          console.error(`Metadata not found for filePath: ${filePath}`);
+          this.logger.error(`Metadata not found for filePath: ${filePath}`);
           continue;
         }
 
@@ -587,7 +587,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           );
         }
       } catch (error) {
-        console.error(`Failed to process file ${filePath}:`, error);
+        this.logger.error(`Failed to process file ${filePath}:`, error);
       }
 
       if (path.extname(filePath).toLowerCase() == ".json") {
@@ -644,7 +644,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           // Add the new reference to the beginning of the array
           allReferencesWithUrls.unshift(newReference);
         } catch (error) {
-          console.error("Failed to fetch URL:", error);
+          this.logger.error("Failed to fetch URL:", error);
           const fallbackReference = {
             reference: `Link${missingLinkIndex}`,
             url: newUrl,
@@ -861,7 +861,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
         if (metadata.filePath) {
           filesForProcessing.push(metadata.filePath); // filePath is assumed to be stored in metadata
         } else {
-          console.error(`File path missing in metadata for fileId: ${fileId}`);
+          this.logger.error(`File path missing in metadata for fileId: ${fileId}`);
         }
       } else {
         console.log(`File ${metadata.filePath} has not been modified`);
@@ -1061,7 +1061,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           console.log(`Skipping download for image URL: ${url}`);
         }
       } catch (error) {
-        console.error(`Failed to download content for URL ${url}:`, error);
+        this.logger.error(`Failed to download content for URL ${url}:`, error);
       }
     }
     await this.saveFileMetadata();
@@ -1149,7 +1149,7 @@ export abstract class IngestionAgentProcessor extends BaseIngestionAgent {
           throw error;
         }
       } else {
-        console.error("Error loading metadata: " + error);
+        this.logger.error("Error loading metadata: " + error);
         process.exit(1); // Consider if this is the desired behavior
       }
     }

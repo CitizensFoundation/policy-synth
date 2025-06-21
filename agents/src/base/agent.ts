@@ -96,11 +96,6 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
     if (memory) {
       this.memory = memory;
-      /*console.log(
-        `Agent ${this.agent.id} loaded memory from constructor: ${JSON.stringify(
-          this.memory
-        )}`
-      );*/
     } else {
       this.loadAgentMemoryFromRedis();
     }
@@ -207,7 +202,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
   async checkProgressForPauseOrStop(): Promise<void> {
     let status = await this.loadStatusFromRedis();
     if (!status) {
-      console.warn("Agent status not initialized");
+      this.logger.debug("Agent status not initialized");
     } else {
       //this.logger.debug(JSON.stringify(status, null, 2));
       if (status.state === "stopped") {

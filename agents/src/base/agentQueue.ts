@@ -61,7 +61,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       redisUrl = redisUrl.replace("redis://h:", "redis://:");
     }
 
-    console.log("AgentQueueManager: Initializing Redis connection:", redisUrl);
+    this.logger.debug("AgentQueueManager: Initializing Redis connection:", redisUrl);
     const options: RedisOptions = {
       maxRetriesPerRequest: null,
       tls: redisUrl.startsWith("rediss://")
@@ -71,16 +71,16 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
 
     this.redisClient = new ioredis(redisUrl, options);
     this.redisClient.on("error", (err) => {
-      console.error("Redis Client Error", err);
+      this.logger.error("Redis Client Error", err);
     });
     this.redisClient.on("connect", () => {
-      console.log("AgentQueueManager: Successfully connected to Redis");
+      this.logger.debug("AgentQueueManager: Successfully connected to Redis");
     });
     this.redisClient.on("reconnecting", () => {
-      console.log("AgentQueueManager: Redis client is reconnecting");
+      this.logger.debug("AgentQueueManager: Redis client is reconnecting");
     });
     this.redisClient.on("ready", () => {
-      console.log("AgentQueueManager: Redis client is ready");
+      this.logger.debug("AgentQueueManager: Redis client is ready");
     });
   }
 
@@ -253,7 +253,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
         this.agentStatusMap.set(agentId, status);
         return status;
       } else {
-        console.error(
+        this.logger.debug(
           `No status data found for agent ${agentId} ${psAgent.redisStatusKey}`
         );
       }
@@ -295,7 +295,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
 
   async setupAgentQueue() {
     if (this.agentQueueName) {
-      console.log(`Setting up workers for agentQueue ${this.agentQueueName}`);
+      this.logger.debug(`Setting up workers for agentQueue ${this.agentQueueName}`);
 
       // Number of Worker instances to spawn
       const concurrencyCount = parseInt(
@@ -306,7 +306,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
         this.agentQueueName,
         async (job: Job) => {
           try {
-            console.log(
+            this.logger.info(
               `Processing job ${job.id} on worker for queue ${this.agentQueueName}`
             );
             const data = job.data as PsAgentStartJobData;
@@ -325,7 +325,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
 
             // 3) Subclass-specific memory setup
             await this.setupMemoryIfNeeded(agentId);
-            console.log(
+            this.logger.debug(
               `${action} agent ${loadedAgent.id} with structured answers overrides:`,
               JSON.stringify(structuredAnswersOverrides)
             );
@@ -352,7 +352,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
                 throw new Error(`Unknown action ${action} for job ${job.id}`);
             }
           } catch (error) {
-            console.error(
+            this.logger.error(
               `Error processing job ${job.id} for queue ${this.agentQueueName}`,
               error
             );

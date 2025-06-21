@@ -34,7 +34,7 @@ const models: Models = {
 
 const initializeModels = async () => {
   try {
-    console.log(`All Models Loaded Init`);
+    console.debug(`All Models Loaded Init`);
 
     // Call associate method to set up associations
     for (const modelName of Object.keys(models)) {
@@ -45,11 +45,11 @@ const initializeModels = async () => {
 
     if (process.env.FORCE_DB_SYNC || process.env.NODE_ENV === "development") {
       sequelize.sync().then(async () => {
-        console.log("Policy Synth database synced successfully.");
+        console.debug("Policy Synth database synced successfully.");
       });
     }
 
-    console.log("All models initialized successfully.");
+    console.debug("All models initialized successfully.");
 
   } catch (error) {
     console.error("Error initializing models:", error);

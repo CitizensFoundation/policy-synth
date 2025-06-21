@@ -59,7 +59,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       cachedInTokens: number,
       tokensOut: number
     ) => {
-      console.log(
+      this.logger.info(
         `(Standalone) Token usage for model ${modelType} (${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`
       );
     };
@@ -70,7 +70,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
    * Override this method to implement custom behavior.
    */
   async process(): Promise<void> {
-    console.log("PolicySynthStandaloneAgent processing started.");
+    this.logger.debug("PolicySynthStandaloneAgent processing started.");
 
   }
 

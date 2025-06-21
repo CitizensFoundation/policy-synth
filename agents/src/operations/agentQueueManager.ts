@@ -1,13 +1,15 @@
 import { Queue, QueueEvents } from "bullmq";
 import { Redis, RedisOptions } from "ioredis";
 import { PsAgent, PsAgentClass } from "../dbModels/index.js";
+import { PolicySynthAgentBase } from "../base/agentBase.js";
 
-export class AgentQueueManager {
+export class AgentQueueManager extends PolicySynthAgentBase {
   redisClient!: Redis;
   queues: Map<string, Queue>;
 
   constructor() {
-    console.log("AgentQueueManager: Initializing");
+    super();
+    this.logger.info("AgentQueueManager: Initializing");
     this.initializeRedis();
     this.queues = new Map();
   }
@@ -20,7 +22,7 @@ export class AgentQueueManager {
       redisUrl = redisUrl.replace("redis://h:", "redis://:");
     }
 
-    console.log(
+    this.logger.info(
       "AgentQueueManager: Initializing Redis connection: " + redisUrl
     );
 
@@ -34,36 +36,36 @@ export class AgentQueueManager {
     this.redisClient = new Redis(redisUrl, options);
 
     this.redisClient.on("error", (err) => {
-      console.error("Redis Client Error", err);
+      this.logger.error("Redis Client Error", err);
     });
 
     this.redisClient.on("connect", () => {
-      console.log("AgentQueueManager: Successfully connected to Redis");
+      this.logger.info("AgentQueueManager: Successfully connected to Redis");
     });
 
     this.redisClient.on("reconnecting", () => {
-      console.log("AgentQueueManager: Redis client is reconnecting");
+      this.logger.info("AgentQueueManager: Redis client is reconnecting");
     });
 
     this.redisClient.on("ready", () => {
-      console.log("AgentQueueManager: Redis client is ready");
+      this.logger.info("AgentQueueManager: Redis client is ready");
     });
   }
 
   getQueue(queueName: string): Queue {
-    console.log(`AgentQueueManager: Getting queue for ${queueName}`);
+    this.logger.info(`AgentQueueManager: Getting queue for ${queueName}`);
     if (!this.queues.has(queueName)) {
-      console.log(`AgentQueueManager: Creating new queue for ${queueName}`);
+      this.logger.info(`AgentQueueManager: Creating new queue for ${queueName}`);
       const newQueue = new Queue(queueName, {
         connection: this.redisClient,
       });
 
       newQueue.on("error", (error) => {
-        console.log(`Error in queue ${queueName}:`, error);
+        this.logger.info(`Error in queue ${queueName}:`, error);
       });
 
       newQueue.on("waiting", (jobId) => {
-        console.log(`Job ${jobId} is waiting in queue ${queueName}`);
+        this.logger.info(`Job ${jobId} is waiting in queue ${queueName}`);
       });
 
       // Create QueueEvents instance for global events
@@ -73,35 +75,35 @@ export class AgentQueueManager {
 
       // Add event listeners for debugging
       queueEvents.on('waiting', ({ jobId }) => {
-        console.log(`Job ${jobId} is waiting in queue ${queueName}`);
+        this.logger.info(`Job ${jobId} is waiting in queue ${queueName}`);
       });
 
       queueEvents.on('active', ({ jobId, prev }) => {
-        console.log(`Job ${jobId} is active in queue ${queueName} (prev state: ${prev})`);
+        this.logger.info(`Job ${jobId} is active in queue ${queueName} (prev state: ${prev})`);
       });
 
       queueEvents.on('completed', ({ jobId, returnvalue }) => {
-        console.log(`Job ${jobId} completed in queue ${queueName}. Result:`, returnvalue);
+        this.logger.info(`Job ${jobId} completed in queue ${queueName}. Result:`, returnvalue);
       });
 
       queueEvents.on('failed', ({ jobId, failedReason }) => {
-        console.log(`Job ${jobId} failed in queue ${queueName}. Reason:`, failedReason);
+        this.logger.info(`Job ${jobId} failed in queue ${queueName}. Reason:`, failedReason);
       });
 
       queueEvents.on('progress', ({ jobId, data }) => {
-        console.log(`Job ${jobId} reported progress in queue ${queueName}:`, data);
+        this.logger.info(`Job ${jobId} reported progress in queue ${queueName}:`, data);
       });
 
       queueEvents.on('removed', ({ jobId }) => {
-        console.log(`Job ${jobId} was removed from queue ${queueName}`);
+        this.logger.info(`Job ${jobId} was removed from queue ${queueName}`);
       });
 
       queueEvents.on('drained', () => {
-        console.log(`Queue ${queueName} was drained`);
+        this.logger.info(`Queue ${queueName} was drained`);
       });
 
       queueEvents.on('error', (error) => {
-        console.log(`Error in queue ${queueName}:`, error);
+        this.logger.info(`Error in queue ${queueName}:`, error);
       });
 
       this.queues.set(queueName, newQueue);
@@ -110,7 +112,7 @@ export class AgentQueueManager {
   }
 
   async controlAgent(agentId: number, action: string): Promise<string> {
-    console.log(
+    this.logger.info(
       `AgentQueueManager: Controlling agent ${agentId} with action ${action}`
     );
     const agent = await PsAgent.findByPk(agentId, {
@@ -118,7 +120,7 @@ export class AgentQueueManager {
     });
 
     if (!agent || !agent.Class) {
-      console.error(
+      this.logger.error(
         `AgentQueueManager: Agent or Agent Class not found for agent ${agentId}`
       );
       throw new Error("Agent or Agent Class not found");
@@ -126,7 +128,7 @@ export class AgentQueueManager {
 
     const queueName = agent.Class.configuration.queueName;
     if (!queueName) {
-      console.error(
+      this.logger.error(
         `AgentQueueManager: Queue name not defined for agent class ${agent.Class.id}`
       );
       throw new Error("Queue name not defined for this agent class");
@@ -134,7 +136,7 @@ export class AgentQueueManager {
 
     const queue = this.getQueue(queueName);
 
-    console.log(
+    this.logger.info(
       `AgentQueueManager: Adding ${action} job to queue ${queueName} for agent ${agentId}`
     );
     await queue.add(`${action}Agent`, { agentId, action });
@@ -142,12 +144,12 @@ export class AgentQueueManager {
     const message = `${
       action.charAt(0).toUpperCase() + action.slice(1)
     } request for agent ${agentId} queued in ${queueName}`;
-    console.log(`AgentQueueManager: ${message}`);
+    this.logger.info(`AgentQueueManager: ${message}`);
     return message;
   }
 
   async startAgentProcessing(agentId: number): Promise<boolean> {
-    console.log(
+    this.logger.info(
       `AgentQueueManager: Starting agent processing for agent ${agentId}`
     );
     const agent = await PsAgent.findByPk(agentId, {
@@ -155,7 +157,7 @@ export class AgentQueueManager {
     });
 
     if (!agent || !agent.Class) {
-      console.error(
+      this.logger.error(
         `AgentQueueManager: Agent or Agent Class not found for agent ${agentId}`
       );
       return false;
@@ -163,14 +165,14 @@ export class AgentQueueManager {
 
     const queueName = agent.Class.configuration.queueName;
     const queue = this.getQueue(queueName);
-    console.log(
+    this.logger.info(
       `AgentQueueManager: Adding start-processing job to queue ${queueName} for agent ${agentId}`
     );
     await queue.add("control-message", {
       type: "start-processing",
       agentId: agent.id,
     });
-    console.log(
+    this.logger.info(
       `AgentQueueManager: Updating agent ${agentId} status to running`
     );
     await this.updateAgentStatus(agent.id, "running");

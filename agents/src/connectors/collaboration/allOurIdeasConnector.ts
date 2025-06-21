@@ -99,7 +99,7 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
 
   async login(): Promise<void> {
     if (!this.user) {
-      console.log("Logging in to All Our Ideas...");
+      this.logger.info("Logging in to All Our Ideas...");
       const loginData = {
         username: this.userEmail,
         password: this.password,
@@ -128,14 +128,14 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
           throw new Error("Login failed, no response received.");
         }
       } catch (error) {
-        console.error("Error during login:", error);
+        this.logger.error("Error during login:", error);
         throw new Error("Login failed.");
       }
     }
   }
 
   async vote(postId: number, value: number): Promise<void> {
-    console.log("Voting on post...");
+    this.logger.info("Voting on post...");
     const votingData = {
       post_id: postId,
       value: value,
@@ -156,7 +156,7 @@ export class PsAllOurIdeasConnector extends PsBaseVotingCollaborationConnector {
         throw new Error("Voting Failed");
       }
     } catch (error) {
-      console.error("Error during voting:", error);
+      this.logger.error("Error during voting:", error);
       throw new Error("Voting failed.");
     }
   }

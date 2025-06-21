@@ -27,62 +27,7 @@ async function sleep(ms: number) {
  *   - MAX_5XX_RETRIES times for HTTP 5xx errors
  * Other errors are thrown immediately.
  */
-async function requestWithRetry<T>(requestFn: () => Promise<T>): Promise<T> {
-  let connectionErrorsSoFar = 0;
-  let serverErrorsSoFar = 0;
 
-  while (true) {
-    try {
-      // Attempt the request
-      return await requestFn();
-    } catch (error: any) {
-      // If it's an Axios error, check the code or status
-      if (axios.isAxiosError(error)) {
-        // Connection-level errors
-        if (
-          error.code === "ECONNREFUSED" ||
-          error.code === "ECONNRESET" ||
-          error.code === "ECONNABORTED" ||
-          error.code === "ETIMEDOUT" ||
-          error.code === "EAI_AGAIN" ||
-          error.code === "ENOTFOUND" ||
-          error.code === "ENETUNREACH"
-        ) {
-          connectionErrorsSoFar++;
-          console.error(
-            `${error.code}: Retry ${connectionErrorsSoFar}/${MAX_CONNECTION_RETRIES} in ${RETRY_DELAY}ms`
-          );
-          if (connectionErrorsSoFar < MAX_CONNECTION_RETRIES) {
-            await sleep(RETRY_DELAY);
-            continue;
-          }
-          // If we exhaust attempts for connection errors, throw
-        }
-        // 5xx errors
-        else if (error.response && error.response.status >= 500) {
-          serverErrorsSoFar++;
-          console.error(
-            `5xx Server Error: Retry ${serverErrorsSoFar}/${MAX_5XX_RETRIES} in ${RETRY_DELAY}ms`
-          );
-          if (serverErrorsSoFar < MAX_5XX_RETRIES) {
-            await sleep(RETRY_DELAY);
-            continue;
-          }
-          // If we exhaust attempts for 5xx errors, throw
-        }
-        // Anything else
-        else {
-          console.error("Other Axios error, not retrying:", error);
-        }
-      } else {
-        console.error("Non-Axios error, not retrying:", error);
-      }
-
-      // If we get here, we either exhausted retries or it’s a non-retryable error
-      throw error;
-    }
-  }
-}
 
 export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector {
   static readonly YOUR_PRIORITIES_CONNECTOR_CLASS_BASE_ID =
@@ -197,15 +142,72 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       throw new Error("Group ID and serverBaseUrl is required.");
     }
 
-    console.log(
+    this.logger.info(
       `Your Priorities Connector created with group ID: ${groupId} serverBaseUrl: ${this.serverBaseUrl}`
     );
+  }
+
+  async requestWithRetry<T>(requestFn: () => Promise<T>): Promise<T> {
+    let connectionErrorsSoFar = 0;
+    let serverErrorsSoFar = 0;
+
+    while (true) {
+      try {
+        // Attempt the request
+        return await requestFn();
+      } catch (error: any) {
+        // If it's an Axios error, check the code or status
+        if (axios.isAxiosError(error)) {
+          // Connection-level errors
+          if (
+            error.code === "ECONNREFUSED" ||
+            error.code === "ECONNRESET" ||
+            error.code === "ECONNABORTED" ||
+            error.code === "ETIMEDOUT" ||
+            error.code === "EAI_AGAIN" ||
+            error.code === "ENOTFOUND" ||
+            error.code === "ENETUNREACH"
+          ) {
+            connectionErrorsSoFar++;
+            this.logger.error(
+              `${error.code}: Retry ${connectionErrorsSoFar}/${MAX_CONNECTION_RETRIES} in ${RETRY_DELAY}ms`
+            );
+            if (connectionErrorsSoFar < MAX_CONNECTION_RETRIES) {
+              await sleep(RETRY_DELAY);
+              continue;
+            }
+            // If we exhaust attempts for connection errors, throw
+          }
+          // 5xx errors
+          else if (error.response && error.response.status >= 500) {
+            serverErrorsSoFar++;
+            this.logger.error(
+              `5xx Server Error: Retry ${serverErrorsSoFar}/${MAX_5XX_RETRIES} in ${RETRY_DELAY}ms`
+            );
+            if (serverErrorsSoFar < MAX_5XX_RETRIES) {
+              await sleep(RETRY_DELAY);
+              continue;
+            }
+            // If we exhaust attempts for 5xx errors, throw
+          }
+          // Anything else
+          else {
+            this.logger.error("Other Axios error, not retrying:", error);
+          }
+        } else {
+          this.logger.error("Non-Axios error, not retrying:", error);
+        }
+
+        // If we get here, we either exhausted retries or it’s a non-retryable error
+        throw error;
+      }
+    }
   }
 
   async login(): Promise<void> {
     if (!process.env.PS_TEMP_AGENTS_FABRIC_GROUP_API_KEY) {
       if (!this.user) {
-        console.log("Logging in to Your Priorities...");
+        this.logger.info("Logging in to Your Priorities...");
         const loginData = {
           username: this.userEmail,
           password: this.password,
@@ -214,7 +216,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         };
 
         try {
-          const response = await requestWithRetry(() =>
+          const response = await this.requestWithRetry(() =>
             axios.post(`${this.serverBaseUrl}/users/login`, loginData, {
               withCredentials: true,
             })
@@ -232,7 +234,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
             throw new Error("Login failed, no response received.");
           }
         } catch (error) {
-          console.error("Error during login:", error);
+          this.logger.error("Error during login:", error);
           throw new Error("Login failed.");
         }
       }
@@ -273,7 +275,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       }
 
       try {
-        const response = await requestWithRetry(() =>
+        const response = await this.requestWithRetry(() =>
           axios.get(url, {
             headers: this.getHeaders(),
           })
@@ -288,7 +290,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
           offset += data.length;
         }
       } catch (error) {
-        console.error("Error fetching posts:", error);
+        this.logger.error("Error fetching posts:", error);
         throw new Error("Failed to fetch group posts.");
       }
     }
@@ -313,7 +315,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     };
 
     try {
-      const response = await requestWithRetry(() =>
+      const response = await this.requestWithRetry(() =>
         axios.post(
           `${this.serverBaseUrl}/points/${groupId}${
             this.agentFabricUserId ? `?agentFabricUserId=${this.agentFabricUserId}` : ""
@@ -327,14 +329,14 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
       return response.data as YpPointData;
     } catch (error) {
-      console.error("Error posting point:", error);
+      this.logger.error("Error posting point:", error);
       throw new Error("Failed to post point.");
     }
   }
 
 
   async vote(postId: number, value: number): Promise<void> {
-    console.log("Voting on post...");
+    this.logger.info("Voting on post...");
 
     const votingData = {
       post_id: postId,
@@ -342,7 +344,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     };
 
     try {
-      const response = await requestWithRetry(() =>
+      const response = await this.requestWithRetry(() =>
         axios.post(
           `${this.serverBaseUrl}/posts/${postId}/endorse${
             this.agentFabricUserId
@@ -360,7 +362,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         throw new Error("Voting Failed");
       }
     } catch (error) {
-      console.error("Error during voting:", error);
+      this.logger.error("Error during voting:", error);
       throw new Error("Voting failed.");
     }
   }
@@ -395,7 +397,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       imageForm.append("file", fs.createReadStream(imageLocalPath), filename);
 
       try {
-        const imageUploadResponse = await requestWithRetry(() =>
+        const imageUploadResponse = await this.requestWithRetry(() =>
           axios.post(
             `${this.serverBaseUrl}/images${
               this.agentFabricUserId
@@ -423,8 +425,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
         imageId = imageUploadResponse.data.id;
       } catch (error) {
-        console.error("Error uploading local image:", error);
-        console.log("Generating AI image with prompt:", imagePrompt);
+        this.logger.error("Error uploading local image:", error);
+        this.logger.info("Generating AI image with prompt:", imagePrompt);
         imageId = await this.generateImageWithAi(groupId, imagePrompt);
       }
     } else {
@@ -435,13 +437,13 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     if (imageId) {
       formData.uploadedHeaderImageId = imageId.toString();
     } else {
-      console.warn("Skipping image setting, no imageId received.");
+      this.logger.warn("Skipping image setting, no imageId received.");
     }
 
     try {
-      console.log(`Posting data to groupId ${groupId}:`, formData);
+      this.logger.info(`Posting data to groupId ${groupId}:`, formData);
 
-      const postResponse = await requestWithRetry(() =>
+      const postResponse = await this.requestWithRetry(() =>
         axios.post(
           `${this.serverBaseUrl}/posts/${groupId}${
             this.agentFabricUserId
@@ -460,7 +462,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
       return postResponse.data;
     } catch (error) {
-      console.error("Error posting data:", error);
+      this.logger.error("Error posting data:", error);
       throw new Error("Failed to post data after multiple attempts.");
     }
   }
@@ -469,8 +471,8 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
     await this.login();
 
     try {
-      console.log("Generating AI image with prompt:", prompt);
-      const startResponse = await requestWithRetry(() =>
+      this.logger.info("Generating AI image with prompt:", prompt);
+      const startResponse = await this.requestWithRetry(() =>
         axios.post(
           `${this.serverBaseUrl}/groups/${groupId}/start_generating/ai_image`,
           {
@@ -491,21 +493,21 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
       const startTime = Date.now();
 
       while (isGenerating) {
-        pollResponse = await requestWithRetry(() =>
+        pollResponse = await this.requestWithRetry(() =>
           axios.get(
             `${this.serverBaseUrl}/groups/${groupId}/${jobId}/poll_for_generating_ai_image`,
             { headers: this.getHeaders() }
           )
         );
 
-        console.log("Poll response:", pollResponse.data);
+        this.logger.info("Poll response:", pollResponse.data);
 
         if (pollResponse.data.data.imageId) {
           isGenerating = false;
-          console.log("AI image generated:", pollResponse.data.data.imageId);
+          this.logger.info("AI image generated:", pollResponse.data.data.imageId);
         } else if (pollResponse.data.error) {
           isGenerating = false;
-          console.error(
+          this.logger.error(
             "Error generating AI image:",
             pollResponse.data.data.error
           );
@@ -515,7 +517,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
         if (isGenerating) {
           // Check if we exceeded our 2-minute timeout
           if (Date.now() - startTime > AI_IMAGE_GENERATION_TIMEOUT_MS) {
-            console.log(
+            this.logger.info(
               "AI image generation timed out after 2 minutes. Skipping image..."
             );
             return 0; // Will signal to skip the image
@@ -530,7 +532,7 @@ export class PsYourPrioritiesConnector extends PsBaseIdeasCollaborationConnector
 
       return pollResponse.data.data.imageId;
     } catch (error) {
-      console.error("Error generating AI image:", error);
+      this.logger.error("Error generating AI image:", error);
       throw new Error("Failed to generate AI image.");
     }
   }

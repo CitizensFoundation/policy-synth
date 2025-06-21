@@ -12,6 +12,7 @@ import { PsYourPrioritiesConnector } from "../collaboration/yourPrioritiesConnec
 import { PsGoogleSheetsConnector } from "../sheets/googleSheetsConnector.js";
 import { PsBaseSheetConnector } from "./baseSheetConnector.js";
 import { PsAllOurIdeasConnector } from "../collaboration/allOurIdeasConnector.js";
+import { PolicySynthAgentBase } from "../../base/agentBase.js";
 //import { PsGitHubConnector } from "../collaboration/gitHubConnector.js";
 
 type PsBaseConnectorTypes =
@@ -21,7 +22,7 @@ type PsBaseConnectorTypes =
   | PsBaseVotingCollaborationConnector
   | PsBaseIdeasCollaborationConnector;
 
-export class PsConnectorFactory {
+export class PsConnectorFactory extends PolicySynthAgentBase {
   static createConnector(
     connector: PsAgentConnectorAttributes,
     connectorClass: PsAgentConnectorClassAttributes,
@@ -70,7 +71,7 @@ export class PsConnectorFactory {
         );
 
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported connector type: ${connectorClass.configuration.classType}`
         );
         return null;
@@ -99,7 +100,7 @@ export class PsConnectorFactory {
           memory
         );*/
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported document connector: ${connectorClass.configuration.name}`
         );
         return null;
@@ -128,7 +129,7 @@ export class PsConnectorFactory {
           memory
         );*/
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported document connector: ${connectorClass.configuration.name}`
         );
         return null;
@@ -153,7 +154,7 @@ export class PsConnectorFactory {
       case "Slack":
         //return new PsSlackConnector(connector, connectorClass, agent, memory);
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported notifications connector: ${connectorClass.configuration.name}`
         );
         return null;
@@ -178,7 +179,7 @@ export class PsConnectorFactory {
       case "GitHub":
         //return new PsGitHubConnector(connector, connectorClass, agent, memory);
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported collaboration connector: ${connectorClass.configuration.name}`
         );
         return null;
@@ -202,7 +203,7 @@ export class PsConnectorFactory {
       case "GitHub":
         //return new PsGitHubConnector(connector, connectorClass, agent, memory);
       default:
-        console.warn(
+        this.logger.warn(
           `Unsupported collaboration connector: ${connectorClass.configuration.name}`
         );
         return null;

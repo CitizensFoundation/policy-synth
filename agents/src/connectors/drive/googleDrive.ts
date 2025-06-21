@@ -136,7 +136,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
       });
       return res.data.files || [];
     } catch (error) {
-      console.error("Error listing Drive files:", error);
+      this.logger.error("Error listing Drive files:", error);
       throw error;
     }
   }
@@ -158,7 +158,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
       });
       return res.data;
     } catch (error) {
-      console.error("Error getting file:", error);
+      this.logger.error("Error getting file:", error);
       throw error;
     }
   }
@@ -180,7 +180,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
       });
       return res.data;
     } catch (error) {
-      console.error("Error creating file:", error);
+      this.logger.error("Error creating file:", error);
       throw error;
     }
   }
@@ -208,7 +208,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
       });
       return res.data;
     } catch (error) {
-      console.error("Error updating file:", error);
+      this.logger.error("Error updating file:", error);
       throw error;
     }
   }
@@ -225,7 +225,7 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
     try {
       await this.drive.files.delete({ fileId });
     } catch (error) {
-      console.error("Error deleting file:", error);
+      this.logger.error("Error deleting file:", error);
       throw error;
     }
   }

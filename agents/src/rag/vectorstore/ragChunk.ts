@@ -43,7 +43,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
       const data = await fs.readFile(filePath, "utf8");
       classObj = JSON.parse(data);
     } catch (err) {
-      console.error(`Error reading file from disk: ${err}`);
+      this.logger.error(`Error reading file from disk: ${err}`);
       return;
     }
 
@@ -54,7 +54,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
         .do();
       console.log(res);
     } catch (err) {
-      console.error(`Error creating schema: ${err}`);
+      this.logger.error(`Error creating schema: ${err}`);
     }
   }
 
@@ -63,7 +63,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
       const res = await PsRagChunkVectorStore.client.schema.getter().do();
       console.log(JSON.stringify(res, null, 2));
     } catch (err) {
-      console.error(`Error showing schema: ${err}`);
+      this.logger.error(`Error showing schema: ${err}`);
     }
   }
 
@@ -75,7 +75,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
         .do();
       console.log(res);
     } catch (err) {
-      console.error(`Error deleting schema: ${err}`);
+      this.logger.error(`Error deleting schema: ${err}`);
     }
   }
 
@@ -121,7 +121,7 @@ export class PsRagChunkVectorStore extends PolicySynthSimpleAgentBase {
           this.logger.info(`Weaviate: Have saved chunk ${chunkData.title}`);
           return res.id;
         } catch (err) {
-          console.error(`Error posting chunk: ${err}`);
+          this.logger.error(`Error posting chunk: ${err}`);
         }
       },
       3,

@@ -114,10 +114,10 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
 
     try {
       await this.client.login(this.token);
-      console.log("Discord bot logged in!");
+      this.logger.info("Discord bot logged in!");
 
       this.client.once("ready", () => {
-        console.log(`Logged in as ${this.client.user?.tag}!`);
+        this.logger.info(`Logged in as ${this.client.user?.tag}!`);
       });
 
       this.client.on("messageCreate", (message) => {
@@ -125,14 +125,14 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
         const isMentioned = message.mentions.has(this.client.user!.id);
 
         if (isDM || isMentioned) {
-          console.log(
+          this.logger.info(
             `Received message: ${message.content} from ${message.author.tag}`
           );
           this.handleMessage(message);
         }
       });
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -145,7 +145,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
 
     for (const action in this.actions) {
       if (response.includes(action)) {
-        console.log(`Triggering action: ${action}`);
+        this.logger.info(`Triggering action: ${action}`);
         actionsTriggered.push(action);
         await this.actions[action]();
         modifiedResponse = modifiedResponse.replace(action, "");
@@ -186,7 +186,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
       )) as TextChannel;
       await channel.send(message);
     } catch (error) {
-      console.error("Error:", error);
+      this.logger.error("Error:", error);
       throw error;
     }
   }
@@ -246,7 +246,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
 
     this.channelTimeouts[channelId] = setTimeout(() => {
       this.archiveConversation(channelId);
-      console.log(
+      this.logger.info(
         `Stopped listening to channel: ${channelId} due to inactivity.`
       );
     }, this.listenDuration);
@@ -292,7 +292,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
       const fetchedMessages = await messages.messages.fetch({ limit: 100 });
       return fetchedMessages.map((msg) => msg.content);
     } catch (error) {
-      console.error("Error fetching messages:", error);
+      this.logger.error("Error fetching messages:", error);
       throw error;
     }
   }
@@ -304,7 +304,7 @@ export class PsBaseDiscordConnector extends PsBaseNotificationsConnector {
       )) as TextChannel;
       await targetChannel.send(message);
     } catch (error) {
-      console.error("Error sending notification:", error);
+      this.logger.error("Error sending notification:", error);
       throw error;
     }
   }

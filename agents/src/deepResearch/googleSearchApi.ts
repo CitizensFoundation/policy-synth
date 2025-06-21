@@ -5,40 +5,40 @@ function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function googleRequestWithRetry<T>(fn: () => Promise<T>): Promise<T> {
-  let attempt = 1;
-  const maxAttempts = 30;
-
-  // initial backoff in seconds
-  let backoffSec = 1;
-  // maximum wait: 60s
-  const maxBackoffSec = 60;
-
-  while (attempt <= maxAttempts) {
-    try {
-      return await fn();
-    } catch (error: any) {
-      if (axios.isAxiosError(error) && error.response?.status === 429) {
-        console.warn(
-          `Got 429 on attempt #${attempt}. Will back off for ${backoffSec}s, then retry.`
-        );
-        await sleep(backoffSec * 1000);
-        backoffSec = Math.min(backoffSec * 2, maxBackoffSec);
-        attempt++;
-        continue;
-      }
-
-      // For other errors, throw immediately
-      throw error;
-    }
-  }
-  throw new Error(
-    `Exceeded ${maxAttempts} retries after 429 responses. Aborting.`
-  );
-}
-
 export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
   needsAiModel = false;
+
+  async googleRequestWithRetry<T>(fn: () => Promise<T>): Promise<T> {
+    let attempt = 1;
+    const maxAttempts = 30;
+
+    // initial backoff in seconds
+    let backoffSec = 1;
+    // maximum wait: 60s
+    const maxBackoffSec = 60;
+
+    while (attempt <= maxAttempts) {
+      try {
+        return await fn();
+      } catch (error: any) {
+        if (axios.isAxiosError(error) && error.response?.status === 429) {
+          this.logger.debug(
+            `Got 429 on attempt #${attempt}. Will back off for ${backoffSec}s, then retry.`
+          );
+          await sleep(backoffSec * 1000);
+          backoffSec = Math.min(backoffSec * 2, maxBackoffSec);
+          attempt++;
+          continue;
+        }
+
+        // For other errors, throw immediately
+        throw error;
+      }
+    }
+    throw new Error(
+      `Exceeded ${maxAttempts} retries after 429 responses. Aborting.`
+    );
+  }
 
   public async search(
     query: string,
@@ -85,7 +85,7 @@ export class GoogleSearchApi extends PolicySynthSimpleAgentBase {
 
       try {
         // Use our custom requestWithRetry wrapper
-        const response = await googleRequestWithRetry(() => axios.get(url));
+        const response = await this.googleRequestWithRetry(() => axios.get(url));
         const results = response.data.items;
 
         if (results && results.length > 0) {
