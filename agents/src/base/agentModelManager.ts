@@ -324,7 +324,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         });
         break;
       default:
-        this.logger.warn(`Unsupported ephemeral provider: ${provider}`);
+        this.logger.warn(
+          `Unsupported ephemeral provider: ${provider} ${modelType} ${modelSize} ${JSON.stringify(options, null, 2)}`
+        );
         return undefined;
     }
 
