@@ -94,8 +94,8 @@ export class CookieConsent extends LitElement {
       <div class="actions">
         <md-filled-button @click=${this.accept}>Accept</md-filled-button>
         <md-text-button @click=${this.deny}>Deny</md-text-button>
-        <a href="/cookie-policy" target="_blank">Cookie Policy</a>
-        <a href="/privacy-policy" target="_blank">Privacy Policy</a>
+        <a href="https://ecas.org/ecas-cookies-policy/" target="_blank">Cookie Policy</a>
+        <a href="https://ecas.org/privacy-policy/" target="_blank">Privacy Policy</a>
       </div>
     `;
   }
