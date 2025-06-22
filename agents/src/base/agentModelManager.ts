@@ -10,6 +10,7 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
+import { TokenLimitChunker } from "./tokenLimitChunker.js";
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   models: Map<string, BaseChatModel> = new Map();
@@ -695,6 +696,18 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             `Model call timed out, retrying immediately. Attempt #${retryCount}`
           );
           continue;
+        }
+        if (TokenLimitChunker.isTokenLimitError(error)) {
+          this.logger.warn("Token limit exceeded, invoking chunking handler");
+          const handler = new TokenLimitChunker(this);
+          return await handler.handle(
+            model,
+            modelType,
+            modelSize,
+            messages,
+            options,
+            error
+          );
         }
         let tooMany429s = false;
         if (
