@@ -23,6 +23,7 @@ interface PsAiModelConfig {
   modelName?: string;
   provider?: string;
   maxTokensOut?: number;
+  maxContextTokens?: number;
   modelType: import("./aiModelTypes.js").PsAiModelType;
   modelSize: import("./aiModelTypes.js").PsAiModelSize;
   temperature?: number;

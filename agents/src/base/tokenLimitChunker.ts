@@ -1,6 +1,8 @@
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+import { PolicySynthSimpleAgentBase } from "./simpleAgent.js";
+import { PolicySynthAgentBase } from "./agentBase.js";
 
 export interface ModelCaller {
   callModel(
@@ -11,8 +13,10 @@ export interface ModelCaller {
   ): Promise<any>;
 }
 
-export class TokenLimitChunker {
-  constructor(private manager: ModelCaller) {}
+export class TokenLimitChunker extends PolicySynthAgentBase {
+  constructor(private manager: ModelCaller) {
+    super();
+  }
 
   static isTokenLimitError(err: any): boolean {
     if (!err) return false;
@@ -51,6 +55,27 @@ export class TokenLimitChunker {
     return undefined;
   }
 
+  calcTokenLimitFromModel(model: BaseChatModel): number | undefined {
+    if (model.config.maxContextTokens && model.config.maxTokensOut) {
+      return model.config.maxContextTokens - model.config.maxTokensOut;
+    } else {
+      return undefined;
+    }
+  }
+
+  calcTokenLimitFromError(model: BaseChatModel, err: any): number | undefined {
+    if (model.config.maxContextTokens) {
+      const parseLimit = TokenLimitChunker.parseTokenLimit(err);
+      if (parseLimit) {
+        return parseLimit-model.config.maxContextTokens;
+      } else {
+        return undefined;
+      }
+    } else {
+      return undefined;
+    }
+  }
+
   async handle(
     model: BaseChatModel,
     modelType: PsAiModelType,
@@ -60,9 +85,9 @@ export class TokenLimitChunker {
     err: any
   ): Promise<any> {
     const limit =
-      TokenLimitChunker.parseTokenLimit(err) ||
-      model.maxTokensOut ||
-      1000000;
+      this.calcTokenLimitFromError(model, err) ||
+      this.calcTokenLimitFromModel(model) ||
+      (1000000-40000);
 
     const enc = encoding_for_model(model.modelName as TiktokenModel);
 
