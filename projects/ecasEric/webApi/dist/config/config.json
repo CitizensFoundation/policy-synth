@@ -1,26 +1,26 @@
 {
-  "development": {
-    "username": "puser",
-    "password": "12",
-    "database": "ecas_development",
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "use_env_variable": null
-  },
-  "test": {
-    "username": "puser",
-    "password": "",
-    "database": "ecas_test",
-    "host": "127.0.0.1",
-    "dialect": "postgres",
-    "use_env_variable": null
-  },
-  "production": {
-    "use_env_variable": "DATABASE_URL",	  
-    "username": "puser",
-    "password": "",
-    "database": "ecas_production",
-    "host": "127.0.0.1",
-    "dialect": "postgres"
-  }
+    "development": {
+        "username": "puser",
+        "password": "bjahdh69",
+        "database": "ecas_development",
+        "host": "127.0.0.1",
+        "dialect": "postgres",
+        "use_env_variable": null
+    },
+    "test": {
+        "username": "puser",
+        "password": "",
+        "database": "ecas_test",
+        "host": "127.0.0.1",
+        "dialect": "postgres",
+        "use_env_variable": null
+    },
+    "production": {
+        "username": "puser",
+        "password": "",
+        "database": "ecas_production",
+        "host": "127.0.0.1",
+        "dialect": "postgres",
+        "use_env_variable": null
+    }
 }

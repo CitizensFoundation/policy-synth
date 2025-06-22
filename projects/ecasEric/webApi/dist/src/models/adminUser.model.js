@@ -2,11 +2,6 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index.js';
 import bcrypt from 'bcrypt';
 class AdminUser extends Model {
-    // Declare fields for TS and to satisfy implements, Sequelize handles them.
-    id;
-    email;
-    passwordHash;
-    role;
     // No temporary password?: string; field needed
     // Keep methods
     async validatePassword(password) {

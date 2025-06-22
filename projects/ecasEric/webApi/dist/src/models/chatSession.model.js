@@ -1,13 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index.js';
 class ChatSession extends Model {
-    id;
-    topicId;
-    userId;
-    chatLogJson;
-    legacyMemoryId;
-    createdAt;
-    updatedAt;
 }
 ChatSession.init({
     id: {

@@ -2,15 +2,6 @@ import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index.js';
 import { Topic } from './topic.model.js';
 class CountryLink extends Model {
-    id;
-    topicId;
-    countryCode;
-    url;
-    title;
-    createdAt;
-    updatedAt;
-    // Association mixins
-    getTopic;
 }
 CountryLink.init({
     id: {

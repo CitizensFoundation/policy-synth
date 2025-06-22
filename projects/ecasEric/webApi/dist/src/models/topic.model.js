@@ -1,13 +1,6 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from './index.js'; // Adjust path as necessary
 class Topic extends Model {
-    id;
-    slug;
-    title;
-    description;
-    language;
-    createdAt;
-    updatedAt;
 }
 Topic.init({
     id: {

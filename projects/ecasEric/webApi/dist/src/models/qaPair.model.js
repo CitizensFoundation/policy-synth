@@ -9,17 +9,6 @@ export var QAPairQuestionType;
     QAPairQuestionType["LEGAL_ASSISTANCE"] = "legal_assistance";
 })(QAPairQuestionType || (QAPairQuestionType = {}));
 class QAPair extends Model {
-    id;
-    topicId;
-    question;
-    answer;
-    embeddingUuid;
-    questionType;
-    source;
-    createdAt;
-    updatedAt;
-    // Association mixins
-    getTopic;
     // Placeholder for vector store synchronization hook
     static addHookForVectorSync() {
         QAPair.afterSave('syncWithVectorStore', async (qaPair, options) => {

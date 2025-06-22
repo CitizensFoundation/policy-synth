@@ -4,19 +4,6 @@ import { QAPair } from './qaPair.model.js';
 import { AdminUser } from './adminUser.model.js';
 import { ChatSession } from './chatSession.model.js'; // Assuming ChatSession model exists
 class Review extends Model {
-    id;
-    qaPairId;
-    chatSessionId;
-    answerHash;
-    rating;
-    notes;
-    reviewerId;
-    createdAt;
-    updatedAt;
-    // Association mixins
-    getQAPair;
-    getChatSession;
-    getReviewer;
     // Static method for aggregation
     static async aggregateForQaPair(qaPairId) {
         const result = await Review.findOne({
