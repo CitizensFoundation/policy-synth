@@ -500,8 +500,11 @@ export class PsChatAssistant extends PsStreamingLlmBase {
   renderChatInput() {
     return html`
       <div class="layout vertical chatInputContainer">
-        <div class="layout horizontal tagLine" ?hidden="${this.chatLog.length > 0}">
-          Let me help you navigate EU telework laws.
+        <div
+          class="layout horizontal tagLine"
+          ?hidden="${this.chatLog.length > 0}"
+        >
+          Questions about cross-border or remote work in the EU? Let us know.
         </div>
         <ps-input-dialog
           class="textInput"
@@ -514,6 +517,20 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           @blur="${() => (this.inputIsFocused = true)}"
           .label="${this.textInputLabel}"
         ></ps-input-dialog>
+        <div class="layout horizontal center-center">
+          <div class="disclaimer">
+            Our service is an automated tool designed to provide information in
+            response to individual enquiries. While we strive for accuracy, the
+            extracted information may not always be complete or error-free. Our
+            service does not provide legal advice or replace the need for
+            professional legal consultation. The information extracted and
+            provided by the service is for informational purposes only.
+            <a href="https://ecas.org/privacy-policy/" style="padding: 4px" target="_blank"
+              >Privacy Policy</a
+            >
+            © 2025 All rights reserved
+          </div>
+        </div>
       </div>
     `;
   }
@@ -525,7 +542,8 @@ export class PsChatAssistant extends PsStreamingLlmBase {
           <div class="bigEricWelcome">Hello I'm Eric, your assistant.</div>
           <div class="flex"></div>
           <div class="bottomRightInfo">
-            Supporting fair & informed telework across the EU
+            Supporting citizens in understanding their teleworking rights in the
+            EU.
           </div>
         </div>
       </div>
@@ -576,6 +594,23 @@ export class PsChatAssistant extends PsStreamingLlmBase {
     return [
       super.styles,
       css`
+        .disclaimer {
+          font-size: 12px;
+          font-weight: 400;
+          max-width: 770px;
+          padding-left: 8px;
+          padding-right: 8px;
+        }
+
+        @media (max-width: 600px) {
+          .disclaimer {
+            font-size: 10px;
+            padding-left: 16px;
+            max-width: 100%;
+            padding-right: 8px;
+          }
+        }
+
         .welcomeInfo {
           max-width: 790px;
         }

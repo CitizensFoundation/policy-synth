@@ -47,7 +47,7 @@ export class EcasYeaChatBot extends PsBaseChatBot {
   mainStreamingSystemPrompt = (
     topicTitle: string,
     topicContext: string
-  ) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (European Rights Information Centre). You help users with questions about **${topicTitle}**.
+  ) => `You are the ECAS (European Citizen Action Service) chatbot called ERIC (Ecas Rights Information Centre). You help users with questions about **${topicTitle}**.
 
 <TOPIC_CONTEXT>
 ${topicContext}

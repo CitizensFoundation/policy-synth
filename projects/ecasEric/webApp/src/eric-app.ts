@@ -175,7 +175,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         }
 
         .topHeader {
-          margin-top: 32px;
+          margin-top: 0px;
           max-width: 1100px;
           width: 100%;
         }
@@ -375,7 +375,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
             >
           </div>
           <div class="flex"></div>
-          <div class="layout horizontal ecasTopLeft" style="margin-left: 32px">
+          <div hidden class="layout horizontal ecasTopLeft" style="margin-left: 32px">
             <span class="boldEcas">E</span>CAS &nbsp; <span class="boldEcas">R</span>ights &nbsp; <span class="boldEcas">I</span>nformation &nbsp; <span class="boldEcas">C</span>entre</span>
           </div>
         </div>
