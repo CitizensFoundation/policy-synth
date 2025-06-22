@@ -5,7 +5,7 @@ import { PsAgentConnector } from "../../dbModels/agentConnector.js";
 
 export class PsSubAgentsConnector extends PsBaseConnector {
   static readonly SUB_AGENTS_CONNECTOR_CLASS_BASE_ID =
-    "0d0d0d0d-0000-0000-0000-000000000000";
+    "eb5a405e-e8bb-4eae-80c9-e5b66aaf164f";
 
   static readonly SUB_AGENTS_CONNECTOR_VERSION = 1;
 
@@ -20,7 +20,7 @@ export class PsSubAgentsConnector extends PsBaseConnector {
       classType: PsConnectorClassTypes.SubAgents,
       description: "Connector for linking agents together",
       hasPublicAccess: true,
-      imageUrl: "",
+      imageUrl: "https://aoi-storage-production.citizens.is/dl/f1aba913bcb5fcec9b4bb7edea0989e5--retina-1.png",
       iconName: "agents",
       questions: [
         { uniqueId: "name", text: "Name", type: "textField", maxLength: 200, required: true },
@@ -47,7 +47,7 @@ export class PsSubAgentsConnector extends PsBaseConnector {
         {
           model: PsAgentConnector,
           as: "InputConnectors",
-          where: { id: (this.connector as any).id },
+          where: { id: this.connector.id },
           attributes: [],
           through: { attributes: [] },
         },
@@ -56,13 +56,13 @@ export class PsSubAgentsConnector extends PsBaseConnector {
   }
 
   async listConnectedOutputAgents(): Promise<PsAgent[]> {
-    if (!(this.connector as any).id) return [];
+    if (!this.connector.id) return [];
     return await PsAgent.findAll({
       include: [
         {
           model: PsAgentConnector,
           as: "OutputConnectors",
-          where: { id: (this.connector as any).id },
+          where: { id: this.connector.id },
           attributes: [],
           through: { attributes: [] },
         },
