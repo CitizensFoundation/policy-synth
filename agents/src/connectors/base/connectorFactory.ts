@@ -12,6 +12,7 @@ import { PsYourPrioritiesConnector } from "../collaboration/yourPrioritiesConnec
 import { PsGoogleSheetsConnector } from "../sheets/googleSheetsConnector.js";
 import { PsBaseSheetConnector } from "./baseSheetConnector.js";
 import { PsAllOurIdeasConnector } from "../collaboration/allOurIdeasConnector.js";
+import { PsSubAgentsConnector } from "../agents/subAgentsConnector.js";
 import { PolicySynthAgentBase } from "../../base/agentBase.js";
 //import { PsGitHubConnector } from "../collaboration/gitHubConnector.js";
 
@@ -20,7 +21,8 @@ type PsBaseConnectorTypes =
   | PsBaseSheetConnector
   | PsBaseNotificationsConnector
   | PsBaseVotingCollaborationConnector
-  | PsBaseIdeasCollaborationConnector;
+  | PsBaseIdeasCollaborationConnector
+  | PsSubAgentsConnector;
 
 export class PsConnectorFactory extends PolicySynthAgentBase {
   static createConnector(
@@ -64,6 +66,14 @@ export class PsConnectorFactory extends PolicySynthAgentBase {
 
       case PsConnectorClassTypes.VotingCollaboration:
         return this.createVotingCollaborationConnector(
+          connector,
+          connectorClass,
+          agent,
+          memory
+        );
+
+      case PsConnectorClassTypes.SubAgents:
+        return this.createSubAgentsConnector(
           connector,
           connectorClass,
           agent,
@@ -208,6 +218,20 @@ export class PsConnectorFactory extends PolicySynthAgentBase {
         );
         return null;
     }
+  }
+
+  static createSubAgentsConnector(
+    connector: PsAgentConnectorAttributes,
+    connectorClass: PsAgentConnectorClassAttributes,
+    agent: PsAgent,
+    memory: any
+  ): PsSubAgentsConnector {
+    return new PsSubAgentsConnector(
+      connector,
+      connectorClass,
+      agent,
+      memory
+    );
   }
 
   static getConnector(

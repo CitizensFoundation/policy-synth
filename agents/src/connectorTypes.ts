@@ -5,5 +5,6 @@ export enum PsConnectorClassTypes {
   IdeasCollaboration = "ideasCollaboration",
   VotingCollaboration = "votingCollaboration",
   Drive = "drive",
+  SubAgents = "subAgents",
 }
 
