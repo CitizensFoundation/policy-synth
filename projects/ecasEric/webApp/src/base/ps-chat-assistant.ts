@@ -379,6 +379,8 @@ export class PsChatAssistant extends PsStreamingLlmBase {
         this.chatLog[this.chatLog.length - 1].debug = wsMessage.debug;
         this.streamingEnded();
 
+        this.removeAgentSystemMessagesAboveAnswer();
+
         this.infoMessage = this.defaultInfoMessage;
         break;
       case "message":
@@ -478,6 +480,21 @@ export class PsChatAssistant extends PsStreamingLlmBase {
 
   streamingEnded() {
     this.chatInputField!.isDisabled = false;
+  }
+
+  removeAgentSystemMessagesAboveAnswer() {
+    const lastIndex = this.chatLog.length - 1;
+    this.chatLog = this.chatLog.filter((msg, index) => {
+      if (index >= lastIndex) {
+        return true;
+      }
+      return (
+        msg.type !== "agentStart" &&
+        msg.type !== "agentUpdated" &&
+        msg.type !== "agentCompleted"
+      );
+    });
+    this.requestUpdate();
   }
 
   renderChatInput() {
