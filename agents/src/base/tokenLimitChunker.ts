@@ -15,20 +15,39 @@ export class TokenLimitChunker {
   constructor(private manager: ModelCaller) {}
 
   static isTokenLimitError(err: any): boolean {
-    if (!err?.message) return false;
-    const m = err.message.toLowerCase();
+    if (!err) return false;
+
+    const m = (err.message || "").toLowerCase();
+    const code =
+      (err.code || err?.error?.code || err?.response?.data?.error?.code || "").toLowerCase();
+
+    if (code === "context_length_exceeded" || code === "request_too_large") {
+      return true;
+    }
+
     return (
       m.includes("exceeds the maximum number of tokens") ||
-      m.includes("maximum context length")
+      m.includes("maximum context length") ||
+      m.includes("input token count") ||
+      m.includes("exceeds context window size") ||
+      m.includes("request exceeds the maximum allowed number of bytes")
     );
   }
 
   static parseTokenLimit(err: any): number | undefined {
     if (!err?.message) return undefined;
-    const match = err.message.match(/maximum number of tokens allowed \((\d+)\)/i);
-    if (match) return parseInt(match[1], 10);
-    const match2 = err.message.match(/maximum context length is (\d+)/i);
-    if (match2) return parseInt(match2[1], 10);
+
+    const matchGoogle = err.message.match(
+      /maximum number of tokens allowed \((\d+)\)/i
+    );
+    if (matchGoogle) return parseInt(matchGoogle[1], 10);
+
+    const matchOpenAi = err.message.match(/maximum context length is (\d+)/i);
+    if (matchOpenAi) return parseInt(matchOpenAi[1], 10);
+
+    const matchAnthropic = err.message.match(/context window size.*?(\d+)/i);
+    if (matchAnthropic) return parseInt(matchAnthropic[1], 10);
+
     return undefined;
   }
 
