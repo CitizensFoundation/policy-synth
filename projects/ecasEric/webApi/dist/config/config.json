@@ -1,7 +1,7 @@
 {
     "development": {
         "username": "puser",
-        "password": "bjahdh69",
+        "password": "x",
         "database": "ecas_development",
         "host": "127.0.0.1",
         "dialect": "postgres",
@@ -21,6 +21,6 @@
         "database": "ecas_production",
         "host": "127.0.0.1",
         "dialect": "postgres",
-        "use_env_variable": null
+        "use_env_variable": "DATABASE_URL"
     }
 }
