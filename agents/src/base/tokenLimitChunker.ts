@@ -115,13 +115,22 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         ...prefixMessages,
         { role: docMessage.role, message: chunk },
       ];
-      const res = await this.manager.callModel(
-        modelType,
-        modelSize,
-        chunkMessages,
-        options
-      );
-      analyses.push(res);
+      try {
+        const res = await this.manager.callModel(
+          modelType,
+          modelSize,
+          chunkMessages,
+          { ...options, disableChunkingRetry: true }
+        );
+        analyses.push(res);
+      } catch (e) {
+        if (TokenLimitChunker.isTokenLimitError(e)) {
+          this.logger.error(
+            "Token limit error occurred during chunk processing; aborting."
+          );
+        }
+        throw e;
+      }
     }
 
     const summaryText = analyses
@@ -132,6 +141,20 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       ...prefixMessages,
       { role: docMessage.role, message: summaryText },
     ];
-    return this.manager.callModel(modelType, modelSize, finalMessages, options);
+    try {
+      return await this.manager.callModel(
+        modelType,
+        modelSize,
+        finalMessages,
+        { ...options, disableChunkingRetry: true }
+      );
+    } catch (e) {
+      if (TokenLimitChunker.isTokenLimitError(e)) {
+        this.logger.error(
+          "Token limit error encountered while summarizing chunks; giving up."
+        );
+      }
+      throw e;
+    }
   }
 }

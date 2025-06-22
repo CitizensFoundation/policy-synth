@@ -55,6 +55,12 @@ interface PsCallModelOptions {
     mimeType: string;
     data: string;
   }[];
+  /**
+   * When true, token limit errors will be rethrown instead of triggering
+   * the TokenLimitChunker retry logic. Useful for preventing infinite
+   * retry loops if chunking already failed.
+   */
+  disableChunkingRetry?: boolean;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
