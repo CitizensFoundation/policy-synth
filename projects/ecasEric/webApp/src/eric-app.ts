@@ -169,6 +169,18 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
           font-weight: 600;
         }
 
+        .logo {
+          height: 50px;
+          margin: 32px;
+        }
+
+        @media (max-width: 600px) {
+          .logo {
+            height: 32px;
+            margin: 16px;
+          }
+        }
+
         simple-chat-bot {
           width: 100vw;
           height: 100%;
@@ -366,7 +378,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
         <div class="layout horizontal center-center topHeader">
           <img
             src="https://yp-eu-assets.citizens.is/ecas/logo.svg"
-            style="height: 50px;margin: 32px;"
+            class="logo"
           />
           <div class="flex"></div>
           <div style="margin-top: 32px;" hidden>

@@ -279,25 +279,28 @@ export class PsChatAssistant extends PsStreamingLlmBase {
         }
         break;
       case "agentStart":
-        console.log("agentStart");
-        if (this.lastChatUiElement) {
-          this.lastChatUiElement.spinnerActive = false;
-        }
-        const startOptions = wsMessage.data as PsAgentStartWsOptions;
-        setTimeout(() => this.scrollDown(), 50);
+        const diableAgentUi = true;
+        if (!diableAgentUi) {
+          console.log("agentStart");
+          if (this.lastChatUiElement) {
+            this.lastChatUiElement.spinnerActive = false;
+          }
+          const startOptions = wsMessage.data as PsAgentStartWsOptions;
+          setTimeout(() => this.scrollDown(), 50);
 
-        if (startOptions?.noStreaming) {
-          this.addChatBotElement({
-            sender: "bot",
-            type: "noStreaming",
-            message: startOptions.name,
-          } as PsAiChatWsMessage);
-        } else {
-          this.addToChatLogWithMessage(wsMessage, startOptions?.name || "");
-          const lastMsg = this.chatLog[this.chatLog.length - 1];
-          lastMsg.message = `${startOptions?.name}\n\n`;
+          if (startOptions?.noStreaming) {
+            this.addChatBotElement({
+              sender: "bot",
+              type: "noStreaming",
+              message: startOptions.name,
+            } as PsAiChatWsMessage);
+          } else {
+            this.addToChatLogWithMessage(wsMessage, startOptions?.name || "");
+            const lastMsg = this.chatLog[this.chatLog.length - 1];
+            lastMsg.message = `${startOptions?.name}\n\n`;
+          }
+          this.requestUpdate();
         }
-        this.requestUpdate();
         break;
       case "liveLlmCosts":
         this.fire("llm-total-cost-update", wsMessage.data as number);
@@ -525,7 +528,10 @@ export class PsChatAssistant extends PsStreamingLlmBase {
             service does not provide legal advice or replace the need for
             professional legal consultation. The information extracted and
             provided by the service is for informational purposes only.
-            <a href="https://ecas.org/privacy-policy/" style="padding: 4px" target="_blank"
+            <a
+              href="https://ecas.org/privacy-policy/"
+              style="padding: 4px"
+              target="_blank"
               >Privacy Policy</a
             >
             © 2025 All rights reserved
@@ -595,16 +601,17 @@ export class PsChatAssistant extends PsStreamingLlmBase {
       super.styles,
       css`
         .disclaimer {
-          font-size: 12px;
+          font-size: 10px;
           font-weight: 400;
           max-width: 770px;
           padding-left: 8px;
           padding-right: 8px;
+          padding-bottom: 4px;
         }
 
         @media (max-width: 600px) {
           .disclaimer {
-            font-size: 10px;
+            font-size: 9px;
             padding-left: 16px;
             max-width: 100%;
             padding-right: 8px;
@@ -640,6 +647,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
             font-size: 32px;
             width: 300px;
             margin-right: 0;
+            margin-top: 16px;
           }
 
           .chatInputContainer {
@@ -672,7 +680,7 @@ export class PsChatAssistant extends PsStreamingLlmBase {
             margin-left: 0;
             text-align: right;
             width: 100%;
-            margin-top: 48px;
+            margin-top: 64px;
           }
         }
 

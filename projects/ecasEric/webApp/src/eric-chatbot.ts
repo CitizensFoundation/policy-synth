@@ -58,13 +58,14 @@ export class EcasEricChatBot extends PsChatAssistant {
       ...super.styles,
       css`
         .chat-window {
-          height: 78vh;
+          height: 85vh;
           width: 1000px;
         }
 
         @media (max-width: 600px) {
           .chat-window {
             width: 100%;
+            height: 90vh;
           }
         }
       `,
