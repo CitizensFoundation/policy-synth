@@ -92,7 +92,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
       !process.env.AI_MODEL_PROVIDER
     ) {
       //TODO: this should not happen on all agents that have this.needsAiModel = false
-      this.logger.error("Memory or AI model configuration not found");
+      this.logger.warn("Memory or AI model configuration not found");
       return;
     }
 

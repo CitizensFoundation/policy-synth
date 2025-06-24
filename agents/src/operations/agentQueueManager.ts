@@ -213,6 +213,25 @@ export class AgentQueueManager extends PolicySynthAgentBase {
     }
   }
 
+  async clearAgentStatusMessages(agentId: number): Promise<void> {
+    const agent = await PsAgent.findByPk(agentId, {
+      include: [{ model: PsAgentClass, as: "Class" }],
+    });
+
+    if (agent) {
+      const statusDataString = await this.redisClient.get(agent.redisStatusKey);
+      if (statusDataString) {
+        const statusData: PsAgentStatus = JSON.parse(statusDataString);
+        statusData.messages = [];
+        statusData.lastUpdated = Date.now();
+        await this.redisClient.set(
+          agent.redisStatusKey,
+          JSON.stringify(statusData)
+        );
+      }
+    }
+  }
+
   async updateAgentStatus(
     agentId: number,
     state: PsAgentStatus["state"],
