@@ -163,7 +163,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
    * Reads profession and degree columns from the first sheet. Duplicates are
    * filtered based on the profession value.
    */
-  private async readSheet1Rows(
+  private async readWvuSheetRows(
     connector: PsBaseSheetConnector,
     sheetName: string
   ): Promise<ProfessionRow[]> {
@@ -186,7 +186,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
    * Reads job name and education requirement from the second sheet, filtering
    * out rows that do not require a college degree.
    */
-  private async readSheet2Rows(
+  private async readSkillsFirstSheetRows(
     connector: PsBaseSheetConnector,
     sheetName: string
   ): Promise<JobRow[]> {
@@ -205,27 +205,28 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     return result;
   }
 
-  async process(): Promise<void> {
+  async processWvuComparison() {
     await this.updateRangedProgress(0, "Starting license comparison");
 
-    const sheet1Rows = await this.readSheet1Rows(
+    const skillsFirstSheetRows = await this.readSkillsFirstSheetRows(
       this.sheet1Connector,
       this.sheet1Name
     );
-    const sheet2Rows = await this.readSheet2Rows(
+
+    const wvuSheetRows = await this.readWvuSheetRows(
       this.sheet2Connector,
       this.sheet2Name
     );
 
     let count = 0;
-    for (const row of sheet1Rows) {
+    for (const row of wvuSheetRows) {
       count++;
       await this.updateRangedProgress(
-        (count / sheet1Rows.length) * 50,
-        `Processing row ${count} of ${sheet1Rows.length}`
+        (count / wvuSheetRows.length) * 50,
+        `Processing row ${count} of ${wvuSheetRows.length}`
       );
 
-      const context = sheet2Rows
+      const context = skillsFirstSheetRows
         .map((r) => `${r.name} - ${r.educationRequirement}`)
         .join("\n");
 
@@ -264,6 +265,13 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
     await this.writeResults();
     await this.updateRangedProgress(100, "Comparison complete");
+
+  }
+
+  async process(): Promise<void> {
+    await this.updateRangedProgress(0, "Starting license comparison");
+    await this.processWvuComparison();
+
   }
 
   /** Writes results to the output sheet in chunks */
