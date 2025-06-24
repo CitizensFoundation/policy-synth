@@ -31,6 +31,12 @@ interface LicenseComparisonResult {
   isLikelyMatchingEducationRequirements: boolean;
 }
 
+/** Row from the deep research sheet */
+interface DeepResearchRow {
+  name: string;
+  degreeStatus: string;
+}
+
 export class CompareLicenseEducationAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData & {
     results?: LicenseComparisonResult[];
@@ -39,10 +45,12 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
   private sheet1Connector: PsBaseSheetConnector;
   private sheet2Connector: PsBaseSheetConnector;
+  private sheet3Connector: PsBaseSheetConnector;
   private outputConnector: PsBaseSheetConnector;
 
   private sheet1Name: string;
   private sheet2Name: string;
+  private sheet3Name: string;
   private outputSheetName: string;
 
   private readonly maxRows = 4500;
@@ -67,11 +75,12 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       true
     ) as PsBaseSheetConnector[];
 
-    if (inputs.length < 2) {
-      throw new Error("At least two spreadsheet connectors are required");
+    if (inputs.length < 3) {
+      throw new Error("At least three spreadsheet connectors are required");
     }
     this.sheet1Connector = inputs[0];
     this.sheet2Connector = inputs[1];
+    this.sheet3Connector = inputs[2];
 
     this.outputConnector = PsConnectorFactory.getConnector(
       this.agent,
@@ -86,6 +95,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
     this.sheet1Name = this.getConfig("sheet1Name", "Sheet1");
     this.sheet2Name = this.getConfig("sheet2Name", "Sheet2");
+    this.sheet3Name = this.getConfig("sheet3Name", "LicenceDegreesDeepResearch");
     this.outputSheetName = this.getConfig("outputSheetName", "Comparison");
 
     if (!this.memory.results) this.memory.results = [];
@@ -150,6 +160,13 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         text: "Name of the second sheet",
       },
       {
+        uniqueId: "sheet3Name",
+        type: "textField",
+        value: "LicenceDegreesDeepResearch",
+        required: true,
+        text: "Name of the deep research sheet",
+      },
+      {
         uniqueId: "outputSheetName",
         type: "textField",
         value: "Comparison",
@@ -201,6 +218,26 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       const name = (r[11] ?? "").toString().trim();
       const educationRequirement = (r[20] ?? "").toString().trim();
       result.push({ name, educationRequirement });
+    }
+    return result;
+  }
+
+  /**
+   * Reads license name and degree status from the deep research sheet.
+   */
+  private async readDeepResearchSheetRows(
+    connector: PsBaseSheetConnector,
+    sheetName: string
+  ): Promise<DeepResearchRow[]> {
+    const range = `${sheetName}!A1:C${this.maxRows}`;
+    const rows = await connector.getRange(range);
+    if (!rows || rows.length === 0) return [];
+    const result: DeepResearchRow[] = [];
+    for (const r of rows.slice(1)) {
+      const name = (r[0] ?? "").toString().trim();
+      if (!name) continue;
+      const degreeStatus = (r[2] ?? "").toString().trim();
+      result.push({ name, degreeStatus });
     }
     return result;
   }
@@ -268,9 +305,71 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
   }
 
+  async processDeepResearchComparison() {
+    await this.updateRangedProgress(0, "Starting deep research comparison");
+
+    const deepResearchRows = await this.readDeepResearchSheetRows(
+      this.sheet3Connector,
+      this.sheet3Name
+    );
+
+    const wvuSheetRows = await this.readWvuSheetRows(
+      this.sheet2Connector,
+      this.sheet2Name
+    );
+
+    let count = 0;
+    for (const row of wvuSheetRows) {
+      count++;
+      await this.updateRangedProgress(
+        (count / wvuSheetRows.length) * 50,
+        `Processing row ${count} of ${wvuSheetRows.length}`
+      );
+
+      const context = deepResearchRows
+        .map((r) => `${r.name} - ${r.degreeStatus}`)
+        .join("\n");
+
+      const prompt =
+        `You will be given a profession and its required degree from the WVU Sheet.\n` +
+        `You also have a list of license degree research results with their degree status.\n` +
+        `Find the best matching license from the deep research list by the name.\n` +
+        `If none of the licenses match, then return none in the fields but with a short explanation.\n` +
+        `Return JSON with keys: profession, matchedJobName, skillsFirstEducationRequirement, isLikelyMatchingEducationRequirements, explanation.`;
+
+      const userMessage = `<LicenceDegreesDeepResearchRows>\n${context}\n</LicenceDegreesDeepResearchRows>\n\n<WvuSheetProfessionAndDegreeRequirement>${row.profession} - ${row.degree}</WvuSheetProfessionAndDegreeRequirement>\n`;
+
+      const messages = [
+        this.createSystemMessage(`${prompt}`),
+        this.createHumanMessage(userMessage),
+      ];
+
+      try {
+        const result = (await this.callModel(
+          PsAiModelType.TextReasoning,
+          PsAiModelSize.Large,
+          messages
+        )) as LicenseComparisonResult;
+        (this.memory.results ?? []).push({
+          ...result,
+          wvuSheetEducationRequirement: row.degree,
+        });
+      } catch (err: any) {
+        const msg = `LLM error for profession ${row.profession}: ${err.message}`;
+        this.logger.error(msg);
+        (this.memory.llmErrors ?? []).push(msg);
+      }
+    }
+
+    await this.writeResults();
+    await this.updateRangedProgress(100, "Deep research comparison complete");
+
+  }
+
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting license comparison");
     await this.processWvuComparison();
+    await this.processDeepResearchComparison();
 
   }
 
