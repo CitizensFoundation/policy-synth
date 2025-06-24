@@ -377,7 +377,7 @@ export class EcasYeaChatBotApp extends PolicySynthWebApp {
       <div class="layout horizontal center-center">
         <div class="layout horizontal center-center topHeader">
           <img
-            src="https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/logo_%402x.gif"
+            src="https://yrpri-eu-direct-assets.s3.eu-west-1.amazonaws.com/logo_%402x_one.gif"
             class="logo"
           />
           <div class="flex"></div>
