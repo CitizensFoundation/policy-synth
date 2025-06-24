@@ -65,12 +65,19 @@ export class GoogleGeminiChat extends BaseChatModel {
       });
       this.logger.info("Using Google Cloud Vertex AI");
     } else {
-      if (!config.apiKey) {
+      let apiKey = config.apiKey;
+      if (process.env.PS_AGENT_GEMINI_API_KEY) {
+        apiKey = process.env.PS_AGENT_GEMINI_API_KEY;
+        this.logger.debug(
+          "Using Google Gemini API key from PS_AGENT_GEMINI_API_KEY environment variable"
+        );
+      }
+      if (!apiKey) {
         throw new Error(
           "Google Generative AI requires an API key. Provide it in config.apiKey."
         );
       }
-      this.googleAiClient = new GoogleGenerativeAI(config.apiKey);
+      this.googleAiClient = new GoogleGenerativeAI(apiKey);
       this.logger.info("Using Google Generative AI API");
     }
   }

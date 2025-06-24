@@ -98,6 +98,7 @@ const messages = [
   - `USE_GOOGLE_VERTEX_AI` (set to `"true"` to use Vertex AI for all models)
   - `USE_GOOGLE_VERTEX_AI_FOR_MODELS` (comma-separated list of model names to use Vertex AI for)
   - `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` are required for Vertex AI.
+- The environment variable `PS_AGENT_GEMINI_API_KEY` overrides `config.apiKey` when using the Google Generative AI API.
 - Safety settings are set to "block none" for all harm categories by default.
 - Token usage is tracked and can be logged for debugging/cost analysis.
 - The `generate` method supports both streaming and non-streaming completions.
