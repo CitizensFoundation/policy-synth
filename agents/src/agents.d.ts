@@ -138,6 +138,7 @@ interface PsAiModelConfiguration {
   active: boolean;
   prices: PsBaseModelPriceConfiguration;
   maxTokensOut: number;
+  maxContextTokens?: number;
   deploymentName?: string;
   endpoint?: string;
   defaultTemperature: number;

@@ -324,6 +324,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       provider: provider,
       maxTokensOut:
         options.modelMaxTokens ?? dbConfig?.maxTokensOut ?? this.maxModelTokensOut,
+      maxContextTokens: dbConfig?.maxContextTokens,
       temperature:
         options.modelTemperature ?? dbConfig?.defaultTemperature ?? this.modelTemperature,
       reasoningEffort:
