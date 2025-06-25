@@ -26,6 +26,7 @@ interface LicenseComparisonResult {
   profession: string;
   wvuSheetEducationRequirement: string;
   skillsFirstEducationRequirement?: string;
+  deepResearchEducationRequirement?: string;
   matchedJobName?: string;
   explanation: string;
   isLikelyMatchingEducationRequirements: boolean;
@@ -246,13 +247,13 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     await this.updateRangedProgress(0, "Starting license comparison");
 
     const skillsFirstSheetRows = await this.readSkillsFirstSheetRows(
-      this.sheet1Connector,
-      this.sheet1Name
+      this.sheet2Connector,
+      this.sheet2Name
     );
 
     const wvuSheetRows = await this.readWvuSheetRows(
-      this.sheet2Connector,
-      this.sheet2Name
+      this.sheet1Connector,
+      this.sheet1Name
     );
 
     let count = 0;
@@ -272,7 +273,14 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         `You also have a list of job descriptions from Skills First Sheet that require a college degree with their education requirements.\n` +
         `Find the best matching job description from Skills First Sheet by the name of the job.\n` +
         `If none of the job descriptions match, then return none in the fields but with a short explanation.\n` +
-        `Return JSON with keys: profession, matchedJobName, skillsFirstEducationRequirement, isLikelyMatchingEducationRequirements, explanation.`;
+        `Return JSON with keys: {
+          profession: string,
+          wvuSheetEducationRequirement: string,
+          matchedJobName: string,
+          skillsFirstEducationRequirement: string,
+          isLikelyMatchingEducationRequirements: boolean,
+          explanation: string
+        }`;
 
       const userMessage = `<SkillsFirstSheetRows>\n${context}\n</SkillsFirstSheetRows>\n\n<WvuSheetProfessionAndDegreeRequirement>${row.profession} - ${row.degree}</WvuSheetProfessionAndDegreeRequirement>\n`;
 
@@ -313,10 +321,14 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       this.sheet3Name
     );
 
+    console.log(JSON.stringify(deepResearchRows, null, 2).slice(0, 300));
+
     const wvuSheetRows = await this.readWvuSheetRows(
-      this.sheet2Connector,
-      this.sheet2Name
+      this.sheet1Connector,
+      this.sheet1Name
     );
+
+    console.log(JSON.stringify(wvuSheetRows, null, 2).slice(0, 300));
 
     let count = 0;
     for (const row of wvuSheetRows) {
@@ -334,8 +346,17 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         `You will be given a profession and its required degree from the WVU Sheet.\n` +
         `You also have a list of license degree research results with their degree status.\n` +
         `Find the best matching license from the deep research list by the name.\n` +
+        `If "No Degree Found" is coming from the deep research sheet then assume that no higher degree required so either no degree or high school diploma would be a match.\n` +
         `If none of the licenses match, then return none in the fields but with a short explanation.\n` +
-        `Return JSON with keys: profession, matchedJobName, skillsFirstEducationRequirement, isLikelyMatchingEducationRequirements, explanation.`;
+        `Return JSON with keys:
+        {
+          profession: string,
+          wvuSheetEducationRequirement: string,
+          deepResearchEducationRequirement: string,
+          matchedJobName: string,
+          isLikelyMatchingEducationRequirements: boolean | null,
+          explanation: string
+        }`;
 
       const userMessage = `<LicenceDegreesDeepResearchRows>\n${context}\n</LicenceDegreesDeepResearchRows>\n\n<WvuSheetProfessionAndDegreeRequirement>${row.profession} - ${row.degree}</WvuSheetProfessionAndDegreeRequirement>\n`;
 
@@ -368,7 +389,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting license comparison");
-    await this.processWvuComparison();
+    //await this.processWvuComparison();
     await this.processDeepResearchComparison();
 
   }
@@ -381,7 +402,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       [
         "profession",
         "wvuSheetEducationRequirement",
-        "skillsFirstEducationRequirement",
+        "deepResearchEducationRequirement",
         "isLikelyMatchingEducationRequirements",
         "matchedJobName",
         "explanation",
@@ -392,7 +413,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       rows.push([
         r.profession,
         r.wvuSheetEducationRequirement,
-        r.skillsFirstEducationRequirement ?? "",
+        r.deepResearchEducationRequirement ?? "",
         r.isLikelyMatchingEducationRequirements ? "true" : "false",
         r.matchedJobName ?? "",
         r.explanation,
