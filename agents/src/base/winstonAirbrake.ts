@@ -7,10 +7,12 @@ export interface AirbrakeTransportOptions
   projectId: number;
   projectKey: string;
   environment?: string;
+  ignoredErrorMessages?: string[];
 }
 
 export class AirbrakeTransport extends Transport {
   private notifier: Notifier;
+  private ignoredErrorMessages: string[];
 
   constructor(opts: AirbrakeTransportOptions) {
     super(opts);
@@ -19,6 +21,7 @@ export class AirbrakeTransport extends Transport {
       projectKey: opts.projectKey,
       environment: opts.environment ?? "production",
     });
+    this.ignoredErrorMessages = opts.ignoredErrorMessages ?? [];
   }
 
   // Winston will call this for every log entry
@@ -34,7 +37,11 @@ export class AirbrakeTransport extends Transport {
         ? Object.assign(new Error(message), { stack: info.stack })
         : new Error(message);
 
-    if (process.env.AIRBRAKE_PROJECT_ID) {
+    const shouldIgnore = this.ignoredErrorMessages.some((m) =>
+      err.message.includes(m)
+    );
+
+    if (!shouldIgnore && process.env.AIRBRAKE_PROJECT_ID) {
       this.notifier
         .notify({
           error: err,
