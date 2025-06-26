@@ -21,12 +21,16 @@ export class PolicySynthAgentBase {
     ];
 
     if (process.env.AIRBRAKE_PROJECT_ID && process.env.AIRBRAKE_PROJECT_KEY) {
+      const ignored = process.env.AIRBRAKE_IGNORED_ERRORS
+        ? process.env.AIRBRAKE_IGNORED_ERRORS.split(',').map((e) => e.trim()).filter(Boolean)
+        : [];
       transports.push(
         new AirbrakeTransport({
           level: "error",
           projectId: +process.env.AIRBRAKE_PROJECT_ID,
           projectKey: process.env.AIRBRAKE_PROJECT_KEY,
           environment: process.env.NODE_ENV,
+          ignoredErrorMessages: ignored,
         })
       );
     }
