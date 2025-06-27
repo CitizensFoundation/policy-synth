@@ -700,12 +700,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
         if (TokenLimitChunker.isTokenLimitError(error)) {
           if (options.disableChunkingRetry) {
-            this.logger.warn(
+            this.logger.error(
               "Token limit error encountered after chunking; giving up."
             );
             throw error;
           }
-          this.logger.warn("Token limit exceeded, invoking chunking handler");
+          this.logger.error("Token limit exceeded, invoking chunking handler");
           const handler = new TokenLimitChunker(this);
           return await handler.handle(
             model,

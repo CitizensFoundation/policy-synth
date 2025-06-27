@@ -89,7 +89,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       this.calcTokenLimitFromModel(model) ||
       (1000000-40000);
 
-    const enc = encoding_for_model(model.modelName as TiktokenModel);
+    const modelName: TiktokenModel = "gpt-4o";
+    const enc = encoding_for_model(modelName);
 
     const prefixMessages = messages.slice(0, -1);
     const docMessage = messages[messages.length - 1];
