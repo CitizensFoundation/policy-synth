@@ -26,16 +26,20 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       (err.code || err?.error?.code || err?.response?.data?.error?.code || "").toLowerCase();
 
     if (code === "context_length_exceeded" || code === "request_too_large") {
+      this.logger.debug(`Token limit error: ${err.message}`);
       return true;
     }
 
-    return (
+    const isTokenLimitError = (
       m.includes("exceeds the maximum number of tokens") ||
       m.includes("maximum context length") ||
       m.includes("input token count") ||
       m.includes("exceeds context window size") ||
       m.includes("request exceeds the maximum allowed number of bytes")
     );
+
+    this.logger.debug(`Token limit error: ${isTokenLimitError}`);
+    return isTokenLimitError;
   }
 
   static parseTokenLimit(err: any): number | undefined {
@@ -88,6 +92,13 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       this.calcTokenLimitFromError(model, err) ||
       this.calcTokenLimitFromModel(model) ||
       (1000000-40000);
+    this.logger.debug(`Token limit: ${limit}`);
+    this.logger.debug(`Model name: ${model.modelName}`);
+    this.logger.debug(`Model type: ${modelType}`);
+    this.logger.debug(`Model size: ${modelSize}`);
+    this.logger.debug(`Messages: ${messages.length}`);
+    this.logger.debug(`Options: ${JSON.stringify(options)}`);
+    this.logger.debug(`Error: ${JSON.stringify(err)}`);
 
     const modelName: TiktokenModel = "gpt-4o";
     const enc = encoding_for_model(modelName);
@@ -95,12 +106,19 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const prefixMessages = messages.slice(0, -1);
     const docMessage = messages[messages.length - 1];
 
+    this.logger.debug(`Prefix messages: ${JSON.stringify(prefixMessages, null, 2).slice(0, 1000)}`);
+    this.logger.debug(`Doc message: ${JSON.stringify(docMessage, null, 2).slice(0, 1000)}`);
+
     const prefixText = prefixMessages.map((m) => m.message).join("\n");
     const prefixTokens = enc.encode(prefixText).length;
+    this.logger.debug(`Prefix tokens: ${prefixTokens}`);
 
-    const buffer = 2000;
+    const buffer = 120000;
     const allowed = limit - prefixTokens - buffer;
+    this.logger.debug(`Allowed: ${allowed}`);
     const docTokens = enc.encode(docMessage.message);
+    this.logger.debug(`Doc tokens: ${docTokens.length}`);
+    this.logger.debug(`Doc message: ${docMessage.message.slice(0, 1000)}`);
     const chunks: string[] = [];
     const decoder = new TextDecoder();
     for (let i = 0; i < docTokens.length; i += allowed) {
@@ -109,6 +127,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       chunks.push(text);
     }
     enc.free();
+
+    this.logger.debug(`Chunks: ${JSON.stringify(chunks, null, 2).slice(0, 3000)}`);
 
     const analyses: any[] = [];
     for (const chunk of chunks) {
@@ -138,17 +158,23 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       .map((a, idx) => `Analysis ${idx + 1}: ${typeof a === "string" ? a : JSON.stringify(a)}`)
       .join("\n\n");
 
+    this.logger.debug(`Summary text: ${summaryText}`);
+
     const finalMessages = [
       ...prefixMessages,
       { role: docMessage.role, message: summaryText },
     ];
     try {
-      return await this.manager.callModel(
+      const finalRes = await this.manager.callModel(
         modelType,
         modelSize,
         finalMessages,
         { ...options, disableChunkingRetry: true }
       );
+
+      this.logger.debug(`Final split analysis response: ${JSON.stringify(finalRes, null, 2)}`);
+
+      return finalRes;
     } catch (e) {
       if (TokenLimitChunker.isTokenLimitError(e)) {
         this.logger.error(
