@@ -29,7 +29,7 @@ export const styles = css`
     font-family: "Cabin", sans-serif;
     font-size: 22px;
     width: 185px;
-    background-color: var(--md-sys-color-primary);
+    background-color: #111111;
     color: var(--md-sys-color-on-primary);
     border-top-left-radius: 24px;
     border-top-right-radius: 24px;
@@ -82,12 +82,12 @@ export const styles = css`
 
   .selectedContainer {
     /*--md-list-item-list-item-container-color: var(--md-sys-color-surface-variant);*/
-    color: var(--md-sys-color-primary);
-    --md-list-item-list-item-label-text-color: var(--md-sys-color-primary);
+    color: #111111;
+    --md-list-item-list-item-label-text-color: #111111;
     --md-list-item-list-item-focus-label-text-color: var(
       --md-sys-color-primary
     );
-    --md-list-item-label-text-color: var(--md-sys-color-primary);
+    --md-list-item-label-text-color: #111111;
   }
 
   md-navigation-drawer {

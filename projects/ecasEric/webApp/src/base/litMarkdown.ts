@@ -178,7 +178,7 @@ export class MarkdownDirective extends AsyncDirective {
           }
 
           a {
-            color: var(--md-sys-color-primary);
+            color: #111111;
             font-weight: bold;
           }
         `;

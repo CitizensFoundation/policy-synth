@@ -452,7 +452,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .directCause {
-          background-color: var(--md-sys-color-primary);
+          background-color: #111111;
           color: var(--md-sys-color-on-primary);
           margin-bottom: 16px !important;
           border-radius: 16px;
@@ -507,7 +507,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .thinkingText[spinnerActive] {
-          color: var(--md-sys-color-primary);
+          color: #111111;
         }
 
         .doneIcon {
@@ -521,7 +521,7 @@ export class PsAiChatElement extends YpBaseElement {
         .postCitation {
           font-size: 9px;
           background-color: var(--md-sys-color-inverse-on-surface);
-          color: var(--md-sys-color-primary);
+          color: #111111;
           padding: 3px;
         }
 
@@ -530,7 +530,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .followUpQuestionMark {
-          color: var(--md-sys-color-primary);
+          color: #111111;
           font-size: 36px;
           margin-top: 8px;
         }
@@ -548,7 +548,7 @@ export class PsAiChatElement extends YpBaseElement {
           margin-right: 4px;
         }
         .progress-ring__circle {
-          stroke: var(--md-sys-color-primary);
+          stroke: #111111;
           stroke-dasharray: 75.4;
           stroke-dashoffset: 75.4;
           stroke-linecap: round;
@@ -566,7 +566,7 @@ export class PsAiChatElement extends YpBaseElement {
 
         .suggestionsHeader {
           font-size: 18px;
-          color: var(--md-sys-color-primary);
+          color: #111111;
           margin-bottom: 16px;
         }
 
@@ -594,7 +594,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         a {
-          color: var(--md-sys-color-primary);
+          color: #111111;
          }
       `,
     ];
