@@ -34,7 +34,7 @@ export class AdminLogin extends LitElement {
       text-align: center;
     }
     h1 {
-      color: var(--md-sys-color-on-surface);
+      color: #111111;
       margin-bottom: 24px;
     }
     md-outlined-text-field {

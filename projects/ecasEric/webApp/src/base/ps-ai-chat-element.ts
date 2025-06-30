@@ -342,7 +342,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .userChatDialog {
-          color: var(--md-sys-color-on-surface);
+          color: #111111;
           background-color: var(--md-sys-color-surface-container);
           padding: 8px;
           margin: 16px;
@@ -357,7 +357,7 @@ export class PsAiChatElement extends YpBaseElement {
           border-radius: 24px;
           margin-right: 0;
           background-color: var(--md-sys-color-secondary);
-          color: var(--md-sys-color-on-secondary);
+          color: #111111;
           cursor: pointer;
         }
 
@@ -385,7 +385,7 @@ export class PsAiChatElement extends YpBaseElement {
         }
 
         .chatGPTDialog {
-          color: var(--md-sys-color-on-surface);
+          color: #111111;
           background-color: #fbe4dc;
           padding: 8px;
           margin: 16px;
@@ -460,19 +460,19 @@ export class PsAiChatElement extends YpBaseElement {
 
         .assumption {
           background-color: var(--md-sys-color-secondary);
-          color: var(--md-sys-color-on-secondary);
+          color: #111111;
           margin-bottom: 16px !important;
           border-radius: 16px;
         }
 
         .assumptionCheckbox {
-          --md-checkbox-outline-color: var(--md-sys-color-on-secondary);
+          --md-checkbox-outline-color: #111111;
           --md-checkbox-hover-outline-color: var(--md-sys-color-on-primary);
         }
 
         .directCauseCheckbox {
           --md-checkbox-outline-color: var(--md-sys-color-on-primary);
-          --md-checkbox-hover-outline-color: var(--md-sys-color-on-secondary);
+          --md-checkbox-hover-outline-color: #111111;
         }
 
         md-filled-button {

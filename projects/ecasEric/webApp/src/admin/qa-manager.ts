@@ -205,7 +205,7 @@ export class QaManager extends LitElement {
       display: block;
       padding: 16px;
       background-color: var(--md-sys-color-surface);
-      color: var(--md-sys-color-on-surface);
+      color: #111111;
     }
     .top-bar {
       display: flex;

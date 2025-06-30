@@ -9,7 +9,7 @@ export const styles = css`
   }
 
   a {
-    color: var(--md-sys-color-on-surface);
+    color: #111111;
     margin-top: 8px;
   }
 
@@ -67,13 +67,13 @@ export const styles = css`
   .costItem {
     margin-bottom: 8px;
     margin-left: 8px;
-    color: var(--md-sys-color-on-surface);
+    color: #111111;
   }
 
   .statsItem {
     margin-bottom: 6px;
     margin-left: 8px;
-    color: var(--md-sys-color-on-surface);
+    color: #111111;
   }
 
   .statsContainer {
@@ -147,7 +147,7 @@ export const styles = css`
     margin-top: 32px;
     font-size: 12px;
     margin-bottom: 32px;
-    color: var(--md-sys-color-on-surface);
+    color: #111111;
   }
 
   .navContainer {
