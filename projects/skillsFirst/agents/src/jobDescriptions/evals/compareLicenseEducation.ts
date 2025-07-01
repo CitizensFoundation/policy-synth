@@ -1,6 +1,7 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
+import pLimit from "p-limit";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
 import {
   PsAiModelType,
@@ -446,76 +447,85 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       grouped[r.name].push(r.degreeStatus);
     }
 
-    // determine highest degree status per license
+    // determine highest degree status per license using concurrency limit
+    const limitHighest = pLimit(10);
     const highestRows: DeepResearchHighestRow[] = [];
-    let index = 0;
-    for (const [name, statuses] of Object.entries(grouped)) {
-      index++;
-      await this.updateRangedProgress(
-        undefined,
-        `Processing top degree status for license ${name} of ${index} / ${Object.keys(grouped).length}`
-      );
-      const result = await this.getHighestDegreeStatus(name, statuses);
-      highestRows.push(result);
-    }
+    const groupedEntries = Object.entries(grouped);
+    let highestCount = 0;
+    const highestTasks = groupedEntries.map(([name, statuses]) =>
+      limitHighest(async () => {
+        highestCount++;
+        await this.updateRangedProgress(
+          undefined,
+          `Processing top degree status for license ${name} (${highestCount}/${groupedEntries.length})`
+        );
+        const result = await this.getHighestDegreeStatus(name, statuses);
+        highestRows.push(result);
+      })
+    );
+    await Promise.all(highestTasks);
 
     const wvuSheetRows = await this.readWvuSheetRows(
       this.sheet1Connector,
       this.sheet1Name
     );
 
-    let count = 0;
-    for (const row of highestRows) {
-      count++;
-      await this.updateRangedProgress(
-        (count / highestRows.length) * 50,
-        `Processing row ${count} of ${highestRows.length}`
-      );
+    const wvuContext = wvuSheetRows
+      .map((r) => `${r.profession} - ${r.degree}`)
+      .join("\n");
 
-      const context = wvuSheetRows
-        .map((r) => `${r.profession} - ${r.degree}`)
-        .join("\n");
+    const limitAnalysis = pLimit(10);
+    let analysisCount = 0;
+    const analysisTasks = highestRows.map((row) =>
+      limitAnalysis(async () => {
+        analysisCount++;
+        await this.updateRangedProgress(
+          (analysisCount / highestRows.length) * 50,
+          `Processing row ${analysisCount} of ${highestRows.length}`
+        );
 
-      const prompt =
-        `You will be given a license and its degree status from the deep research sheet.\n` +
-        `You also have a list of professions and required degrees from the WVU Sheet.\n` +
-        `Find the best matching profession from the WVU Sheet by the name of the license.\n` +
-        `If "No Degree Found" is coming from the deep research sheet then assume that no higher degree required so either no degree or high school diploma would be a match.\n` +
-        `If none of the professions match, then return none in the fields but with a short explanation.\n` +
-        `Return JSON with keys:\n` +
-        `  {\n` +
-        `    profession: string,\n` +
-        `    wvuSheetEducationRequirement: string,\n` +
-        `    deepResearchEducationRequirement: string,\n` +
-        `    matchedJobName: string,\n` +
-        `    isLikelyMatchingEducationRequirements: boolean | null,\n` +
-        `    explanation: string\n` +
-        `  }`;
+        const prompt =
+          `You will be given a license and its degree status from the deep research sheet.\n` +
+          `You also have a list of professions and required degrees from the WVU Sheet.\n` +
+          `Find the best matching profession from the WVU Sheet by the name of the license.\n` +
+          `If "No Degree Found" is coming from the deep research sheet then assume that no higher degree required so either no degree or high school diploma would be a match.\n` +
+          `If none of the professions match, then return none in the fields but with a short explanation.\n` +
+          `Return JSON with keys:\n` +
+          `  {\n` +
+          `    profession: string,\n` +
+          `    wvuSheetEducationRequirement: string,\n` +
+          `    deepResearchEducationRequirement: string,\n` +
+          `    matchedJobName: string,\n` +
+          `    isLikelyMatchingEducationRequirements: boolean | null,\n` +
+          `    explanation: string\n` +
+          `  }`;
 
-      const userMessage = `<WvuSheetRows>\n${context}\n</WvuSheetRows>\n\n<DeepResearchNameAndDegreeStatus>${row.name} - ${row.highestDegreeStatus}</DeepResearchNameAndDegreeStatus>\n`;
+        const userMessage = `<WvuSheetRows>\n${wvuContext}\n</WvuSheetRows>\n\n<DeepResearchNameAndDegreeStatus>${row.name} - ${row.highestDegreeStatus}</DeepResearchNameAndDegreeStatus>\n`;
 
-      const messages = [
-        this.createSystemMessage(`${prompt}`),
-        this.createHumanMessage(userMessage),
-      ];
+        const messages = [
+          this.createSystemMessage(`${prompt}`),
+          this.createHumanMessage(userMessage),
+        ];
 
-      try {
-        const result = (await this.callModel(
-          PsAiModelType.TextReasoning,
-          PsAiModelSize.Large,
-          messages
-        )) as LicenseComparisonResult;
-        (this.memory.results ?? []).push({
-          ...result,
-          deepResearchEducationRequirement: row.highestDegreeStatus,
-          matchedJobName: row.name,
-        });
-      } catch (err: any) {
-        const msg = `LLM error for license ${row.name}: ${err.message}`;
-        this.logger.error(msg);
-        (this.memory.llmErrors ?? []).push(msg);
-      }
-    }
+        try {
+          const result = (await this.callModel(
+            PsAiModelType.TextReasoning,
+            PsAiModelSize.Large,
+            messages
+          )) as LicenseComparisonResult;
+          (this.memory.results ?? []).push({
+            ...result,
+            deepResearchEducationRequirement: row.highestDegreeStatus,
+            matchedJobName: row.name,
+          });
+        } catch (err: any) {
+          const msg = `LLM error for license ${row.name}: ${err.message}`;
+          this.logger.error(msg);
+          (this.memory.llmErrors ?? []).push(msg);
+        }
+      })
+    );
+    await Promise.all(analysisTasks);
 
     await this.writeResults();
     await this.updateRangedProgress(
