@@ -448,7 +448,13 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
     // determine highest degree status per license
     const highestRows: DeepResearchHighestRow[] = [];
+    let index = 0;
     for (const [name, statuses] of Object.entries(grouped)) {
+      index++;
+      await this.updateRangedProgress(
+        undefined,
+        `Processing top degree status for license ${name} of ${index} / ${Object.keys(grouped).length}`
+      );
       const result = await this.getHighestDegreeStatus(name, statuses);
       highestRows.push(result);
     }
@@ -502,6 +508,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         (this.memory.results ?? []).push({
           ...result,
           deepResearchEducationRequirement: row.highestDegreeStatus,
+          matchedJobName: row.name,
         });
       } catch (err: any) {
         const msg = `LLM error for license ${row.name}: ${err.message}`;
