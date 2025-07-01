@@ -38,6 +38,12 @@ interface DeepResearchRow {
   degreeStatus: string;
 }
 
+/** Highest degree status per license name */
+interface DeepResearchHighestRow {
+  name: string;
+  highestDegreeStatus: string;
+}
+
 export class CompareLicenseEducationAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData & {
     results?: LicenseComparisonResult[];
@@ -243,6 +249,41 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
     return result;
   }
 
+  /**
+   * Determines the highest degree status for a given license name
+   */
+  private async getHighestDegreeStatus(
+    name: string,
+    statuses: string[]
+  ): Promise<DeepResearchHighestRow> {
+    const prompt =
+      `You will be given a license name with several degree status results from deep research.\n` +
+      `Decide which degree status represents the highest level of education required.\n` +
+      `Return JSON with keys: { name: string, highestDegreeStatus: string }`;
+
+    const userMessage = `<LicenseName>${name}</LicenseName>\n<DegreeStatuses>\n${statuses.join(
+      "\n"
+    )}\n</DegreeStatuses>`;
+
+    const messages = [
+      this.createSystemMessage(prompt),
+      this.createHumanMessage(userMessage),
+    ];
+
+    try {
+      return (await this.callModel(
+        PsAiModelType.TextReasoning,
+        PsAiModelSize.Medium,
+        messages
+      )) as DeepResearchHighestRow;
+    } catch (err: any) {
+      const msg = `LLM error determining highest degree for ${name}: ${err.message}`;
+      this.logger.error(msg);
+      (this.memory.llmErrors ?? []).push(msg);
+      return { name, highestDegreeStatus: "" };
+    }
+  }
+
   async processWvuComparison() {
     await this.updateRangedProgress(0, "Starting license comparison");
 
@@ -398,17 +439,31 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
       this.sheet3Name
     );
 
+    // group rows by license name
+    const grouped: Record<string, string[]> = {};
+    for (const r of deepResearchRows) {
+      if (!grouped[r.name]) grouped[r.name] = [];
+      grouped[r.name].push(r.degreeStatus);
+    }
+
+    // determine highest degree status per license
+    const highestRows: DeepResearchHighestRow[] = [];
+    for (const [name, statuses] of Object.entries(grouped)) {
+      const result = await this.getHighestDegreeStatus(name, statuses);
+      highestRows.push(result);
+    }
+
     const wvuSheetRows = await this.readWvuSheetRows(
       this.sheet1Connector,
       this.sheet1Name
     );
 
     let count = 0;
-    for (const row of deepResearchRows) {
+    for (const row of highestRows) {
       count++;
       await this.updateRangedProgress(
-        (count / deepResearchRows.length) * 50,
-        `Processing row ${count} of ${deepResearchRows.length}`
+        (count / highestRows.length) * 50,
+        `Processing row ${count} of ${highestRows.length}`
       );
 
       const context = wvuSheetRows
@@ -431,7 +486,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         `    explanation: string\n` +
         `  }`;
 
-      const userMessage = `<WvuSheetRows>\n${context}\n</WvuSheetRows>\n\n<DeepResearchNameAndDegreeStatus>${row.name} - ${row.degreeStatus}</DeepResearchNameAndDegreeStatus>\n`;
+      const userMessage = `<WvuSheetRows>\n${context}\n</WvuSheetRows>\n\n<DeepResearchNameAndDegreeStatus>${row.name} - ${row.highestDegreeStatus}</DeepResearchNameAndDegreeStatus>\n`;
 
       const messages = [
         this.createSystemMessage(`${prompt}`),
@@ -446,7 +501,7 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
         )) as LicenseComparisonResult;
         (this.memory.results ?? []).push({
           ...result,
-          deepResearchEducationRequirement: row.degreeStatus,
+          deepResearchEducationRequirement: row.highestDegreeStatus,
         });
       } catch (err: any) {
         const msg = `LLM error for license ${row.name}: ${err.message}`;
