@@ -466,7 +466,8 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting license comparison");
     //await this.processWvuComparison();
-    await this.processDeepResearchComparison();
+    //await this.processDeepResearchComparison();
+    await this.processReversedDeepResearchComparison();
 
   }
 
