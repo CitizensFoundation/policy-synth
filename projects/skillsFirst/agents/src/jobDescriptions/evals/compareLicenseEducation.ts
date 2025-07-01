@@ -387,6 +387,82 @@ export class CompareLicenseEducationAgent extends PolicySynthAgent {
 
   }
 
+  async processReversedDeepResearchComparison() {
+    await this.updateRangedProgress(
+      0,
+      "Starting reversed deep research comparison"
+    );
+
+    const deepResearchRows = await this.readDeepResearchSheetRows(
+      this.sheet3Connector,
+      this.sheet3Name
+    );
+
+    const wvuSheetRows = await this.readWvuSheetRows(
+      this.sheet1Connector,
+      this.sheet1Name
+    );
+
+    let count = 0;
+    for (const row of deepResearchRows) {
+      count++;
+      await this.updateRangedProgress(
+        (count / deepResearchRows.length) * 50,
+        `Processing row ${count} of ${deepResearchRows.length}`
+      );
+
+      const context = wvuSheetRows
+        .map((r) => `${r.profession} - ${r.degree}`)
+        .join("\n");
+
+      const prompt =
+        `You will be given a license and its degree status from the deep research sheet.\n` +
+        `You also have a list of professions and required degrees from the WVU Sheet.\n` +
+        `Find the best matching profession from the WVU Sheet by the name of the license.\n` +
+        `If "No Degree Found" is coming from the deep research sheet then assume that no higher degree required so either no degree or high school diploma would be a match.\n` +
+        `If none of the professions match, then return none in the fields but with a short explanation.\n` +
+        `Return JSON with keys:\n` +
+        `  {\n` +
+        `    profession: string,\n` +
+        `    wvuSheetEducationRequirement: string,\n` +
+        `    deepResearchEducationRequirement: string,\n` +
+        `    matchedJobName: string,\n` +
+        `    isLikelyMatchingEducationRequirements: boolean | null,\n` +
+        `    explanation: string\n` +
+        `  }`;
+
+      const userMessage = `<WvuSheetRows>\n${context}\n</WvuSheetRows>\n\n<DeepResearchNameAndDegreeStatus>${row.name} - ${row.degreeStatus}</DeepResearchNameAndDegreeStatus>\n`;
+
+      const messages = [
+        this.createSystemMessage(`${prompt}`),
+        this.createHumanMessage(userMessage),
+      ];
+
+      try {
+        const result = (await this.callModel(
+          PsAiModelType.TextReasoning,
+          PsAiModelSize.Large,
+          messages
+        )) as LicenseComparisonResult;
+        (this.memory.results ?? []).push({
+          ...result,
+          deepResearchEducationRequirement: row.degreeStatus,
+        });
+      } catch (err: any) {
+        const msg = `LLM error for license ${row.name}: ${err.message}`;
+        this.logger.error(msg);
+        (this.memory.llmErrors ?? []).push(msg);
+      }
+    }
+
+    await this.writeResults();
+    await this.updateRangedProgress(
+      100,
+      "Reversed deep research comparison complete"
+    );
+
+  }
+
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting license comparison");
     //await this.processWvuComparison();
