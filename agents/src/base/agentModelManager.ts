@@ -598,6 +598,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     let maxRetries = options.limitedRetries
       ? this.limitedLLMmaxRetryCount
       : this.mainLLMmaxRetryCount;
+    let serverErrorRetries = 0;
 
     if (options.overrideMaxRetries) {
       maxRetries = options.overrideMaxRetries;
@@ -715,6 +716,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             options,
             error
           );
+        }
+        if (is5xxError(error) && serverErrorRetries < 3) {
+          serverErrorRetries++;
+          retryCount++;
+          this.logger.warn(
+            `5xx error: retrying callTextModel. Attempt #${retryCount}`
+          );
+          await this.sleepBeforeRetry(retryCount);
+          continue;
         }
         let tooMany429s = false;
         if (
