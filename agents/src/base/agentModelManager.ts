@@ -609,12 +609,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     // Simple helper to check if error is 5xx or "prohibited content".
     const is5xxError = (err: any) => {
+      const message = (
+        typeof err === "string" ? err : err?.message || ""
+      ).toLowerCase();
+
       if (
         (err?.response?.status >= 500 && err?.response?.status < 600) ||
-        err?.message?.includes("500 Internal Server Error") ||
-        (typeof err === "string" &&
-          err.includes("500 Internal Server Error")) ||
-        (typeof err === "string" && err.includes("503 Service Unavailable"))
+        message.includes("500 internal server error") ||
+        message.includes("503 service unavailable") ||
+        message.includes("fetch failed") ||
+        message.includes("model is overloaded")
       ) {
         this.logDetailedServerError(model, err, messages);
         return true;
