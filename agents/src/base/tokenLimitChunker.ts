@@ -35,7 +35,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       m.includes("maximum context length") ||
       m.includes("input token count") ||
       m.includes("exceeds context window size") ||
-      m.includes("request exceeds the maximum allowed number of bytes")
+      m.includes("request exceeds the maximum allowed number of bytes") ||
+      m.includes("string too long")
     );
 
     this.logger.debug(`Token limit error: ${isTokenLimitError}`);
@@ -55,6 +56,14 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
 
     const matchAnthropic = err.message.match(/context window size.*?(\d+)/i);
     if (matchAnthropic) return parseInt(matchAnthropic[1], 10);
+
+    const matchStringTooLong = err.message.match(/maximum length (\d+)/i);
+    if (matchStringTooLong) {
+      const charLimit = parseInt(matchStringTooLong[1], 10);
+      if (!isNaN(charLimit)) {
+        return Math.floor(charLimit / 4);
+      }
+    }
 
     return undefined;
   }
