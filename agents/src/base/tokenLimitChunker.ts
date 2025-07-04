@@ -8,6 +8,7 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
+import { GoogleGenAI, Content } from "@google/genai";
 
 export interface ModelCaller {
   callModel(
@@ -41,6 +42,51 @@ function calcSafetyBuffer(windowSize: number): number {                         
 export class TokenLimitChunker extends PolicySynthAgentBase {
   constructor(private readonly manager: ModelCaller) {
     super();
+  }
+
+  private static geminiAi = new GoogleGenAI({
+    apiKey: process.env.GEMINI_API_KEY!,
+  });
+
+  private static async geminiTokenCount(
+    modelName: string,
+    prompt: string
+  ): Promise<number> {
+    const contents: Content[] = [
+      { role: "user", parts: [{ text: prompt }] },
+    ];
+    const { totalTokens } = await TokenLimitChunker.geminiAi.models.countTokens({
+      model: modelName,
+      contents,
+    });
+    return totalTokens ?? 0;
+  }
+
+  private decodeTokens(
+    model: BaseChatModel,
+    enc: any,
+    tokens: Uint32Array
+  ): string {
+    const name = String(model.modelName).toLowerCase();
+    // Gemini provides no token decoder; fall back to tiktoken
+    return new TextDecoder().decode(enc.decode(tokens));
+  }
+
+  private async countTokens(model: BaseChatModel, text: string): Promise<number> {
+    const name = String(model.modelName).toLowerCase();
+    if (name.includes("gemini")) {
+      try {
+        return await TokenLimitChunker.geminiTokenCount(String(model.modelName), text);
+      } catch (err) {
+        this.logger.warn(`Gemini token count failed: ${err}`);
+      }
+    }
+    const enc = encoding_for_model("gpt-4o");
+    try {
+      return enc.encode(text).length;
+    } finally {
+      enc.free();
+    }
   }
 
   /* ----------------------------------------------------------------------
@@ -151,16 +197,11 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const prefixMessages = messages.slice(0, -1);
     const docMessage = messages[messages.length - 1];
 
+    const prefixText = prefixMessages.map((m) => m.message).join("\n");
+    const prefixTokenCount = await this.countTokens(model, prefixText);
+
     const encModel: TiktokenModel = "gpt-4o";
     const enc = encoding_for_model(encModel);
-
-    let prefixTokenCount = 0;
-    try {
-      const prefixText = prefixMessages.map((m) => m.message).join("\n");
-      prefixTokenCount = enc.encode(prefixText).length;
-    } finally {
-      // keep encoder for now
-    }
 
     const safetyBuffer = calcSafetyBuffer(tokenLimit);                              // ★ changed
     const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;           // ★ changed
@@ -192,7 +233,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     let cursor = 0;
     while (cursor < totalDocTokens) {
       const slice = docTokens.slice(cursor, cursor + allowedPerChunk);
-      const text = enc.decode(slice);
+      const text = this.decodeTokens(model, enc, slice);
       chunks.push(text);
       cursor += allowedPerChunk;
     }
