@@ -43,7 +43,7 @@ interface PsCallModelOptions {
   modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
   modelName?: string; // e.g. "gpt-4", "claude-2", etc.
   modelTemperature?: number;
-  modelMaxTokens?: number;
+  maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: "low" | "medium" | "high";
   retryLimitFor429sUntilFallback?: number;

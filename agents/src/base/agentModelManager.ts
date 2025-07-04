@@ -21,7 +21,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   userId: number;
   agentId: number;
 
-  maxModelTokensOut: number;
+  maxTokensOut: number;
   modelTemperature: number;
   reasoningEffort: "low" | "medium" | "high" = "medium";
   maxThinkingTokens: number;
@@ -35,7 +35,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   constructor(
     aiModels: PsAiModelAttributes[],
     accessConfiguration: YpGroupPrivateAccessConfiguration[],
-    maxModelTokensOut: number = 4096,
+    maxTokensOut: number = 4096,
     modelTemperature: number = 0.7,
     reasoningEffort: "low" | "medium" | "high" = "medium",
     maxThinkingTokens: number = 0,
@@ -43,7 +43,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     userId: number
   ) {
     super();
-    this.maxModelTokensOut = maxModelTokensOut;
+    this.maxTokensOut = maxTokensOut;
     this.modelTemperature = modelTemperature;
     this.reasoningEffort = reasoningEffort;
     this.maxThinkingTokens = maxThinkingTokens;
@@ -92,7 +92,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKey,
         modelName: modelName,
-        maxTokensOut: this.maxModelTokensOut,
+        maxTokensOut: this.maxTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         maxThinkingTokens: this.maxThinkingTokens,
@@ -183,7 +183,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.configuration.model,
-        maxTokensOut: this.maxModelTokensOut,
+        maxTokensOut: this.maxTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
         maxThinkingTokens: this.maxThinkingTokens,
@@ -323,7 +323,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       modelName: options.modelName ?? (dbConfig?.model ?? fallbackModel.modelName),
       provider: provider,
       maxTokensOut:
-        options.modelMaxTokens ?? dbConfig?.maxTokensOut ?? this.maxModelTokensOut,
+        options.maxTokensOut ?? dbConfig?.maxTokensOut ?? this.maxTokensOut,
       maxContextTokens: dbConfig?.maxContextTokens,
       temperature:
         options.modelTemperature ?? dbConfig?.defaultTemperature ?? this.modelTemperature,
@@ -766,7 +766,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelProvider: options.fallbackModelProvider,
                 modelName: options.fallbackModelName,
                 modelTemperature: options.modelTemperature,
-                modelMaxTokens: options.modelMaxTokens,
+                maxTokensOut: options.maxTokensOut,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
               }

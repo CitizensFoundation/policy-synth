@@ -23,7 +23,7 @@ export interface ModelCaller {
  *  CONFIG CONSTANTS
  * ──────────────────────────────────────────────────────────────────────── */
 
-/** Absolute minimum context window across *all* deployed models. */           // ★ changed
+/** Absolute minimum context window across *all* deployed models. */ // ★ changed
 const MIN_CONTEXT_TOKENS = 120_000;
 
 /** Fallback “typical” window when nothing else is known (e.g. GPT‑4o 1 M). */ // ★ changed
@@ -35,8 +35,9 @@ const DEFAULT_MAX_CONTEXT_TOKENS = 1_000_000;
  *   • 10 % of the context window, capped at 120 000 tokens.
  * This mirrors the original 120 k buffer for 1 M‑token models but stays
  * proportional for smaller windows.                                                    */ // ★ changed
-function calcSafetyBuffer(windowSize: number): number {                                 // ★ changed
-  return Math.min(120_000, Math.max(4_000, Math.floor(windowSize * 0.10)));
+function calcSafetyBuffer(windowSize: number): number {
+  // ★ changed
+  return Math.min(10_000, Math.max(4_000, Math.floor(windowSize * 0.1)));
 }
 
 export class TokenLimitChunker extends PolicySynthAgentBase {
@@ -52,31 +53,28 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     modelName: string,
     prompt: string
   ): Promise<number> {
-    const contents: Content[] = [
-      { role: "user", parts: [{ text: prompt }] },
-    ];
-    const { totalTokens } = await TokenLimitChunker.geminiAi.models.countTokens({
-      model: modelName,
-      contents,
-    });
+    const contents: Content[] = [{ role: "user", parts: [{ text: prompt }] }];
+    const { totalTokens } = await TokenLimitChunker.geminiAi.models.countTokens(
+      {
+        model: modelName,
+        contents,
+      }
+    );
     return totalTokens ?? 0;
   }
 
-  private decodeTokens(
-    model: BaseChatModel,
-    enc: any,
-    tokens: Uint32Array
-  ): string {
-    const name = String(model.modelName).toLowerCase();
-    // Gemini provides no token decoder; fall back to tiktoken
-    return new TextDecoder().decode(enc.decode(tokens));
-  }
 
-  private async countTokens(model: BaseChatModel, text: string): Promise<number> {
+  private async countTokens(
+    model: BaseChatModel,
+    text: string
+  ): Promise<number> {
     const name = String(model.modelName).toLowerCase();
     if (name.includes("gemini")) {
       try {
-        return await TokenLimitChunker.geminiTokenCount(String(model.modelName), text);
+        return await TokenLimitChunker.geminiTokenCount(
+          String(model.modelName),
+          text
+        );
       } catch (err) {
         this.logger.warn(`Gemini token count failed: ${err}`);
       }
@@ -139,18 +137,95 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     return undefined;
   }
 
-  /* ----------------------------------------------------------------------
-   *  LIMIT CALCULATIONS
-   * -------------------------------------------------------------------- */
-
-  /** Remaining tokens available for *prompt* (i.e. maxContext − maxTokensOut). */
-  private calcTokenLimitFromModel(model: BaseChatModel): number | undefined {
+  private calcTokenLimitFromModel(model: BaseChatModel): number {
     const { maxContextTokens, maxTokensOut } = model.config;
-    this.logger.debug(`calcTokenLimitFromModel: maxContextTokens=${maxContextTokens}, maxTokensOut=${maxTokensOut}`);
+    this.logger.debug(
+      `calcTokenLimitFromModel: maxContextTokens=${maxContextTokens}, maxTokensOut=${maxTokensOut}`
+    );
     if (maxContextTokens) {
       return maxContextTokens - (maxTokensOut ?? 0);
+    } else {
+      this.logger.error(
+        `calcTokenLimitFromModel: model.config.maxContextTokens is undefined`
+      );
+      return 120_000;
     }
-    return undefined;
+  }
+
+  private async chunkByTokens(
+    model: BaseChatModel,
+    text: string,
+    allowedTokens: number
+  ): Promise<string[]> {
+    const name = String(model.modelName).toLowerCase();
+
+    /* ---------- OpenAI & other tiktoken-based models ---------- */
+    if (!name.includes("gemini")) {
+      const enc = encoding_for_model("gpt-4o");
+      try {
+        const allIds = enc.encode(text); // Uint32Array of token-ids
+        const chunks: string[] = [];
+        for (let i = 0; i < allIds.length; i += allowedTokens) {
+          const slice = allIds.subarray(i, i + allowedTokens);
+          chunks.push(new TextDecoder().decode(enc.decode(slice)));
+        }
+        return chunks;
+      } finally {
+        enc.free();
+      }
+    }
+
+    /* ---------- Gemini models (no public encoder) ----------
+   Strategy:
+     1.  Use a fast *estimate* (chars ÷ 4 ≈ tokens) while building a chunk.
+     2.  Call countTokens() only when that estimate says we’re
+         about to overflow.  This trims API calls to ≈ #chunks.
+ ----------------------------------------------------------------------- */
+
+    const AVG_CHARS_PER_TOKEN = 4; // empirical for Gemini-1.5 Pro
+    const paragraphs = text.split(/\n{2,}/); // tweak if your docs aren’t paragraphic
+    const chunks: string[] = [];
+
+    let buffer: string[] = [];
+    let approxTokens = 0; // running *estimated* token count for buffer
+    let estRatio = 1 / AVG_CHARS_PER_TOKEN; // adaptive tokens-per-char guess
+
+    for (const para of paragraphs) {
+      const paraTokensEst = Math.ceil(para.length * estRatio);
+
+      // If adding this paragraph would *probably* fit, just append.
+      if (approxTokens + paraTokensEst < allowedTokens) {
+        buffer.push(para);
+        approxTokens += paraTokensEst;
+        continue;
+      }
+
+      /* We *might* overflow – time for an exact count (costly call). */
+      const candidate = buffer.length
+        ? `${buffer.join("\n\n")}\n\n${para}`
+        : para;
+      const exactTokens = await this.countTokens(model, candidate);
+
+      if (exactTokens <= allowedTokens) {
+        // Still fits: keep it and update the running estimate ratio.
+        buffer.push(para);
+        approxTokens = exactTokens;
+        estRatio = exactTokens / candidate.length; // refine for later paras
+      } else {
+        // Doesn’t fit: seal the current buffer as a chunk, start a new one.
+        if (buffer.length) {
+          chunks.push(buffer.join("\n\n"));
+        }
+        buffer = [para];
+        approxTokens = await this.countTokens(model, para); // 1 call per *new* chunk
+        estRatio = approxTokens / para.length || estRatio; // avoid /0
+      }
+    }
+
+    /* Flush remainder */
+    if (buffer.length) chunks.push(buffer.join("\n\n"));
+
+    return chunks;
   }
 
   /** Fallback: derive token limit from the provider error. */
@@ -159,11 +234,19 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     err: any
   ): number | undefined {
     const contextWindow = TokenLimitChunker.parseTokenLimit(err);
-    this.logger.debug(`calcTokenLimitFromError: parseTokenLimit.contextWindow=${contextWindow}`);
+    this.logger.debug(
+      `calcTokenLimitFromError: parseTokenLimit.contextWindow=${contextWindow}`
+    );
     if (!contextWindow) return undefined;
 
     const { maxTokensOut } = model.config;
-    this.logger.debug(`calcTokenLimitFromError: model.config.maxTokensOut=${maxTokensOut}`);
+    this.logger.debug(
+      `calcTokenLimitFromError: model.config.maxTokensOut=${maxTokensOut}`
+    );
+
+    if (maxTokensOut) {
+      this.logger.error(`calcTokenLimitFromError: maxTokensOut=${maxTokensOut}`);
+    }
     return contextWindow - (maxTokensOut ?? 0);
   }
 
@@ -182,16 +265,11 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     /* ---------------------------------------------------------
      * 1. Determine usable prompt window.
      * ------------------------------------------------------- */
-    let tokenLimit =
-      this.calcTokenLimitFromError(model, err) ??
-      this.calcTokenLimitFromModel(model) ??
-      DEFAULT_MAX_CONTEXT_TOKENS;
+    let tokenLimit = this.calcTokenLimitFromModel(model);
 
-    // Guarantee at least the documented minimum window.
-    tokenLimit = Math.max(tokenLimit, MIN_CONTEXT_TOKENS);                           // ★ changed
-    this.logger.debug(`Determined prompt token limit: ${tokenLimit}`);
+    this.logger.debug(`calcTokenLimitFromModel: tokenLimit=${tokenLimit}`);
 
-    /* ---------------------------------------------------------
+   /* ---------------------------------------------------------
      * 2. Build prefix / extract doc message.
      * ------------------------------------------------------- */
     const prefixMessages = messages.slice(0, -1);
@@ -200,21 +278,17 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const prefixText = prefixMessages.map((m) => m.message).join("\n");
     const prefixTokenCount = await this.countTokens(model, prefixText);
 
-    const encModel: TiktokenModel = "gpt-4o";
-    const enc = encoding_for_model(encModel);
-
-    const safetyBuffer = calcSafetyBuffer(tokenLimit);                              // ★ changed
-    const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;           // ★ changed
+    const safetyBuffer = 10_000;
+    const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;
 
     if (allowedPerChunk <= 0) {
-      enc.free();
       throw new Error(
         `TokenLimitChunker: The prefix alone (${prefixTokenCount} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
       );
     }
 
     this.logger.debug(
-      `prefixTokens=${prefixTokenCount}, safetyBuffer=${safetyBuffer}, chunkBudget=${allowedPerChunk}`
+      `TokenLimitChunker: prefixTokens=${prefixTokenCount}, safetyBuffer=${safetyBuffer}, chunkBudget=${allowedPerChunk}`
     );
 
     /* ---------------------------------------------------------
@@ -226,22 +300,30 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       ? docMessage.message.replace(firstTag, "")
       : docMessage.message;
 
-    const docTokens = enc.encode(bodyWithoutTag);
-    const totalDocTokens = docTokens.length;
+    this.logger.debug(`TokenLimitChunker: firstTag=${firstTag}`);
 
-    const chunks: string[] = [];
-    let cursor = 0;
-    while (cursor < totalDocTokens) {
-      const slice = docTokens.slice(cursor, cursor + allowedPerChunk);
-      const text = this.decodeTokens(model, enc, slice);
-      chunks.push(text);
-      cursor += allowedPerChunk;
+    const totalDocTokens = await this.countTokens(model, bodyWithoutTag);
+
+    if (totalDocTokens > allowedPerChunk) {
+      this.logger.debug(
+        `Document is ${totalDocTokens} tokens; splitting with budget ${allowedPerChunk}.`
+      );
     }
 
-    enc.free(); // finished with encoder
+    const tagCount = firstTag ? await this.countTokens(model, firstTag) : 0;
 
-    this.logger.debug(
-      `Document split into ${chunks.length} chunks (~${allowedPerChunk} tokens each)`
+    const allowedPerChunkWithTag = allowedPerChunk - tagCount;
+
+    if (allowedPerChunkWithTag <= 0) {
+      throw new Error(
+        `TokenLimitChunker: The tag alone (${tagCount} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
+      );
+    }
+
+    const chunks = await this.chunkByTokens(
+      model,
+      bodyWithoutTag,
+      allowedPerChunkWithTag
     );
 
     /* ---------------------------------------------------------
@@ -250,7 +332,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
-      const chunkText = idx === 0 && firstTag ? firstTag + chunks[idx] : chunks[idx];
+      let chunkText = firstTag ? firstTag + chunks[idx] : chunks[idx];
+      chunkText = `<PartialDocument index="${idx+1}">${chunkText.trim()}\n</PartialDocument>`;
       const chunkMessages: PsModelMessage[] = [
         ...prefixMessages,
         { role: docMessage.role, message: chunkText },
@@ -267,7 +350,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       } catch (e) {
         if (TokenLimitChunker.isTokenLimitError(e)) {
           this.logger.error(
-            "Token limit error inside chunk loop – aborting further processing."
+            `Token limit error inside chunk loop – aborting further processing. ${idx} ${chunkText.length} ${e}`
           );
         }
         throw e;
@@ -298,12 +381,18 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         { ...options, disableChunkingRetry: true }
       );
       this.logger.debug(
-        `Final summarisation response: ${JSON.stringify(finalRes, null, 2).slice(0, 1000)}`
+        `Final summarisation response: ${JSON.stringify(
+          finalRes,
+          null,
+          2
+        ).slice(0, 1000)}`
       );
       return finalRes;
     } catch (e) {
       if (TokenLimitChunker.isTokenLimitError(e)) {
-        this.logger.error("Token limit error during final summary – giving up.");
+        this.logger.error(
+          "Token limit error during final summary – giving up."
+        );
       }
       throw e;
     }

@@ -278,7 +278,9 @@ export class GoogleGeminiChat extends BaseChatModel {
         }
         googleAiFinalPrompt = promptChatlogText;
       }
-      this.logger.debug(`[Google AI Final prompt]: ${googleAiFinalPrompt}`);
+      if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+        this.logger.debug(`[Google AI Final prompt]: ${googleAiFinalPrompt}`);
+      }
     }
 
     // --- Execute Request ---
@@ -372,7 +374,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
         this.logger.debug(
-          `Google AI Final prompt with media count: ${media?.length}`
+          `Google AI Final prompt with media length: ${media?.length}`
         );
         if (media?.length) {
           const parts: Part[] = [
@@ -382,7 +384,7 @@ export class GoogleGeminiChat extends BaseChatModel {
             })),
           ];
 
-          this.logger.debug(`Google AI Final prompt with images parts: ${parts.length}`);
+          this.logger.debug(`Google AI Final prompt with images parts length: ${parts.length}`);
 
           const result = await (this.model as GoogleAiGenerativeModel).generateContent(parts);
           const content = result.response.text();
