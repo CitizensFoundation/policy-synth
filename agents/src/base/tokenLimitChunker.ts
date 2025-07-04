@@ -1,7 +1,12 @@
+/****************************************************************************************
+ * TokenLimitChunker.ts
+ * Chunk‑then‑summarise helper that retries large prompts when the model rejects them
+ * for context‑window overflow.  Revised July 2025.
+ ****************************************************************************************/
+
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
-import { PolicySynthSimpleAgentBase } from "./simpleAgent.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
 
 export interface ModelCaller {
@@ -13,24 +18,50 @@ export interface ModelCaller {
   ): Promise<any>;
 }
 
+/* ──────────────────────────────────────────────────────────────────────────
+ *  CONFIG CONSTANTS
+ * ──────────────────────────────────────────────────────────────────────── */
+
+/** Absolute minimum context window across *all* deployed models. */           // ★ changed
+const MIN_CONTEXT_TOKENS = 120_000;
+
+/** Fallback “typical” window when nothing else is known (e.g. GPT‑4o 1 M). */ // ★ changed
+const DEFAULT_MAX_CONTEXT_TOKENS = 1_000_000;
+
+/**
+ * Calculate a dynamic safety buffer:
+ *   • at least 4 000 tokens so the model can answer;
+ *   • 10 % of the context window, capped at 120 000 tokens.
+ * This mirrors the original 120 k buffer for 1 M‑token models but stays
+ * proportional for smaller windows.                                                    */ // ★ changed
+function calcSafetyBuffer(windowSize: number): number {                                 // ★ changed
+  return Math.min(120_000, Math.max(4_000, Math.floor(windowSize * 0.10)));
+}
+
 export class TokenLimitChunker extends PolicySynthAgentBase {
-  constructor(private manager: ModelCaller) {
+  constructor(private readonly manager: ModelCaller) {
     super();
   }
 
-  static isTokenLimitError(err: any): boolean {
+  /* ----------------------------------------------------------------------
+   *  ERROR‑DETECTION UTILITIES
+   * -------------------------------------------------------------------- */
+
+  static isTokenLimitError(err: unknown): boolean {
     if (!err) return false;
 
-    const m = (err.message || "").toLowerCase();
-    const code =
-      (err.code || err?.error?.code || err?.response?.data?.error?.code || "").toLowerCase();
+    const m = String((err as any).message ?? "").toLowerCase();
+    const code = String(
+      (err as any).code ??
+        (err as any)?.error?.code ??
+        (err as any)?.response?.data?.error?.code ??
+        ""
+    ).toLowerCase();
 
-    if (code === "context_length_exceeded" || code === "request_too_large") {
-      this.logger.debug(`Token limit error: ${err.message}`);
+    if (code === "context_length_exceeded" || code === "request_too_large")
       return true;
-    }
 
-    const isTokenLimitError = (
+    return (
       m.includes("exceeds the maximum number of tokens") ||
       m.includes("maximum context length") ||
       m.includes("input token count") ||
@@ -38,56 +69,61 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       m.includes("request exceeds the maximum allowed number of bytes") ||
       m.includes("string too long")
     );
-
-    this.logger.debug(`Token limit error: ${isTokenLimitError}`);
-    return isTokenLimitError;
   }
 
+  /** Extract the model’s context‑window size (tokens) from a provider error msg. */
   static parseTokenLimit(err: any): number | undefined {
-    if (!err?.message) return undefined;
+    const msg: string = err?.message ?? "";
 
-    const matchGoogle = err.message.match(
-      /maximum number of tokens allowed \((\d+)\)/i
-    );
-    if (matchGoogle) return parseInt(matchGoogle[1], 10);
+    const mGoogle = msg.match(/maximum number of tokens allowed\s*\((\d+)\)/i);
+    if (mGoogle) return parseInt(mGoogle[1], 10);
 
-    const matchOpenAi = err.message.match(/maximum context length is (\d+)/i);
-    if (matchOpenAi) return parseInt(matchOpenAi[1], 10);
+    const mOpenAI = msg.match(/maximum context length is\s*(\d+)/i);
+    if (mOpenAI) return parseInt(mOpenAI[1], 10);
 
-    const matchAnthropic = err.message.match(/context window size.*?(\d+)/i);
-    if (matchAnthropic) return parseInt(matchAnthropic[1], 10);
+    const mAnthropic = msg.match(/context window size.*?(\d+)/i);
+    if (mAnthropic) return parseInt(mAnthropic[1], 10);
 
-    const matchStringTooLong = err.message.match(/maximum length (\d+)/i);
-    if (matchStringTooLong) {
-      const charLimit = parseInt(matchStringTooLong[1], 10);
-      if (!isNaN(charLimit)) {
-        return Math.floor(charLimit / 4);
-      }
+    const mStrTooLong = msg.match(/maximum length\s*(\d+)/i);
+    if (mStrTooLong) {
+      const charLimit = parseInt(mStrTooLong[1], 10);
+      if (!Number.isNaN(charLimit)) return Math.floor(charLimit / 4);
     }
 
     return undefined;
   }
 
-  calcTokenLimitFromModel(model: BaseChatModel): number | undefined {
-    if (model.config.maxContextTokens && model.config.maxTokensOut) {
-      return model.config.maxContextTokens - model.config.maxTokensOut;
-    } else {
-      return undefined;
+  /* ----------------------------------------------------------------------
+   *  LIMIT CALCULATIONS
+   * -------------------------------------------------------------------- */
+
+  /** Remaining tokens available for *prompt* (i.e. maxContext − maxTokensOut). */
+  private calcTokenLimitFromModel(model: BaseChatModel): number | undefined {
+    const { maxContextTokens, maxTokensOut } = model.config;
+    this.logger.debug(`calcTokenLimitFromModel: maxContextTokens=${maxContextTokens}, maxTokensOut=${maxTokensOut}`);
+    if (maxContextTokens) {
+      return maxContextTokens - (maxTokensOut ?? 0);
     }
+    return undefined;
   }
 
-  calcTokenLimitFromError(model: BaseChatModel, err: any): number | undefined {
-    if (model.config.maxContextTokens) {
-      const parseLimit = TokenLimitChunker.parseTokenLimit(err);
-      if (parseLimit) {
-        return parseLimit-model.config.maxContextTokens;
-      } else {
-        return undefined;
-      }
-    } else {
-      return undefined;
-    }
+  /** Fallback: derive token limit from the provider error. */
+  private calcTokenLimitFromError(
+    model: BaseChatModel,
+    err: any
+  ): number | undefined {
+    const contextWindow = TokenLimitChunker.parseTokenLimit(err);
+    this.logger.debug(`calcTokenLimitFromError: parseTokenLimit.contextWindow=${contextWindow}`);
+    if (!contextWindow) return undefined;
+
+    const { maxTokensOut } = model.config;
+    this.logger.debug(`calcTokenLimitFromError: model.config.maxTokensOut=${maxTokensOut}`);
+    return contextWindow - (maxTokensOut ?? 0);
   }
+
+  /* ----------------------------------------------------------------------
+   *  MAIN HANDLER
+   * -------------------------------------------------------------------- */
 
   async handle(
     model: BaseChatModel,
@@ -97,62 +133,88 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     options: PsCallModelOptions,
     err: any
   ): Promise<any> {
-    const limit =
-      this.calcTokenLimitFromError(model, err) ||
-      this.calcTokenLimitFromModel(model) ||
-      (1000000-40000);
-    this.logger.debug(`Token limit: ${limit}`);
-    this.logger.debug(`Model name: ${model.modelName}`);
-    this.logger.debug(`Model type: ${modelType}`);
-    this.logger.debug(`Model size: ${modelSize}`);
-    this.logger.debug(`Messages: ${messages.length}`);
-    this.logger.debug(`Options: ${JSON.stringify(options)}`);
-    this.logger.debug(`Error: ${JSON.stringify(err)}`);
+    /* ---------------------------------------------------------
+     * 1. Determine usable prompt window.
+     * ------------------------------------------------------- */
+    let tokenLimit =
+      this.calcTokenLimitFromError(model, err) ??
+      this.calcTokenLimitFromModel(model) ??
+      DEFAULT_MAX_CONTEXT_TOKENS;
 
-    const modelName: TiktokenModel = "gpt-4o";
-    const enc = encoding_for_model(modelName);
+    // Guarantee at least the documented minimum window.
+    tokenLimit = Math.max(tokenLimit, MIN_CONTEXT_TOKENS);                           // ★ changed
+    this.logger.debug(`Determined prompt token limit: ${tokenLimit}`);
 
+    /* ---------------------------------------------------------
+     * 2. Build prefix / extract doc message.
+     * ------------------------------------------------------- */
     const prefixMessages = messages.slice(0, -1);
     const docMessage = messages[messages.length - 1];
 
-    this.logger.debug(`Prefix messages: ${JSON.stringify(prefixMessages, null, 2).slice(0, 1000)}`);
-    this.logger.debug(`Doc message: ${JSON.stringify(docMessage, null, 2).slice(0, 1000)}`);
+    const encModel: TiktokenModel = "gpt-4o";
+    const enc = encoding_for_model(encModel);
 
-    const prefixText = prefixMessages.map((m) => m.message).join("\n");
-    const prefixTokens = enc.encode(prefixText).length;
-    this.logger.debug(`Prefix tokens: ${prefixTokens}`);
+    let prefixTokenCount = 0;
+    try {
+      const prefixText = prefixMessages.map((m) => m.message).join("\n");
+      prefixTokenCount = enc.encode(prefixText).length;
+    } finally {
+      // keep encoder for now
+    }
 
-    const buffer = 120000;
-    const allowed = limit - prefixTokens - buffer;
-    this.logger.debug(`Allowed: ${allowed}`);
+    const safetyBuffer = calcSafetyBuffer(tokenLimit);                              // ★ changed
+    const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;           // ★ changed
 
+    if (allowedPerChunk <= 0) {
+      enc.free();
+      throw new Error(
+        `TokenLimitChunker: The prefix alone (${prefixTokenCount} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
+      );
+    }
+
+    this.logger.debug(
+      `prefixTokens=${prefixTokenCount}, safetyBuffer=${safetyBuffer}, chunkBudget=${allowedPerChunk}`
+    );
+
+    /* ---------------------------------------------------------
+     * 3. Slice document into chunks.
+     * ------------------------------------------------------- */
     const firstTagMatch = docMessage.message.match(/<[^>]+>/);
     const firstTag = firstTagMatch ? firstTagMatch[0] : "";
-
-    const messageToChunk = firstTag
+    const bodyWithoutTag = firstTag
       ? docMessage.message.replace(firstTag, "")
       : docMessage.message;
 
-    const docTokens = enc.encode(messageToChunk);
-    this.logger.debug(`Doc tokens: ${docTokens.length}`);
-    this.logger.debug(`Doc message: ${docMessage.message.slice(0, 1000)}`);
+    const docTokens = enc.encode(bodyWithoutTag);
+    const totalDocTokens = docTokens.length;
+
     const chunks: string[] = [];
-    const decoder = new TextDecoder();
-    for (let i = 0; i < docTokens.length; i += allowed) {
-      const slice = docTokens.slice(i, i + allowed);
-      const text = decoder.decode(enc.decode(slice));
+    let cursor = 0;
+    while (cursor < totalDocTokens) {
+      const slice = docTokens.slice(cursor, cursor + allowedPerChunk);
+      const text = enc.decode(slice);
       chunks.push(text);
+      cursor += allowedPerChunk;
     }
-    enc.free();
 
-    this.logger.debug(`Chunks: ${JSON.stringify(chunks, null, 2).slice(0, 3000)}`);
+    enc.free(); // finished with encoder
 
+    this.logger.debug(
+      `Document split into ${chunks.length} chunks (~${allowedPerChunk} tokens each)`
+    );
+
+    /* ---------------------------------------------------------
+     * 4. Analyse each chunk with the underlying model.
+     * ------------------------------------------------------- */
     const analyses: any[] = [];
-    for (const chunk of chunks) {
-      const chunkMessages = [
+
+    for (let idx = 0; idx < chunks.length; idx++) {
+      const chunkText = idx === 0 && firstTag ? firstTag + chunks[idx] : chunks[idx];
+      const chunkMessages: PsModelMessage[] = [
         ...prefixMessages,
-        { role: docMessage.role, message: firstTag + chunk },
+        { role: docMessage.role, message: chunkText },
       ];
+
       try {
         const res = await this.manager.callModel(
           modelType,
@@ -164,23 +226,29 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       } catch (e) {
         if (TokenLimitChunker.isTokenLimitError(e)) {
           this.logger.error(
-            "Token limit error occurred during chunk processing; aborting."
+            "Token limit error inside chunk loop – aborting further processing."
           );
         }
         throw e;
       }
     }
 
+    /* ---------------------------------------------------------
+     * 5. Summarise the per‑chunk analyses.
+     * ------------------------------------------------------- */
     const summaryText = analyses
-      .map((a, idx) => `Analysis ${idx + 1}: ${typeof a === "string" ? a : JSON.stringify(a)}`)
+      .map((a, i) =>
+        typeof a === "string"
+          ? `Analysis ${i + 1}: ${a}`
+          : `Analysis ${i + 1}: ${JSON.stringify(a)}`
+      )
       .join("\n\n");
 
-    this.logger.debug(`Summary text: ${summaryText}`);
-
-    const finalMessages = [
+    const finalMessages: PsModelMessage[] = [
       ...prefixMessages,
       { role: docMessage.role, message: summaryText },
     ];
+
     try {
       const finalRes = await this.manager.callModel(
         modelType,
@@ -188,15 +256,13 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         finalMessages,
         { ...options, disableChunkingRetry: true }
       );
-
-      this.logger.debug(`Final split analysis response: ${JSON.stringify(finalRes, null, 2)}`);
-
+      this.logger.debug(
+        `Final summarisation response: ${JSON.stringify(finalRes, null, 2).slice(0, 1000)}`
+      );
       return finalRes;
     } catch (e) {
       if (TokenLimitChunker.isTokenLimitError(e)) {
-        this.logger.error(
-          "Token limit error encountered while summarizing chunks; giving up."
-        );
+        this.logger.error("Token limit error during final summary – giving up.");
       }
       throw e;
     }
