@@ -61,6 +61,12 @@ interface PsCallModelOptions {
    * retry loops if chunking already failed.
    */
   disableChunkingRetry?: boolean;
+  /**
+   * Optional XML tag name to preserve when the TokenLimitChunker needs to split
+   * a document due to token limits. If provided, the chunker will search for
+   * this tag instead of blindly grabbing the first XML tag in the message.
+   */
+  xmlTagToPreserveForTooManyTokenSplitting?: string;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
