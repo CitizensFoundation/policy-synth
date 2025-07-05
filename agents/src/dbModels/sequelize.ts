@@ -25,7 +25,7 @@ if (process.env.NODE_ENV === "production") {
     sequelize = new Sequelize(process.env.DATABASE_URL!, {
       dialect: "postgres",
       minifyAliases: true,
-      logging: false,
+      logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       operatorsAliases: {} as any, // You might want to define this properly
     });
   } else {
@@ -37,7 +37,7 @@ if (process.env.NODE_ENV === "production") {
         },
       },
       minifyAliases: true,
-      logging: false,
+      logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       operatorsAliases: {} as any, // You might want to define this properly
     });
   }
@@ -62,7 +62,7 @@ if (process.env.NODE_ENV === "production") {
         dialectOptions: {
           ssl: false,
         },
-        logging: process.env.NODE_ENV !== "production" ? logQuery : false,
+        logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       }
     );
   } else {
