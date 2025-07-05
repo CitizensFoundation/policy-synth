@@ -228,28 +228,6 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     return chunks;
   }
 
-  /** Fallback: derive token limit from the provider error. */
-  private calcTokenLimitFromError(
-    model: BaseChatModel,
-    err: any
-  ): number | undefined {
-    const contextWindow = TokenLimitChunker.parseTokenLimit(err);
-    this.logger.debug(
-      `calcTokenLimitFromError: parseTokenLimit.contextWindow=${contextWindow}`
-    );
-    if (!contextWindow) return undefined;
-
-    const { maxTokensOut } = model.config;
-    this.logger.debug(
-      `calcTokenLimitFromError: model.config.maxTokensOut=${maxTokensOut}`
-    );
-
-    if (maxTokensOut) {
-      this.logger.error(`calcTokenLimitFromError: maxTokensOut=${maxTokensOut}`);
-    }
-    return contextWindow - (maxTokensOut ?? 0);
-  }
-
   /* ----------------------------------------------------------------------
    *  MAIN HANDLER
    * -------------------------------------------------------------------- */
@@ -298,13 +276,13 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const tagRegex = tagName
       ? new RegExp(`<${tagName}[^>]*>`, "i")
       : /<[^>]+>/;
-    const firstTagMatch = docMessage.message.match(tagRegex);
-    const firstTag = firstTagMatch ? firstTagMatch[0] : "";
-    const bodyWithoutTag = firstTag
-      ? docMessage.message.replace(firstTag, "")
+    const tagMatch = docMessage.message.match(tagRegex);
+    const lastTag = tagMatch ? tagMatch[0] : "";
+    const bodyWithoutTag = lastTag
+      ? docMessage.message.replace(lastTag, "")
       : docMessage.message;
 
-    this.logger.debug(`TokenLimitChunker: firstTag=${firstTag}`);
+    this.logger.debug(`TokenLimitChunker: tag=${lastTag}`);
 
     const totalDocTokens = await this.countTokens(model, bodyWithoutTag);
 
@@ -314,7 +292,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       );
     }
 
-    const tagCount = firstTag ? await this.countTokens(model, firstTag) : 0;
+    const tagCount = lastTag ? await this.countTokens(model, lastTag) : 0;
 
     const allowedPerChunkWithTag = allowedPerChunk - tagCount;
 
@@ -336,7 +314,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
-      let chunkText = firstTag ? firstTag + chunks[idx] : chunks[idx];
+      let chunkText = lastTag ? chunks[idx]+lastTag : chunks[idx];
       chunkText = `<PartialDocument index="${idx+1}">${chunkText.trim()}\n</PartialDocument>`;
       const chunkMessages: PsModelMessage[] = [
         ...prefixMessages,
