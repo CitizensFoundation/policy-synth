@@ -195,51 +195,55 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const chunks: string[] = [];
 
     let buffer: string[] = [];
-    let approxTokens = 0; // running *estimated* token count for buffer
     let estRatio = 1 / AVG_CHARS_PER_TOKEN; // adaptive tokens-per-char guess
 
     this.logger.debug(`gemini chunkByTokens: paragraphs.length=${paragraphs.length}`);
 
     for (const para of paragraphs) {
-      const paraTokensEst = Math.ceil(para.length * estRatio);
-
-      // If adding this paragraph would *probably* fit, just append.
-      if (approxTokens + paraTokensEst < allowedTokens) {
-        buffer.push(para);
-        approxTokens += paraTokensEst;
-        continue;
-      }
-
-      /* We *might* overflow – time for an exact count (costly call). */
       const candidate = buffer.length
         ? `${buffer.join("\n\n")}\n\n${para}`
         : para;
       const exactTokens = await this.countTokens(model, candidate);
+      estRatio = exactTokens / candidate.length || estRatio;
 
       if (exactTokens <= allowedTokens) {
-        // Still fits: keep it and update the running estimate ratio.
         buffer.push(para);
-        approxTokens = exactTokens;
-        estRatio = exactTokens / candidate.length; // refine for later paras
-        this.logger.debug(`gemini chunkByTokens: buffer.length=${buffer.length}`);
-        this.logger.debug(`gemini chunkByTokens: approxTokens=${approxTokens}`);
-        this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio}`);
-      } else {
-        // Doesn’t fit: seal the current buffer as a chunk, start a new one.
-        if (buffer.length) {
-          chunks.push(buffer.join("\n\n"));
+        continue;
+      }
+
+      if (buffer.length) {
+        chunks.push(buffer.join("\n\n"));
+      }
+
+      buffer = [para];
+      const paraTokens = await this.countTokens(model, para);
+      estRatio = paraTokens / para.length || estRatio;
+
+      if (paraTokens > allowedTokens) {
+        // Extremely long single paragraph; hard-split by characters.
+        let sliceStart = 0;
+        const approxChars = Math.floor(allowedTokens / estRatio);
+        while (sliceStart < para.length) {
+          const slice = para.slice(sliceStart, sliceStart + approxChars);
+          chunks.push(slice);
+          sliceStart += approxChars;
         }
-        buffer = [para];
-        approxTokens = await this.countTokens(model, para); // 1 call per *new* chunk
-        estRatio = approxTokens / para.length || estRatio;
-        this.logger.debug(`gemini chunkByTokens: buffer.length=${buffer.length}`);
-        this.logger.debug(`gemini chunkByTokens: approxTokens=${approxTokens}`);
-        this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio}`);
+        buffer = [];
       }
     }
 
-    /* Flush remainder */
-    if (buffer.length) chunks.push(buffer.join("\n\n"));
+    if (buffer.length) {
+      const last = buffer.join("\n\n");
+      const lastTokens = await this.countTokens(model, last);
+      if (lastTokens > allowedTokens) {
+        // Recursively split the final chunk
+        const split = await this.chunkByTokens(model, last, allowedTokens);
+        chunks.push(...split);
+      } else {
+        chunks.push(last);
+      }
+    }
+
     this.logger.debug(`gemini chunkByTokens: chunks.length=${chunks.length}`);
 
     return chunks;
