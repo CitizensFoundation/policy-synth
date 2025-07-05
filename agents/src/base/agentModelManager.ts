@@ -229,6 +229,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.modelsByType.set(modelType, newModel);
       this.modelIds.set(modelKey, model.id);
       this.modelIdsByType.set(modelType, model.id);
+
+      this.logger.debug(`Initialized model ${newModel.config.modelName} ${newModel.config.maxContextTokens} ${newModel.config.maxTokensOut}`);
     }
 
     if (this.models.size === 0) {
