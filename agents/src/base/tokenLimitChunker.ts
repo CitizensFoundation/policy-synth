@@ -70,17 +70,21 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const name = String(model.modelName).toLowerCase();
     if (name.includes("gemini")) {
       try {
-        return await TokenLimitChunker.geminiTokenCount(
+        const count = await TokenLimitChunker.geminiTokenCount(
           String(model.modelName),
           text
         );
+        this.logger.debug(`Gemini token count: ${count}`);
+        return count;
       } catch (err) {
         this.logger.warn(`Gemini token count failed: ${err}`);
       }
     }
     const enc = encoding_for_model("gpt-4o");
     try {
-      return enc.encode(text).length;
+      const count = enc.encode(text).length;
+      this.logger.debug(`OpenAI Token count: ${count}`);
+      return count;
     } finally {
       enc.free();
     }
@@ -158,10 +162,15 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
   ): Promise<string[]> {
     const name = String(model.modelName).toLowerCase();
 
+    this.logger.debug(`chunkByTokens: model.modelName=${model.modelName}`);
+    this.logger.debug(`chunkByTokens: text.length=${text.length}`);
+    this.logger.debug(`chunkByTokens: allowedTokens=${allowedTokens}`);
+
     /* ---------- OpenAI & other tiktoken-based models ---------- */
     if (!name.includes("gemini")) {
       const enc = encoding_for_model("gpt-4o");
       try {
+        this.logger.debug("openai chunking");
         const allIds = enc.encode(text); // Uint32Array of token-ids
         const chunks: string[] = [];
         for (let i = 0; i < allIds.length; i += allowedTokens) {
@@ -189,6 +198,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     let approxTokens = 0; // running *estimated* token count for buffer
     let estRatio = 1 / AVG_CHARS_PER_TOKEN; // adaptive tokens-per-char guess
 
+    this.logger.debug(`gemini chunkByTokens: paragraphs.length=${paragraphs.length}`);
+
     for (const para of paragraphs) {
       const paraTokensEst = Math.ceil(para.length * estRatio);
 
@@ -210,6 +221,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         buffer.push(para);
         approxTokens = exactTokens;
         estRatio = exactTokens / candidate.length; // refine for later paras
+        this.logger.debug(`gemini chunkByTokens: buffer.length=${buffer.length}`);
+        this.logger.debug(`gemini chunkByTokens: approxTokens=${approxTokens}`);
+        this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio}`);
       } else {
         // Doesn’t fit: seal the current buffer as a chunk, start a new one.
         if (buffer.length) {
@@ -217,12 +231,16 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         }
         buffer = [para];
         approxTokens = await this.countTokens(model, para); // 1 call per *new* chunk
-        estRatio = approxTokens / para.length || estRatio; // avoid /0
+        estRatio = approxTokens / para.length || estRatio;
+        this.logger.debug(`gemini chunkByTokens: buffer.length=${buffer.length}`);
+        this.logger.debug(`gemini chunkByTokens: approxTokens=${approxTokens}`);
+        this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio}`);
       }
     }
 
     /* Flush remainder */
     if (buffer.length) chunks.push(buffer.join("\n\n"));
+    this.logger.debug(`gemini chunkByTokens: chunks.length=${chunks.length}`);
 
     return chunks;
   }
