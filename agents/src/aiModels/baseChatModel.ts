@@ -10,7 +10,11 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
   config: PsAiModelConfig;
   dbModelId?: number;
 
-  constructor(config: PsAiModelConfig, modelName: string | TiktokenModel, maxTokensOut = 4096) {
+  constructor(
+    config: PsAiModelConfig,
+    modelName: string | TiktokenModel,
+    maxTokensOut = 4096
+  ) {
     super();
     this.modelName = modelName;
     this.maxTokensOut = maxTokensOut;
@@ -44,7 +48,12 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
     return messages
       .map((msg, index) => {
         // 1) Truncate
-        const truncatedContent = this.truncateXmlTags(msg.content, 500);
+        const truncatedContent = this.truncateXmlTags(
+          msg.content,
+          process.env.PS_DEBUG_PROMPT_MESSAGES_MAX_TAG_CHARS
+            ? parseInt(process.env.PS_DEBUG_PROMPT_MESSAGES_MAX_TAG_CHARS)
+            : 500
+        );
 
         // 2) Color-code
         const colorized = this.colorCodeXml(truncatedContent);
@@ -57,12 +66,15 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
   // Example color-coding method (using chalk)
   colorCodeXml(text: string): string {
     const tagRegex = /(<\/?)(\w[\w\d-]*)([^>]*)(>)/g;
-    return text.replace(tagRegex, (_, openBracket, tagName, attrs, closeBracket) => {
-      const coloredOpen = chalk.gray(openBracket);
-      const coloredTagName = chalk.cyan(tagName);
-      const coloredAttrs = chalk.yellow(attrs);
-      const coloredClose = chalk.gray(closeBracket);
-      return `${coloredOpen}${coloredTagName}${coloredAttrs}${coloredClose}`;
-    });
+    return text.replace(
+      tagRegex,
+      (_, openBracket, tagName, attrs, closeBracket) => {
+        const coloredOpen = chalk.gray(openBracket);
+        const coloredTagName = chalk.cyan(tagName);
+        const coloredAttrs = chalk.yellow(attrs);
+        const coloredClose = chalk.gray(closeBracket);
+        return `${coloredOpen}${coloredTagName}${coloredAttrs}${coloredClose}`;
+      }
+    );
   }
 }

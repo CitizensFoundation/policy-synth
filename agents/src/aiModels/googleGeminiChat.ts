@@ -31,7 +31,11 @@ export class GoogleGeminiChat extends BaseChatModel {
   model!: GoogleAiGenerativeModel | VertexAiGenerativeModel;
 
   constructor(config: PsAiModelConfig) {
-    super(config, config.modelName || "gemini-pro", config.maxTokensOut || 16000); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
+    super(
+      config,
+      config.modelName || "gemini-pro",
+      config.maxTokensOut || 16000
+    ); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
 
     this.modelName = config.modelName || "gemini-pro"; // Store model name
     this.useVertexAi = process.env.USE_GOOGLE_VERTEX_AI === "true";
@@ -180,7 +184,9 @@ export class GoogleGeminiChat extends BaseChatModel {
       prices?.longContextTokenThreshold &&
       tokensIn >= prices.longContextTokenThreshold
     ) {
-      longContextTokensIn = cachedInTokens ? tokensIn - cachedInTokens : tokensIn;
+      longContextTokensIn = cachedInTokens
+        ? tokensIn - cachedInTokens
+        : tokensIn;
       longContextTokensOut = tokensOut;
       tokensIn = 0;
       tokensOut = 0;
@@ -204,7 +210,11 @@ export class GoogleGeminiChat extends BaseChatModel {
     media?: { mimeType: string; data: string }[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
-      this.logger.debug(`Messages:\n${JSON.stringify(messages, null, 2)}`);
+      this.logger.debug(
+        `Messages:\n${this.prettyPrintPromptMessages(
+          messages.map((m) => ({ role: m.role, content: m.message }))
+        )}`
+      );
     }
 
     /**
@@ -343,7 +353,9 @@ export class GoogleGeminiChat extends BaseChatModel {
       // Non-streaming
       this.logger.debug(`Non-streaming request`);
       if (this.useVertexAi && vertexContents) {
-        this.logger.debug(`Vertex AI Final prompt with images count: ${vertexContents.length}`);
+        this.logger.debug(
+          `Vertex AI Final prompt with images count: ${vertexContents.length}`
+        );
         const result: GenerateContentResult = await (
           this.model as VertexAiGenerativeModel
         ).generateContent({ contents: vertexContents });
@@ -384,19 +396,24 @@ export class GoogleGeminiChat extends BaseChatModel {
             })),
           ];
 
-          this.logger.debug(`Google AI Final prompt with images parts length: ${parts.length}`);
+          this.logger.debug(
+            `Google AI Final prompt with images parts length: ${parts.length}`
+          );
 
-          const result = await (this.model as GoogleAiGenerativeModel).generateContent(parts);
+          const result = await (
+            this.model as GoogleAiGenerativeModel
+          ).generateContent(parts);
           const content = result.response.text();
           const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
           const tokensOut = getTokensOut(result.response.usageMetadata);
-          const cachedInTokens = result.response.usageMetadata?.cachedContentTokenCount ?? 0;
+          const cachedInTokens =
+            result.response.usageMetadata?.cachedContentTokenCount ?? 0;
           await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
           return { tokensIn, tokensOut, cachedInTokens, content };
         }
 
         const chat = (this.model as GoogleAiGenerativeModel).startChat({
-          safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone
+          safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
         });
         const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();

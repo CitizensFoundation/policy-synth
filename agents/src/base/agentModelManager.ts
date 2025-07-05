@@ -338,6 +338,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       prices: dbConfig?.prices ?? fallbackModel.config?.prices ?? ({} as any),
     };
 
+    this.logger.debug(`Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`);
+
     // Construct ephemeral model
     let ephemeralModel: BaseChatModel;
     switch (provider.toLowerCase()) {
