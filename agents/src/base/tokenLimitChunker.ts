@@ -307,11 +307,18 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
 
     const allowedPerChunkWithTag = allowedPerChunk - tagCount - lastWordsCount;
 
-    if (allowedPerChunkWithTag <= 0) {
+    const MIN_ALLOWED_CHUNK_SIZE = 5000;
+    const MIN_RECOMMENDED_CHUNK_SIZE = 20000;
+
+    if (allowedPerChunkWithTag <= MIN_ALLOWED_CHUNK_SIZE) {
       const extra = tagCount + lastWordsCount;
       throw new Error(
         `TokenLimitChunker: Preserved context (${extra} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
       );
+    }
+
+    if (allowedPerChunkWithTag < MIN_RECOMMENDED_CHUNK_SIZE) {
+      this.logger.error(`TokenLimitChunker: Chunk size ${allowedPerChunkWithTag} is less than the recommended ${MIN_RECOMMENDED_CHUNK_SIZE}.`);
     }
 
     const chunks = await this.chunkByTokens(
