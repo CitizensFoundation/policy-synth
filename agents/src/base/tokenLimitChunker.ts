@@ -63,7 +63,6 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     return totalTokens ?? 0;
   }
 
-
   private async countTokens(
     model: BaseChatModel,
     text: string
@@ -247,7 +246,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
 
     this.logger.debug(`calcTokenLimitFromModel: tokenLimit=${tokenLimit}`);
 
-   /* ---------------------------------------------------------
+    /* ---------------------------------------------------------
      * 2. Build prefix / extract doc message.
      * ------------------------------------------------------- */
     const prefixMessages = messages.slice(0, -1);
@@ -273,9 +272,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
      * 3. Slice document into chunks.
      * ------------------------------------------------------- */
     const tagName = options.xmlTagToPreserveForTooManyTokenSplitting;
-    const tagRegex = tagName
-      ? new RegExp(`<${tagName}[^>]*>`, "i")
-      : /<[^>]+>/;
+    const tagRegex = tagName ? new RegExp(`<${tagName}[^>]*>`, "i") : /<[^>]+>/;
     const tagMatch = docMessage.message.match(tagRegex);
     const lastTag = tagMatch ? tagMatch[0] : "";
     let bodyWithoutTag = lastTag
@@ -289,7 +286,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       Math.max(0, bodyWords.length - lastWordCount),
       lastWordCount
     );
-    const lastWords = preservedWords.join(" ");
+    const endWords = preservedWords.join(" ");
     bodyWithoutTag = bodyWords.join(" ");
 
     this.logger.debug(`TokenLimitChunker: tag=${lastTag}`);
@@ -303,22 +300,26 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     }
 
     const tagCount = lastTag ? await this.countTokens(model, lastTag) : 0;
-    const lastWordsCount = lastWords ? await this.countTokens(model, lastWords) : 0;
+    const endWordsCount = endWords
+      ? await this.countTokens(model, endWords)
+      : 0;
 
-    const allowedPerChunkWithTag = allowedPerChunk - tagCount - lastWordsCount;
+    const allowedPerChunkWithTag = allowedPerChunk - tagCount - endWordsCount;
 
     const MIN_ALLOWED_CHUNK_SIZE = 5000;
     const MIN_RECOMMENDED_CHUNK_SIZE = 20000;
 
     if (allowedPerChunkWithTag <= MIN_ALLOWED_CHUNK_SIZE) {
-      const extra = tagCount + lastWordsCount;
+      const extra = tagCount + endWordsCount;
       throw new Error(
         `TokenLimitChunker: Preserved context (${extra} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
       );
     }
 
     if (allowedPerChunkWithTag < MIN_RECOMMENDED_CHUNK_SIZE) {
-      this.logger.error(`TokenLimitChunker: Chunk size ${allowedPerChunkWithTag} is less than the recommended ${MIN_RECOMMENDED_CHUNK_SIZE}.`);
+      this.logger.error(
+        `TokenLimitChunker: Chunk size ${allowedPerChunkWithTag} is less than the recommended ${MIN_RECOMMENDED_CHUNK_SIZE}.`
+      );
     }
 
     const chunks = await this.chunkByTokens(
@@ -333,14 +334,18 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
-      let chunkText = chunks[idx];
-      if (lastWords) {
-        chunkText = `${chunkText} ${lastWords}`.trim();
-      }
+      let chunkText = `<PartialDocument index="${idx + 1}">${
+        chunks[idx]
+      }</PartialDocument>`;
       if (lastTag) {
-        chunkText += lastTag;
+        chunkText += `\n${lastTag}`;
+        this.logger.debug(`TokenLimitChunker: lastTag=${lastTag}`);
       }
-      chunkText = `<PartialDocument index="${idx+1}">${chunkText.trim()}\n</PartialDocument>`;
+      if (endWords) {
+        chunkText += ` ${endWords}`;
+        this.logger.debug(`TokenLimitChunker: endWords=${endWords}`);
+      }
+      chunkText = `${chunkText.trim()}\n`;
       const chunkMessages: PsModelMessage[] = [
         ...prefixMessages,
         { role: docMessage.role, message: chunkText },
