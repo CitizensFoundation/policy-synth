@@ -67,6 +67,12 @@ interface PsCallModelOptions {
    * this tag instead of blindly grabbing the first XML tag in the message.
    */
   xmlTagToPreserveForTooManyTokenSplitting?: string;
+  /**
+   * Number of last words from the document message to preserve when the
+   * TokenLimitChunker needs to split a document due to token limits.
+   * Defaults to 50 words if not provided.
+   */
+  numberOfLastWordsToPreserveForTooManyTokenSplitting?: number;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
