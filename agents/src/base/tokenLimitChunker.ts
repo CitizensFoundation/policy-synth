@@ -183,19 +183,14 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       }
     }
 
-    /* ---------- Gemini models (no public encoder) ----------
-   Strategy:
-     1.  Use a fast *estimate* (chars ÷ 4 ≈ tokens) while building a chunk.
-     2.  Call countTokens() only when that estimate says we’re
-         about to overflow.  This trims API calls to ≈ #chunks.
- ----------------------------------------------------------------------- */
-
-    const AVG_CHARS_PER_TOKEN = 4; // empirical for Gemini-1.5 Pro
-    const paragraphs = text.split(/\n{2,}/); // tweak if your docs aren’t paragraphic
+    const AVG_CHARS_PER_TOKEN = 4;
+    const paragraphs = text.split(/\n{2,}/);
     const chunks: string[] = [];
 
     let buffer: string[] = [];
     let estRatio = 1 / AVG_CHARS_PER_TOKEN; // adaptive tokens-per-char guess
+
+    this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} 1`);
 
     this.logger.debug(`gemini chunkByTokens: paragraphs.length=${paragraphs.length}`);
 
@@ -205,6 +200,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         : para;
       const exactTokens = await this.countTokens(model, candidate);
       estRatio = exactTokens / candidate.length || estRatio;
+      this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} exactTokens=${exactTokens} candidate.length=${candidate.length}`);
 
       if (exactTokens <= allowedTokens) {
         buffer.push(para);
@@ -218,6 +214,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       buffer = [para];
       const paraTokens = await this.countTokens(model, para);
       estRatio = paraTokens / para.length || estRatio;
+
+      this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} paraTokens=${paraTokens} para.length=${para.length}`);
 
       if (paraTokens > allowedTokens) {
         // Extremely long single paragraph; hard-split by characters.
