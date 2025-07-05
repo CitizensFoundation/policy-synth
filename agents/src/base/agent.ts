@@ -151,7 +151,8 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
       parseJson: true,
       limitedRetries: false,
       tokenOutEstimate: 1200,
-      streamingCallbacks: undefined
+      streamingCallbacks: undefined,
+      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50
     }
   ) {
     return this.modelManager?.callModel(

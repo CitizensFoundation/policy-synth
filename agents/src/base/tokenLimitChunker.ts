@@ -278,9 +278,19 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       : /<[^>]+>/;
     const tagMatch = docMessage.message.match(tagRegex);
     const lastTag = tagMatch ? tagMatch[0] : "";
-    const bodyWithoutTag = lastTag
+    let bodyWithoutTag = lastTag
       ? docMessage.message.replace(lastTag, "")
       : docMessage.message;
+
+    const lastWordCount =
+      options.numberOfLastWordsToPreserveForTooManyTokenSplitting ?? 50;
+    const bodyWords = bodyWithoutTag.split(" ");
+    const preservedWords = bodyWords.splice(
+      Math.max(0, bodyWords.length - lastWordCount),
+      lastWordCount
+    );
+    const lastWords = preservedWords.join(" ");
+    bodyWithoutTag = bodyWords.join(" ");
 
     this.logger.debug(`TokenLimitChunker: tag=${lastTag}`);
 
@@ -293,12 +303,14 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     }
 
     const tagCount = lastTag ? await this.countTokens(model, lastTag) : 0;
+    const lastWordsCount = lastWords ? await this.countTokens(model, lastWords) : 0;
 
-    const allowedPerChunkWithTag = allowedPerChunk - tagCount;
+    const allowedPerChunkWithTag = allowedPerChunk - tagCount - lastWordsCount;
 
     if (allowedPerChunkWithTag <= 0) {
+      const extra = tagCount + lastWordsCount;
       throw new Error(
-        `TokenLimitChunker: The tag alone (${tagCount} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
+        `TokenLimitChunker: Preserved context (${extra} tokens) leaves no room for the document within the ${tokenLimit}-token window (buffer=${safetyBuffer}).`
       );
     }
 
@@ -314,7 +326,13 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
-      let chunkText = lastTag ? chunks[idx]+lastTag : chunks[idx];
+      let chunkText = chunks[idx];
+      if (lastWords) {
+        chunkText = `${chunkText} ${lastWords}`.trim();
+      }
+      if (lastTag) {
+        chunkText += lastTag;
+      }
       chunkText = `<PartialDocument index="${idx+1}">${chunkText.trim()}\n</PartialDocument>`;
       const chunkMessages: PsModelMessage[] = [
         ...prefixMessages,

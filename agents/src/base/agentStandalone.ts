@@ -92,7 +92,8 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       parseJson: false,
       limitedRetries: false,
       tokenOutEstimate: 120,
-      streamingCallbacks: undefined
+      streamingCallbacks: undefined,
+      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50
     }
   ): Promise<any> {
     return this.modelManager.callModel(
