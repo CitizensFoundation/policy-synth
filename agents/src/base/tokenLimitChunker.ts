@@ -345,6 +345,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       );
     }
 
+    this.logger.debug(`TokenLimitChunker: allowedPerChunkWithTag=${allowedPerChunkWithTag}`);
+
     const chunks = await this.chunkByTokens(
       model,
       bodyWithoutTag,
