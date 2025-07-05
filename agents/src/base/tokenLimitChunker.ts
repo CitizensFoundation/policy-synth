@@ -272,7 +272,12 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
      * 3. Slice document into chunks.
      * ------------------------------------------------------- */
     const tagName = options.xmlTagToPreserveForTooManyTokenSplitting;
-    const tagRegex = tagName ? new RegExp(`<${tagName}[^>]*>`, "i") : /<[^>]+>/;
+    const tagRegex = tagName
+      ? new RegExp(
+          `<${tagName}[^>]*>[\\s\\S]*?<\\/${tagName}>`,
+          "i"
+        )
+      : /<[^>]+>/;
     const tagMatch = docMessage.message.match(tagRegex);
     const lastTag = tagMatch ? tagMatch[0] : "";
     let bodyWithoutTag = lastTag
