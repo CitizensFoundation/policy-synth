@@ -273,6 +273,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const prefixText = prefixMessages.map((m) => m.message).join("\n");
     const prefixTokenCount = await this.countTokens(model, prefixText);
 
+    this.logger.debug(`TokenLimitChunker: prefixText.length=${prefixText.length}`);
+    this.logger.debug(`TokenLimitChunker: prefixTokenCount=${prefixTokenCount}`);
+
     const safetyBuffer = 10_000;
     const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;
 
@@ -359,6 +362,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
+      this.logger.debug(`TokenLimitChunker: chunking chunk ${idx + 1} of ${chunks.length}`);
       let chunkText = `<PartialDocument index="${idx + 1}">${
         chunks[idx]
       }</PartialDocument>`;
@@ -375,6 +379,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         ...prefixMessages,
         { role: docMessage.role, message: chunkText },
       ];
+
+      this.logger.debug(`TokenLimitChunker: chunkMessages.length=${chunkMessages.length}`);
 
       try {
         const res = await this.manager.callModel(
