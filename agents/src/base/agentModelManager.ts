@@ -230,7 +230,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.modelIds.set(modelKey, model.id);
       this.modelIdsByType.set(modelType, model.id);
 
-      this.logger.debug(`Initialized model ${newModel.config.modelName} ${newModel.config.maxContextTokens} ${newModel.config.maxTokensOut}`);
+      this.logger.debug(
+        `Initialized model ${newModel.config.modelName} ${newModel.config.maxContextTokens} ${newModel.config.maxTokensOut}`
+      );
     }
 
     if (this.models.size === 0) {
@@ -301,7 +303,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         where: {
           [Op.and]: [
             sequelize.literal(`configuration->>'provider' = '${provider}'`),
-            sequelize.literal(`configuration->>'model' = '${options.modelName}'`),
+            sequelize.literal(
+              `configuration->>'model' = '${options.modelName}'`
+            ),
           ],
         },
       });
@@ -318,18 +322,23 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
     }
 
-    const dbConfig = dbModel?.configuration as PsAiModelConfiguration | undefined;
+    const dbConfig = dbModel?.configuration as
+      | PsAiModelConfiguration
+      | undefined;
 
     // Merge ephemeral config
     const ephemeralConfig: PsAiModelConfig = {
       apiKey,
-      modelName: options.modelName ?? (dbConfig?.model ?? fallbackModel.modelName),
+      modelName:
+        options.modelName ?? dbConfig?.model ?? fallbackModel.modelName,
       provider: provider,
       maxTokensOut:
         options.maxTokensOut ?? dbConfig?.maxTokensOut ?? this.maxTokensOut,
       maxContextTokens: dbConfig?.maxContextTokens,
       temperature:
-        options.modelTemperature ?? dbConfig?.defaultTemperature ?? this.modelTemperature,
+        options.modelTemperature ??
+        dbConfig?.defaultTemperature ??
+        this.modelTemperature,
       reasoningEffort:
         options.modelReasoningEffort ?? (this.reasoningEffort as any),
       maxThinkingTokens:
@@ -340,7 +349,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       prices: dbConfig?.prices ?? fallbackModel.config?.prices ?? ({} as any),
     };
 
-    this.logger.debug(`Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`);
+    this.logger.debug(
+      `Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`
+    );
 
     // Construct ephemeral model
     let ephemeralModel: BaseChatModel;
@@ -556,13 +567,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   private logDetailedServerError(
     model: BaseChatModel,
     error: any,
-    messages: PsModelMessage[]
+    messages: PsModelMessage[],
+    retryCount: number
   ) {
     try {
       const status = error?.response?.status ?? error.status;
       const statusText = error?.response?.statusText ?? "";
       this.logger.error(
-        `5xx error from model ${model.modelName}: ${status} ${statusText} - ${error.message}`
+        `5xx error from model ${model.modelName} (${
+          retryCount + 1
+        } retries): ${status} ${statusText} - ${error.message}`
       );
       if (error?.response?.data) {
         const data =
@@ -603,7 +617,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     let maxRetries = options.limitedRetries
       ? this.limitedLLMmaxRetryCount
       : this.mainLLMmaxRetryCount;
-    let serverErrorRetries = 0;
 
     if (options.overrideMaxRetries) {
       maxRetries = options.overrideMaxRetries;
@@ -613,7 +626,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     let usedFallback = false;
 
     // Simple helper to check if error is 5xx or "prohibited content".
-    const is5xxError = (err: any) => {
+    const is5xxError = (err: any, retryCount: number) => {
       const message = (
         typeof err === "string" ? err : err?.message || ""
       ).toLowerCase();
@@ -625,7 +638,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         message.includes("fetch failed") ||
         message.includes("model is overloaded")
       ) {
-        this.logDetailedServerError(model, err, messages);
+        this.logDetailedServerError(model, err, messages, retryCount);
         return true;
       }
       return false;
@@ -715,8 +728,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             );
             throw error;
           }
-          this.logger.error("Token limit exceeded, invoking chunking handler");
-          const handler = new TokenLimitChunker(this);
+          this.logger.error(
+            "Token limit exceeded, invoking chunking handler and retrying"
+          );
+          const handler: TokenLimitChunker = new TokenLimitChunker(this);
           return await handler.handle(
             model,
             modelType,
@@ -726,8 +741,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             error
           );
         }
-        if (is5xxError(error) && serverErrorRetries < 3) {
-          serverErrorRetries++;
+        if (is5xxError(error, retryCount) && retryCount < 3) {
           retryCount++;
           this.logger.warn(
             `5xx error: retrying callTextModel. Attempt #${retryCount}`
@@ -750,7 +764,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           );
         }
         if (
-          (is5xxError(error) ||
+          (is5xxError(error, retryCount) ||
             PsAiModelManager.isProhibitedContentError(error) ||
             tooMany429s ||
             isUnknownError(error)) &&
@@ -761,7 +775,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             this.logger.warn(
               `Encountered 5xx, content-prohibited error or too many 429s. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
             );
-            usedFallback = true;
 
             // Create ephemeral fallback with user-supplied fallback provider/name:
             const fallbackEphemeral = await this.createEphemeralModel(
@@ -777,11 +790,28 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               }
             );
             if (!fallbackEphemeral) {
-              this.logger.warn(
-                `Unable to create fallback ephemeral model, rethrowing error.`
+              this.logger.crit(
+                `Unable to create fallback ephemeral model, rethrowing error. All debug information: ${JSON.stringify(
+                  {
+                    error,
+                    options,
+                    model,
+                    messages,
+                    retryCount,
+                    maxRetries,
+                    usedFallback,
+                    tooMany429s,
+                    is5xxError: is5xxError(error, retryCount),
+                    isUnknownError: isUnknownError(error),
+                  },
+                  null,
+                  2
+                )}`
               );
               throw error;
             }
+
+            usedFallback = true;
 
             // Attempt the call with the fallback ephemeral model (no further fallback if this fails)
             try {
@@ -827,9 +857,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   throw fallbackError;
                 }
                 this.logger.error(
-                  "Token limit exceeded in fallback model, invoking chunking handler"
+                  "Token limit exceeded in fallback model, invoking chunking handler and retrying"
                 );
-                const handler = new TokenLimitChunker(this);
+                const handler: TokenLimitChunker = new TokenLimitChunker(this);
                 return await handler.handle(
                   fallbackEphemeral,
                   fallbackEphemeral.config?.modelType ?? modelType,

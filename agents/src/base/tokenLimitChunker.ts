@@ -30,17 +30,6 @@ const MIN_CONTEXT_TOKENS = 120_000;
 /** Fallback "typical" window when nothing else is known (e.g. GPT‑4o 1 M). */ // ★ changed
 const DEFAULT_MAX_CONTEXT_TOKENS = 1_000_000;
 
-/**
- * Calculate a dynamic safety buffer:
- *   • at least 4 000 tokens so the model can answer;
- *   • 10 % of the context window, capped at 120 000 tokens.
- * This mirrors the original 120 k buffer for 1 M-token models but stays
- * proportional for smaller windows.                                                    */ // ★ changed
-function calcSafetyBuffer(windowSize: number): number {
-  // ★ changed
-  return Math.min(10_000, Math.max(4_000, Math.floor(windowSize * 0.1)));
-}
-
 export class TokenLimitChunker extends PolicySynthAgentBase {
   constructor(private readonly manager: ModelCaller) {
     super();
