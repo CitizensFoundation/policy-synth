@@ -155,6 +155,77 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     }
   }
 
+  /* ---------- Optimised but simple Gemini chunking ---------- */
+  async chunkByTokensGemini(
+    model: BaseChatModel,
+    text: string,
+    allowedTokens: number
+  ): Promise<string[]> {
+    /** 1 . One‑off calibration on a small sample */
+    const SAMPLE_CHARS = 8_000;
+    const sample = text.slice(0, SAMPLE_CHARS);
+    const sampleTokens = await this.countTokens(model, sample);
+    const tokensPerChar = sampleTokens / sample.length || 0.25; // fallback
+
+    /** 2 . Choose a fixed safety multiplier so estimation never overruns. */
+    const SAFETY = 1.1; // 10 % head‑room
+    const maxChars = (t: number) => Math.floor(t / (tokensPerChar * SAFETY));
+
+    /** 3 . Greedy paragraph packing */
+    const chunks: string[] = [];
+    let buffer = "";
+
+    const paragraphs = text.split(/\n{2,}/);
+
+    this.logger.debug(
+      `chunkByTokensGemini: ${sampleTokens} ${tokensPerChar} ${SAFETY} ${maxChars(
+        allowedTokens
+      )}`
+    );
+
+    for (const para of paragraphs) {
+      const candidate = buffer ? `${buffer}\n\n${para}` : para;
+      const est = candidate.length * tokensPerChar * SAFETY;
+
+      if (est <= allowedTokens) {
+        buffer = candidate; // still fits → keep packing
+        continue;
+      }
+
+      if (buffer) chunks.push(buffer); // flush current buffer
+      buffer = para;
+
+      /** 4 . If a single paragraph is too big, slice it by character length. */
+      while (buffer.length * tokensPerChar * SAFETY > allowedTokens) {
+        const slice = buffer.slice(0, maxChars(allowedTokens));
+        chunks.push(slice);
+        buffer = buffer.slice(slice.length);
+      }
+    }
+    if (buffer) chunks.push(buffer);
+
+    /** 5 . Final verification pass (100 % safety) */
+    for (let i = 0; i < chunks.length; i++) {
+      const tok = await this.countTokens(model, chunks[i]);
+      if (tok > allowedTokens) {
+        this.logger.error(
+          `chunkByTokensGemini: tok > allowedTokens: ${tok} > ${allowedTokens}, rechunking`
+        );
+        // Rare—estimation was too optimistic. Split by binary halving.
+        const segment = chunks.splice(i, 1)[0];
+        const mids = Math.floor(segment.length / 2);
+        chunks.splice(i, 0, segment.slice(0, mids), segment.slice(mids));
+        i--; // re‑verify the first half next loop
+      }
+    }
+
+    this.logger.debug(
+      `chunkByTokensGemini: chunks.length=${chunks.length}`
+    );
+
+    return chunks;
+  }
+
   private async chunkByTokens(
     model: BaseChatModel,
     text: string,
@@ -181,76 +252,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       } finally {
         enc.free();
       }
+    } else {
+      return this.chunkByTokensGemini(model, text, allowedTokens);
     }
-
-    const AVG_CHARS_PER_TOKEN = 4;
-    const paragraphs = text.split(/\n{2,}/);
-    const chunks: string[] = [];
-
-    let buffer: string[] = [];
-    let estRatio = 1 / AVG_CHARS_PER_TOKEN; // adaptive tokens-per-char guess
-
-    this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} 1`);
-
-    this.logger.debug(`gemini chunkByTokens: paragraphs.length=${paragraphs.length}`);
-
-    const THRESHOLD = allowedTokens * 0.95;
-
-    for (const para of paragraphs) {
-      const candidate = buffer.length
-        ? `${buffer.join("\n\n")}\n\n${para}`
-        : para;
-
-      let approxTokens = AVG_CHARS_PER_TOKEN*candidate.length;
-      if (approxTokens > THRESHOLD) {
-        const exactTokens = await this.countTokens(model, candidate);
-        estRatio = exactTokens / candidate.length || estRatio;
-        this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} exactTokens=${exactTokens} candidate.length=${candidate.length}`);
-        approxTokens = exactTokens;
-      }
-
-      if (approxTokens <= allowedTokens) {
-        buffer.push(para);
-        continue;
-      }
-
-      if (buffer.length) {
-        chunks.push(buffer.join("\n\n"));
-      }
-
-      buffer = [para];
-      const paraTokens = await this.countTokens(model, para);
-      //estRatio = paraTokens / para.length || estRatio;
-      this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} paraTokens=${paraTokens} para.length=${para.length}`);
-
-      if (paraTokens > allowedTokens) {
-        // Extremely long single paragraph; hard-split by characters.
-        let sliceStart = 0;
-        const approxChars = Math.floor(allowedTokens / estRatio);
-        while (sliceStart < para.length) {
-          const slice = para.slice(sliceStart, sliceStart + approxChars);
-          chunks.push(slice);
-          sliceStart += approxChars;
-        }
-        buffer = [];
-      }
-    }
-
-    if (buffer.length) {
-      const last = buffer.join("\n\n");
-      const lastTokens = await this.countTokens(model, last);
-      if (lastTokens > allowedTokens) {
-        // Recursively split the final chunk
-        const split = await this.chunkByTokens(model, last, allowedTokens);
-        chunks.push(...split);
-      } else {
-        chunks.push(last);
-      }
-    }
-
-    this.logger.debug(`gemini chunkByTokens: chunks.length=${chunks.length}`);
-
-    return chunks;
   }
 
   /* ----------------------------------------------------------------------
@@ -281,8 +285,12 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const prefixText = prefixMessages.map((m) => m.message).join("\n");
     const prefixTokenCount = await this.countTokens(model, prefixText);
 
-    this.logger.debug(`TokenLimitChunker: prefixText.length=${prefixText.length}`);
-    this.logger.debug(`TokenLimitChunker: prefixTokenCount=${prefixTokenCount}`);
+    this.logger.debug(
+      `TokenLimitChunker: prefixText.length=${prefixText.length}`
+    );
+    this.logger.debug(
+      `TokenLimitChunker: prefixTokenCount=${prefixTokenCount}`
+    );
 
     const safetyBuffer = 10_000;
     const allowedPerChunk = tokenLimit - prefixTokenCount - safetyBuffer;
@@ -302,10 +310,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
      * ------------------------------------------------------- */
     const tagName = options.xmlTagToPreserveForTooManyTokenSplitting;
     const tagRegex = tagName
-      ? new RegExp(
-          `<${tagName}[^>]*>[\\s\\S]*?<\\/${tagName}>`,
-          "i"
-        )
+      ? new RegExp(`<${tagName}[^>]*>[\\s\\S]*?<\\/${tagName}>`, "i")
       : /<[^>]+>/;
     const tagMatch = docMessage.message.match(tagRegex);
     const lastTag = tagMatch ? tagMatch[0] : "";
@@ -356,7 +361,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       );
     }
 
-    this.logger.debug(`TokenLimitChunker: allowedPerChunkWithTag=${allowedPerChunkWithTag}`);
+    this.logger.debug(
+      `TokenLimitChunker: allowedPerChunkWithTag=${allowedPerChunkWithTag}`
+    );
 
     const chunks = await this.chunkByTokens(
       model,
@@ -370,7 +377,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const analyses: any[] = [];
 
     for (let idx = 0; idx < chunks.length; idx++) {
-      this.logger.debug(`TokenLimitChunker: chunking chunk ${idx + 1} of ${chunks.length}`);
+      this.logger.debug(
+        `TokenLimitChunker: chunking chunk ${idx + 1} of ${chunks.length}`
+      );
       let chunkText = `<PartialDocument index="${idx + 1}">${
         chunks[idx]
       }</PartialDocument>`;
@@ -388,7 +397,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         { role: docMessage.role, message: chunkText },
       ];
 
-      this.logger.debug(`TokenLimitChunker: chunkMessages.length=${chunkMessages.length}`);
+      this.logger.debug(
+        `TokenLimitChunker: chunkMessages.length=${chunkMessages.length}`
+      );
 
       try {
         const res = await this.manager.callModel(
@@ -411,13 +422,21 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     /* ---------------------------------------------------------
      * 5. Summarise the per‑chunk analyses.
      * ------------------------------------------------------- */
-    const summaryText = analyses
+    let summaryText = analyses
       .map((a, i) =>
         typeof a === "string"
-          ? `Analysis ${i + 1}: ${a}`
-          : `Analysis ${i + 1}: ${JSON.stringify(a)}`
+          ? `<Analysis ${i + 1}>${a}</Analysis ${i + 1}>`
+          : `<Analysis ${i + 1}>${JSON.stringify(a)}</Analysis ${i + 1}>`
       )
       .join("\n\n");
+
+    if (lastTag) {
+      summaryText = `${summaryText}\n\n${lastTag}`;
+    }
+
+    if (endWords) {
+      summaryText = `${summaryText}\n\n${endWords}`;
+    }
 
     const finalMessages: PsModelMessage[] = [
       ...prefixMessages,
