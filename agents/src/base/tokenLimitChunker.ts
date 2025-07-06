@@ -194,14 +194,14 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
 
     this.logger.debug(`gemini chunkByTokens: paragraphs.length=${paragraphs.length}`);
 
-    const THRESHOLD = allowedTokens * 0.8;
+    const THRESHOLD = allowedTokens * 0.95;
 
     for (const para of paragraphs) {
       const candidate = buffer.length
         ? `${buffer.join("\n\n")}\n\n${para}`
         : para;
 
-      let approxTokens = Math.ceil(candidate.length * estRatio);
+      let approxTokens = AVG_CHARS_PER_TOKEN*candidate.length;
       if (approxTokens > THRESHOLD) {
         const exactTokens = await this.countTokens(model, candidate);
         estRatio = exactTokens / candidate.length || estRatio;
@@ -220,7 +220,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
 
       buffer = [para];
       const paraTokens = await this.countTokens(model, para);
-      estRatio = paraTokens / para.length || estRatio;
+      //estRatio = paraTokens / para.length || estRatio;
       this.logger.debug(`gemini chunkByTokens: estRatio=${estRatio} paraTokens=${paraTokens} para.length=${para.length}`);
 
       if (paraTokens > allowedTokens) {
