@@ -819,6 +819,26 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 throw error;
               }
             } catch (fallbackError) {
+              if (TokenLimitChunker.isTokenLimitError(fallbackError)) {
+                if (options.disableChunkingRetry) {
+                  this.logger.error(
+                    "Token limit error encountered after chunking; giving up."
+                  );
+                  throw fallbackError;
+                }
+                this.logger.error(
+                  "Token limit exceeded in fallback model, invoking chunking handler"
+                );
+                const handler = new TokenLimitChunker(this);
+                return await handler.handle(
+                  fallbackEphemeral,
+                  fallbackEphemeral.config?.modelType ?? modelType,
+                  fallbackEphemeral.config?.modelSize ?? modelSize,
+                  messages,
+                  options,
+                  fallbackError
+                );
+              }
               // If fallback also fails, throw the original or fallback error
               this.logger.error("Fallback model also failed. Throwing error.");
               throw fallbackError;
