@@ -417,8 +417,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     let summaryText = analyses
       .map((a, i) =>
         typeof a === "string"
-          ? `<Analysis ${i + 1}>${a}</Analysis ${i + 1}>`
-          : `<Analysis ${i + 1}>${JSON.stringify(a)}</Analysis ${i + 1}>`
+          ? `<Analysis index="${i + 1}">${a}</Analysis>`
+          : `<Analysis index="${i + 1}">${JSON.stringify(a)}</Analysis>`
       )
       .join("\n\n");
 
