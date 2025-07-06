@@ -559,9 +559,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!err.message) return false;
     const lowerCaseMessage = err.message.toLowerCase();
 
-    return PsAiModelManager.prohibitedContentErrors.some((error) =>
+    const isError = PsAiModelManager.prohibitedContentErrors.some((error) =>
       lowerCaseMessage.includes(error)
     );
+    if (isError) {
+      this.logger.error(
+        `Prohibited content error, invoking fallback model: ${err.message}`
+      );
+    }
+    return isError;
   };
 
   private logDetailedServerError(
@@ -596,7 +602,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const prompt = model.prettyPrintPromptMessages(
         messages.map((m) => ({ role: m.role, content: m.message }))
       );
-      this.logger.error(`Prompt leading to error:\n${prompt}`);
+      this.logger.warn(`Prompt leading to error:\n${prompt}`);
     } catch (logErr) {
       this.logger.error(`Failed to log detailed server error: ${logErr}`);
     }
