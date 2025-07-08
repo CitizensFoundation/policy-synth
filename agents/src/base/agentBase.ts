@@ -112,7 +112,7 @@ export class PolicySynthAgentBase {
         return parsed as T;
       } catch (repairError) {
         this.logger.error(
-          `Failed to repair JSON: ${(repairError as Error).message}`
+          `Failed to repair JSON, retrying: ${(repairError as Error).message}`
         );
         throw new Error(
           `Unable to parse JSON: ${
