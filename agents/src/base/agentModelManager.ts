@@ -1170,8 +1170,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
       });
 
+      const provider = (model as any)?.provider ?? "unknown";
+      const modelName = model?.modelName ?? "unknown";
       this.logger.info(
-        `Token usage updated (modelId:${finalModelId}) for agent ${this.agentId}`
+        `Saved tokens id:${finalModelId} type:${modelType}/${modelSize} provider:${provider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${tokensIn} cached:${cachedInTokens} longIn:${longContextTokenIn} longCached:${longContextTokenInCached} out:${tokensOut} longOut:${longContextTokenOut}`
       );
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
