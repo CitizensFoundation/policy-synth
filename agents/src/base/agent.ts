@@ -152,7 +152,8 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
       limitedRetries: false,
       tokenOutEstimate: 1200,
       streamingCallbacks: undefined,
-      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50
+      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50,
+      maximumNumberOfSplitDocumentChunks: 10
     }
   ) {
     return this.modelManager?.callModel(

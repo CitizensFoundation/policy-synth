@@ -73,6 +73,13 @@ interface PsCallModelOptions {
    * Defaults to 50 words if not provided.
    */
   numberOfLastWordsToPreserveForTooManyTokenSplitting?: number;
+  /**
+   * Maximum number of document chunks allowed when the TokenLimitChunker
+   * splits a document due to token limits. Defaults to 10. If the
+   * chunker needs to create more chunks than this value an error will be
+   * thrown to prevent excessive costs.
+   */
+  maximumNumberOfSplitDocumentChunks?: number;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
