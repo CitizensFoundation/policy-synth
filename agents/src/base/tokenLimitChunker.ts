@@ -360,6 +360,14 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       allowedPerChunkWithTag
     );
 
+    const maxChunksAllowed =
+      options.maximumNumberOfSplitDocumentChunks ?? 10;
+    if (chunks.length > maxChunksAllowed) {
+      throw new Error(
+        `TokenLimitChunker: Document requires ${chunks.length} chunks which exceeds the allowed maximum of ${maxChunksAllowed}.`
+      );
+    }
+
     const concurrency = 32;
     const limit = pLimit(concurrency);
 

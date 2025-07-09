@@ -93,7 +93,8 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       limitedRetries: false,
       tokenOutEstimate: 120,
       streamingCallbacks: undefined,
-      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50
+      numberOfLastWordsToPreserveForTooManyTokenSplitting: 50,
+      maximumNumberOfSplitDocumentChunks: 10
     }
   ): Promise<any> {
     return this.modelManager.callModel(
