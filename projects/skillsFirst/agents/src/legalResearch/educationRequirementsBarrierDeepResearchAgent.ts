@@ -51,7 +51,11 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           100
         );
         const urls = await finder.findSources(job.name);
-        await statutesAgent.analyseJob(job.name);
+        const { results: statuteResults, educationRequirementResults } = await statutesAgent.analyseJob(job.name);
+
+        if (educationRequirementResults.length > 0) {
+          results.push(...educationRequirementResults);
+        }
 
         const finalUrls = Array.from(new Set(urls)).slice(0, 3);
         for (const src of finalUrls) {

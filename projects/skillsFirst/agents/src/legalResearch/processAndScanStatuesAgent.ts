@@ -11,6 +11,7 @@ import {
   PsAiModelSize,
   PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
+import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,7 +36,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   }
 
   private get dataPath() {
-    return join(__dirname, "data", "statues.txt");
+    return join(__dirname, "../../data", "njStatutes.txt");
   }
 
   private async loadStatutesText(): Promise<string> {
@@ -43,10 +44,13 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       const fileId = this.driveConnector.getConfig("fileId", "");
       if (fileId) {
         try {
-          const res = await this.driveConnector.drive.files.get({
-            fileId,
-            alt: "media",
-          }, { responseType: "arraybuffer" });
+          const res = await this.driveConnector.drive.files.get(
+            {
+              fileId,
+              alt: "media",
+            },
+            { responseType: "arraybuffer" }
+          );
           const buffer = Buffer.isBuffer(res.data)
             ? Buffer.from(res.data)
             : Buffer.from(res.data as any);
@@ -82,7 +86,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             PsAiModelSize.Medium,
             [
               this.createSystemMessage(
-                "Determine if the following legal text contains any discussion about jobs or job requirements. Reply only with JSON { \"discussesJobs\": boolean, \"summary\": string }"
+                `Determine if the following legal text contains any discussion about jobs or job requirements.
+                 Reply only with JSON { "discussesJobs": boolean, "summary": string }`
               ),
               this.createHumanMessage(chunkText),
             ]
@@ -103,7 +108,12 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     }
   }
 
-  async analyseJob(jobTitle: string): Promise<JobStatuteMatchResult[]> {
+  async analyseJob(
+    jobTitle: string
+  ): Promise<{
+    results: JobStatuteMatchResult[];
+    educationRequirementResults: EducationRequirementResearchResult[];
+  }> {
     await this.loadAndScanStatuesIfNeeded();
 
     this.memory.statuteResearch = (this.memory.statuteResearch || {
@@ -115,17 +125,27 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       return this.memory.statuteResearch!.jobMatches[jobTitle];
     }
 
+    const anlyzer = new EducationRequirementAnalyzerAgent(
+      this.agent,
+      this.memory,
+      0,
+      100
+    );
+
     const relevant = this.memory.statuteResearch.chunks.filter(
       (c: StatuteChunkAnalysis) => c.discussesJobs
     );
     const results: JobStatuteMatchResult[] = [];
+    const educationRequirementResults: EducationRequirementResearchResult[] =
+      [];
     for (const chunk of relevant) {
       const res = (await this.callModel(
         PsAiModelType.TextReasoning,
         PsAiModelSize.Large,
         [
           this.createSystemMessage(
-            `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it? Reply only with JSON { \"mentionsJob\": boolean, \"reasoning\": string }`
+            `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it?
+             Reply only with JSON { \"mentionsJob\": boolean, \"reasoning\": string }`
           ),
           this.createHumanMessage(chunk.text),
         ]
@@ -139,11 +159,21 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
         reasoning: res?.reasoning || "",
       });
       await this.saveMemory();
+      if (res?.mentionsJob) {
+        const analysis = (await anlyzer.analyze(
+          chunk.text,
+          jobTitle,
+          ""
+        )) as EducationRequirementResearchResult;
+        if (analysis) {
+          educationRequirementResults.push(analysis);
+        }
+      }
     }
 
     this.memory.statuteResearch!.jobMatches[jobTitle] = results;
     await this.saveMemory();
-    return results;
+    return { results, educationRequirementResults };
   }
 
   private splitByTitle(text: string): { title: string; text: string }[] {
