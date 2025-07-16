@@ -37,6 +37,8 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
+    console.log(`---------------------> Found ${qualifyingJobs.length} qualifying jobs`);
+
     const results: EducationRequirementResearchResult[] = [];
     const statutesAgent = new ProcessAndScanStatuesAgent(this.agent, this.memory);
     await statutesAgent.loadAndScanStatuesIfNeeded();

@@ -138,38 +138,49 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     const results: JobStatuteMatchResult[] = [];
     const educationRequirementResults: EducationRequirementResearchResult[] =
       [];
-    for (const chunk of relevant) {
-      const res = (await this.callModel(
-        PsAiModelType.Text,
-        PsAiModelSize.Medium,
-        [
-          this.createSystemMessage(
-            `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it?
-             Reply only with JSON { \"mentionsJob\": boolean, \"reasoning\": string }`
-          ),
-          this.createHumanMessage(chunk.text),
-        ]
-      )) as { mentionsJob: boolean; reasoning: string };
+    // Limit concurrent analysis to avoid overwhelming the model provider
+    const limit = pLimit(MAX_PARALLEL_CHUNKS);
 
-      results.push({
-        jobTitle,
-        title: chunk.title,
-        chunkIndex: chunk.chunkIndex,
-        mentionsJob: !!res?.mentionsJob,
-        reasoning: res?.reasoning || "",
-      });
-      await this.saveMemory();
-      if (res?.mentionsJob) {
-        const analysis = (await analyzer.analyze(
-          chunk.text,
+    const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
+      limit(async () => {
+        const res = (await this.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Medium,
+          [
+            this.createSystemMessage(
+              `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it?\n             Reply only with JSON { \"mentionsJob\": boolean }`
+            ),
+            this.createHumanMessage(chunk.text),
+          ],
+          {
+            modelName: "gpt-4.1-nano",
+            modelProvider: "openai",
+          }
+        )) as { mentionsJob: boolean };
+
+        results.push({
           jobTitle,
-          ""
-        )) as EducationRequirementResearchResult;
-        if (analysis) {
-          educationRequirementResults.push(analysis);
+          title: chunk.title,
+          chunkIndex: chunk.chunkIndex,
+          mentionsJob: !!res?.mentionsJob,
+          reasoning: "",
+        });
+        await this.saveMemory();
+
+        if (res?.mentionsJob) {
+          const analysis = (await analyzer.analyze(
+            chunk.text,
+            jobTitle,
+            ""
+          )) as EducationRequirementResearchResult;
+          if (analysis) {
+            educationRequirementResults.push(analysis);
+          }
         }
-      }
-    }
+      })
+    );
+
+    await Promise.all(tasks);
 
     this.memory.statuteResearch!.jobMatches[jobTitle] = results;
     await this.saveMemory();
