@@ -3,16 +3,20 @@ import { BaseDeepResearchAgent } from "../jobDescriptions/deepResearch/baseResea
 export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   override scanType: DeepResearchWebResearchTypes = "jobDescription";
 
-  jobTitle: string = ""; // reused for job title
-  licenseType: string = ""; // reused for job title
+  jobTitle = "";
+  licenseType = ""; // reused for job title
 
-  searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents, court decisions, or similar official legally binding documents
-   produced by New Jersey government or the U.S. government that describe or otherwise contain mandatory education requirement for the job title. Include  materials from non-government sources only if they include a citation
-   or direct reference to an official government source.`;
-
-  rankingInstructions = `Prioritize results that explicitly mention legal or regulatory education requirements for the job title.`;
+  searchInstructions = "";
+  rankingInstructions = "";
 
   attributeNameToUseForDedup = "url";
+
+  private updatePrompts(jobTitle: string) {
+    this.jobTitle = jobTitle;
+    this.licenseType = jobTitle;
+    this.searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents, court decisions, or similar official legally binding documents produced by New Jersey government or the U.S. government that describe or otherwise contain mandatory education requirement for '${jobTitle}'. Include  materials from non-government sources only if they include a citation or direct reference to an official government source.`;
+    this.rankingInstructions = `Prioritize results that explicitly mention legal or regulatory education requirements for '${jobTitle}'.`;
+  }
 
   get scanningSystemPrompt(): string {
     return `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising paragraph detailing
@@ -24,5 +28,16 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
       confidenceScore: number;
       hasDegreeRequirement: boolean;
     }`;
+  }
+
+  async doWebResearch(jobTitle: string, config: any) {
+    this.updatePrompts(jobTitle);
+    const results = (await super.doWebResearch(jobTitle, config)) as any[];
+    if (Array.isArray(results)) {
+      return results.map((r) =>
+        typeof r === "object" && r !== null ? { jobTitle, ...r } : r
+      );
+    }
+    return results;
   }
 }
