@@ -22,7 +22,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
 
   abstract searchInstructions: string;
   abstract rankingInstructions: string;
-  abstract scanningSystemPrompt: string;
+  abstract get scanningSystemPrompt(): string;
   abstract scanType: DeepResearchWebResearchTypes;
   abstract attributeNameToUseForDedup: string;
   abstract licenseType: string;

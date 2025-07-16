@@ -11,7 +11,9 @@ export class LicenseDeepResearchAgent extends BaseDeepResearchAgent {
 
   attributeNameToUseForDedup = "url";
 
-  scanningSystemPrompt: string = `Analyze the provided search results snippets for the query "${this.searchInstructions}". \
+  get scanningSystemPrompt(): string {
+    return `Analyze the provided search results snippets for the query "${this.searchInstructions}". \
   Identify the single most promising URL pointing directly to the official New Jersey statute, regulation, or licensing board page detailing \
   the requirements for a '${this.licenseType}'. Output ONLY the URL. If no single authoritative URL is clearly identified, output "NOT_FOUND".`;
+  }
 }

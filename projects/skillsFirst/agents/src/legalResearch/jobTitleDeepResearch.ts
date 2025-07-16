@@ -13,13 +13,15 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   attributeNameToUseForDedup = "url";
 
-  scanningSystemPrompt: string = `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising paragraph detailing
-  the education requirements for '${this.licenseType}'.
+  get scanningSystemPrompt(): string {
+    return `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising paragraph detailing
+    the education requirements for '${this.licenseType}'.
 
-  Output JSON with: {
-    requirementSummary: string;
-    reasoning: string;
-    confidenceScore: number;
-    hasDegreeRequirement: boolean;
-  }`;
+    Output JSON with: {
+      requirementSummary: string;
+      reasoning: string;
+      confidenceScore: number;
+      hasDegreeRequirement: boolean;
+    }`;
+  }
 }
