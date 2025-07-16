@@ -4,9 +4,7 @@ import { PsAiModelSize } from "@policysynth/agents/aiModelTypes.js";
 import { PsAgentClassCategories } from "@policysynth/agents/agentCategories.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { EducationType } from "../jobDescriptions/educationTypes.js";
-import type {
-  EducationRequirementResearchRow,
-} from "./types.js";
+
 import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js";
 import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
 import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
@@ -34,7 +32,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    const results: EducationRequirementResearchRow[] = [];
+    const results: EducationRequirementResearchResult[] = [];
     const statutesAgent = new ProcessAndScanStatuesAgent(this.agent, this.memory);
     await statutesAgent.loadAndScanStatuesIfNeeded();
     const limit = pLimit(5);
@@ -42,24 +40,15 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const researcher = new JobTitleDeepResearchAgent(this.agent, this.memory, 0, 100);
-        const urls = (await researcher.doWebResearch(job.name, {
-          numberOfQueriesToGenerate: 12,
-          percentOfQueriesToSearch: 0.5,
-          percentOfResultsToScan: 0.5,
-          maxTopContentResultsToUse: 5,
-        })) as { url: string }[];
-        const row: EducationRequirementResearchRow = {
-          jobTitle: job.name,
-          analysisResults: urls.map((u) => ({
-            jobTitle: job.name,
-            sourceUrl: typeof u === "string" ? u : u.url,
-            requirementSummary: "",
-            reasoning: "",
-            confidenceScore: 0,
-          })),
-        };
+        const row = (await researcher.doWebResearch(job.name, {
+          numberOfQueriesToGenerate: 3,
+          percentOfQueriesToSearch: 0.2,
+          percentOfResultsToScan: 0.2,
+          maxTopContentResultsToUse: 3,
+        })) as EducationRequirementResearchResult[];
+
         await statutesAgent.analyseJob(job.name);
-        results.push(row);
+        results.push(...row);
         processed++;
         await this.updateRangedProgress(
           Math.floor((processed / qualifyingJobs.length) * 90),

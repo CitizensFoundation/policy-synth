@@ -17,7 +17,9 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   the education requirements for '${this.licenseType}'.
 
   Output JSON with: {
+    requirementSummary: string;
+    reasoning: string;
+    confidenceScore: number;
     hasDegreeRequirement: boolean;
-    textFromParagraphExplainingRequirement: string;
   }`;
 }

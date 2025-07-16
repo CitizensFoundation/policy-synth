@@ -1,4 +1,4 @@
-export interface EducationRequirementResearchResult extends PsEloRateable {
+interface EducationRequirementResearchResult extends PsEloRateable {
   jobTitle: string;
   sourceUrl: string;
   requirementSummary: string;
@@ -7,12 +7,12 @@ export interface EducationRequirementResearchResult extends PsEloRateable {
   error?: string;
 }
 
-export interface EducationRequirementResearchRow {
+interface EducationRequirementResearchRow {
   jobTitle: string;
   analysisResults?: EducationRequirementResearchResult[];
 }
 
-export interface StatuteChunkAnalysis {
+interface StatuteChunkAnalysis {
   title: string;
   chunkIndex: number;
   text: string;
@@ -20,7 +20,7 @@ export interface StatuteChunkAnalysis {
   summary: string;
 }
 
-export interface JobStatuteMatchResult {
+interface JobStatuteMatchResult {
   jobTitle: string;
   title: string;
   chunkIndex: number;
@@ -28,7 +28,7 @@ export interface JobStatuteMatchResult {
   reasoning: string;
 }
 
-export interface StatuteResearchMemory {
+interface StatuteResearchMemory {
   chunks: StatuteChunkAnalysis[];
   jobMatches: { [jobTitle: string]: JobStatuteMatchResult[] };
 }

@@ -11,11 +11,6 @@ import {
   PsAiModelSize,
   PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
-import type {
-  JobStatuteMatchResult,
-  StatuteChunkAnalysis,
-  StatuteResearchMemory,
-} from "./types.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);

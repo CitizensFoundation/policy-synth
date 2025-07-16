@@ -3,7 +3,6 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
 import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { PsBaseSheetConnector } from "@policysynth/agents/connectors/base/baseSheetConnector.js";
-import type { EducationRequirementResearchRow } from "./types.js";
 
 export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
   declare memory: any;
