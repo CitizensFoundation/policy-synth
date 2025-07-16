@@ -13,6 +13,11 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   attributeNameToUseForDedup = "url";
 
-  scanningSystemPrompt: string = `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising official source URL detailing
-  the education requirements for '\${this.licenseType}'. Output ONLY the URL. If no authoritative source is found, output "NOT_FOUND".`;
+  scanningSystemPrompt: string = `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising paragraph detailing
+  the education requirements for '${this.licenseType}'.
+
+  Output JSON with: {
+    hasDegreeRequirement: boolean;
+    textFromParagraphExplainingRequirement: string;
+  }`;
 }

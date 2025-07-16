@@ -9,7 +9,7 @@ import type {
 } from "./types.js";
 import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js";
 import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
-import { ProcessAndScanStatuesAgent } from "./ProcessAndScanStatuesAgent.js";
+import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
 import pLimit from "p-limit";
 
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
