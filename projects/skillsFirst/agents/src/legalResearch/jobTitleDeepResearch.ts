@@ -3,6 +3,7 @@ import { BaseDeepResearchAgent } from "../jobDescriptions/deepResearch/baseResea
 export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   override scanType: DeepResearchWebResearchTypes = "jobDescription";
 
+  jobTitle: string = ""; // reused for job title
   licenseType: string = ""; // reused for job title
 
   searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents, court decisions, or similar official legally binding documents
@@ -15,7 +16,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   get scanningSystemPrompt(): string {
     return `Analyze the provided search results snippets for the query "${this.searchInstructions}". Identify the single most promising paragraph detailing
-    the education requirements for '${this.licenseType}'.
+    the education requirements for '${this.jobTitle}'.
 
     Output JSON with: {
       requirementSummary: string;

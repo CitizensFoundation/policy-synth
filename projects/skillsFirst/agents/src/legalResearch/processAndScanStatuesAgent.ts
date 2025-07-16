@@ -15,6 +15,8 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+const MAX_PARALLEL_CHUNKS = 1;
+
 export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
   private driveConnector?: PsGoogleDriveConnector;
@@ -72,7 +74,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
 
     for (const { title, text } of titles) {
       const chunks = this.splitIntoChunks(text, 700000);
-      const limit = pLimit(5);
+      const limit = pLimit(MAX_PARALLEL_CHUNKS);
       const tasks = chunks.map((chunkText, i) =>
         limit(async () => {
           const analysis = (await this.callModel(
