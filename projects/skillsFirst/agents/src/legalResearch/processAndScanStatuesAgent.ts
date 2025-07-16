@@ -125,7 +125,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       return this.memory.statuteResearch!.jobMatches[jobTitle];
     }
 
-    const anlyzer = new EducationRequirementAnalyzerAgent(
+    const analyzer = new EducationRequirementAnalyzerAgent(
       this.agent,
       this.memory,
       0,
@@ -140,8 +140,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       [];
     for (const chunk of relevant) {
       const res = (await this.callModel(
-        PsAiModelType.TextReasoning,
-        PsAiModelSize.Large,
+        PsAiModelType.Text,
+        PsAiModelSize.Medium,
         [
           this.createSystemMessage(
             `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it?
@@ -160,7 +160,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       });
       await this.saveMemory();
       if (res?.mentionsJob) {
-        const analysis = (await anlyzer.analyze(
+        const analysis = (await analyzer.analyze(
           chunk.text,
           jobTitle,
           ""
