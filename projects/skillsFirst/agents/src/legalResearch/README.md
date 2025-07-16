@@ -6,8 +6,10 @@ This folder contains agents that find official evidence of college degree requir
 
 ## Agent Descriptions
 
-- **EducationRequirementsBarrierDeepResearchAgent** – filters job descriptions that need a college degree, performs web research on each title using `JobTitleDeepResearchAgent`, then sends the results to `SheetsEducationRequirementExportAgent` for export.
-- **JobTitleDeepResearchAgent** – a specialized deep‑research utility that searches official statutes or government classification documents for mandatory education requirements and returns the best matching URL.
+- **EducationRequirementsBarrierDeepResearchAgent** – filters job descriptions that need a college degree, locates authoritative URLs via `JobTitleAuthoritativeSourceFinderAgent`, crawls them and analyses the content with `EducationRequirementAnalyzerAgent`, then exports the findings using `SheetsEducationRequirementExportAgent`.
+- **JobTitleAuthoritativeSourceFinderAgent** – uses `JobTitleDeepResearchAgent` to search for official sources about education requirements for a job title and returns the discovered URLs.
+- **EducationRequirementAnalyzerAgent** – given page text, determines if the job title requires a college degree and outputs a short summary with a confidence score.
+- **JobTitleDeepResearchAgent** – utility for generating targeted search queries and ranking results.
 - **SheetsEducationRequirementExportAgent** – writes the aggregated research data to a Google Sheet in chunks after sanitising the values.
 
 ## Queues
