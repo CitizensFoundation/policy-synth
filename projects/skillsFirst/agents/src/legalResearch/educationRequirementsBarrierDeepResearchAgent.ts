@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js";
 import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
+import { ProcessAndScanStatuesAgent } from "./ProcessAndScanStatuesAgent.js";
 import pLimit from "p-limit";
 
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
@@ -34,6 +35,8 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     });
 
     const results: EducationRequirementResearchRow[] = [];
+    const statutesAgent = new ProcessAndScanStatuesAgent(this.agent, this.memory);
+    await statutesAgent.loadAndScanStatuesIfNeeded();
     const limit = pLimit(5);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
@@ -55,6 +58,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
             confidenceScore: 0,
           })),
         };
+        await statutesAgent.analyseJob(job.name);
         results.push(row);
         processed++;
         await this.updateRangedProgress(
