@@ -6,7 +6,12 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { EducationType } from "../jobDescriptions/educationTypes.js";
 
 import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js";
-import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
+import { JobTitleAuthoritativeSourceFinderAgent } from "./jobTitleAuthoritativeSourceFinder.js";
+import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer.js";
+import {
+  FirecrawlScrapeAndCrawlerAgent,
+  ScrapedPage,
+} from "../jobDescriptions/licenceDegrees/firecrawlExtractor.js";
 import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
 import pLimit from "p-limit";
 
@@ -39,16 +44,55 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
-        const researcher = new JobTitleDeepResearchAgent(this.agent, this.memory, 0, 100);
-        const row = (await researcher.doWebResearch(job.name, {
-          numberOfQueriesToGenerate: 3,
-          percentOfQueriesToSearch: 0.2,
-          percentOfResultsToScan: 0.2,
-          maxTopContentResultsToUse: 3,
-        })) as EducationRequirementResearchResult[];
-
+        const finder = new JobTitleAuthoritativeSourceFinderAgent(
+          this.agent,
+          this.memory,
+          0,
+          100
+        );
+        const urls = await finder.findSources(job.name);
         await statutesAgent.analyseJob(job.name);
-        results.push(...row);
+
+        const finalUrls = Array.from(new Set(urls)).slice(0, 3);
+        for (const src of finalUrls) {
+          let pagesToAnalyze: ScrapedPage[] = [];
+          if (src) {
+            const extractor = new FirecrawlScrapeAndCrawlerAgent(
+              this.agent,
+              this.memory,
+              0,
+              100,
+              job.name
+            );
+            pagesToAnalyze = await extractor.scrapeUrl(
+              src,
+              ["markdown"],
+              3,
+              true
+            );
+          }
+
+          for (const page of pagesToAnalyze) {
+            const analyzer = new EducationRequirementAnalyzerAgent(
+              this.agent,
+              this.memory,
+              0,
+              100
+            );
+            const res = (await analyzer.analyze(
+              page.content,
+              job.name,
+              page.url
+            )) as EducationRequirementResearchResult;
+
+            res.jobTitle = job.name;
+            res.sourceUrl = page.url;
+            if (!("error" in res)) {
+              results.push(res);
+            }
+          }
+        }
+
         processed++;
         await this.updateRangedProgress(
           Math.floor((processed / qualifyingJobs.length) * 90),
