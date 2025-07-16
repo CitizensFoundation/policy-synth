@@ -1,6 +1,10 @@
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
+import pLimit from "p-limit";
+import { PsConnectorFactory } from "@policysynth/agents/connectors/base/connectorFactory.js";
+import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
+import { PsGoogleDriveConnector } from "@policysynth/agents/connectors/drive/googleDrive.js";
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import {
@@ -18,14 +22,44 @@ const __dirname = dirname(__filename);
 
 export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
+  private driveConnector?: PsGoogleDriveConnector;
 
   constructor(agent: PsAgent, memory: JobDescriptionMemoryData) {
     super(agent, memory, 0, 100);
     this.memory = memory;
+    const connector = PsConnectorFactory.getConnector(
+      this.agent,
+      this.memory,
+      PsConnectorClassTypes.Drive,
+      true
+    );
+    this.driveConnector =
+      connector instanceof PsGoogleDriveConnector ? connector : undefined;
   }
 
   private get dataPath() {
     return join(__dirname, "data", "statues.txt");
+  }
+
+  private async loadStatutesText(): Promise<string> {
+    if (this.driveConnector) {
+      const fileId = this.driveConnector.getConfig("fileId", "");
+      if (fileId) {
+        try {
+          const res = await this.driveConnector.drive.files.get({
+            fileId,
+            alt: "media",
+          }, { responseType: "arraybuffer" });
+          const buffer = Buffer.isBuffer(res.data)
+            ? Buffer.from(res.data)
+            : Buffer.from(res.data as any);
+          return buffer.toString("utf8");
+        } catch (err) {
+          this.logger.error(`Failed to load statutes from Drive: ${err}`);
+        }
+      }
+    }
+    return fs.readFileSync(this.dataPath, "utf8");
   }
 
   async loadAndScanStatuesIfNeeded(): Promise<void> {
@@ -38,33 +72,37 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       return;
     }
 
-    const raw = fs.readFileSync(this.dataPath, "utf8");
+    const raw = await this.loadStatutesText();
     const titles = this.splitByTitle(raw);
 
     for (const { title, text } of titles) {
       const chunks = this.splitIntoChunks(text, 700000);
-      for (let i = 0; i < chunks.length; i++) {
-        const chunkText = chunks[i];
-        const analysis = (await this.callModel(
-          PsAiModelType.Text,
-          PsAiModelSize.Medium,
-          [
-            this.createSystemMessage(
-              "Determine if the following legal text contains any discussion about jobs or job requirements. Reply only with JSON { \"discussesJobs\": boolean, \"summary\": string }"
-            ),
-            this.createHumanMessage(chunkText),
-          ]
-        )) as { discussesJobs: boolean; summary?: string };
+      const limit = pLimit(5);
+      const tasks = chunks.map((chunkText, i) =>
+        limit(async () => {
+          const analysis = (await this.callModel(
+            PsAiModelType.Text,
+            PsAiModelSize.Medium,
+            [
+              this.createSystemMessage(
+                "Determine if the following legal text contains any discussion about jobs or job requirements. Reply only with JSON { \"discussesJobs\": boolean, \"summary\": string }"
+              ),
+              this.createHumanMessage(chunkText),
+            ]
+          )) as { discussesJobs: boolean; summary?: string };
 
-        this.memory.statuteResearch.chunks.push({
-          title,
-          chunkIndex: i,
-          text: chunkText,
-          discussesJobs: !!analysis?.discussesJobs,
-          summary: analysis?.summary || "",
-        });
-        await this.saveMemory();
-      }
+          this.memory.statuteResearch!.chunks.push({
+            title,
+            chunkIndex: i,
+            text: chunkText,
+            discussesJobs: !!analysis?.discussesJobs,
+            summary: analysis?.summary || "",
+          });
+          await this.saveMemory();
+        })
+      );
+
+      await Promise.all(tasks);
     }
   }
 
@@ -76,8 +114,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       jobMatches: {},
     }) as StatuteResearchMemory;
 
-    if (this.memory.statuteResearch.jobMatches[jobTitle]) {
-      return this.memory.statuteResearch.jobMatches[jobTitle];
+    if (this.memory.statuteResearch!.jobMatches[jobTitle]) {
+      return this.memory.statuteResearch!.jobMatches[jobTitle];
     }
 
     const relevant = this.memory.statuteResearch.chunks.filter(
@@ -106,7 +144,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       await this.saveMemory();
     }
 
-    this.memory.statuteResearch.jobMatches[jobTitle] = results;
+    this.memory.statuteResearch!.jobMatches[jobTitle] = results;
     await this.saveMemory();
     return results;
   }
