@@ -1,6 +1,9 @@
 import { PolicySynthAgent } from "@policysynth/agents/base/agent.js";
 import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
-import { PsAiModelSize, PsAiModelType } from "@policysynth/agents/aiModelTypes.js";
+import {
+  PsAiModelSize,
+  PsAiModelType,
+} from "@policysynth/agents/aiModelTypes.js";
 
 export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
   memory: JobDescriptionMemoryData;
@@ -52,15 +55,25 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       );
     }
 
-    await this.updateRangedProgress(0, `Analyzing requirements for: ${jobTitle}`);
-    this.logger.info(`Analyzing extracted text for ${jobTitle} from ${sourceUrl}`);
+    await this.updateRangedProgress(
+      0,
+      `Analyzing requirements for: ${jobTitle}`
+    );
+    this.logger.info(
+      `Analyzing extracted text for ${jobTitle} from ${sourceUrl}`
+    );
 
     if (!extractedText || extractedText.trim().length === 0) {
       this.logger.warn(`Cannot analyze empty text for ${jobTitle}`);
       return { error: "Input text for analysis is empty." };
     }
 
-    const systemPrompt = `You are an expert analyst specializing in New Jersey employment regulations. Your task is to determine if the job title \"${jobTitle}\" requires a college degree based *only* on the provided text from an official source (statute, regulation, classification document, etc.).\n\nFocus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement. If none is found, state that no degree requirement is mentioned.\n\nReturn your analysis strictly as JSON in the following format:\n{\n  \"requirementSummary\": string,\n  \"reasoning\": string,\n  \"confidenceScore\": number\n}\nDo NOT include any text before or after the JSON object.`;
+    const systemPrompt = `You are an expert analyst specializing in New Jersey employment regulations.
+    Your task is to determine if the job title \"${jobTitle}\" requires a college degree based *only* on the provided text from an official source (statute, regulation, classification document, etc.).
+    Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement. If none is found, state that no degree requirement is mentioned.
+    Return your analysis strictly as JSON in the following format:
+    {\n  \"requirementSummary\": string,\n  \"reasoning\": string,\n  \"confidenceScore\": number\n}\n
+    Do NOT include any text before or after the JSON object.`;
 
     const userPrompt = `<SourceText>${extractedText}</SourceText>\n\nYour JSON output:`;
 
@@ -75,7 +88,9 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
         messages
       );
 
-      this.logger.debug(`LLM response: ${JSON.stringify(llmResponse, null, 2)}`);
+      this.logger.debug(
+        `LLM response: ${JSON.stringify(llmResponse, null, 2)}`
+      );
 
       const analysis = llmResponse as EducationRequirementResearchResult;
       if (
@@ -101,11 +116,16 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       this.logger.info(
         `Analysis complete for ${jobTitle}: Confidence=${analysis.confidenceScore}`
       );
-      await this.updateRangedProgress(100, `Analysis complete for: ${jobTitle}`);
+      await this.updateRangedProgress(
+        100,
+        `Analysis complete for: ${jobTitle}`
+      );
 
       return analysis;
     } catch (error: any) {
-      this.logger.error(`Error during LLM analysis for ${jobTitle}: ${error.message}`);
+      this.logger.error(
+        `Error during LLM analysis for ${jobTitle}: ${error.message}`
+      );
       this.memory.llmErrors.push(
         `Analyzer LLM Error (${jobTitle}): ${error.message}`
       );
@@ -115,6 +135,8 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
   }
 
   async process() {
-    throw new Error("Process method not implemented for direct use. Call analyze instead.");
+    throw new Error(
+      "Process method not implemented for direct use. Call analyze instead."
+    );
   }
 }
