@@ -18,11 +18,11 @@ export class JobTitleAuthoritativeSourceFinderAgent extends PolicySynthAgent {
     this.logger.debug(`Finding authoritative sources for ${jobTitle}`);
 
     const webResearchCfg: any = {
-      numberOfQueriesToGenerate: 24,
+      numberOfQueriesToGenerate: 4,
       percentOfQueriesToSearch: 0.5,
       percentOfResultsToScan: 0.5,
-      maxTopContentResultsToUse: 45,
-      maxItemsToAnalyze: 45,
+      maxTopContentResultsToUse: 5,
+      maxItemsToAnalyze: 5,
     };
 
     const researcher = new JobTitleDeepResearchAgent(

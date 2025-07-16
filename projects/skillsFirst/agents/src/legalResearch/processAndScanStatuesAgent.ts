@@ -11,12 +11,12 @@ import {
   PsAiModelSize,
   PsAiModelType,
 } from "@policysynth/agents/aiModelTypes.js";
-import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer";
+import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const MAX_PARALLEL_CHUNKS = 1;
+const MAX_PARALLEL_CHUNKS = 30;
 
 export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -69,7 +69,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       jobMatches: {},
     }) as StatuteResearchMemory;
 
-    if ((this.memory.statuteResearch.chunks || []).length) {
+    if ((this.memory.statuteResearch?.chunks || []).length) {
       return;
     }
 
