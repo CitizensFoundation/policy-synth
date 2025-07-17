@@ -1,10 +1,9 @@
-import { BaseDeepResearchAgent } from "../jobDescriptions/deepResearch/baseResearchAgent.js";
+import { BaseDeepResearchAgent } from "./deepResearch/baseResearchAgent.js";
 
 export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   override scanType: DeepResearchWebResearchTypes = "jobDescription";
 
   jobTitle = "";
-  licenseType = ""; // reused for job title
 
   searchInstructions = "";
   rankingInstructions = "";
@@ -13,7 +12,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   private updatePrompts(jobTitle: string) {
     this.jobTitle = jobTitle;
-    this.licenseType = jobTitle;
+    this.jobTitle = jobTitle;
     this.searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents, court decisions, or similar official legally binding documents produced by New Jersey government or the U.S. government that describe or otherwise contain mandatory education requirement for '${jobTitle}'. Include  materials from non-government sources only if they include a citation or direct reference to an official government source.`;
     this.rankingInstructions = `Prioritize results that explicitly mention legal or regulatory education requirements for '${jobTitle}'.`;
   }

@@ -133,13 +133,16 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
       limit(async () => {
         const res = (await this.callModel(
-          PsAiModelType.TextReasoning,
+          PsAiModelType.Text,
           PsAiModelSize.Medium,
           [
             this.createSystemMessage(
-              `Extract any text about degree requirements or preferences for a job title from the following statute text. Reply only with JSON { "degreeInformation": string[] }`
+              `Extract any text about degree requirements or preferences for a job title from the following statute text.
+               Reply only with JSON { "degreeInformation": string[] }`
             ),
-            this.createHumanMessage(chunk.text),
+            this.createHumanMessage(
+              `<statuteTextToLookForDegreeInformation>${chunk.text}</statuteTextToLookForDegreeInformation>`
+            ),
           ]
         )) as { degreeInformation: string[] };
 
