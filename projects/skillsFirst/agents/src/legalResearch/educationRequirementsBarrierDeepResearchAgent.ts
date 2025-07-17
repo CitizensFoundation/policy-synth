@@ -53,10 +53,22 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           100
         );
         const urls = await finder.findSources(job.name);
-        const { results: statuteResults, educationRequirementResults } = await statutesAgent.analyseJob(job.name);
+        const { results: statuteResults, educationRequirementResults } =
+          await statutesAgent.analyseJob(job.name);
 
         if (educationRequirementResults.length > 0) {
           results.push(...educationRequirementResults);
+          job.degreeAnalysis.deepResearchResults =
+            job.degreeAnalysis.deepResearchResults || [];
+          job.degreeAnalysis.deepResearchResults.push(
+            ...educationRequirementResults,
+          );
+        }
+
+        if (statuteResults.length > 0) {
+          job.degreeAnalysis.statutesResearchResults =
+            job.degreeAnalysis.statutesResearchResults || [];
+          job.degreeAnalysis.statutesResearchResults.push(...statuteResults);
         }
 
         const finalUrls = Array.from(new Set(urls)).slice(0, 3);
@@ -95,6 +107,9 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
             res.sourceUrl = page.url;
             if (!("error" in res)) {
               results.push(res);
+              job.degreeAnalysis.deepResearchResults =
+                job.degreeAnalysis.deepResearchResults || [];
+              job.degreeAnalysis.deepResearchResults.push(res);
             }
           }
         }
