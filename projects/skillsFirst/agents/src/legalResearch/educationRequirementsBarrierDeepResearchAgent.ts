@@ -6,14 +6,10 @@ import { PsConnectorClassTypes } from "@policysynth/agents/connectorTypes.js";
 import { EducationType } from "../jobDescriptions/educationTypes.js";
 
 import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js";
-import { JobTitleAuthoritativeSourceFinderAgent } from "./jobTitleAuthoritativeSourceFinder.js";
-import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer.js";
-import {
-  FirecrawlScrapeAndCrawlerAgent,
-  ScrapedPage,
-} from "../jobDescriptions/licenceDegrees/firecrawlExtractor.js";
+
 import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
 import pLimit from "p-limit";
+import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
 
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -46,22 +42,44 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
-        const finder = new JobTitleAuthoritativeSourceFinderAgent(
+        const webResearchCfg: any = {
+          numberOfQueriesToGenerate: 4,
+          percentOfQueriesToSearch: 0.5,
+          percentOfResultsToScan: 0.5,
+          maxTopContentResultsToUse: 5,
+          maxItemsToAnalyze: 5,
+        };
+
+        const researcher = new JobTitleDeepResearchAgent(
           this.agent,
           this.memory,
-          0,
-          100
+          this.startProgress,
+          this.endProgress
         );
-        const urls = await finder.findSources(job.name);
-        const { results: statuteResults, educationRequirementResults } =
+
+        await researcher.updateRangedProgress(
+          0,
+          `Searching authoritative source for ${job.name}`
+        );
+
+        const deepResearchResults = (await researcher.doWebResearch(job.name, {
+          ...webResearchCfg
+        })) as EducationRequirementResearchResult[];
+
+        await researcher.updateRangedProgress(
+          0,
+          `Scanning statutes for ${job.name}`
+        );
+        const { results: statuteResults } =
           await statutesAgent.analyseJob(job.name);
 
-        if (educationRequirementResults.length > 0) {
-          results.push(...educationRequirementResults);
+
+        if (deepResearchResults.length > 0) {
+          results.push(...deepResearchResults);
           job.degreeAnalysis.deepResearchResults =
             job.degreeAnalysis.deepResearchResults || [];
           job.degreeAnalysis.deepResearchResults.push(
-            ...educationRequirementResults,
+            ...deepResearchResults,
           );
         }
 
@@ -71,48 +89,6 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           job.degreeAnalysis.statutesResearchResults.push(...statuteResults);
         }
 
-        const finalUrls = Array.from(new Set(urls)).slice(0, 3);
-        for (const src of finalUrls) {
-          let pagesToAnalyze: ScrapedPage[] = [];
-          if (src) {
-            const extractor = new FirecrawlScrapeAndCrawlerAgent(
-              this.agent,
-              this.memory,
-              0,
-              100,
-              job.name
-            );
-            pagesToAnalyze = await extractor.scrapeUrl(
-              src,
-              ["markdown"],
-              3,
-              true
-            );
-          }
-
-          for (const page of pagesToAnalyze) {
-            const analyzer = new EducationRequirementAnalyzerAgent(
-              this.agent,
-              this.memory,
-              0,
-              100
-            );
-            const res = (await analyzer.analyze(
-              page.content,
-              job.name,
-              page.url
-            )) as EducationRequirementResearchResult;
-
-            res.jobTitle = job.name;
-            res.sourceUrl = page.url;
-            if (!("error" in res)) {
-              results.push(res);
-              job.degreeAnalysis.deepResearchResults =
-                job.degreeAnalysis.deepResearchResults || [];
-              job.degreeAnalysis.deepResearchResults.push(res);
-            }
-          }
-        }
 
         processed++;
         await this.updateRangedProgress(

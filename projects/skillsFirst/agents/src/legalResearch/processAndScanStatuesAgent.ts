@@ -16,7 +16,7 @@ import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyze
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const MAX_PARALLEL_CHUNKS = 30;
+const MAX_PARALLEL_CHUNKS = 1;
 
 export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -173,9 +173,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       jobMatches: {},
     }) as StatuteResearchMemory;
 
-    if (this.memory.statuteResearch!.jobMatches[jobTitle]) {
-      return this.memory.statuteResearch!.jobMatches[jobTitle];
-    }
+    this.memory.statuteResearch!.jobMatches = {};
 
     const analyzer = new EducationRequirementAnalyzerAgent(
       this.agent,
@@ -186,7 +184,9 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
 
     const relevant: ExtractedJobTitleInformation[] = (
       this.memory.extractedJobTitleDegreeInformation || []
-    ).map((i) => i.extractedJobTitleDegreeInformation).flat();
+    ).map((i) => i.extractedJobTitleDegreeInformation);
+
+    console.log("relevant", JSON.stringify(relevant, null, 2));
 
     const results: JobStatuteMatchResult[] = [];
     const educationRequirementResults: EducationRequirementResearchResult[] =
@@ -202,11 +202,13 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
           [
             this.createSystemMessage(
               `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" or requirements for it?\n
-               Reply only with JSON { \"mentionsJob\": boolean }`
+               Reply only with JSON {
+                 mentionsJob: boolean
+               }`
             ),
             this.createHumanMessage(
               `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join("\n")}</extractedJobTitleDegreeInformation>
-                <jobTitle>${jobTitle}</jobTitle>\n`
+               <jobTitle>${jobTitle}</jobTitle>\n`
             ),
           ],
           {
