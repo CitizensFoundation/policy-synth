@@ -209,7 +209,6 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
           mentionsJob: !!res?.mentionsJob,
           reasoning: "",
         });
-        await this.saveMemory();
 
         if (res?.mentionsJob) {
           const analysis = (await analyzer.analyze(
@@ -220,6 +219,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
           if (analysis) {
             educationRequirementResults.push(analysis);
           }
+          await this.saveMemory();
         }
       })
     );
