@@ -97,6 +97,8 @@ interface JobDescriptionDegreeAnalysis {
   // From the last question:
   // "Identify any barrier or obstacle stated, suggested, or described in the job description to hiring an applicant who does not have a college or university degree.
   // If there are no barriers, leave the field blank. Do not fabricate any information."
+  deepResearchResults?: import("../legalResearch/types.js").EducationRequirementResearchResult[];
+  statutesResearchResults?: import("../legalResearch/types.js").JobStatuteMatchResult[];
 }
 
 /**
@@ -215,6 +217,8 @@ interface JobDescriptionDegreeAnalysis {
   // From the last question:
   // "Identify any barrier or obstacle stated, suggested, or described in the job description to hiring an applicant who does not have a college or university degree.
   // If there are no barriers, leave the field blank. Do not fabricate any information."
+  deepResearchResults?: import("../legalResearch/types.js").EducationRequirementResearchResult[];
+  statutesResearchResults?: import("../legalResearch/types.js").JobStatuteMatchResult[];
 
   validationChecks?: DataConsistencyChecks;
   // Contains the results of data consistency checks based on predefined hypotheses.
