@@ -70,6 +70,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     }) as StatuteResearchMemory;
 
     if ((this.memory.statuteResearch?.chunks || []).length) {
+      await this.extractJobTitleDegreeInformation();
+
       return;
     }
 
@@ -109,6 +111,10 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   }
 
   private async extractJobTitleDegreeInformation(): Promise<void> {
+    if (this.memory.extractedJobTitleDegreeInformation?.length) {
+      return;
+    }
+
     this.memory.extractedJobTitleDegreeInformation =
       this.memory.extractedJobTitleDegreeInformation || [];
 
@@ -158,7 +164,6 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     educationRequirementResults: EducationRequirementResearchResult[];
   }> {
     await this.loadAndScanStatuesIfNeeded();
-    await this.extractJobTitleDegreeInformation();
 
     this.memory.statuteResearch = (this.memory.statuteResearch || {
       chunks: [],
@@ -176,50 +181,54 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       100
     );
 
-    const relevant = this.memory.statuteResearch.chunks.filter(
-      (c: StatuteChunkAnalysis) => c.discussesJobs
-    );
+    const relevant: ExtractedJobTitleInformation[] = (
+      this.memory.extractedJobTitleDegreeInformation || []
+    ).map((i) => i.extractedJobTitleDegreeInformation).flat();
+
     const results: JobStatuteMatchResult[] = [];
     const educationRequirementResults: EducationRequirementResearchResult[] =
       [];
     // Limit concurrent analysis to avoid overwhelming the model provider
     const limit = pLimit(MAX_PARALLEL_CHUNKS);
 
-    const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
+    const tasks = relevant.map((chunk: ExtractedJobTitleInformation) =>
       limit(async () => {
         const res = (await this.callModel(
           PsAiModelType.Text,
           PsAiModelSize.Medium,
           [
             this.createSystemMessage(
-              `Does the following statute text mention the job title \"${jobTitle}\" or requirements for it?\n             Reply only with JSON { \"mentionsJob\": boolean }`
+              `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" or requirements for it?\n
+               Reply only with JSON { \"mentionsJob\": boolean }`
             ),
-            this.createHumanMessage(chunk.text),
+            this.createHumanMessage(
+              `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join("\n")}</extractedJobTitleDegreeInformation>
+                <jobTitle>${jobTitle}</jobTitle>\n`
+            ),
           ],
           {
-            modelName: "gpt-4.1-nano",
+            modelName: "gpt-4.1-mini",
             modelProvider: "openai",
           }
         )) as { mentionsJob: boolean };
 
-        results.push({
-          jobTitle,
-          title: chunk.title,
-          chunkIndex: chunk.chunkIndex,
-          mentionsJob: !!res?.mentionsJob,
-          reasoning: "",
-        });
-
         if (res?.mentionsJob) {
           const analysis = (await analyzer.analyze(
-            chunk.text,
+            chunk.extractedJobTitleDegreeInformation.join("\n"),
             jobTitle,
             ""
           )) as EducationRequirementResearchResult;
           if (analysis) {
+            results.push({
+              jobTitle,
+              title: chunk.title,
+              chunkIndex: chunk.chunkIndex,
+              mentionsJob: !!res?.mentionsJob,
+              reasoning: "",
+            });
             educationRequirementResults.push(analysis);
+            await this.saveMemory();
           }
-          await this.saveMemory();
         }
       })
     );
