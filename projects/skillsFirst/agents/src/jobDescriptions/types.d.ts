@@ -64,6 +64,7 @@ interface JobDescriptionMemoryData extends PsAgentMemoryData {
   researchPlan?: string;
   educationRequirementResearchResults?: import("../legalResearch/types.js").EducationRequirementResearchRow[];
   statuteResearch?: import("../legalResearch/types.js").StatuteResearchMemory;
+  extractedJobTitleDegreeInformation?: import("../legalResearch/types.js").ExtractedJobTitleInformation[];
 }
 
 /**
