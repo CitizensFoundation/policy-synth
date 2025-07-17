@@ -29,7 +29,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
 
   disableRanking = false;
 
-  skipScanning = true;
+  skipScanning = false;
 
   findOrganizationUrlsAndLogos = false;
 

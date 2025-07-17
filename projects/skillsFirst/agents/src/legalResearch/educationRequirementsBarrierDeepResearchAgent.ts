@@ -17,6 +17,14 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
   static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_BASE_ID = "7eb4d482-1fcb-400c-a877-070305c9b661";
   static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_VERSION = 2;
 
+  override get maxModelTokensOut(): number {
+    return 30000;
+  }
+
+  override get modelTemperature(): number {
+    return 0.0;
+  }
+
   constructor(agent: PsAgent, memory: JobDescriptionMemoryData, start: number, end: number) {
     super(agent, memory, start, end);
     this.memory = memory;
@@ -59,19 +67,21 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
 
         await researcher.updateRangedProgress(
           0,
-          `Searching authoritative source for ${job.name}`
+          `Scanning statutes for ${job.name}`
+        );
+        const { results: statuteResults } =
+          await statutesAgent.analyseJob(job.name);
+
+
+        await researcher.updateRangedProgress(
+          0,
+          `Deep researching for ${job.name}`
         );
 
         const deepResearchResults = (await researcher.doWebResearch(job.name, {
           ...webResearchCfg
         })) as EducationRequirementResearchResult[];
 
-        await researcher.updateRangedProgress(
-          0,
-          `Scanning statutes for ${job.name}`
-        );
-        const { results: statuteResults } =
-          await statutesAgent.analyseJob(job.name);
 
 
         if (deepResearchResults.length > 0) {
@@ -88,7 +98,6 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
             job.degreeAnalysis.statutesResearchResults || [];
           job.degreeAnalysis.statutesResearchResults.push(...statuteResults);
         }
-
 
         processed++;
         await this.updateRangedProgress(

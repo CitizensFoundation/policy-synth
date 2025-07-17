@@ -16,11 +16,19 @@ import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyze
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const MAX_PARALLEL_CHUNKS = 1;
+const MAX_PARALLEL_CHUNKS = 40;
 
 export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
   private driveConnector?: PsGoogleDriveConnector;
+
+  override get maxModelTokensOut(): number {
+    return 30000;
+  }
+
+  override get modelTemperature(): number {
+    return 0.0;
+  }
 
   constructor(agent: PsAgent, memory: JobDescriptionMemoryData) {
     super(agent, memory, 0, 100);
@@ -182,20 +190,15 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       100
     );
 
-    const relevant: ExtractedJobTitleInformation[] = (
-      this.memory.extractedJobTitleDegreeInformation || []
-    ).map((i) => i.extractedJobTitleDegreeInformation);
-
-    console.log("relevant", JSON.stringify(relevant, null, 2));
-
     const results: JobStatuteMatchResult[] = [];
     const educationRequirementResults: EducationRequirementResearchResult[] =
       [];
     // Limit concurrent analysis to avoid overwhelming the model provider
     const limit = pLimit(MAX_PARALLEL_CHUNKS);
 
-    const tasks = relevant.map((chunk: ExtractedJobTitleInformation) =>
+    const tasks = this.memory.extractedJobTitleDegreeInformation!.map((chunk: ExtractedJobTitleInformation) =>
       limit(async () => {
+        console.log("chunk", chunk.extractedJobTitleDegreeInformation.join("\n"));
         const res = (await this.callModel(
           PsAiModelType.Text,
           PsAiModelSize.Medium,
@@ -212,7 +215,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             ),
           ],
           {
-            modelName: "gpt-4.1-mini",
+            modelName: "gpt-4.1-nano",
             modelProvider: "openai",
           }
         )) as { mentionsJob: boolean };
