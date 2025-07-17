@@ -108,6 +108,49 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     }
   }
 
+  private async extractJobTitleDegreeInformation(): Promise<void> {
+    this.memory.extractedJobTitleDegreeInformation =
+      this.memory.extractedJobTitleDegreeInformation || [];
+
+    const existing = new Set(
+      this.memory.extractedJobTitleDegreeInformation.map(
+        (i) => `${i.title}-${i.chunkIndex}`
+      )
+    );
+
+    const relevant = (this.memory.statuteResearch?.chunks || []).filter(
+      (c: StatuteChunkAnalysis) =>
+        c.discussesJobs && !existing.has(`${c.title}-${c.chunkIndex}`)
+    );
+
+    const limit = pLimit(MAX_PARALLEL_CHUNKS);
+    const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
+      limit(async () => {
+        const res = (await this.callModel(
+          PsAiModelType.TextReasoning,
+          PsAiModelSize.Medium,
+          [
+            this.createSystemMessage(
+              `Extract any text about degree requirements or preferences for a job title from the following statute text. Reply only with JSON { "degreeInformation": string[] }`
+            ),
+            this.createHumanMessage(chunk.text),
+          ]
+        )) as { degreeInformation: string[] };
+
+        if (res?.degreeInformation?.length) {
+          this.memory.extractedJobTitleDegreeInformation!.push({
+            title: chunk.title,
+            chunkIndex: chunk.chunkIndex,
+            extractedJobTitleDegreeInformation: res.degreeInformation,
+          });
+          await this.saveMemory();
+        }
+      })
+    );
+
+    await Promise.all(tasks);
+  }
+
   async analyseJob(
     jobTitle: string
   ): Promise<{
@@ -115,6 +158,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     educationRequirementResults: EducationRequirementResearchResult[];
   }> {
     await this.loadAndScanStatuesIfNeeded();
+    await this.extractJobTitleDegreeInformation();
 
     this.memory.statuteResearch = (this.memory.statuteResearch || {
       chunks: [],

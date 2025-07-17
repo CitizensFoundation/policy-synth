@@ -32,3 +32,8 @@ interface StatuteResearchMemory {
   chunks: StatuteChunkAnalysis[];
   jobMatches: { [jobTitle: string]: JobStatuteMatchResult[] };
 }
+interface ExtractedJobTitleInformation {
+  title: string;
+  chunkIndex: number;
+  extractedJobTitleDegreeInformation: string[];
+}
