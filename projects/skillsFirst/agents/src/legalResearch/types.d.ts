@@ -3,13 +3,8 @@ interface EducationRequirementResearchResult extends PsEloRateable {
   sourceUrl: string;
   reasoning: string;
   statedDegreeRequirement: string;
-  confidenceScore?: number;
+  typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
   error?: string;
-}
-
-interface EducationRequirementResearchRow {
-  jobTitle: string;
-  analysisResults?: EducationRequirementResearchResult[];
 }
 
 interface StatuteChunkAnalysis {

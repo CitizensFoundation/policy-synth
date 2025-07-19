@@ -25,7 +25,7 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
     }
   }
 
-  async processJsonData(rows: EducationRequirementResearchRow[]): Promise<void> {
+  async processJsonData(rows: EducationRequirementResearchResult[]): Promise<void> {
     await this.updateRangedProgress(0, "Starting Education Requirement export");
     const data = this.generateSheetData(rows);
     const sanitized = this.sanitiseData(data);
@@ -33,13 +33,13 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
     await this.updateRangedProgress(100, "Google Sheets export completed");
   }
 
-  private generateSheetData(rows: EducationRequirementResearchRow[]): (string | number)[][] {
+  private generateSheetData(rows: EducationRequirementResearchResult[]): (string | number)[][] {
     const headers = [
       "Job Title",
-      "Source URL",
+      "Type of Official Document",
       "Stated Degree Requirement",
       "Reasoning",
-      "Elo Rating",
+      "Source URL"
     ];
     const shortHeaders = headers.map(h => {
       const idx = h.lastIndexOf(".");
@@ -48,17 +48,14 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
     const sheetRows: (string | number)[][] = [headers, shortHeaders];
 
     for (const row of rows) {
-      if (!row.analysisResults) continue;
-      for (const res of row.analysisResults) {
-        sheetRows.push([
-          this.toStr(res.jobTitle),
-          this.toStr(res.sourceUrl),
-          this.toStr(res.statedDegreeRequirement),
-          this.toStr(res.reasoning),
-          Math.round(res.eloRating ?? 0),
-        ]);
-      }
-    }
+      sheetRows.push([
+        this.toStr(row.jobTitle),
+        this.toStr(row.typeOfOfficialDocument),
+        this.toStr(row.statedDegreeRequirement),
+        this.toStr(row.reasoning),
+        this.toStr(row.sourceUrl)
+      ]);
+  }
     return sheetRows;
   }
 

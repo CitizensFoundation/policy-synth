@@ -22,14 +22,17 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
     return `You are an expert analyst specializing in New Jersey employment regulations.
     Your task is to determine if the <jobTitle>${this.jobTitle}</jobTitle> requires a college degree or higher based *only* on the provided text context.
 
-    Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement.
+    The statedDegreeRequirement should only be related to the <jobTitle>${this.jobTitle}</jobTitle> and should be a clear and explicit degree requirement in the text context.
 
-    If no degree requirement is found, return an empty array.
+    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context.
+
+    If no stated degree requirement is found anywhere in the text context, return an empty array.
 
     Return your analysis strictly as JSON in the following format:
     [
      {
       statedDegreeRequirement: string;
+      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
       reasoning: string;
      }
     ]`;

@@ -95,7 +95,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       const analysis = llmResponse as EducationRequirementResearchResult;
 
       this.logger.info(
-        `Analysis complete for ${jobTitle}: Confidence=${analysis.confidenceScore}`
+        `Analysis complete for ${jobTitle}`
       );
       await this.updateRangedProgress(
         100,

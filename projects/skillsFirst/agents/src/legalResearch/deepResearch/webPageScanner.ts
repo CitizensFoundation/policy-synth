@@ -57,24 +57,10 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   }
 
   renderDeepScanningPrompt(text: string) {
-    let deepResearchPlan = `<OurResearchPlan>:
-${this.memory.researchPlan}
-</OurResearchPlan>`;
+    const systemMessage = `Your task is to analyze the provided text context and determine if it contains a clear and explicit degree requirement for the job title.
+    Follow the user <Instruction> in detail.`
 
-    if (this.memory.additionalGeneralContext) {
-      deepResearchPlan += this.memory.additionalGeneralContext;
-    }
-
-    const systemMessageWithPlan = this.systemMessage.replace(
-      "!!REPLACE_WITH_OMRP!!",
-      deepResearchPlan
-    );
-
-    console.log(
-      `renderDeepScanningPrompt systemMessageWithPlan: ${systemMessageWithPlan}`
-    );
-
-    const systemMessage = this.createSystemMessage(systemMessageWithPlan);
+    ;
     this.logger.debug("Rendering Deep Scanning Prompt:" + systemMessage);
 
     return [
@@ -83,6 +69,10 @@ ${this.memory.researchPlan}
         `<TextContext>:
         ${text}
         </TextContext>
+
+        <Instructions>:
+        ${this.systemMessage}
+        </Instructions>
 
         Important, only output JSON, nothing else.
 
