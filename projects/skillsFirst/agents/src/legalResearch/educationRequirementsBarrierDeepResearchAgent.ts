@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 70);
+    //qualifyingJobs = qualifyingJobs.slice(0, 10);
 
     console.log(
       `---------------------> Found ${qualifyingJobs.length} qualifying jobs`
