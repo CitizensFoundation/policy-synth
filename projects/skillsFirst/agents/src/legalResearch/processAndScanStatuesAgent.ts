@@ -170,10 +170,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
 
   async analyseJob(
     jobTitle: string
-  ): Promise<{
-    results: JobStatuteMatchResult[];
-    educationRequirementResults: EducationRequirementResearchResult[];
-  }> {
+  ): Promise<EducationRequirementResearchResult[]> {
     await this.loadAndScanStatuesIfNeeded();
 
     this.memory.statuteResearch = (this.memory.statuteResearch || {
@@ -190,62 +187,58 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
       100
     );
 
-    const results: JobStatuteMatchResult[] = [];
+    let results: EducationRequirementResearchResult[] = [];
     const educationRequirementResults: EducationRequirementResearchResult[] =
       [];
     // Limit concurrent analysis to avoid overwhelming the model provider
     const limit = pLimit(MAX_PARALLEL_CHUNKS);
 
-    const tasks = this.memory.extractedJobTitleDegreeInformation!.map((chunk: ExtractedJobTitleInformation) =>
-      limit(async () => {
-        console.log("chunk", chunk.extractedJobTitleDegreeInformation.join("\n"));
-        const res = (await this.callModel(
-          PsAiModelType.Text,
-          PsAiModelSize.Medium,
-          [
-            this.createSystemMessage(
-              `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" or requirements for it?\n
+    const tasks = this.memory.extractedJobTitleDegreeInformation!.map(
+      (chunk: ExtractedJobTitleInformation) =>
+        limit(async () => {
+          console.log(
+            "chunk",
+            chunk.extractedJobTitleDegreeInformation.join("\n")
+          );
+          const res = (await this.callModel(
+            PsAiModelType.Text,
+            PsAiModelSize.Medium,
+            [
+              this.createSystemMessage(
+                `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" and education requirements for it?\n
                Reply only with JSON {
                  mentionsJob: boolean
                }`
-            ),
-            this.createHumanMessage(
-              `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join("\n")}</extractedJobTitleDegreeInformation>
+              ),
+              this.createHumanMessage(
+                `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join(
+                  "\n"
+                )}</extractedJobTitleDegreeInformation>
                <jobTitle>${jobTitle}</jobTitle>\n`
-            ),
-          ],
-          {
-            modelName: "gpt-4.1-nano",
-            modelProvider: "openai",
-          }
-        )) as { mentionsJob: boolean };
+              ),
+            ],
+            {
+              modelName: "gpt-4.1-nano",
+              modelProvider: "openai",
+            }
+          )) as { mentionsJob: boolean };
 
-        if (res?.mentionsJob) {
-          const analysis = (await analyzer.analyze(
-            chunk.extractedJobTitleDegreeInformation.join("\n"),
-            jobTitle,
-            ""
-          )) as EducationRequirementResearchResult;
-          if (analysis) {
-            results.push({
+          if (res?.mentionsJob) {
+            const analysis = (await analyzer.analyze(
+              chunk.extractedJobTitleDegreeInformation.join("\n"),
               jobTitle,
-              title: chunk.title,
-              chunkIndex: chunk.chunkIndex,
-              mentionsJob: !!res?.mentionsJob,
-              reasoning: "",
-            });
-            educationRequirementResults.push(analysis);
-            await this.saveMemory();
+              ""
+            )) as EducationRequirementResearchResult;
+            if (analysis) {
+              results = [...results, analysis];
+            }
           }
-        }
-      })
+        })
     );
 
     await Promise.all(tasks);
 
-    this.memory.statuteResearch!.jobMatches[jobTitle] = results;
-    await this.saveMemory();
-    return { results, educationRequirementResults };
+    return results;
   }
 
   private splitByTitle(text: string): { title: string; text: string }[] {

@@ -14,7 +14,8 @@ import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
 
-  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_BASE_ID = "7eb4d482-1fcb-400c-a877-070305c9b661";
+  static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_BASE_ID =
+    "7eb4d482-1fcb-400c-a877-070305c9b661";
   static readonly EDUCATION_DEEP_RESEARCH_AGENT_CLASS_VERSION = 2;
 
   override get maxModelTokensOut(): number {
@@ -25,30 +26,44 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     return 0.0;
   }
 
-  constructor(agent: PsAgent, memory: JobDescriptionMemoryData, start: number, end: number) {
+  constructor(
+    agent: PsAgent,
+    memory: JobDescriptionMemoryData,
+    start: number,
+    end: number
+  ) {
     super(agent, memory, start, end);
     this.memory = memory;
   }
 
   async process(): Promise<void> {
-    await this.updateRangedProgress(0, "Starting education requirement deep research");
+    await this.updateRangedProgress(
+      0,
+      "Starting education requirement deep research"
+    );
 
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
         j.degreeAnalysis?.needsCollegeDegree &&
-        (maxReq === EducationType.BachelorsDegree || maxReq === EducationType.AssociatesDegree)
+        (maxReq === EducationType.BachelorsDegree ||
+          maxReq === EducationType.AssociatesDegree)
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 10);
+    qualifyingJobs = qualifyingJobs.slice(0, 70);
 
-    console.log(`---------------------> Found ${qualifyingJobs.length} qualifying jobs`);
+    console.log(
+      `---------------------> Found ${qualifyingJobs.length} qualifying jobs`
+    );
 
     const results: EducationRequirementResearchResult[] = [];
-    const statutesAgent = new ProcessAndScanStatuesAgent(this.agent, this.memory);
+    const statutesAgent = new ProcessAndScanStatuesAgent(
+      this.agent,
+      this.memory
+    );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(1);
+    const limit = pLimit(10);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
@@ -75,27 +90,30 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           `Scanning statutes for ${job.name}`
         );
 
-        const { results: statuteResults } = { results: [] };
-        //  await statutesAgent.analyseJob(job.name);
-
+        const statuteResults = await statutesAgent.analyseJob(
+          job.name
+        );
 
         await researcher.updateRangedProgress(
           0,
           `Deep researching for ${job.name}`
         );
 
-        const deepResearchResults = (await researcher.doWebResearch(job.name, {
-          ...webResearchCfg
-        })) as EducationRequirementResearchResult[];
+        const deepResearchResults: EducationRequirementResearchResult[] = []/*(await researcher.doWebResearch(job.name, {
+          ...webResearchCfg,
+        })) as EducationRequirementResearchResult[];*/
 
-        console.log(`---------------------> Deep research results: ${JSON.stringify(deepResearchResults)}`);
+        console.log(
+          `---------------------> Deep research results: ${JSON.stringify(
+            deepResearchResults
+          )}`
+        );
 
         if (deepResearchResults.length > 0) {
           results.push(...deepResearchResults);
-          job.degreeAnalysis.deepResearchResults = job.degreeAnalysis.deepResearchResults || [];
-          job.degreeAnalysis.deepResearchResults.push(
-            ...deepResearchResults,
-          );
+          job.degreeAnalysis.deepResearchResults =
+            job.degreeAnalysis.deepResearchResults || [];
+          job.degreeAnalysis.deepResearchResults.push(...deepResearchResults);
         }
 
         if (statuteResults.length > 0) {
@@ -123,10 +141,15 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       "Sheet1"
     );
 
-    console.log(`---------------------> Results to export: ${JSON.stringify(results)}`);
+    console.log(
+      `---------------------> Results to export: ${JSON.stringify(results)}`
+    );
 
     await exporter.processJsonData(results);
-    await this.updateRangedProgress(100, "Completed education requirement research");
+    await this.updateRangedProgress(
+      100,
+      "Completed education requirement research"
+    );
   }
 
   static getAgentClass(): PsAgentClassCreationAttributes {
@@ -147,7 +170,11 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           "https://aoi-storage-production.citizens.is/ypGenAi/community/1/6ee8390b-7a66-4692-baf0-f74c394004c0.png",
         iconName: "education_requirements_deep_research",
         capabilities: ["analysis", "text processing"],
-        requestedAiModelSizes: [PsAiModelSize.Small, PsAiModelSize.Medium, PsAiModelSize.Large],
+        requestedAiModelSizes: [
+          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+        ],
         supportedConnectors: [] as PsConnectorClassTypes[],
         questions: [],
       },

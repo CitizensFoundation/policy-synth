@@ -75,7 +75,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
      {
       statedDegreeRequirement: string;
       degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
-      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
+      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
       reasoning: string;
      }
     ]`;
@@ -117,6 +117,17 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
         100,
         `Analysis complete for: ${jobTitle}`
       );
+
+      if (Array.isArray(analysis)) {
+        for (const obj of analysis) {
+          if (obj && typeof obj === "object") {
+            (obj as any).sourceUrl = "file://nj-statutes.txt";
+          }
+        }
+      } else if (typeof analysis === "object") {
+        (analysis as any).sourceUrl = "file://nj-statutes.txt";
+      }
+
 
       return analysis;
     } catch (error: any) {

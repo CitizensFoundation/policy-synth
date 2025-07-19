@@ -34,7 +34,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
      {
       statedDegreeRequirement: string;
       degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
-      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
+      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
       reasoning: string;
      }
     ]`;
