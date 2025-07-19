@@ -143,27 +143,40 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
       limit(async () => {
         const res = (await this.callModel(
-          PsAiModelType.TextReasoning,
+          PsAiModelType.Text,
           PsAiModelSize.Medium,
           [
             this.createSystemMessage(
               `We are looking for education requirements for all job titles in the <statuteTextToLookForDegreeInformationForJobTitle> text.
                Extract any text about degree requirements or preferences for a job title from the <statuteTextToLookForDegreeInformationForJobTitle> text.
-               Make sure the extracted text in "degreeInformationAboutJobTitles" json array includes the job titles and the degree requirements for each job title.
-               If no job titles are found, return an empty array for "degreeInformationAboutJobTitles".
-               Reply only with JSON { "degreeInformationAboutJobTitles": string[] }`
+               Make sure the extracted text in "extractedTextWithEducationRequirementsForJobTitle" json array includes the job titles and the degree requirements for each job title.
+               If no job titles are found, return an empty array for "extractedTextWithEducationRequirementsForJobTitle".
+
+               <outputFormat>
+                Reply only with JSON array:
+                [
+                  {
+                    "jobTitle": string,
+                    "extractedTextWithEducationRequirementsForTheJobTitle": string
+                  }
+                ]
+               </outputFormat>`
             ),
             this.createHumanMessage(
-              `<statuteTextToLookForDegreeInformationForJobTitle>${chunk.text}</statuteTextToLookForDegreeInformationForJobTitle>`
+              `<statuteTextToLookForDegreeInformationForJobTitle>${chunk.text}</statuteTextToLookForDegreeInformationForJobTitle>
+
+              Your JSON output: `
             ),
           ]
-        )) as { degreeInformationAboutJobTitles: string[] };
+        )) as { jobTitle: string; extractedTextWithEducationRequirementsForTheJobTitle: string }[];
 
-        if (res?.degreeInformationAboutJobTitles?.length) {
+        if (res?.length) {
           this.memory.extractedJobTitleDegreeInformation!.push({
             title: chunk.title,
             chunkIndex: chunk.chunkIndex,
-            extractedJobTitleDegreeInformation: res.degreeInformationAboutJobTitles,
+            extractedJobTitleDegreeInformation: res.map(
+              (r) => `${r.jobTitle}: ${r.extractedTextWithEducationRequirementsForTheJobTitle}`
+            ),
           });
           await this.saveMemory();
         }
