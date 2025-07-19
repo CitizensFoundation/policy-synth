@@ -34,6 +34,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
   async analyze(
     extractedText: string,
     jobTitle: string,
+    title: string,
     sourceUrl: string
   ): Promise<EducationRequirementResearchResult[] | { error: string }> {
     const estimatedTokenFactor = 1.42;
@@ -84,6 +85,8 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
     <Instructions>
     Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that job title.
 
+    The job title does not have to be exact match but should still be the same job as described in the <SourceText>.
+
     The statedDegreeRequirement should only be related to the specific job title <jobTitle>${jobTitle}</jobTitle>.
 
     Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the specific job title <jobTitle>${jobTitle}</jobTitle>.
@@ -123,6 +126,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
           if (obj && typeof obj === "object") {
             obj.sourceUrl = "file://nj-statutes.txt";
             obj.jobTitle = jobTitle;
+            obj.title = title;
           }
         }
       } else {

@@ -2,6 +2,7 @@ interface EducationRequirementResearchResult extends PsEloRateable {
   jobTitle: string;
   sourceUrl: string;
   reasoning: string;
+  title?: string;
   statedDegreeRequirement: string;
   degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
   typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "administrativeDecision" | "jobPosting" | "other";

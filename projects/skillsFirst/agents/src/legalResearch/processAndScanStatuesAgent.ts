@@ -147,17 +147,22 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
           PsAiModelSize.Medium,
           [
             this.createSystemMessage(
-              `We are looking for education requirements for all job titles in the <statuteTextToLookForDegreeInformationForJobTitle> text.
-               Extract any text about degree requirements or preferences for a job title from the <statuteTextToLookForDegreeInformationForJobTitle> text.
-               Make sure the extracted text in "extractedTextWithEducationRequirementsForJobTitle" json array includes the job titles and the degree requirements for each job title.
-               If no job titles are found, return an empty array for "extractedTextWithEducationRequirementsForJobTitle".
+              `We are looking for degree education requirements for all job titles in the <statuteTextToLookForDegreeInformationForJobTitle> text.
+               Degree requirements can be baccalaureate, graduate degree, Bachelor's degree, Master's degree, etc.
+               Extract any text about degree requirements for job titles from the <statuteTextToLookForDegreeInformationForJobTitle> text.
+               Make sure the extracted text in "extractedTextQuoteWithDegreeRequirementsForTheJobTitle" includes the educational degree requirements for the job title.
+               Do not output objects with the job title unless there is a clear degree requirement for the job title.
+               Do not output empty extractedTextQuoteWithDegreeRequirementsForTheJobTitle field.
+               If there is no degree requirement for the job title, do not output that object at all.
+               We are not looking for general descriptions of the job title, we are looking for specific degree requirements for the job title.
+               If no job titles are found, return an empty JSON array.
 
                <outputFormat>
                 Reply only with JSON array:
                 [
                   {
                     "jobTitle": string,
-                    "extractedTextWithEducationRequirementsForTheJobTitle": string
+                    "extractedTextQuoteWithDegreeRequirementsForTheJobTitle": string
                   }
                 ]
                </outputFormat>`
@@ -168,22 +173,23 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
               Your JSON output: `
             ),
           ]
-        )) as { jobTitle: string; extractedTextWithEducationRequirementsForTheJobTitle: string }[];
+        )) as { jobTitle: string; extractedTextQuoteWithDegreeRequirementsForTheJobTitle: string }[];
 
         if (res?.length) {
           this.memory.extractedJobTitleDegreeInformation!.push({
             title: chunk.title,
             chunkIndex: chunk.chunkIndex,
             extractedJobTitleDegreeInformation: res.map(
-              (r) => `${r.jobTitle}: ${r.extractedTextWithEducationRequirementsForTheJobTitle}`
+              (r) => `${r.jobTitle}: ${r.extractedTextQuoteWithDegreeRequirementsForTheJobTitle}`
             ),
           });
-          await this.saveMemory();
         }
       })
     );
 
     await Promise.all(tasks);
+
+    await this.saveMemory();
   }
 
   async analyseJob(
@@ -223,16 +229,16 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             PsAiModelSize.Medium,
             [
               this.createSystemMessage(
-                `Does the <extractedJobTitleDegreeInformation> mention any education requirements like baccalaureate, graduate degree, Bachelor's degree, Master's degree, etc. for the job title similar to: \"${jobTitle}\"?\n
-               Reply only with JSON:
-               {
-                 mentionsJob: boolean
-               }`
+                `Your task is to determine if the <extractedJobTitleInformation> mentions job title similar to: \"${jobTitle}\"?\n
+                Reply only with JSON:
+                {
+                  mentionsJob: boolean
+                }`
               ),
               this.createHumanMessage(
-                `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join(
+                `<extractedJobTitleInformation>${chunk.extractedJobTitleDegreeInformation.join(
                   "\n"
-                )}</extractedJobTitleDegreeInformation>
+                )}</extractedJobTitleInformation>
                <jobTitle>${jobTitle}</jobTitle>
 
                Your JSON output: `
@@ -251,7 +257,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             const analysis = (await analyzer.analyze(
               chunk.extractedJobTitleDegreeInformation.join("\n"),
               jobTitle,
-              ""
+              chunk.title,
+              "file://nj-statutes.txt"
             )) as EducationRequirementResearchResult[];
             if (analysis) {
               results = [...results, ...analysis];
