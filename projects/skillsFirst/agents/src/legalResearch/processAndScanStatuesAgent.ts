@@ -205,7 +205,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             PsAiModelSize.Medium,
             [
               this.createSystemMessage(
-                `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" and education requirements for it?\n
+                `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" or a similar title and education requirements for it?\n
                Reply only with JSON {
                  mentionsJob: boolean
                }`
