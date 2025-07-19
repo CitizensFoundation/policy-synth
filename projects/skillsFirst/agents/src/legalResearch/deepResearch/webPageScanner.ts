@@ -104,7 +104,7 @@ ${this.memory.researchPlan}
       }
 
       const analysis = (await this.callModel(
-        PsAiModelType.Text,
+        PsAiModelType.TextReasoning,
         PsAiModelSize.Medium,
         messages
       )) as any;

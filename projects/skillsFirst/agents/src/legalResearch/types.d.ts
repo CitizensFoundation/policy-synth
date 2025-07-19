@@ -1,9 +1,9 @@
 interface EducationRequirementResearchResult extends PsEloRateable {
   jobTitle: string;
   sourceUrl: string;
-  requirementSummary: string;
   reasoning: string;
-  confidenceScore: number;
+  statedDegreeRequirement: string;
+  confidenceScore?: number;
   error?: string;
 }
 

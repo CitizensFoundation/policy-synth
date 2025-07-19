@@ -37,9 +37,8 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
     const headers = [
       "Job Title",
       "Source URL",
-      "Requirement Summary",
+      "Stated Degree Requirement",
       "Reasoning",
-      "Confidence Score",
       "Elo Rating",
     ];
     const shortHeaders = headers.map(h => {
@@ -54,9 +53,8 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
         sheetRows.push([
           this.toStr(res.jobTitle),
           this.toStr(res.sourceUrl),
-          this.toStr(res.requirementSummary),
+          this.toStr(res.statedDegreeRequirement),
           this.toStr(res.reasoning),
-          res.confidenceScore ?? "",
           Math.round(res.eloRating ?? 0),
         ]);
       }

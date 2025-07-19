@@ -33,13 +33,15 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
   async process(): Promise<void> {
     await this.updateRangedProgress(0, "Starting education requirement deep research");
 
-    const qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
+    let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
         j.degreeAnalysis?.needsCollegeDegree &&
         (maxReq === EducationType.BachelorsDegree || maxReq === EducationType.AssociatesDegree)
       );
     });
+
+    qualifyingJobs = qualifyingJobs.slice(0, 10);
 
     console.log(`---------------------> Found ${qualifyingJobs.length} qualifying jobs`);
 
@@ -69,8 +71,9 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           0,
           `Scanning statutes for ${job.name}`
         );
-        const { results: statuteResults } =
-          await statutesAgent.analyseJob(job.name);
+
+        const { results: statuteResults } = { results: [] };
+        //  await statutesAgent.analyseJob(job.name);
 
 
         await researcher.updateRangedProgress(

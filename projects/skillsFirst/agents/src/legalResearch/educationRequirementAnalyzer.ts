@@ -69,10 +69,10 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
     }
 
     const systemPrompt = `You are an expert analyst specializing in New Jersey employment regulations.
-    Your task is to determine if the job title \"${jobTitle}\" requires a college degree based *only* on the provided text from an official source (statute, regulation, classification document, etc.).
-    Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement. If none is found, state that no degree requirement is mentioned.
+    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> requires a college degree based *only* on the provided text from an official source (statute, regulation, classification document, etc.).
+    Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement.
     Return your analysis strictly as JSON in the following format:
-    {\n  \"requirementSummary\": string,\n  \"reasoning\": string,\n  \"confidenceScore\": number\n}\n
+    {\n  \"statedDegreeRequirement\": string,\n  \"reasoning\": string\n}\n
     Do NOT include any text before or after the JSON object.`;
 
     const userPrompt = `<SourceText>${extractedText}</SourceText>\n\nYour JSON output:`;
@@ -93,25 +93,6 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       );
 
       const analysis = llmResponse as EducationRequirementResearchResult;
-      if (
-        !analysis ||
-        typeof analysis !== "object" ||
-        typeof analysis.requirementSummary !== "string" ||
-        typeof analysis.reasoning !== "string" ||
-        typeof analysis.confidenceScore !== "number"
-      ) {
-        this.logger.error(
-          `LLM response parsing failed or invalid structure for ${jobTitle}. Response: ${JSON.stringify(
-            llmResponse
-          )}`
-        );
-        this.memory.llmErrors.push(
-          `Analyzer LLM Parsing Error (${jobTitle}): Invalid JSON structure`
-        );
-        return {
-          error: `LLM analysis failed for ${jobTitle}: Invalid response structure.`,
-        };
-      }
 
       this.logger.info(
         `Analysis complete for ${jobTitle}: Confidence=${analysis.confidenceScore}`
