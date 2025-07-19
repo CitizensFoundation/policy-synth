@@ -20,11 +20,16 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
     return `You are an expert analyst specializing in New Jersey employment regulations.
     Your task is to determine if the <jobTitle>${this.jobTitle}</jobTitle> requires a college degree or higher based *only* on the provided text.
     Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement.
+
+    If no degree requirement is found, return an empty array.
+
     Return your analysis strictly as JSON in the following format:
-    {
+    [
+     {
       statedDegreeRequirement: string;
       reasoning: string;
-    }`;
+     }
+    ]`;
   }
 
   async doWebResearch(jobTitle: string, config: any) {
