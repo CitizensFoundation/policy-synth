@@ -82,7 +82,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
 
     const userPrompt = `<SourceText>${extractedText}</SourceText>
     <Instructions>
-    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that specific job title.
+    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that job title.
 
     The statedDegreeRequirement should only be related to the specific job title <jobTitle>${jobTitle}</jobTitle>.
 

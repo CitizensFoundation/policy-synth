@@ -120,8 +120,10 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
 
   private async extractJobTitleDegreeInformation(): Promise<void> {
     if (this.memory.extractedJobTitleDegreeInformation?.length) {
-      return;
+      //return;
     }
+
+    this.memory.extractedJobTitleDegreeInformation = [];
 
     this.memory.extractedJobTitleDegreeInformation =
       this.memory.extractedJobTitleDegreeInformation || [];
@@ -141,24 +143,27 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
     const tasks = relevant.map((chunk: StatuteChunkAnalysis) =>
       limit(async () => {
         const res = (await this.callModel(
-          PsAiModelType.Text,
+          PsAiModelType.TextReasoning,
           PsAiModelSize.Medium,
           [
             this.createSystemMessage(
-              `Extract any text about degree requirements or preferences for a job title from the following statute text.
-               Reply only with JSON { "degreeInformation": string[] }`
+              `We are looking for education requirements for all job titles in the <statuteTextToLookForDegreeInformationForJobTitle> text.
+               Extract any text about degree requirements or preferences for a job title from the <statuteTextToLookForDegreeInformationForJobTitle> text.
+               Make sure the extracted text in "degreeInformationAboutJobTitles" json array includes the job titles and the degree requirements for each job title.
+               If no job titles are found, return an empty array for "degreeInformationAboutJobTitles".
+               Reply only with JSON { "degreeInformationAboutJobTitles": string[] }`
             ),
             this.createHumanMessage(
-              `<statuteTextToLookForDegreeInformation>${chunk.text}</statuteTextToLookForDegreeInformation>`
+              `<statuteTextToLookForDegreeInformationForJobTitle>${chunk.text}</statuteTextToLookForDegreeInformationForJobTitle>`
             ),
           ]
-        )) as { degreeInformation: string[] };
+        )) as { degreeInformationAboutJobTitles: string[] };
 
-        if (res?.degreeInformation?.length) {
+        if (res?.degreeInformationAboutJobTitles?.length) {
           this.memory.extractedJobTitleDegreeInformation!.push({
             title: chunk.title,
             chunkIndex: chunk.chunkIndex,
-            extractedJobTitleDegreeInformation: res.degreeInformation,
+            extractedJobTitleDegreeInformation: res.degreeInformationAboutJobTitles,
           });
           await this.saveMemory();
         }
@@ -171,7 +176,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   async analyseJob(
     jobTitle: string
   ): Promise<EducationRequirementResearchResult[]> {
-    await this.loadAndScanStatuesIfNeeded();
+    //await this.loadAndScanStatuesIfNeeded();
 
     this.memory.statuteResearch = (this.memory.statuteResearch || {
       chunks: [],
@@ -222,8 +227,9 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             ],
             {
               parseJson: true,
-              modelName: "gpt-4.1-nano",
+              modelName: "gpt-4.1-mini",
               modelProvider: "openai",
+              maxTokensOut: 10000,
             }
           )) as { mentionsJob: boolean };
 
