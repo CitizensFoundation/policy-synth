@@ -22,7 +22,9 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   get scanningSystemPrompt(): string {
     return `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
-Analyze the <SourceText> for minimum education requirements for the job title: <jobTitle>${this.jobTitle}</jobTitle>.  If the job title is not found in the <SourceText>, return an empty array.
+<jobTitle>${this.jobTitle}</jobTitle>.
+
+Analyze the <SourceText> for minimum education requirements for the job title <jobTitle>${this.jobTitle}</jobTitle>.  If the job title is not found in the <SourceText>, return an empty array.
 
 Determine the minimum degree requirement for the job title based on the following hierarchy and definitions:
 

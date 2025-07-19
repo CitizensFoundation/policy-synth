@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 10);
+    qualifyingJobs = qualifyingJobs.slice(100, 110);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 

@@ -65,6 +65,9 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   renderDeepScanningPrompt(text: string) {
     const systemMessage = `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
+If the <TextContext> does not contain the job title <jobTitle> mentioned in the <Instructions>, return an empty array.
+If the <TextContext> does not contain any education requirements, explicitly stated or implied, for the job title <jobTitle> mentioned in the <Instructions>, return an empty array.
+
 Follow the user <Instruction> in detail.
 
 Return your analysis strictly as JSON in the following format:
