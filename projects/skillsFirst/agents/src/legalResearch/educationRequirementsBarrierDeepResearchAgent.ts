@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    //qualifyingJobs = qualifyingJobs.slice(0, 10);
+    qualifyingJobs = qualifyingJobs.slice(0, 10);
 
     console.log(
       `---------------------> Found ${qualifyingJobs.length} qualifying jobs`
@@ -75,7 +75,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           maxItemsToAnalyze: 1000,
         };
 
-        job.degreeAnalysis.statutesResearchResults = [];
+        //        job.degreeAnalysis.statutesResearchResults = [];
         job.degreeAnalysis.deepResearchResults = [];
 
         const researcher = new JobTitleDeepResearchAgent(
@@ -90,18 +90,18 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           `Scanning statutes for ${job.name}`
         );
 
-        const statuteResults = await statutesAgent.analyseJob(
+        const statuteResults: EducationRequirementResearchResult[] = [];/*await statutesAgent.analyseJob(
           job.name
-        );
+        );*/
 
         await researcher.updateRangedProgress(
           0,
           `Deep researching for ${job.name}`
         );
 
-        const deepResearchResults: EducationRequirementResearchResult[] = []/*(await researcher.doWebResearch(job.name, {
+        const deepResearchResults: EducationRequirementResearchResult[] = (await researcher.doWebResearch(job.name, {
           ...webResearchCfg,
-        })) as EducationRequirementResearchResult[];*/
+        })) as EducationRequirementResearchResult[];
 
         console.log(
           `---------------------> Deep research results: ${JSON.stringify(
