@@ -76,7 +76,7 @@ Return your analysis strictly as JSON in the following format:
 [
   {
     statedDegreeRequirement: string;
-    degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's" | "No Degree Found" | "Could Not Determine";
+    degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's";
     typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
     reasoning: string;
   }
