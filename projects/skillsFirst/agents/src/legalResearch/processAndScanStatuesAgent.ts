@@ -205,8 +205,9 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             PsAiModelSize.Medium,
             [
               this.createSystemMessage(
-                `Does the <extractedJobTitleDegreeInformation> mention the job title \"${jobTitle}\" or a similar title and education requirements for it?\n
-               Reply only with JSON {
+                `Does the <extractedJobTitleDegreeInformation> mention any education requirements like baccalaureate, graduate degree, Bachelor's degree, Master's degree, etc. for the job title similar to: \"${jobTitle}\"?\n
+               Reply only with JSON:
+               {
                  mentionsJob: boolean
                }`
               ),
@@ -214,24 +215,30 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
                 `<extractedJobTitleDegreeInformation>${chunk.extractedJobTitleDegreeInformation.join(
                   "\n"
                 )}</extractedJobTitleDegreeInformation>
-               <jobTitle>${jobTitle}</jobTitle>\n`
+               <jobTitle>${jobTitle}</jobTitle>
+
+               Your JSON output: `
               ),
             ],
             {
+              parseJson: true,
               modelName: "gpt-4.1-nano",
               modelProvider: "openai",
             }
           )) as { mentionsJob: boolean };
 
           if (res?.mentionsJob) {
+            console.log("--------------------------------> ", res.mentionsJob);
             const analysis = (await analyzer.analyze(
               chunk.extractedJobTitleDegreeInformation.join("\n"),
               jobTitle,
               ""
-            )) as EducationRequirementResearchResult;
+            )) as EducationRequirementResearchResult[];
             if (analysis) {
-              results = [...results, analysis];
+              results = [...results, ...analysis];
             }
+          } else {
+            console.log("No job found in", JSON.stringify(res, null, 2));
           }
         })
     );

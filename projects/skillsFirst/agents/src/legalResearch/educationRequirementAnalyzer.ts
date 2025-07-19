@@ -35,7 +35,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
     extractedText: string,
     jobTitle: string,
     sourceUrl: string
-  ): Promise<EducationRequirementResearchResult | { error: string }> {
+  ): Promise<EducationRequirementResearchResult[] | { error: string }> {
     const estimatedTokenFactor = 1.42;
     const tokenLimit = 150_000;
     const words = extractedText.split(" ");
@@ -82,13 +82,13 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
 
     const userPrompt = `<SourceText>${extractedText}</SourceText>
     <Instructions>
-    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided text context.
+    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that specific job title.
 
-    The statedDegreeRequirement should only be related to the <jobTitle>${jobTitle}</jobTitle>, a state job, and should be a clear and explicit degree requirement in the text context.
+    The statedDegreeRequirement should only be related to the specific job title <jobTitle>${jobTitle}</jobTitle>.
 
-    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the state job.
+    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the specific job title <jobTitle>${jobTitle}</jobTitle>.
 
-    If no stated degree requirement is found anywhere in the text context, return an empty array.
+    If no stated degree requirement is found anywhere in the text context for the specific job title <jobTitle>${jobTitle}</jobTitle>, return an empty array.
     </Instructions>
 
     \n\nYour JSON output:`;
@@ -108,7 +108,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
         `LLM response: ${JSON.stringify(llmResponse, null, 2)}`
       );
 
-      const analysis = llmResponse as EducationRequirementResearchResult;
+      const analysis = llmResponse as EducationRequirementResearchResult[];
 
       this.logger.info(
         `Analysis complete for ${jobTitle}`
@@ -121,13 +121,13 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       if (Array.isArray(analysis)) {
         for (const obj of analysis) {
           if (obj && typeof obj === "object") {
-            (obj as any).sourceUrl = "file://nj-statutes.txt";
+            obj.sourceUrl = "file://nj-statutes.txt";
+            obj.jobTitle = jobTitle;
           }
         }
-      } else if (typeof analysis === "object") {
-        (analysis as any).sourceUrl = "file://nj-statutes.txt";
+      } else {
+        throw new Error("LLM response is not an array");
       }
-
 
       return analysis;
     } catch (error: any) {
