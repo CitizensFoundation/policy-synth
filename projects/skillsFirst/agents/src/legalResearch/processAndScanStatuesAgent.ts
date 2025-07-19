@@ -120,7 +120,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
 
   private async extractJobTitleDegreeInformation(): Promise<void> {
     if (this.memory.extractedJobTitleDegreeInformation?.length) {
-      //return;
+      return;
     }
 
     this.memory.extractedJobTitleDegreeInformation = [];
