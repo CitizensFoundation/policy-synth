@@ -57,14 +57,23 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   }
 
   renderDeepScanningPrompt(text: string) {
-    const systemMessage = `Your task is to analyze the provided text context and determine if it contains a clear and explicit degree requirement for the job title.
-    Follow the user <Instruction> in detail.`
+    const systemMessage = `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
-    ;
+Follow the user <Instruction> in detail.
+
+Return your analysis strictly as JSON in the following format:
+[
+  {
+  statedDegreeRequirement: string;
+  degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's" | "No Degree Found" | "Could Not Determine";
+  typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
+  reasoning: string;
+  }
+]`;
     this.logger.debug("Rendering Deep Scanning Prompt:" + systemMessage);
 
     return [
-      this.createSystemMessage(this.systemMessage),
+      this.createSystemMessage(systemMessage),
       this.createHumanMessage(
         `<TextContext>:
         ${text}

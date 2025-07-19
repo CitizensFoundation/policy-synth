@@ -70,31 +70,40 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
     }
 
     const systemPrompt = `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
+Follow the user <Instruction> in detail.
 
-    Return your analysis strictly as JSON in the following format:
-    [
-     {
-      statedDegreeRequirement: string;
-      degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
-      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
-      reasoning: string;
-     }
-    ]`;
+Return your analysis strictly as JSON in the following format:
+[
+  {
+  statedDegreeRequirement: string;
+  degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's" | "No Degree Found" | "Could Not Determine";
+  typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
+  reasoning: string;
+  }
+]`;
 
     const userPrompt = `<SourceText>${extractedText}</SourceText>
-    <Instructions>
-    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that job title.
+<Instructions>
+You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey. Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that job title.
 
-    The job title does not have to be exact match but should still be the same job as described in the <SourceText>.
+Analyze the <SourceText> provided below for the job title: <jobTitle>${jobTitle}</jobTitle>.
 
-    The statedDegreeRequirement should only be related to the specific job title <jobTitle>${jobTitle}</jobTitle>.
+Focus solely on *educational prerequisites* for the job title: <jobTitle>${jobTitle}</jobTitle>.
 
-    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the specific job title <jobTitle>${jobTitle}</jobTitle>.
+Do not consider experience substitutions unless they explicitly replace the *entire* educational requirement.
 
-    If no stated degree requirement is found anywhere in the text context for the specific job title <jobTitle>${jobTitle}</jobTitle>, return an empty array.
-    </Instructions>
+Determine the minimum degree requirement based on the following hierarchy and definitions:
 
-    \n\nYour JSON output:`;
+1.  **Explicit Graduate/Professional:** Text explicitly requires a Master's, Doctorate, professional degree (JD, MD, PharmD, DVM etc.), or graduation from a specific post-baccalaureate professional school (e.g., "accredited law school", "medical school").
+2.  **Explicit Bachelor's:** Text explicitly requires a "bachelor's degree", "baccalaureate degree", "4-year degree", or graduation from a program *typically* requiring a bachelor's (e.g., "ABET-accredited engineering program" often implies a BS).
+3.  **Explicit Associate's:** Text explicitly requires an "associate's degree", "2-year degree", or graduation from a program *typically* awarding an associate's (e.g., "accredited associate degree nursing program").
+4.  **Implicit Bachelor's:** Text requires a graduate/professional degree (see #1) which inherently presupposes a Bachelor's, *unless* it's explicitly stated an alternative path exists *without* a prior bachelor's (rare). Flag this as "Implicit Bachelor's". Also consider requirements like "graduation from an accredited 4-year [Type] program" if the degree name isn't mentioned but the duration/accreditation implies it.
+5.  **Implicit Associate's:** Text requires graduation from a program *clearly* identifiable as associate-level (e.g., "completion of a 2-year registered nursing program") even if the word "associate's" isn't used.
+6.  **No Degree Found:** The text details requirements (like high school diploma, specific training courses, experience, exams) but mentions *no* requirement for an Associate's, Bachelor's, or Graduate/Professional degree, either explicitly or implicitly through program descriptions. High school diploma or GED requirements fall into this category. Specific non-degree training hours (e.g., 1500 hours of cosmetology training) also fall here.
+7.  **Could Not Determine:** The text is ambiguous, contradictory, or lacks sufficient detail about educational requirements to make a confident determination.
+</Instructions>
+
+Your JSON array output:`;
 
     try {
       const messages = [
