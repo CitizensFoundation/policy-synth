@@ -12,10 +12,11 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   private updatePrompts(jobTitle: string) {
     this.jobTitle = jobTitle;
-    this.searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents,
+    this.searchInstructions = `Search for New Jersey laws, statutes, regulations, administrative code provisions, formal policy documents,
     court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
-    mandatory education requirement for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>`;
-    this.rankingInstructions = `Prioritize results likely to contain legal or regulatory education requirements for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.`;
+    mandatory education requirement for the New Jersey State Government job with the <jobTitle>${jobTitle}</jobTitle> focus on New Jersey sources but also sources like law.cornell.edu, courtlistener.com are acceptable that have actual NJ laws.`;
+    this.rankingInstructions = `Prioritize results likely to contain legal or regulatory education requirements for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.
+    Official and relevant New Jersey government sources are preferred but also websites like law.cornell.edu, courtlistener.com are acceptable that have actual NJ laws.`;
   }
 
   get scanningSystemPrompt(): string {

@@ -53,12 +53,15 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const webResearchCfg: any = {
-          numberOfQueriesToGenerate: 18,
-          percentOfQueriesToSearch: 0.3,
-          percentOfResultsToScan: 0.3,
+          numberOfQueriesToGenerate: 20,
+          percentOfQueriesToSearch: 0.35,
+          percentOfResultsToScan: 0.35,
           maxTopContentResultsToUse: 1000,
           maxItemsToAnalyze: 1000,
         };
+
+        job.degreeAnalysis.statutesResearchResults = [];
+        job.degreeAnalysis.deepResearchResults = [];
 
         const researcher = new JobTitleDeepResearchAgent(
           this.agent,
@@ -89,8 +92,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
 
         if (deepResearchResults.length > 0) {
           results.push(...deepResearchResults);
-          job.degreeAnalysis.deepResearchResults =
-            job.degreeAnalysis.deepResearchResults || [];
+          job.degreeAnalysis.deepResearchResults = job.degreeAnalysis.deepResearchResults || [];
           job.degreeAnalysis.deepResearchResults.push(
             ...deepResearchResults,
           );
