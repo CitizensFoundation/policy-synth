@@ -185,7 +185,17 @@ ${this.memory.researchPlan}
             this.logger.error(`Error processing page ${url} no aiAnalysisObject`);
             continue;
           }
-          aiAnalysisObject.fromUrl = url;
+
+          if (Array.isArray(aiAnalysisObject)) {
+            for (const obj of aiAnalysisObject) {
+              if (obj && typeof obj === "object") {
+                (obj as any).sourceUrl = url;
+              }
+            }
+          } else if (typeof aiAnalysisObject === "object") {
+            (aiAnalysisObject as any).sourceUrl = url;
+          }
+
           this.collectedWebPages.push(aiAnalysisObject);
           this.totalPagesSave++;
         }
