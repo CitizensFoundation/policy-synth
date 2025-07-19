@@ -20,9 +20,9 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   }
 
   get scanningSystemPrompt(): string {
-    return `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey. Your task is to determine if the <jobTitle>${this.jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided <SourceText> for that job title.
+    return `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
-Analyze the <SourceText> for minimum education requirements for the job title: <jobTitle>${this.jobTitle}</jobTitle>.
+Analyze the <SourceText> for minimum education requirements for the job title: <jobTitle>${this.jobTitle}</jobTitle>.  If the job title is not found in the <SourceText>, return an empty array.
 
 Determine the minimum degree requirement for the job title based on the following hierarchy and definitions:
 
@@ -32,7 +32,7 @@ Determine the minimum degree requirement for the job title based on the followin
 4.  **Implicit Bachelor's:** Text requires a graduate/professional degree (see #1) which inherently presupposes a Bachelor's, *unless* it's explicitly stated an alternative path exists *without* a prior bachelor's (rare). Flag this as "Implicit Bachelor's". Also consider requirements like "graduation from an accredited 4-year [Type] program" if the degree name isn't mentioned but the duration/accreditation implies it.
 5.  **Implicit Associate's:** Text requires graduation from a program *clearly* identifiable as associate-level (e.g., "completion of a 2-year registered nursing program") even if the word "associate's" isn't used.
 
-Important: Do not output items into the array if there is no degree requirement for the job title.
+Important: Do not output items into the array if there is no degree requirement for the job title or if the job title is not found in the <SourceText>.
 `;
   }
 

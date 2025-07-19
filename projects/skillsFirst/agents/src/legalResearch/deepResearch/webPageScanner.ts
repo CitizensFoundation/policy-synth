@@ -27,9 +27,15 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
 
   collectedWebPages: any[] = [];
 
-  override get modelTemperature(): number { return 0.0; }
+  override get modelTemperature(): number {
+    return 0.0;
+  }
 
   urlToCrawl: string | undefined = undefined;
+
+  override get reasoningEffort(): "low" | "medium" | "high" {
+    return "high";
+  }
 
   constructor(
     agent: PsAgent,
@@ -99,7 +105,9 @@ Return your analysis strictly as JSON in the following format:
       const messages = this.renderDeepScanningPrompt(text);
 
       if (process.env.PS_DEBUG_AI_MESSAGES) {
-        console.log(`getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`);
+        console.log(
+          `getAIAnalysis messages: ${JSON.stringify(messages, null, 2)}`
+        );
       }
 
       const analysis = (await this.callModel(
@@ -153,7 +161,10 @@ Return your analysis strictly as JSON in the following format:
     const tasks = listOfUrls.map((url, i) =>
       limit(async () => {
         const progress = Math.round(((i + 1) / listOfUrls.length) * 100);
-        await this.updateRangedProgress(progress, `Scanning (${i + 1}/${listOfUrls.length}) ${url}`);
+        await this.updateRangedProgress(
+          progress,
+          `Scanning (${i + 1}/${listOfUrls.length}) ${url}`
+        );
 
         this.logger.info(`${i + 1}/${listOfUrls.length}`);
         this.logger.info(`------> Searching ${url} <------`);
@@ -181,7 +192,9 @@ Return your analysis strictly as JSON in the following format:
         for (const contentItem of contentsToProcess) {
           const aiAnalysisObject = await this.processPageAnalysis(contentItem);
           if (!aiAnalysisObject) {
-            this.logger.error(`Error processing page ${url} no aiAnalysisObject`);
+            this.logger.error(
+              `Error processing page ${url} no aiAnalysisObject`
+            );
             continue;
           }
 
@@ -200,7 +213,10 @@ Return your analysis strictly as JSON in the following format:
         }
 
         completedUrls++;
-        await this.updateRangedProgress(progress, `Scanned (${completedUrls}/${listOfUrls.length}) ${url}`);
+        await this.updateRangedProgress(
+          progress,
+          `Scanned (${completedUrls}/${listOfUrls.length}) ${url}`
+        );
       })
     );
 
