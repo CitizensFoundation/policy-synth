@@ -64,7 +64,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
     this.logger.debug("Rendering Deep Scanning Prompt:" + systemMessage);
 
     return [
-      systemMessage,
+      this.createSystemMessage(this.systemMessage),
       this.createHumanMessage(
         `<TextContext>:
         ${text}
