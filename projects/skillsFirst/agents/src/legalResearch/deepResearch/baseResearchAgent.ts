@@ -27,7 +27,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
   abstract attributeNameToUseForDedup: string;
   abstract jobTitle: string;
 
-  disableRanking = false;
+  disableRanking = true;
 
   skipScanning = false;
 

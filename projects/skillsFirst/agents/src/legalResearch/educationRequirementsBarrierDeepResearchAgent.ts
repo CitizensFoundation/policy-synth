@@ -41,7 +41,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 10);
+    qualifyingJobs = qualifyingJobs.slice(0, 5);
 
     console.log(`---------------------> Found ${qualifyingJobs.length} qualifying jobs`);
 
@@ -85,7 +85,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           ...webResearchCfg
         })) as EducationRequirementResearchResult[];
 
-
+        console.log(`---------------------> Deep research results: ${JSON.stringify(deepResearchResults)}`);
 
         if (deepResearchResults.length > 0) {
           results.push(...deepResearchResults);
@@ -97,6 +97,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
         }
 
         if (statuteResults.length > 0) {
+          results.push(...statuteResults);
           job.degreeAnalysis.statutesResearchResults =
             job.degreeAnalysis.statutesResearchResults || [];
           job.degreeAnalysis.statutesResearchResults.push(...statuteResults);
@@ -119,6 +120,9 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       100,
       "Sheet1"
     );
+
+    console.log(`---------------------> Results to export: ${JSON.stringify(results)}`);
+
     await exporter.processJsonData(results);
     await this.updateRangedProgress(100, "Completed education requirement research");
   }
