@@ -41,7 +41,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 5);
+    qualifyingJobs = qualifyingJobs.slice(0, 10);
 
     console.log(`---------------------> Found ${qualifyingJobs.length} qualifying jobs`);
 
@@ -53,11 +53,11 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const webResearchCfg: any = {
-          numberOfQueriesToGenerate: 4,
-          percentOfQueriesToSearch: 0.5,
-          percentOfResultsToScan: 0.5,
-          maxTopContentResultsToUse: 5,
-          maxItemsToAnalyze: 5,
+          numberOfQueriesToGenerate: 18,
+          percentOfQueriesToSearch: 0.3,
+          percentOfResultsToScan: 0.3,
+          maxTopContentResultsToUse: 1000,
+          maxItemsToAnalyze: 1000,
         };
 
         const researcher = new JobTitleDeepResearchAgent(

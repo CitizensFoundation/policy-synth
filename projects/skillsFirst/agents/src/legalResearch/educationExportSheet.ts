@@ -38,6 +38,7 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
       "Job Title",
       "Type of Official Document",
       "Stated Degree Requirement",
+      "Degree Requirement Type",
       "Reasoning",
       "Source URL"
     ];
@@ -52,6 +53,7 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
         this.toStr(row.jobTitle),
         this.toStr(row.typeOfOfficialDocument),
         this.toStr(row.statedDegreeRequirement),
+        this.toStr(row.degreeRequirementType),
         this.toStr(row.reasoning),
         this.toStr(row.sourceUrl)
       ]);

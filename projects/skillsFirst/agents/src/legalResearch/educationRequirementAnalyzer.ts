@@ -68,14 +68,30 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
       return { error: "Input text for analysis is empty." };
     }
 
-    const systemPrompt = `You are an expert analyst specializing in New Jersey employment regulations.
-    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> requires a college degree based *only* on the provided text from an official source (statute, regulation, classification document, etc.).
-    Focus solely on educational prerequisites for holding the job. Summarize any explicit or implicit degree requirement.
-    Return your analysis strictly as JSON in the following format:
-    {\n  \"statedDegreeRequirement\": string,\n  \"reasoning\": string\n}\n
-    Do NOT include any text before or after the JSON object.`;
+    const systemPrompt = `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
-    const userPrompt = `<SourceText>${extractedText}</SourceText>\n\nYour JSON output:`;
+    Return your analysis strictly as JSON in the following format:
+    [
+     {
+      statedDegreeRequirement: string;
+      degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
+      typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
+      reasoning: string;
+     }
+    ]`;
+
+    const userPrompt = `<SourceText>${extractedText}</SourceText>
+    <Instructions>
+    Your task is to determine if the <jobTitle>${jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided text context.
+
+    The statedDegreeRequirement should only be related to the <jobTitle>${jobTitle}</jobTitle>, a state job, and should be a clear and explicit degree requirement in the text context.
+
+    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the state job.
+
+    If no stated degree requirement is found anywhere in the text context, return an empty array.
+    </Instructions>
+
+    \n\nYour JSON output:`;
 
     try {
       const messages = [

@@ -3,6 +3,7 @@ interface EducationRequirementResearchResult extends PsEloRateable {
   sourceUrl: string;
   reasoning: string;
   statedDegreeRequirement: string;
+  degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
   typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
   error?: string;
 }

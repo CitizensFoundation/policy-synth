@@ -14,17 +14,17 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
     this.jobTitle = jobTitle;
     this.searchInstructions = `Search for all New Jersey and U.S. laws, including statutes, regulations, administrative code provisions, formal policy documents,
     court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
-    mandatory education requirement for <jobTitle>${jobTitle}</jobTitle>`;
-    this.rankingInstructions = `Prioritize results likely to contain legal or regulatory education requirements for <jobTitle>${jobTitle}</jobTitle>.`;
+    mandatory education requirement for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>`;
+    this.rankingInstructions = `Prioritize results likely to contain legal or regulatory education requirements for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.`;
   }
 
   get scanningSystemPrompt(): string {
-    return `You are an expert analyst specializing in New Jersey employment regulations.
-    Your task is to determine if the <jobTitle>${this.jobTitle}</jobTitle> requires a college degree or higher based *only* on the provided text context.
+    return `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
+    Your task is to determine if the <jobTitle>${this.jobTitle}</jobTitle> for a job at the State of New Jersey requires a college degree or higher based *only* on the provided text context.
 
-    The statedDegreeRequirement should only be related to the <jobTitle>${this.jobTitle}</jobTitle> and should be a clear and explicit degree requirement in the text context.
+    The statedDegreeRequirement should only be related to the <jobTitle>${this.jobTitle}</jobTitle>, a state job, and should be a clear and explicit degree requirement in the text context.
 
-    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context.
+    Only fill out statedDegreeRequirement if there is a clear and explicit degree requirement in the text context for the state job.
 
     If no stated degree requirement is found anywhere in the text context, return an empty array.
 
@@ -32,6 +32,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
     [
      {
       statedDegreeRequirement: string;
+      degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
       typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "other";
       reasoning: string;
      }
