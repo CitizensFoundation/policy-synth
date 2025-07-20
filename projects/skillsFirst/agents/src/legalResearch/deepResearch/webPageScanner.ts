@@ -69,7 +69,7 @@ If the <TextContext> does not contain the job title <jobTitle> mentioned in the 
 
 Follow the user <Instruction> in detail.
 
-Return your analysis strictly as JSON in the following format:
+Return your analysis strictly as JSON array in the following format:
 [
   {
   statedDegreeRequirement: string;
@@ -91,9 +91,7 @@ Return your analysis strictly as JSON in the following format:
         ${this.systemMessage}
         </Instructions>
 
-        Important, only output JSON, nothing else.
-
-        JSON Output:
+        Your JSON Array Output:
         `
       ),
     ];
@@ -113,7 +111,7 @@ Return your analysis strictly as JSON in the following format:
       }
 
       const analysis = (await this.callModel(
-        PsAiModelType.Text,
+        PsAiModelType.TextReasoning,
         PsAiModelSize.Medium,
         messages
       )) as any;

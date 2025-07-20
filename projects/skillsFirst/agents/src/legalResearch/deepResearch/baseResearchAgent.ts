@@ -70,9 +70,17 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
   ) {
     const cacheDebugFilePath = `/tmp/${this.scanType}_DeepAgentWebResearchDebugCache_${this.debugCacheVersion}.json`;
     const totalProgressRange = this.endProgress - this.startProgress;
-    this.jobTitle = jobTitle;
+
+    let cleanedJobTitle = this.jobTitle.replace(/Confidential/g, "");
+    cleanedJobTitle = cleanedJobTitle.replace(/confidential/g, "").trim();
+
+    // Remove any numbers from the job title
+    cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
+
+    this.jobTitle = cleanedJobTitle;
 
     this.statusPrefix = statusPrefix;
+
 
     // Use the config parameters instead of class properties
     let {
@@ -121,7 +129,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         this.searchInstructions,
         generatorStartProgress,
         generatorEndProgress,
-        jobTitle
+        this.jobTitle
       );
 
       const searchQueries =
@@ -161,7 +169,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         undefined,
         subAgentStartProgress,
         subAgentEndProgress,
-        jobTitle
+        this.jobTitle
       );
 
       const rankedSearchQueries = await searchQueriesRanker.rankSearchQueries(
@@ -178,12 +186,6 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         0,
         Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch)
       );
-
-      let cleanedJobTitle = this.jobTitle.replace(/Confidential/g, "");
-      cleanedJobTitle = cleanedJobTitle.replace(/confidential/g, "").trim();
-
-      // Remove any numbers from the job title
-      cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
 
       queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:law.cornell.edu`);
       queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:courtlistener.com`);
@@ -232,7 +234,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         undefined,
         resultsRankerStartProgress,
         resultsRankerEndProgress,
-        jobTitle,
+        this.jobTitle,
         this.useSmallModelForSearchResultsRanking
       );
 

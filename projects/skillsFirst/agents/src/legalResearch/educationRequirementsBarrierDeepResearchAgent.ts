@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 20);
+    qualifyingJobs = qualifyingJobs.slice(0, 10);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 
@@ -67,7 +67,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(10);
+    const limit = pLimit(5);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
