@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(100, 110);
+    qualifyingJobs = qualifyingJobs.slice(0, 20);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 
@@ -67,14 +67,14 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(5);
+    const limit = pLimit(10);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const webResearchCfg: any = {
-          numberOfQueriesToGenerate: 20,
-          percentOfQueriesToSearch: 0.35,
-          percentOfResultsToScan: 0.35,
+          numberOfQueriesToGenerate: 16,
+          percentOfQueriesToSearch: 0.42,
+          percentOfResultsToScan: 0.42,
           maxTopContentResultsToUse: 1000,
           maxItemsToAnalyze: 1000,
         };

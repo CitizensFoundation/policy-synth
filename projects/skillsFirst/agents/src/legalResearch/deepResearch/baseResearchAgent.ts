@@ -179,6 +179,19 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch)
       );
 
+      let cleanedJobTitle = this.jobTitle.replace(/Confidential/g, "");
+      cleanedJobTitle = cleanedJobTitle.replace(/confidential/g, "").trim();
+
+      // Remove any numbers from the job title
+      cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
+
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:law.cornell.edu`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:courtlistener.com`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:justia.com`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:njleg.state.nj.us`);
+
+      this.logger.info(JSON.stringify(queriesToSearch, null, 2));
+
       // Search the web
       this.logger.info("Searching the Web...");
 

@@ -93,7 +93,7 @@ export class SearchQueriesRanker extends PairwiseRankingAgent {
       queriesToRank,
       queriesToRank.length*10,
       this.progressFunction,
-      30,
+      20,
       true
     );
     await this.performPairwiseRanking(-1);
