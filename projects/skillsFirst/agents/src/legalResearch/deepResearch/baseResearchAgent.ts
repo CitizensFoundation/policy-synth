@@ -71,16 +71,9 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
     const cacheDebugFilePath = `/tmp/${this.scanType}_DeepAgentWebResearchDebugCache_${this.debugCacheVersion}.json`;
     const totalProgressRange = this.endProgress - this.startProgress;
 
-    let cleanedJobTitle = this.jobTitle.replace(/Confidential/g, "");
-    cleanedJobTitle = cleanedJobTitle.replace(/confidential/g, "").trim();
-
-    // Remove any numbers from the job title
-    cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
-
-    this.jobTitle = cleanedJobTitle;
+    this.jobTitle = jobTitle;
 
     this.statusPrefix = statusPrefix;
-
 
     // Use the config parameters instead of class properties
     let {
@@ -187,10 +180,10 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
         Math.floor(rankedSearchQueries.length * percentOfQueriesToSearch)
       );
 
-      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:law.cornell.edu`);
-      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:courtlistener.com`);
-      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:justia.com`);
-      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${cleanedJobTitle}" site:njleg.state.nj.us`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${this.jobTitle}" site:law.cornell.edu`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${this.jobTitle}" site:courtlistener.com`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${this.jobTitle}" site:justia.com`);
+      queriesToSearch.push(`Degree requirements for New Jersey State job title: "${this.jobTitle}" site:njleg.state.nj.us`);
 
       this.logger.info(JSON.stringify(queriesToSearch, null, 2));
 

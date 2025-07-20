@@ -24,7 +24,7 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
 <jobTitle>${this.jobTitle}</jobTitle>.
 
-Analyze the <SourceText> for minimum education requirements for the job title <jobTitle>${this.jobTitle}</jobTitle>.  If the job title is not found in the <SourceText>, return an empty array.
+Analyze the <SourceText> for explicit or implicit minimum education requirements for the job title <jobTitle>${this.jobTitle}</jobTitle>.
 
 Determine the minimum degree requirement for the job title based on the following hierarchy and definitions:
 
@@ -34,7 +34,7 @@ Determine the minimum degree requirement for the job title based on the followin
 4.  **Implicit Bachelor's:** Text requires a graduate/professional degree (see #1) which inherently presupposes a Bachelor's, *unless* it's explicitly stated an alternative path exists *without* a prior bachelor's (rare). Flag this as "Implicit Bachelor's". Also consider requirements like "graduation from an accredited 4-year [Type] program" if the degree name isn't mentioned but the duration/accreditation implies it.
 5.  **Implicit Associate's:** Text requires graduation from a program *clearly* identifiable as associate-level (e.g., "completion of a 2-year registered nursing program") even if the word "associate's" isn't used.
 
-Important: Do not output items into the array if there is no degree requirement for the job title or if the job title is not found in the <SourceText>.
+Important: Do not output items into the array if there is no explicit or implicit degree requirement for the job title or if the job title is not found in the <SourceText>.
 `;
   }
 

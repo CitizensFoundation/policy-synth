@@ -51,7 +51,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 10);
+    qualifyingJobs = qualifyingJobs.slice(0, 30);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 
@@ -67,12 +67,12 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(5);
+    const limit = pLimit(6);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const webResearchCfg: any = {
-          numberOfQueriesToGenerate: 16,
+          numberOfQueriesToGenerate: 20,
           percentOfQueriesToSearch: 0.42,
           percentOfResultsToScan: 0.42,
           maxTopContentResultsToUse: 1000,
@@ -103,7 +103,13 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           `Deep researching for ${job.name}`
         );
 
-        const deepResearchResults: EducationRequirementResearchResult[] = (await researcher.doWebResearch(job.name, {
+        let cleanedJobTitle = job.name.replace(/Confidential/g, "");
+        cleanedJobTitle = cleanedJobTitle.replace(/confidential/g, "").trim();
+
+        // Remove any numbers from the job title
+        cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
+
+        const deepResearchResults: EducationRequirementResearchResult[] = (await researcher.doWebResearch(cleanedJobTitle, {
           ...webResearchCfg,
         })) as EducationRequirementResearchResult[];
 
