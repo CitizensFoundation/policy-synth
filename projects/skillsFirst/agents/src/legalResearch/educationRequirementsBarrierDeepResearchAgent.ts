@@ -67,14 +67,14 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(6);
+    const limit = pLimit(5);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
         const webResearchCfg: any = {
-          numberOfQueriesToGenerate: 20,
-          percentOfQueriesToSearch: 0.42,
-          percentOfResultsToScan: 0.42,
+          numberOfQueriesToGenerate: 18,
+          percentOfQueriesToSearch: 0.5,
+          percentOfResultsToScan: 0.5,
           maxTopContentResultsToUse: 1000,
           maxItemsToAnalyze: 1000,
         };
@@ -94,7 +94,8 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           `Scanning statutes for ${job.name}`
         );
 
-        const statuteResults: EducationRequirementResearchResult[] = [];/*await statutesAgent.analyseJob(
+        const statuteResults: EducationRequirementResearchResult[] =
+          []; /*await statutesAgent.analyseJob(
           job.name
         );*/
 
@@ -109,9 +110,10 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
         // Remove any numbers from the job title
         cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
 
-        const deepResearchResults: EducationRequirementResearchResult[] = (await researcher.doWebResearch(cleanedJobTitle, {
-          ...webResearchCfg,
-        })) as EducationRequirementResearchResult[];
+        const deepResearchResults: EducationRequirementResearchResult[] =
+          (await researcher.doWebResearch(cleanedJobTitle, job.name, {
+            ...webResearchCfg,
+          })) as EducationRequirementResearchResult[];
 
         console.log(
           `---------------------> Deep research results: ${JSON.stringify(

@@ -38,12 +38,21 @@ Important: Do not output items into the array if there is no explicit or implici
 `;
   }
 
-  async doWebResearch(jobTitle: string, config: any) {
-    this.updatePrompts(jobTitle);
-    const results = (await super.doWebResearch(jobTitle, config)) as any[];
+  async doWebResearch(
+    cleanedJobTitle: string,
+    fullJobTitle: string,
+    config: any
+  ) {
+    this.updatePrompts(cleanedJobTitle);
+    const results = (await super.doWebResearch(
+      cleanedJobTitle,
+      config
+    )) as any[];
     if (Array.isArray(results)) {
       return results.map((r) =>
-        typeof r === "object" && r !== null ? { jobTitle, ...r } : r
+        typeof r === "object" && r !== null
+          ? { jobTitle: fullJobTitle, ...r }
+          : r
       );
     }
     return results;

@@ -65,16 +65,16 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   renderDeepScanningPrompt(text: string) {
     const systemMessage = `You are an expert analyst specializing in New Jersey employment degree requirements for state jobs in New Jersey.
 
-If the <TextContext> does not contain the job title <jobTitle> mentioned in the <Instructions>, or a job title representing the same job, return an empty array.
+If the <TextContext> does not contain a job title similar to <jobTitle> mentioned in the <Instructions>, or a job title representing the same job, return an empty array.
 
-Follow the user <Instruction> in detail.
+Follow the user <Instructions>.
 
 Return your analysis strictly as JSON array in the following format:
 [
   {
   statedDegreeRequirement: string;
   degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's";
-  typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
+  typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" | "other";
   reasoning: string;
   }
 ]`;
