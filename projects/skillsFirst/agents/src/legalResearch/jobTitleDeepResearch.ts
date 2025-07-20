@@ -17,9 +17,8 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
 mandatory education requirement for the New Jersey State Government job with the <jobTitle>${jobTitle}</jobTitle> focus on New Jersey official sources.`;
 
-    this.rankingInstructions = `Prioritize results likely to contain legal, statutes, regulations, administrative code provisions, formal policy documents,
-court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
-mandatory education requirement for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.
+    this.rankingInstructions = `Prioritize results likely to contain legal sources over job descriptions. Statutes, regulations, administrative code provisions, formal policy documents,
+court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain education requirements for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.
 Official and relevant New Jersey government sources are preferred but also law.cornell.edu, justia.com & courtlistener.com.`;
   }
 
