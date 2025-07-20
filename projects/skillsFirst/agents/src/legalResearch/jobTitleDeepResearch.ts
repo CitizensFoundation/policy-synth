@@ -12,13 +12,15 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
 
   private updatePrompts(jobTitle: string) {
     this.jobTitle = jobTitle;
+
     this.searchInstructions = `Search for New Jersey laws, statutes, regulations, administrative code provisions, formal policy documents,
-    court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
-    mandatory education requirement for the New Jersey State Government job with the <jobTitle>${jobTitle}</jobTitle> focus on New Jersey sources but also sources like law.cornell.edu, courtlistener.com are acceptable that have actual NJ laws.`;
+court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
+mandatory education requirement for the New Jersey State Government job with the <jobTitle>${jobTitle}</jobTitle> focus on New Jersey official sources.`;
+
     this.rankingInstructions = `Prioritize results likely to contain legal, statutes, regulations, administrative code provisions, formal policy documents,
-    court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
-    mandatory education requirement for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.
-    Official and relevant New Jersey government sources are preferred but also websites like law.cornell.edu, justia.com, courtlistener.com are acceptable that have actual NJ laws.`;
+court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
+mandatory education requirement for the New Jersey State Government job with <jobTitle>${jobTitle}</jobTitle>.
+Official and relevant New Jersey government sources are preferred but also law.cornell.edu, justia.com & courtlistener.com.`;
   }
 
   get scanningSystemPrompt(): string {
