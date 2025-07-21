@@ -36,6 +36,10 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     this.memory = memory;
   }
 
+  shuffleArray(array: any[]): any[] {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
   async process(): Promise<void> {
     await this.updateRangedProgress(
       0,
@@ -51,7 +55,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = qualifyingJobs.slice(0, 60);
+    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 30);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 
