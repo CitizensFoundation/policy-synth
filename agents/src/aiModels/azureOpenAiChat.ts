@@ -7,6 +7,8 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 interface PsModelMessage {
   role: "system" | "developer" | "user" | "assistant";
   message: string;
+  name?: string;
+  toolCall?: { name: string; arguments: Record<string, unknown> };
 }
 
 export class AzureOpenAiChat extends BaseChatModel {
@@ -38,10 +40,24 @@ export class AzureOpenAiChat extends BaseChatModel {
     streamingCallback?: (chunk: string) => void,
     media?: { mimeType: string; data: string }[]
   ) {
-    const chatMessages = messages.map((msg) => ({
-      role: msg.role,
-      content: msg.message,
-    }));
+    const chatMessages = messages.map((msg) => {
+      const base: any = { role: msg.role, content: msg.message };
+      if (msg.name) {
+        base.name = msg.name;
+      }
+      if (msg.toolCall) {
+        base.tool_calls = [
+          {
+            type: "function",
+            function: {
+              name: msg.toolCall.name,
+              arguments: JSON.stringify(msg.toolCall.arguments ?? {}),
+            },
+          },
+        ];
+      }
+      return base;
+    });
 
     if (streaming) {
       // Streaming scenario

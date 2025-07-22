@@ -11,6 +11,8 @@ import { PsAgent } from "../dbModels/agent.js";
 interface PsModelMessage {
   role: string;
   message: string;
+  name?: string;
+  toolCall?: { name: string; arguments: Record<string, unknown> };
 }
 
 export enum AgentPhase {
@@ -148,12 +150,27 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
 
   private async planStep(): Promise<void> {
     const allow = new Set(this.policy());
-    const psMessages: PsModelMessage[] = this.messages.map((m) => ({
-      role: m.role,
-      message: m.content ?? "",
-    }));
+    const psMessages: PsModelMessage[] = this.messages.map((m) => {
+      let message = m.content ?? "";
+      if (m.role === "tool" && m.name) {
+        message = `[tool:${m.name}] ${message}`.trim();
+      } else if (m.toolCall) {
+        const args =
+          m.toolCall.arguments &&
+          Object.keys(m.toolCall.arguments).length > 0
+            ? ` ${JSON.stringify(m.toolCall.arguments)}`
+            : "";
+        message = `[tool:${m.toolCall.name}]${args}`;
+      }
+      return {
+        role: m.role,
+        message,
+        name: m.name,
+        toolCall: m.toolCall,
+      };
+    });
 
-    const result: any = await this.callModel(
+    const result = await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Large,
       psMessages,
