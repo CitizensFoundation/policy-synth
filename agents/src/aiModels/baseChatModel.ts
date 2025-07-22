@@ -2,6 +2,10 @@ import { TiktokenModel } from "tiktoken";
 import chalk from "chalk";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 
 export abstract class BaseChatModel extends PolicySynthAgentBase {
   modelName: string | TiktokenModel;
@@ -25,7 +29,10 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    tools?: ChatCompletionTool[],
+    toolChoice?: ChatCompletionToolChoiceOption | "auto",
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined>;
 
   truncateXmlTags(text: string, maxChars = 500): string {
