@@ -8,13 +8,6 @@ import { PolicySynthAgent } from "./agent.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { PsAgent } from "../dbModels/agent.js";
 
-interface PsModelMessage {
-  role: string;
-  message: string;
-  name?: string;
-  toolCall?: { name: string; arguments: Record<string, unknown> };
-}
-
 export enum AgentPhase {
   START,
   PLAN,
@@ -23,19 +16,12 @@ export enum AgentPhase {
   FINISH,
 }
 
-export interface ChatMessage {
-  role: "system" | "user" | "assistant" | "tool";
-  content?: string;
-  name?: string;
-  toolCall?: { name: string; arguments: Record<string, unknown> };
-}
-
 export type ToolSpec = ChatCompletionTool;
 
 export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected static readonly TOOLS: ToolSpec[] = [];
 
-  protected readonly messages: ChatMessage[] = [];
+  protected readonly messages: PsModelMessage[] = [];
   private pendingToolCalls: { name: string; arguments: any }[] = [];
   protected phase: AgentPhase = AgentPhase.START;
 
@@ -66,9 +52,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     );
   }
 
-  async *run(userMessage: string): AsyncIterableIterator<ChatMessage> {
-    this.messages.push({ role: "system", content: this.systemPrompt.trim() });
-    this.messages.push({ role: "user", content: userMessage });
+  async *run(userMessage: string): AsyncIterableIterator<PsModelMessage> {
+    this.messages.push({ role: "system", message: this.systemPrompt.trim() });
+    this.messages.push({ role: "user", message: userMessage });
 
     while (this.phase !== AgentPhase.FINISH) {
       switch (this.phase) {
@@ -151,30 +137,11 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
 
   private async planStep(): Promise<void> {
     const allow = new Set(this.policy());
-    const psMessages: PsModelMessage[] = this.messages.map((m) => {
-      let message = m.content ?? "";
-      if (m.role === "tool" && m.name) {
-        message = `[tool:${m.name}] ${message}`.trim();
-      } else if (m.toolCall) {
-        const args =
-          m.toolCall.arguments &&
-          Object.keys(m.toolCall.arguments).length > 0
-            ? ` ${JSON.stringify(m.toolCall.arguments)}`
-            : "";
-        message = `[tool:${m.toolCall.name}]${args}`;
-      }
-      return {
-        role: m.role,
-        message,
-        name: m.name,
-        toolCall: m.toolCall,
-      };
-    });
 
     const result = await this.callModel(
       PsAiModelType.TextReasoning,
       PsAiModelSize.Large,
-      psMessages,
+      this.messages,
       {
         parseJson: false,
         functions: (this.constructor as typeof PolicySynthAgentTask).TOOLS,
@@ -183,14 +150,19 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       }
     );
 
-    let assistantMsg: ChatMessage;
-    if (result && typeof result === "object" && Array.isArray(result.toolCalls) && result.toolCalls.length) {
+    let assistantMsg: PsModelMessage;
+    if (
+      result &&
+      typeof result === "object" &&
+      Array.isArray(result.toolCalls) &&
+      result.toolCalls.length
+    ) {
       const [first, ...rest] = result.toolCalls;
       this.pendingToolCalls = rest;
-      assistantMsg = { role: "assistant", toolCall: first };
+      assistantMsg = { role: "assistant", message: "", toolCall: first };
     } else {
       const text = typeof result === "string" ? result : JSON.stringify(result);
-      assistantMsg = { role: "assistant", content: text };
+      assistantMsg = { role: "assistant", message: text };
     }
 
     this.messages.push(assistantMsg);
@@ -203,18 +175,20 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     const call = this.messages.at(-1)!.toolCall!;
     const allow = new Set(this.policy());
     if (!allow.has(call.name)) {
-      console.error(`Policy violation: attempted to call disallowed tool ${call.name}`);
+      console.error(
+        `Policy violation: attempted to call disallowed tool ${call.name}`
+      );
       const msg = `Tool ${call.name} is not allowed by policy`;
-      this.messages.push({ role: "tool", name: call.name, content: msg });
+      this.messages.push({ role: "tool", name: call.name, message: msg });
       this.phase = AgentPhase.OBSERVE;
       return;
     }
 
     const result = await this.runTool(call.name, call.arguments);
-    this.messages.push({ role: "tool", name: call.name, content: result });
+    this.messages.push({ role: "tool", name: call.name, message: result });
     if (this.pendingToolCalls.length) {
       const next = this.pendingToolCalls.shift()!;
-      this.messages.push({ role: "assistant", toolCall: next });
+      this.messages.push({ role: "assistant", message: "", toolCall: next });
       this.phase = AgentPhase.CALL_TOOL;
     } else {
       this.phase = AgentPhase.OBSERVE;

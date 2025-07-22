@@ -261,7 +261,7 @@ export class GoogleGeminiChat extends BaseChatModel {
               name: t.function.name,
               description: t.function.description,
               parameters: t.function.parameters as any,
-            }) as FunctionDeclaration
+            } as FunctionDeclaration)
         );
     }
 
@@ -409,13 +409,23 @@ export class GoogleGeminiChat extends BaseChatModel {
         const content =
           response.candidates?.[0]?.content?.parts?.[0]?.text || "";
         const toolCalls: { name: string; arguments: any }[] = [];
-        const fcList = (response as any).functionCalls?.();
-        if (Array.isArray(fcList)) {
-          for (const fc of fcList) {
-            toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+        const candidate = response.candidates?.[0];
+        if (candidate && candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.functionCall) {
+              toolCalls.push({
+                name: part.functionCall.name,
+                arguments: part.functionCall.args || {},
+              });
+            }
           }
         }
-        if (!content && response.candidates?.[0]?.finishReason !== "STOP") {
+
+        if (
+          !content &&
+          toolCalls.length === 0 &&
+          response.candidates?.[0]?.finishReason !== "STOP"
+        ) {
           const errorMessage =
             response.candidates?.[0]?.finishReason || "Unknown";
 
@@ -459,10 +469,15 @@ export class GoogleGeminiChat extends BaseChatModel {
           ).generateContent(parts);
           const content = result.response.text();
           const toolCalls: { name: string; arguments: any }[] = [];
-          const fcList = (result.response as any).functionCalls?.();
-          if (Array.isArray(fcList)) {
-            for (const fc of fcList) {
-              toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+          const candidate = result.response.candidates?.[0];
+          if (candidate && candidate.content && candidate.content.parts) {
+            for (const part of candidate.content.parts) {
+              if (part.functionCall) {
+                toolCalls.push({
+                  name: part.functionCall.name,
+                  arguments: part.functionCall.args || {},
+                });
+              }
             }
           }
           const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
@@ -479,10 +494,15 @@ export class GoogleGeminiChat extends BaseChatModel {
         const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();
         const toolCalls: { name: string; arguments: any }[] = [];
-        const fcList = (result.response as any).functionCalls?.();
-        if (Array.isArray(fcList)) {
-          for (const fc of fcList) {
-            toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+        const candidate = result.response.candidates?.[0];
+        if (candidate && candidate.content && candidate.content.parts) {
+          for (const part of candidate.content.parts) {
+            if (part.functionCall) {
+              toolCalls.push({
+                name: part.functionCall.name,
+                arguments: part.functionCall.args || {},
+              });
+            }
           }
         }
         //this.logger.debug(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);

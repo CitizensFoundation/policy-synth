@@ -23,13 +23,14 @@ export class OpenAiChat extends BaseChatModel {
     super(config, modelName, maxTokensOut);
     if (process.env.PS_AGENT_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OPENAI_API_KEY;
-      this.logger.debug("Using OpenAI API key from PS_AGENT_OPENAI_API_KEY environment variable");
+      this.logger.debug(
+        "Using OpenAI API key from PS_AGENT_OPENAI_API_KEY environment variable"
+      );
     }
 
     this.client = new OpenAI({ apiKey });
     this.modelConfig = config;
   }
-
 
   async generate(
     messages: PsModelMessage[],
@@ -81,7 +82,8 @@ export class OpenAiChat extends BaseChatModel {
         formattedMessages[1].content;
       // Remove the system message from the array
       formattedMessages.shift();
-    } else if (this.modelConfig.modelSize === PsAiModelSize.Small &&
+    } else if (
+      this.modelConfig.modelSize === PsAiModelSize.Small &&
       this.modelName.toLowerCase().includes("o1 mini") &&
       this.modelConfig.modelType === PsAiModelType.TextReasoning &&
       formattedMessages.length == 1 &&
@@ -110,7 +112,9 @@ export class OpenAiChat extends BaseChatModel {
         }
       }
       this.logger.debug(
-        `Allowed tools: ${JSON.stringify(allowedTools)} logit_bias: ${JSON.stringify(logitBias)}`
+        `Allowed tools: ${JSON.stringify(
+          allowedTools
+        )} logit_bias: ${JSON.stringify(logitBias)}`
       );
     }
     encoding.free();
@@ -150,7 +154,9 @@ export class OpenAiChat extends BaseChatModel {
       }
     } else {
       if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
-        this.logger.debug(`Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`);
+        this.logger.debug(
+          `Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`
+        );
       }
       const timeNow = new Date();
       this.logger.info(`Calling OpenAI model... ${timeNow.toISOString()}`);
@@ -172,11 +178,15 @@ export class OpenAiChat extends BaseChatModel {
         max_completion_tokens:
           this.modelConfig.modelType === PsAiModelType.TextReasoning
             ? undefined
-            : this.modelConfig.maxTokensOut
+            : this.modelConfig.maxTokensOut,
       });
 
       const timeNow2 = new Date();
-      this.logger.info(`OpenAI model call completed in ${(timeNow2.getTime() - timeNow.getTime())/1000} seconds`);
+      this.logger.info(
+        `OpenAI model call completed in ${
+          (timeNow2.getTime() - timeNow.getTime()) / 1000
+        } seconds`
+      );
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
@@ -205,12 +215,13 @@ export class OpenAiChat extends BaseChatModel {
       const cachedInTokens =
         response.usage!.prompt_tokens_details?.cached_tokens || 0;
 
-      const reasoningTokens = response.usage!.completion_tokens_details?.reasoning_tokens || 0;
-      const audioTokens = response.usage!.completion_tokens_details?.audio_tokens || 0;
+      const reasoningTokens =
+        response.usage!.completion_tokens_details?.reasoning_tokens || 0;
+      const audioTokens =
+        response.usage!.completion_tokens_details?.audio_tokens || 0;
 
       const completion_tokens_details =
         response.usage!.completion_tokens_details;
-
 
       this.logger.debug(
         JSON.stringify(
@@ -221,11 +232,15 @@ export class OpenAiChat extends BaseChatModel {
             content,
             completion_tokens_details,
             reasoningTokens,
-            audioTokens
+            audioTokens,
           },
           null,
           2
         )
+      );
+
+      this.logger.debug(
+        `OpenAI Tool calls: ${JSON.stringify(toolCalls, null, 2)}`
       );
 
       return {
