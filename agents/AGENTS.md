@@ -7,6 +7,7 @@ dist, ts-out, old
 
 # Coding rules
 - Everything is written in Typescript
+- Do not use any except in very rare cases, figure our proper types
 - Types *.d.ts are loaded automatically both for server and client code
 
 # Testing
