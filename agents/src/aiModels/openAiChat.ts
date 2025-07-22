@@ -144,14 +144,78 @@ export class OpenAiChat extends BaseChatModel {
           this.modelConfig.modelType === PsAiModelType.TextReasoning
             ? this.modelConfig.maxTokensOut
             : undefined,
+        stream_options: { include_usage: true },
       });
 
-      // Emit streaming tokens to the callback
+      let aggregated = "";
+      const toolCallsAccum: Record<
+        number,
+        { name?: string; args: string }
+      > = {};
+      let tokensIn = 0;
+      let tokensOut = 0;
+      let cachedInTokens = 0;
+      let reasoningTokens = 0;
+      let audioTokens = 0;
+
       for await (const chunk of stream) {
-        if (streamingCallback) {
-          streamingCallback(chunk.choices[0]?.delta?.content ?? "");
+        const delta = chunk.choices[0]?.delta;
+
+        if (delta?.content) {
+          aggregated += delta.content;
+          if (streamingCallback) {
+            streamingCallback(delta.content);
+          }
+        }
+
+        if (delta?.tool_calls) {
+          for (const call of delta.tool_calls) {
+            const idx = call.index ?? 0;
+            const existing = toolCallsAccum[idx] || { args: "" };
+            if (call.function?.name) {
+              existing.name = call.function.name;
+            }
+            if (call.function?.arguments) {
+              existing.args += call.function.arguments;
+            }
+            toolCallsAccum[idx] = existing;
+          }
+        }
+
+        if (chunk.usage) {
+          tokensIn = chunk.usage.prompt_tokens;
+          tokensOut = chunk.usage.completion_tokens;
+          cachedInTokens =
+            chunk.usage.prompt_tokens_details?.cached_tokens || 0;
+          reasoningTokens =
+            chunk.usage.completion_tokens_details?.reasoning_tokens || 0;
+          audioTokens =
+            chunk.usage.completion_tokens_details?.audio_tokens || 0;
         }
       }
+
+      const toolCalls: { name: string; arguments: any }[] = [];
+      for (const idx of Object.keys(toolCallsAccum)) {
+        const { name, args } = toolCallsAccum[Number(idx)];
+        if (name) {
+          try {
+            toolCalls.push({ name, arguments: JSON.parse(args || "{}") });
+          } catch (err) {
+            this.logger.warn(`Failed to parse tool call arguments: ${err}`);
+            toolCalls.push({ name, arguments: {} });
+          }
+        }
+      }
+
+      return {
+        tokensIn,
+        tokensOut,
+        cachedInTokens,
+        content: aggregated,
+        reasoningTokens,
+        audioTokens,
+        toolCalls,
+      };
     } else {
       if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
         this.logger.debug(
