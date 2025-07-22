@@ -11,6 +11,10 @@ import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsModelUsage } from "../dbModels/modelUsage.js";
 import { TokenLimitChunker } from "./tokenLimitChunker.js";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   models: Map<string, BaseChatModel> = new Map();
@@ -668,11 +672,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           messages,
           options.streamingCallbacks,
           timeoutMs,
-          options.promptImages
+          options.promptImages,
+          options.functions,
+          options.toolChoice,
+          options.allowedTools
         )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
-          const { tokensIn, tokensOut, cachedInTokens, content } = results;
+          const { tokensIn, tokensOut, cachedInTokens, content, toolCall } =
+            results;
 
           await this.saveTokenUsage(
             model.config.prices,
@@ -684,6 +692,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             model.dbModelId
           );
 
+          if (toolCall) {
+            return { toolCall };
+          }
           if (options.parseJson) {
             let parsedJson: any;
             try {
@@ -831,11 +842,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 messages,
                 options.streamingCallbacks,
                 timeoutMs,
-                options.promptImages
+                options.promptImages,
+                options.functions,
+                options.toolChoice,
+                options.allowedTools
               )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
-                const { tokensIn, tokensOut, cachedInTokens, content } =
+                const { tokensIn, tokensOut, cachedInTokens, content, toolCall } =
                   fallbackResults;
                 await this.saveTokenUsage(
                   fallbackEphemeral.config.prices,
@@ -846,6 +860,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   tokensOut,
                   fallbackEphemeral.dbModelId
                 );
+                if (toolCall) {
+                  return { toolCall };
+                }
                 return options.parseJson
                   ? this.parseJsonResponse(content.trim())
                   : content.trim();
@@ -912,7 +929,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     messages: PsModelMessage[],
     streamingCallbacks: any,
     timeoutMs: number,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    tools?: ChatCompletionTool[],
+    toolChoice?: ChatCompletionToolChoiceOption | "auto",
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
@@ -920,7 +940,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         timeoutMs
       );
       model
-        .generate(messages, !!streamingCallbacks, streamingCallbacks, media)
+        .generate(
+          messages,
+          !!streamingCallbacks,
+          streamingCallbacks,
+          media,
+          tools,
+          toolChoice,
+          allowedTools
+        )
         .then((res) => {
           clearTimeout(timer);
           resolve(res);
