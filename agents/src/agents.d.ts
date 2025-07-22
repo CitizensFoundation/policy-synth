@@ -39,9 +39,8 @@ interface PsCallModelOptions {
   overrideMaxRetries?: number;
   tokenOutEstimate?: number;
   streamingCallbacks?: Function;
-  // NEW OVERRIDE FIELDS:
   modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
-  modelName?: string; // e.g. "gpt-4", "claude-2", etc.
+  modelName?: string; // e.g. "gpt-4o", "gemin-2.5-pro", etc.
   modelTemperature?: number;
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
@@ -56,7 +55,7 @@ interface PsCallModelOptions {
     data: string;
   }[];
   /**
-   * Optional OpenAI function tools that the model may call during generation.
+   * Optional Model function tools that the model may call during generation.
    */
   functions?: Array<{
     type: "function";
@@ -71,7 +70,7 @@ interface PsCallModelOptions {
    */
   toolChoice?: "auto" | { type: "function"; function: { name: string } };
   /**
-   * Names of function tools the model is allowed to call when using OpenAI.
+   * Names of function tools the model is allowed to call when using the model.
    */
   allowedTools?: string[];
   /**

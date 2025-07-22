@@ -6,6 +6,7 @@ import crypto from "crypto";
 import type { ChatCompletionTool } from "openai/resources/chat/completions";
 import { PolicySynthAgent } from "./agent.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+import { PsAgent } from "../dbModels/agent.js";
 
 interface PsModelMessage {
   role: string;
@@ -36,26 +37,18 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected phase: AgentPhase = AgentPhase.START;
 
   readonly runDir: string;
-  private readonly dirs: Record<"scratch" | "memory" | "artifacts" | "logs", string>;
+  private readonly dirs: Record<
+    "scratch" | "memory" | "artifacts" | "logs",
+    string
+  >;
 
-  constructor(taskId: string, public readonly systemPrompt: string) {
-    const stubAgent: any = {
-      id: -1,
-      uuid: taskId,
-      user_id: -1,
-      created_at: new Date(),
-      updated_at: new Date(),
-      class_id: -1,
-      group_id: -1,
-      configuration: {},
-      get redisMemoryKey() {
-        return `ps:agent:memory:${this.id}:${this.uuid}`;
-      },
-      get redisStatusKey() {
-        return `ps:agent:status:${this.id}:${this.uuid}`;
-      },
-    };
-    super(stubAgent, { agentId: -1 } as any, 0, 100);
+  constructor(
+    agent: PsAgent,
+    memory: PsAgentMemoryData,
+    taskId: string,
+    public readonly systemPrompt: string
+  ) {
+    super(agent, memory, 0, 100);
 
     const here = path.dirname(fileURLToPath(import.meta.url));
     this.runDir = path.join(here, "agent_runs", taskId);
@@ -65,7 +58,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       artifacts: path.join(this.runDir, "artifacts"),
       logs: path.join(this.runDir, "logs"),
     };
-    Promise.all(Object.values(this.dirs).map((d) => fsp.mkdir(d, { recursive: true })));
+    Promise.all(
+      Object.values(this.dirs).map((d) => fsp.mkdir(d, { recursive: true }))
+    );
   }
 
   async *run(userMessage: string): AsyncIterableIterator<ChatMessage> {
@@ -102,7 +97,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     mktemp: (
       bucket: keyof PolicySynthAgentTask["dirs"],
       prefix = "tmp",
-      ext = ".txt",
+      ext = ".txt"
     ) => {
       const ts = Date.now();
       const rnd = crypto.randomBytes(3).toString("hex");
@@ -112,7 +107,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     writeText: async (
       bucket: keyof PolicySynthAgentTask["dirs"],
       rel: string,
-      data: string,
+      data: string
     ) => {
       const file = path.join(this.dirs[bucket], rel);
       await fsp.mkdir(path.dirname(file), { recursive: true });
@@ -120,7 +115,10 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       return file;
     },
 
-    readText: async (bucket: keyof PolicySynthAgentTask["dirs"], rel: string) => {
+    readText: async (
+      bucket: keyof PolicySynthAgentTask["dirs"],
+      rel: string
+    ) => {
       return fsp.readFile(path.join(this.dirs[bucket], rel), "utf8");
     },
 
@@ -128,13 +126,16 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       bucket: keyof PolicySynthAgentTask["dirs"],
       rel: string,
       obj: unknown,
-      pretty = 2,
+      pretty = 2
     ) => {
       const txt = JSON.stringify(obj, null, pretty);
       return this.fs.writeText(bucket, rel, txt);
     },
 
-    readJSON: async (bucket: keyof PolicySynthAgentTask["dirs"], rel: string) => {
+    readJSON: async (
+      bucket: keyof PolicySynthAgentTask["dirs"],
+      rel: string
+    ) => {
       const txt = await this.fs.readText(bucket, rel);
       return JSON.parse(txt);
     },
@@ -161,7 +162,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
         functions: (this.constructor as typeof PolicySynthAgentTask).TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],
-      },
+      }
     );
 
     let assistantMsg: ChatMessage;
@@ -173,7 +174,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     }
 
     this.messages.push(assistantMsg);
-    this.phase = assistantMsg.toolCall ? AgentPhase.CALL_TOOL : AgentPhase.OBSERVE;
+    this.phase = assistantMsg.toolCall
+      ? AgentPhase.CALL_TOOL
+      : AgentPhase.OBSERVE;
   }
 
   private async callToolStep(): Promise<void> {
@@ -183,7 +186,10 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     this.phase = AgentPhase.OBSERVE;
   }
 
-  protected async runTool(name: string, args: Record<string, unknown>): Promise<string> {
+  protected async runTool(
+    name: string,
+    args: Record<string, unknown>
+  ): Promise<string> {
     const artefact = await this.fs.writeJSON("artifacts", `${name}.json`, args);
     return `stored artefact at ${artefact}`;
   }
