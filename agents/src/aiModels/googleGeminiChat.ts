@@ -3,6 +3,8 @@ import {
   GenerativeModel as GoogleAiGenerativeModel,
   HarmBlockThreshold,
   HarmCategory as GenerativeHarmCategory, // Rename to avoid clash
+  FunctionDeclaration,
+  FunctionCallingMode,
 } from "@google/generative-ai";
 
 import {
@@ -13,6 +15,11 @@ import {
   GenerateContentResult,
   HarmCategory as VertexHarmCategory,
 } from "@google-cloud/vertexai";
+
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 
 import { BaseChatModel } from "./baseChatModel.js";
 import { types } from "util";
@@ -207,7 +214,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: (chunk: string) => void,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    tools?: ChatCompletionTool[],
+    toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
@@ -241,20 +251,56 @@ export class GoogleGeminiChat extends BaseChatModel {
       .map((m) => m.message)
       .join("\n\n");
 
+    let functionDeclarations: FunctionDeclaration[] | undefined;
+    if (tools && tools.length) {
+      functionDeclarations = tools
+        .filter((t) => t.type === "function")
+        .map(
+          (t) =>
+            ({
+              name: t.function.name,
+              description: t.function.description,
+              parameters: t.function.parameters as any,
+            }) as FunctionDeclaration
+        );
+    }
+
     // --- Initialize Model ---
     // This needs to be done here because systemInstruction is part of model initialization
+    const modelParams: any = {
+      model: this.modelName,
+      systemInstruction: systemContent,
+      safetySettings: this.useVertexAi
+        ? GoogleGeminiChat.vertexSafetySettingsBlockNone
+        : GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
+    };
+
+    if (functionDeclarations && functionDeclarations.length) {
+      let fcMode = FunctionCallingMode.AUTO;
+      let allowedFnNames = allowedTools;
+
+      if (toolChoice === "none") {
+        fcMode = FunctionCallingMode.NONE;
+      } else if (toolChoice !== "auto") {
+        fcMode = FunctionCallingMode.ANY;
+        if (typeof toolChoice !== "string" && toolChoice.type === "function") {
+          allowedFnNames = [toolChoice.function.name];
+        }
+      }
+
+      modelParams.tools = [{ functionDeclarations }];
+      modelParams.toolConfig = {
+        functionCallingConfig: {
+          mode: fcMode,
+          allowedFunctionNames: allowedFnNames,
+        },
+      };
+    }
+
     if (this.useVertexAi && this.vertexAiClient) {
-      this.model = this.vertexAiClient.getGenerativeModel({
-        model: this.modelName,
-        systemInstruction: systemContent,
-        safetySettings: GoogleGeminiChat.vertexSafetySettingsBlockNone,
-      });
+      this.model = this.vertexAiClient.getGenerativeModel(modelParams);
     } else if (!this.useVertexAi && this.googleAiClient) {
-      this.model = this.googleAiClient.getGenerativeModel({
-        model: this.modelName,
-        systemInstruction: systemContent,
-        safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
-      });
+      this.model = this.googleAiClient.getGenerativeModel(modelParams);
     } else {
       throw new Error("Client not initialized correctly."); // Should not happen
     }
