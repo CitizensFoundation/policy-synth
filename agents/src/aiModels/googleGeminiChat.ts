@@ -348,31 +348,50 @@ export class GoogleGeminiChat extends BaseChatModel {
           this.model as VertexAiGenerativeModel
         ).generateContentStream({ contents: vertexContents });
 
+        const toolCallsAccum: { name?: string; args?: any }[] = [];
+
         for await (const item of streamResult.stream) {
-          // Ensure item and its properties exist before accessing text()
-          const text = item?.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (text) {
-            aggregated += text;
-            if (streamingCallback) {
-              streamingCallback(text);
+          const candidate = item?.candidates?.[0];
+          const parts = candidate?.content?.parts || [];
+          for (const part of parts) {
+            if (part.text) {
+              aggregated += part.text;
+              if (streamingCallback) {
+                streamingCallback(part.text);
+              }
             }
-          } else {
-            this.logger.warn(
-              "Received stream chunk without text content:",
-              JSON.stringify(item)
-            );
+            if (part.functionCall) {
+              toolCallsAccum.push({
+                name: part.functionCall.name,
+                args: part.functionCall.args ?? {},
+              });
+            }
           }
         }
-        // Vertex AI streaming response doesn't easily provide token counts in the same way.
+
+        const finalResponse = await streamResult.response;
+        const tokensIn = finalResponse.usageMetadata?.promptTokenCount ?? 0;
+        const tokensOut = getTokensOut(finalResponse.usageMetadata);
+        const cachedInTokens =
+          finalResponse.usageMetadata?.cachedContentTokenCount ?? 0;
+        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
+
+        const toolCalls = toolCallsAccum.map((t) => ({
+          name: t.name ?? "",
+          arguments: t.args ?? {},
+        }));
+
         return {
-          tokensIn: 0, // Placeholder - Vertex stream might not provide this easily
-          tokensOut: 0, // Placeholder
+          tokensIn,
+          tokensOut,
           content: aggregated,
+          toolCalls,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
         this.logger.debug(`Google AI Streaming request`);
         const chat = (this.model as GoogleAiGenerativeModel).startChat(); // Needs history if not single turn
         const stream = await chat.sendMessageStream(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
+        const toolCallsAccum: { name?: string; args?: any }[] = [];
         let done = false;
 
         while (!done) {
@@ -380,17 +399,42 @@ export class GoogleGeminiChat extends BaseChatModel {
           const { value: chunk, done: streamDone } = await stream.next();
           done = streamDone || !chunk;
           if (chunk) {
-            const text = chunk.text();
-            aggregated += text;
-            if (streamingCallback) {
-              streamingCallback(text);
+            const candidate = chunk.candidates?.[0];
+            const parts = candidate?.content?.parts || [];
+            for (const part of parts) {
+              if (part.text) {
+                aggregated += part.text;
+                if (streamingCallback) {
+                  streamingCallback(part.text);
+                }
+              }
+              if (part.functionCall) {
+                toolCallsAccum.push({
+                  name: part.functionCall.name,
+                  args: part.functionCall.args ?? {},
+                });
+              }
             }
           }
         }
+
+        const finalResponse = await stream.response;
+        const tokensIn = finalResponse.usageMetadata?.promptTokenCount ?? 0;
+        const tokensOut = getTokensOut(finalResponse.usageMetadata);
+        const cachedInTokens =
+          finalResponse.usageMetadata?.cachedContentTokenCount ?? 0;
+        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
+
+        const toolCalls = toolCallsAccum.map((t) => ({
+          name: t.name ?? "",
+          arguments: t.args ?? {},
+        }));
+
         return {
-          tokensIn: 0, // Placeholder - original code didn't return tokens for streaming
-          tokensOut: 0, // Placeholder
+          tokensIn,
+          tokensOut,
           content: aggregated,
+          toolCalls,
         };
       } else {
         throw new Error("Invalid state for streaming generation.");
