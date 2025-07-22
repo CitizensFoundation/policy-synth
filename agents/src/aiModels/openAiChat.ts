@@ -87,14 +87,16 @@ export class OpenAiChat extends BaseChatModel {
       for (const t of tools) {
         const name = t.type === "function" ? t.function.name : "";
         if (!allowedTools.includes(name)) {
-          const tok = encoding.encode(`"${name}"`)[0];
-          logitBias[tok] = -100;
+          encoding.encode(name).forEach((tok) => {
+            logitBias![tok] = -100;
+          });
         }
       }
       this.logger.debug(
         `Allowed tools: ${JSON.stringify(allowedTools)} logit_bias: ${JSON.stringify(logitBias)}`
       );
     }
+    encoding.free();
 
     // 3. Streaming vs. Non-streaming
     if (streaming) {
