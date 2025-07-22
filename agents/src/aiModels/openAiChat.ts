@@ -41,10 +41,27 @@ export class OpenAiChat extends BaseChatModel {
     allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     // 1. Convert messages to OpenAI format
-    let formattedMessages = messages.map((msg) => ({
-      role: msg.role as "system" | "developer" | "user" | "assistant",
-      content: msg.message,
-    }));
+    let formattedMessages = messages.map((msg) => {
+      const base: any = {
+        role: msg.role as "system" | "developer" | "user" | "assistant",
+        content: msg.message,
+      };
+      if (msg.name) {
+        base.name = msg.name;
+      }
+      if (msg.toolCall) {
+        base.tool_calls = [
+          {
+            type: "function",
+            function: {
+              name: msg.toolCall.name,
+              arguments: JSON.stringify(msg.toolCall.arguments ?? {}),
+            },
+          },
+        ];
+      }
+      return base;
+    });
 
     // 2. Collapse system message if the model is "small" reasoning
     if (
