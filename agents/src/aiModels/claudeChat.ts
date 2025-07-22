@@ -1,7 +1,15 @@
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  ContentBlock,
+  Tool,
+  ToolChoice,
+} from "@anthropic-ai/sdk/resources/messages/messages.js";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-import { ContentBlock } from "@anthropic-ai/sdk/resources/messages/messages.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 export class ClaudeChat extends BaseChatModel {
   private client: Anthropic;
@@ -24,7 +32,10 @@ export class ClaudeChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    tools?: ChatCompletionTool[],
+    toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
@@ -62,6 +73,37 @@ export class ClaudeChat extends BaseChatModel {
           }
         : undefined,
     };
+
+    if (tools && tools.length) {
+      const filteredTools = allowedTools && allowedTools.length
+        ? tools.filter((t) => allowedTools.includes(t.function.name))
+        : tools;
+      if (filteredTools.length) {
+        requestOptions.tools = filteredTools.map(
+          (t) =>
+            ({
+              name: t.function.name,
+              description: t.function.description,
+              input_schema: {
+                type: "object",
+                ...(t.function.parameters || {}),
+              },
+            }) as Tool
+        );
+
+        const choice: ToolChoice | undefined =
+          toolChoice === "auto"
+            ? { type: "auto" }
+            : toolChoice === "none"
+            ? { type: "none" }
+            : (toolChoice as any).type === "function"
+            ? { type: "tool", name: (toolChoice as any).function.name }
+            : undefined;
+        if (choice) {
+          requestOptions.tool_choice = choice;
+        }
+      }
+    }
 
     if (systemMessage) {
       requestOptions.system = [
