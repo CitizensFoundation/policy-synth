@@ -126,18 +126,55 @@ export class ClaudeChat extends BaseChatModel {
     }
 
     if (streaming) {
-      const stream = await this.client.messages.create({
+      const stream = await this.client.messages.stream({
         ...requestOptions,
-        stream: true,
       });
+
+      let aggregated = "";
+      const toolCalls: { name: string; arguments: any }[] = [];
 
       for await (const messageStreamEvent of stream) {
         if (streamingCallback) {
           streamingCallback(messageStreamEvent);
         }
+
+        if (messageStreamEvent.type === "content_block_start") {
+          if (messageStreamEvent.content_block.type === "text") {
+            aggregated += messageStreamEvent.content_block.text;
+          } else if (messageStreamEvent.content_block.type === "tool_use") {
+            toolCalls.push({
+              name: messageStreamEvent.content_block.name ?? "unknown",
+              arguments: messageStreamEvent.content_block.input ?? {},
+            });
+          }
+        } else if (
+          messageStreamEvent.type === "content_block_delta" &&
+          messageStreamEvent.delta.type === "text_delta"
+        ) {
+          aggregated += messageStreamEvent.delta.text;
+        }
       }
-      return undefined;
-      // TODO: Deal with token usage here
+
+      const finalMessage = await stream.finalMessage();
+      let tokensIn = finalMessage.usage.input_tokens;
+      let tokensOut = finalMessage.usage.output_tokens;
+      let cachedInTokens = finalMessage.usage.cache_creation_input_tokens;
+
+      if ((finalMessage.usage as any).cache_creation_input_tokens) {
+        tokensIn += (finalMessage.usage as any).cache_creation_input_tokens * 1.25;
+      }
+
+      if ((finalMessage.usage as any).cache_read_input_tokens) {
+        tokensIn += (finalMessage.usage as any).cache_read_input_tokens * 0.1;
+      }
+
+      return {
+        tokensIn,
+        tokensOut,
+        cachedInTokens: cachedInTokens ?? 0,
+        content: aggregated || this.getTextTypeFromContent(finalMessage.content),
+        toolCalls,
+      };
     } else {
       let response;
       response = await this.client.messages.create(requestOptions);
