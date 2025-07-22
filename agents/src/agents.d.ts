@@ -56,6 +56,25 @@ interface PsCallModelOptions {
     data: string;
   }[];
   /**
+   * Optional OpenAI function tools that the model may call during generation.
+   */
+  functions?: Array<{
+    type: "function";
+    function: {
+      name: string;
+      description?: string;
+      parameters?: Record<string, unknown>;
+    };
+  }>;
+  /**
+   * Tool choice passed to the model when using function calling.
+   */
+  toolChoice?: "auto" | { type: "function"; function: { name: string } };
+  /**
+   * Names of function tools the model is allowed to call when using OpenAI.
+   */
+  allowedTools?: string[];
+  /**
    * When true, token limit errors will be rethrown instead of triggering
    * the TokenLimitChunker retry logic. Useful for preventing infinite
    * retry loops if chunking already failed.
