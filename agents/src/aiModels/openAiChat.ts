@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { resolve } from "path";
@@ -31,7 +35,10 @@ export class OpenAiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    tools?: ChatCompletionTool[],
+    toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
     // 1. Convert messages to OpenAI format
     let formattedMessages = messages.map((msg) => ({
@@ -73,12 +80,31 @@ export class OpenAiChat extends BaseChatModel {
         `maxTokens=${this.modelConfig.maxTokensOut}, maxThinkingTokens=${this.modelConfig.maxThinkingTokens}`
     );
 
+    const encoding = encoding_for_model(this.modelName as TiktokenModel);
+    let logitBias: Record<number, number> | undefined;
+    if (allowedTools && allowedTools.length && tools?.length) {
+      logitBias = {};
+      for (const t of tools) {
+        const name = t.type === "function" ? t.function.name : "";
+        if (!allowedTools.includes(name)) {
+          const tok = encoding.encode(`"${name}"`)[0];
+          logitBias[tok] = -100;
+        }
+      }
+      this.logger.debug(
+        `Allowed tools: ${JSON.stringify(allowedTools)} logit_bias: ${JSON.stringify(logitBias)}`
+      );
+    }
+
     // 3. Streaming vs. Non-streaming
     if (streaming) {
       const stream = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
         stream: true,
+        tools,
+        tool_choice: toolChoice,
+        logit_bias: logitBias,
         reasoning_effort:
           this.modelConfig.modelType === PsAiModelType.TextReasoning
             ? this.modelConfig.reasoningEffort
@@ -112,6 +138,9 @@ export class OpenAiChat extends BaseChatModel {
       const response = await this.client.chat.completions.create({
         model: this.modelName,
         messages: formattedMessages,
+        tools,
+        tool_choice: toolChoice,
+        logit_bias: logitBias,
         reasoning_effort:
           this.modelConfig.modelType === PsAiModelType.TextReasoning &&
           !this.modelName.toLowerCase().includes("o1 mini")
