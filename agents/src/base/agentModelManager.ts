@@ -679,7 +679,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
-          const { tokensIn, tokensOut, cachedInTokens, content, toolCall } =
+          const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
             results;
 
           await this.saveTokenUsage(
@@ -692,8 +692,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             model.dbModelId
           );
 
-          if (toolCall) {
-            return { toolCall };
+          if (toolCalls && toolCalls.length) {
+            return { toolCalls };
           }
           if (options.parseJson) {
             let parsedJson: any;
@@ -849,7 +849,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
-                const { tokensIn, tokensOut, cachedInTokens, content, toolCall } =
+                const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
                   fallbackResults;
                 await this.saveTokenUsage(
                   fallbackEphemeral.config.prices,
@@ -860,8 +860,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   tokensOut,
                   fallbackEphemeral.dbModelId
                 );
-                if (toolCall) {
-                  return { toolCall };
+                if (toolCalls && toolCalls.length) {
+                  return { toolCalls };
                 }
                 return options.parseJson
                   ? this.parseJsonResponse(content.trim())

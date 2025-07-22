@@ -154,20 +154,21 @@ export class ClaudeChat extends BaseChatModel {
       if ((response.usage as any).cache_read_input_tokens) {
         tokensIn += (response.usage as any).cache_read_input_tokens * 0.1;
       }
-      let toolCall;
-      const firstBlock = response.content[0];
-      if (firstBlock && firstBlock.type === "tool_use") {
-        toolCall = {
-          name: firstBlock.name ?? "unknown",
-          arguments: firstBlock.input ?? {},
-        };
+      const toolCalls: { name: string; arguments: any }[] = [];
+      for (const block of response.content) {
+        if (block.type === "tool_use") {
+          toolCalls.push({
+            name: block.name ?? "unknown",
+            arguments: block.input ?? {},
+          });
+        }
       }
       return {
         tokensIn: tokensIn,
         tokensOut: tokensOut,
         cachedInTokens: cachedInTokens ?? 0,
         content: this.getTextTypeFromContent(response.content),
-        toolCall,
+        toolCalls,
       };
     }
   }

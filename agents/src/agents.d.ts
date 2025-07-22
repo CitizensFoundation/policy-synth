@@ -134,10 +134,10 @@ interface PsBaseModelReturnParameters {
   cachedInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
-  toolCall?: {
+  toolCalls?: {
     name: string;
     arguments: any;
-  };
+  }[];
 }
 
 // Evaluation configuration for an agent class

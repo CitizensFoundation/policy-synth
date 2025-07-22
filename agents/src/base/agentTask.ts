@@ -36,6 +36,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected static readonly TOOLS: ToolSpec[] = [];
 
   protected readonly messages: ChatMessage[] = [];
+  private pendingToolCalls: { name: string; arguments: any }[] = [];
   protected phase: AgentPhase = AgentPhase.START;
 
   readonly runDir: string;
@@ -183,8 +184,10 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     );
 
     let assistantMsg: ChatMessage;
-    if (result && typeof result === "object" && result.toolCall) {
-      assistantMsg = { role: "assistant", toolCall: result.toolCall };
+    if (result && typeof result === "object" && Array.isArray(result.toolCalls) && result.toolCalls.length) {
+      const [first, ...rest] = result.toolCalls;
+      this.pendingToolCalls = rest;
+      assistantMsg = { role: "assistant", toolCall: first };
     } else {
       const text = typeof result === "string" ? result : JSON.stringify(result);
       assistantMsg = { role: "assistant", content: text };
@@ -209,7 +212,13 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
 
     const result = await this.runTool(call.name, call.arguments);
     this.messages.push({ role: "tool", name: call.name, content: result });
-    this.phase = AgentPhase.OBSERVE;
+    if (this.pendingToolCalls.length) {
+      const next = this.pendingToolCalls.shift()!;
+      this.messages.push({ role: "assistant", toolCall: next });
+      this.phase = AgentPhase.CALL_TOOL;
+    } else {
+      this.phase = AgentPhase.OBSERVE;
+    }
   }
 
   protected async runTool(

@@ -408,10 +408,12 @@ export class GoogleGeminiChat extends BaseChatModel {
         const response = result.response;
         const content =
           response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        let toolCall;
-        const fc = (response as any).functionCalls?.()[0];
-        if (fc) {
-          toolCall = { name: fc.name, arguments: fc.args || {} };
+        const toolCalls: { name: string; arguments: any }[] = [];
+        const fcList = (response as any).functionCalls?.();
+        if (Array.isArray(fcList)) {
+          for (const fc of fcList) {
+            toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+          }
         }
         if (!content && response.candidates?.[0]?.finishReason !== "STOP") {
           const errorMessage =
@@ -434,7 +436,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           tokensOut,
           cachedInTokens,
           content: content,
-          toolCall,
+          toolCalls,
         };
       } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
         this.logger.debug(
@@ -456,17 +458,19 @@ export class GoogleGeminiChat extends BaseChatModel {
             this.model as GoogleAiGenerativeModel
           ).generateContent(parts);
           const content = result.response.text();
-          let toolCall;
-          const fc = (result.response as any).functionCalls?.()[0];
-          if (fc) {
-            toolCall = { name: fc.name, arguments: fc.args || {} };
+          const toolCalls: { name: string; arguments: any }[] = [];
+          const fcList = (result.response as any).functionCalls?.();
+          if (Array.isArray(fcList)) {
+            for (const fc of fcList) {
+              toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+            }
           }
           const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
           const tokensOut = getTokensOut(result.response.usageMetadata);
           const cachedInTokens =
             result.response.usageMetadata?.cachedContentTokenCount ?? 0;
           await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-          return { tokensIn, tokensOut, cachedInTokens, content, toolCall };
+          return { tokensIn, tokensOut, cachedInTokens, content, toolCalls };
         }
 
         const chat = (this.model as GoogleAiGenerativeModel).startChat({
@@ -474,10 +478,12 @@ export class GoogleGeminiChat extends BaseChatModel {
         });
         const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();
-        let toolCall;
-        const fc = (result.response as any).functionCalls?.()[0];
-        if (fc) {
-          toolCall = { name: fc.name, arguments: fc.args || {} };
+        const toolCalls: { name: string; arguments: any }[] = [];
+        const fcList = (result.response as any).functionCalls?.();
+        if (Array.isArray(fcList)) {
+          for (const fc of fcList) {
+            toolCalls.push({ name: fc.name, arguments: fc.args || {} });
+          }
         }
         //this.logger.debug(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
         const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
@@ -490,7 +496,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           tokensOut,
           cachedInTokens,
           content,
-          toolCall,
+          toolCalls,
         };
       } else {
         throw new Error("Invalid state for non-streaming generation.");
