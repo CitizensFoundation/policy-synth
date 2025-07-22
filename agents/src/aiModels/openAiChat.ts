@@ -183,16 +183,21 @@ export class OpenAiChat extends BaseChatModel {
         this.logger.error("No content returned from OpenAI");
         this.logger.error(JSON.stringify(response, null, 2));
       }
-      let toolCall;
-      const tc = response.choices[0]?.message?.tool_calls?.[0];
-      if (tc && tc.type === "function") {
-        try {
-          toolCall = {
-            name: tc.function.name,
-            arguments: JSON.parse(tc.function.arguments || "{}"),
-          };
-        } catch (err) {
-          this.logger.warn(`Failed to parse tool call arguments: ${err}`);
+      const toolCalls: { name: string; arguments: any }[] = [];
+      const tcList = response.choices[0]?.message?.tool_calls;
+      if (tcList && tcList.length) {
+        for (const tc of tcList) {
+          if (tc.type === "function") {
+            try {
+              toolCalls.push({
+                name: tc.function.name,
+                arguments: JSON.parse(tc.function.arguments || "{}"),
+              });
+            } catch (err) {
+              this.logger.warn(`Failed to parse tool call arguments: ${err}`);
+              toolCalls.push({ name: tc.function.name, arguments: {} });
+            }
+          }
         }
       }
       const tokensIn = response.usage!.prompt_tokens;
@@ -230,7 +235,7 @@ export class OpenAiChat extends BaseChatModel {
         content: content ?? "",
         reasoningTokens,
         audioTokens,
-        toolCall,
+        toolCalls,
       };
     }
   }
