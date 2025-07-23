@@ -22,7 +22,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected static readonly TOOLS: ToolSpec[] = [];
 
   protected readonly messages: PsModelMessage[] = [];
-  private pendingToolCalls: { name: string; arguments: any }[] = [];
+  private pendingToolCalls: ToolCall[] = [];
   protected phase: AgentPhase = AgentPhase.START;
 
   readonly runDir: string;
@@ -157,7 +157,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       Array.isArray(result.toolCalls) &&
       result.toolCalls.length
     ) {
-      const [first, ...rest] = result.toolCalls;
+      const [first, ...rest] = result.toolCalls as ToolCall[];
       this.pendingToolCalls = rest;
       assistantMsg = { role: "assistant", message: "", toolCall: first };
     } else {

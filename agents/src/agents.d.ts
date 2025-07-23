@@ -116,6 +116,11 @@ interface PsAgentEvalCriterionResult {
   feedback: string;
 }
 
+interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
 // Configuration for a single evaluation criterion
 interface PsAgentEvalCriterionConfig {
   uuid: string;
@@ -134,10 +139,7 @@ interface PsBaseModelReturnParameters {
   cachedInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
-  toolCalls?: {
-    name: string;
-    arguments: any;
-  }[];
+  toolCalls?: ToolCall[];
 }
 
 // Evaluation configuration for an agent class
