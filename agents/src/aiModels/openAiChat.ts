@@ -6,6 +6,7 @@ import type {
   ChatCompletionCreateParamsBase,
   ChatCompletionCreateParamsStreaming,
   ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionMessageToolCall,
 } from "openai/resources/chat/completions";
 
 import { BaseChatModel } from "./baseChatModel.js";
@@ -69,7 +70,7 @@ export class OpenAiChat extends BaseChatModel {
       logit_bias: logitBias,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       reasoning_effort: isReasoning ? this.cfg.reasoningEffort : undefined,
-      parallel_tool_calls: this.cfg.parallelToolCalls,
+      parallel_tool_calls: this.cfg.parallelToolCalls === true,
     };
 
     /* ------------------------------------------------------------------ *
@@ -153,29 +154,13 @@ export class OpenAiChat extends BaseChatModel {
     }
   }
 
-  /** Handle streaming call, accumulate tool‑calls + usage stats. */
   private async handleStreaming(
     params: ChatCompletionCreateParamsStreaming,
     onChunk?: (c: string) => void
   ): Promise<PsBaseModelReturnParameters> {
-    const stream = await this.client.chat.completions.create(params);
+    const stream = this.client.chat.completions.stream(params);
 
     let content = "";
-    const toolCallsAccum: Record<
-      number,
-      { id: string; name?: string; args: string }
-    > = {};
-
-    // Usage summary (only sent in final chunk)
-    let usage = {
-      prompt_tokens: 0,
-      completion_tokens: 0,
-      prompt_tokens_details: { cached_tokens: 0 },
-      completion_tokens_details: {
-        reasoning_tokens: 0,
-        audio_tokens: 0,
-      },
-    } as any;
 
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta;
@@ -183,35 +168,37 @@ export class OpenAiChat extends BaseChatModel {
         content += delta.content;
         onChunk?.(delta.content);
       }
-
-      if (delta?.tool_calls) {
-        for (const call of delta.tool_calls) {
-          const idx = call.index ?? 0;
-          const acc = toolCallsAccum[idx] ?? { id: call.id, args: "" };
-          if (call.function?.name) acc.name = call.function.name;
-          if (call.function?.arguments) acc.args += call.function.arguments;
-          toolCallsAccum[idx] = acc;
-        }
-      }
-
-      if (chunk.usage) usage = chunk.usage;
     }
 
-    const toolCalls: ToolCall[] = [];
-    for (const v of Object.values(toolCallsAccum)) {
-      if (v.name) {
-        try {
-          toolCalls.push({
-            id: v.id,
-            name: v.name,
-            arguments: JSON.parse(v.args || "{}"),
-          });
-        } catch {
-          toolCalls.push({ id: v.id, name: v.name, arguments: {} });
-        }
-      }
-    }
+    const results = await stream.finalChatCompletion();
 
+    const toolCalls = this.handleToolCalls(
+      results.choices[0]?.message?.tool_calls ?? []
+    );
+
+    return {
+      content,
+      tokensIn: results.usage?.prompt_tokens ?? 0,
+      tokensOut: results.usage?.completion_tokens ?? 0,
+      cachedInTokens: results.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+      reasoningTokens:
+        results.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
+      audioTokens: results.usage?.completion_tokens_details?.audio_tokens ?? 0,
+      toolCalls: toolCalls,
+    };
+  }
+
+  private async handleNonStreaming(
+    params: ChatCompletionCreateParamsNonStreaming
+  ): Promise<PsBaseModelReturnParameters> {
+    const resp = await this.client.chat.completions.create(params);
+
+    const msg = resp.choices[0].message;
+    const content = msg.content ?? "";
+
+    const toolCalls = this.handleToolCalls(msg.tool_calls ?? []);
+
+    const usage = resp.usage!;
     return {
       content,
       tokensIn: usage.prompt_tokens,
@@ -223,18 +210,13 @@ export class OpenAiChat extends BaseChatModel {
     };
   }
 
-  /** Handle blocking (non‑stream) call. */
-  private async handleNonStreaming(
-    params: ChatCompletionCreateParamsNonStreaming
-  ): Promise<PsBaseModelReturnParameters> {
-    const resp = await this.client.chat.completions.create(params);
-
-    const msg = resp.choices[0].message;
-    const content = msg.content ?? "";
-
+  private handleToolCalls(
+    tool_calls: ChatCompletionMessageToolCall[]
+  ): ToolCall[] {
     const toolCalls: ToolCall[] = [];
-    if (msg.tool_calls?.length) {
-      for (const tc of msg.tool_calls) {
+
+    if (tool_calls?.length) {
+      for (const tc of tool_calls) {
         if (tc.type === "function") {
           try {
             toolCalls.push({
@@ -252,17 +234,7 @@ export class OpenAiChat extends BaseChatModel {
         }
       }
     }
-
-    const usage = resp.usage!;
-    return {
-      content,
-      tokensIn: usage.prompt_tokens,
-      tokensOut: usage.completion_tokens,
-      cachedInTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
-      reasoningTokens: usage.completion_tokens_details?.reasoning_tokens ?? 0,
-      audioTokens: usage.completion_tokens_details?.audio_tokens ?? 0,
-      toolCalls,
-    };
+    return toolCalls;
   }
 }
 
