@@ -113,6 +113,28 @@ export class GoogleGeminiChat extends BaseChatModel {
     }
   ]
 
+  assertGeminiNotBlocked(response: GenerateContentResponse) {
+    if (!response.candidates?.length) {
+      const pf = response.promptFeedback;
+      if (pf?.blockReason) {
+        // The prompt was blocked; include the reason in the error
+        throw new Error(
+          `Response was blocked via prompt: ${pf.blockReason} `
+          + (pf.safetyRatings?.map(r => `${r.category}=${r.probability}`).join(', ') || '')
+        );
+      }
+      throw new Error('Gemini returned no candidates; the prompt may be malformed.');
+    }
+
+    // check for blocked candidate
+    const candidate = response.candidates[0];
+    if (candidate.finishReason === 'SAFETY') {
+      throw new Error(
+        `Response was blocked via safety: `
+        + (candidate.safetyRatings?.map(r => `${r.category}=${r.probability}`).join(', ') || '')
+      );
+    }
+  }
 
   /* ---------- main generate() entry‑point ---------- */
 
@@ -190,6 +212,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       let last: GenerateContentResponse | undefined;
 
       for await (const chunk of stream) {
+        this.assertGeminiNotBlocked(chunk);
         last = chunk;
         if (chunk.text) {
           text += chunk.text;
@@ -219,6 +242,8 @@ export class GoogleGeminiChat extends BaseChatModel {
 
     /* ========== non‑streaming ========== */
     const response = await this.ai.models.generateContent(params);
+    this.assertGeminiNotBlocked(response);
+
     const usage = response.usageMetadata ?? {};
     const tokensIn = usage.promptTokenCount ?? 0;
     const tokensOut = this.tokensOut(usage);
