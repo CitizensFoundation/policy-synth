@@ -143,6 +143,7 @@ export class ClaudeChat extends BaseChatModel {
             aggregated += messageStreamEvent.content_block.text;
           } else if (messageStreamEvent.content_block.type === "tool_use") {
             toolCalls.push({
+              id: messageStreamEvent.content_block.id ?? "",
               name: messageStreamEvent.content_block.name ?? "unknown",
               arguments:
                 (messageStreamEvent.content_block.input as Record<string, unknown>) ??
@@ -197,6 +198,7 @@ export class ClaudeChat extends BaseChatModel {
       for (const block of response.content) {
         if (block.type === "tool_use") {
           toolCalls.push({
+            id: block.id ?? "",
             name: block.name ?? "unknown",
             arguments:
               (block.input as Record<string, unknown>) ??

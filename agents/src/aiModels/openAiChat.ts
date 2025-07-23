@@ -2,347 +2,267 @@ import OpenAI from "openai";
 import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
+  ChatCompletionMessageParam,
+  ChatCompletionCreateParamsBase,
+  ChatCompletionCreateParamsStreaming,
+  ChatCompletionCreateParamsNonStreaming,
 } from "openai/resources/chat/completions";
+
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-import { resolve } from "path";
+
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 
 export class OpenAiChat extends BaseChatModel {
   private client: OpenAI;
-  private modelConfig: PsOpenAiModelConfig;
+  private cfg: PsOpenAiModelConfig;
 
   constructor(config: PsOpenAiModelConfig) {
-    let {
-      apiKey,
+    const {
+      apiKey = process.env.PS_AGENT_OPENAI_API_KEY!,
       modelName = "gpt-4o",
-      maxTokensOut = 16384,
-      temperature = 0.7,
+      maxTokensOut = 16_384,
     } = config;
+
     super(config, modelName, maxTokensOut);
-    if (process.env.PS_AGENT_OPENAI_API_KEY) {
-      apiKey = process.env.PS_AGENT_OPENAI_API_KEY;
-      this.logger.debug(
-        "Using OpenAI API key from PS_AGENT_OPENAI_API_KEY environment variable"
-      );
-    }
 
     this.client = new OpenAI({ apiKey });
-    this.modelConfig = config;
+    this.cfg = { ...config, apiKey, modelName, maxTokensOut };
   }
 
+  /************************************  Public API  ************************************/
   async generate(
     messages: PsModelMessage[],
-    streaming?: boolean,
-    streamingCallback?: Function,
+    streaming = false,
+    streamingCallback?: (chunk: string) => void,
+    /** Future vision/audio media input */
     media?: { mimeType: string; data: string }[],
-    tools?: ChatCompletionTool[],
+    tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools?: string[]
-  ): Promise<PsBaseModelReturnParameters | undefined> {
-    // 1. Convert messages to OpenAI format
-    let formattedMessages = messages.map((msg) => {
-      const base: any = {
-        role: msg.role as "system" | "developer" | "user" | "assistant",
-        content: msg.message,
-      };
-      if (msg.name) {
-        base.name = msg.name;
-      }
-      if (msg.toolCall) {
-        base.tool_calls = [
-          {
-            type: "function",
-            function: {
-              name: msg.toolCall.name,
-              arguments: JSON.stringify(msg.toolCall.arguments ?? {}),
-            },
-          },
-        ];
-      }
-      return base;
-    });
+    allowedTools: string[] = []
+  ): Promise<PsBaseModelReturnParameters> {
+    /* ------------------------------------------------------------------ *
+     * 1  Translate internal message format → OpenAI message params        *
+     * ------------------------------------------------------------------ */
+    const formatted: ChatCompletionMessageParam[] =
+      this.preprocessMessages(messages);
 
-    // 2. Collapse system message if the model is "small" reasoning
-    if (
-      this.modelConfig.modelSize === PsAiModelSize.Small &&
-      this.modelName.toLowerCase().includes("o1 mini") &&
-      this.modelConfig.modelType === PsAiModelType.TextReasoning &&
-      formattedMessages.length > 1 &&
-      (formattedMessages[0].role === "system" ||
-        formattedMessages[0].role === "developer") &&
-      formattedMessages[1].role === "user"
-    ) {
-      // Prepend system message content to the first user message
-      formattedMessages[1].content =
-        "<systemMessage>" +
-        formattedMessages[0].content +
-        "</systemMessage>" +
-        formattedMessages[1].content;
-      // Remove the system message from the array
-      formattedMessages.shift();
-    } else if (
-      this.modelConfig.modelSize === PsAiModelSize.Small &&
-      this.modelName.toLowerCase().includes("o1 mini") &&
-      this.modelConfig.modelType === PsAiModelType.TextReasoning &&
-      formattedMessages.length == 1 &&
-      formattedMessages[0].role === "system"
-    ) {
-      // Remove the system message from the array
-      formattedMessages[0].role = "user";
-    }
+    /* ------------------------------------------------------------------ *
+     * 2  Optional logit‑bias to suppress not‑allowed tools                *
+     * ------------------------------------------------------------------ */
+    const logitBias = this.buildLogitBias(tools, allowedTools);
 
-    this.logger.debug(
-      `Model config: type=${this.modelConfig.modelType}, size=${this.modelConfig.modelSize}, ` +
-        `effort=${this.modelConfig.reasoningEffort}, maxtemp=${this.modelConfig.temperature}, ` +
-        `maxTokens=${this.modelConfig.maxTokensOut}, maxThinkingTokens=${this.modelConfig.maxThinkingTokens}`
-    );
+    /* ------------------------------------------------------------------ *
+     * 3  Build base parameter object (shared by streaming & sync paths)   *
+     * ------------------------------------------------------------------ */
+    const isReasoning = this.cfg.modelType === PsAiModelType.TextReasoning;
 
-    const encoding = encoding_for_model(this.modelName as TiktokenModel);
-    let logitBias: Record<number, number> | undefined;
-    if (allowedTools && allowedTools.length && tools?.length) {
-      logitBias = {};
-      for (const t of tools) {
-        const name = t.type === "function" ? t.function.name : "";
-        if (!allowedTools.includes(name)) {
-          encoding.encode(name).forEach((tok) => {
-            logitBias![tok] = -100;
-          });
-        }
-      }
-      this.logger.debug(
-        `Allowed tools: ${JSON.stringify(
-          allowedTools
-        )} logit_bias: ${JSON.stringify(logitBias)}`
-      );
-    }
-    encoding.free();
+    const common: Omit<
+      ChatCompletionCreateParamsBase,
+      "stream" | "max_tokens" | "max_completion_tokens"
+    > = {
+      model: this.cfg.modelName,
+      messages: formatted,
+      tools,
+      tool_choice: toolChoice,
+      logit_bias: logitBias,
+      temperature: isReasoning ? undefined : this.cfg.temperature,
+      reasoning_effort: isReasoning ? this.cfg.reasoningEffort : undefined,
+      parallel_tool_calls: this.cfg.parallelToolCalls,
+    };
 
-    // 3. Streaming vs. Non-streaming
+    /* ------------------------------------------------------------------ *
+     * 4  Streaming vs Non‑streaming                                      *
+     * ------------------------------------------------------------------ */
     if (streaming) {
-      const stream = await this.client.chat.completions.create({
-        model: this.modelName,
-        messages: formattedMessages,
+      const params: ChatCompletionCreateParamsStreaming = {
+        ...common,
         stream: true,
-        tools,
-        tool_choice: toolChoice,
-        logit_bias: logitBias,
-        reasoning_effort:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? this.modelConfig.reasoningEffort
-            : undefined,
-        temperature:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? undefined
-            : this.modelConfig.temperature,
-        max_tokens:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? undefined
-            : this.modelConfig.maxTokensOut,
-        max_completion_tokens:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? this.modelConfig.maxTokensOut
-            : undefined,
+        max_completion_tokens: isReasoning ? this.cfg.maxTokensOut : undefined,
+        max_tokens: isReasoning ? undefined : this.cfg.maxTokensOut,
         stream_options: { include_usage: true },
-      });
-
-      let aggregated = "";
-      const toolCallsAccum: Record<
-        number,
-        { name?: string; args: string }
-      > = {};
-      let tokensIn = 0;
-      let tokensOut = 0;
-      let cachedInTokens = 0;
-      let reasoningTokens = 0;
-      let audioTokens = 0;
-
-      for await (const chunk of stream) {
-        const delta = chunk.choices[0]?.delta;
-
-        if (delta?.content) {
-          aggregated += delta.content;
-          if (streamingCallback) {
-            streamingCallback(delta.content);
-          }
-        }
-
-        if (delta?.tool_calls) {
-          for (const call of delta.tool_calls) {
-            const idx = call.index ?? 0;
-            const existing = toolCallsAccum[idx] || { args: "" };
-            if (call.function?.name) {
-              existing.name = call.function.name;
-            }
-            if (call.function?.arguments) {
-              existing.args += call.function.arguments;
-            }
-            toolCallsAccum[idx] = existing;
-          }
-        }
-
-        if (chunk.usage) {
-          tokensIn = chunk.usage.prompt_tokens;
-          tokensOut = chunk.usage.completion_tokens;
-          cachedInTokens =
-            chunk.usage.prompt_tokens_details?.cached_tokens || 0;
-          reasoningTokens =
-            chunk.usage.completion_tokens_details?.reasoning_tokens || 0;
-          audioTokens =
-            chunk.usage.completion_tokens_details?.audio_tokens || 0;
-        }
-      }
-
-      const toolCalls: ToolCall[] = [];
-      for (const idx of Object.keys(toolCallsAccum)) {
-        const { name, args } = toolCallsAccum[Number(idx)];
-        if (name) {
-          try {
-            toolCalls.push({
-              name,
-              arguments: JSON.parse(args || "{}") as Record<string, unknown>,
-            });
-          } catch (err) {
-            this.logger.warn(`Failed to parse tool call arguments: ${err}`);
-            toolCalls.push({
-              name,
-              arguments: {} as Record<string, unknown>,
-            });
-          }
-        }
-      }
-
-      return {
-        tokensIn,
-        tokensOut,
-        cachedInTokens,
-        content: aggregated,
-        reasoningTokens,
-        audioTokens,
-        toolCalls,
       };
+
+      return await this.handleStreaming(params, streamingCallback);
     } else {
-      if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
-        this.logger.debug(
-          `Messages:\n${this.prettyPrintPromptMessages(formattedMessages)}`
-        );
-      }
-      const timeNow = new Date();
-      this.logger.info(`Calling OpenAI model... ${timeNow.toISOString()}`);
-      const response = await this.client.chat.completions.create({
-        model: this.modelName,
-        messages: formattedMessages,
-        tools,
-        tool_choice: toolChoice,
-        logit_bias: logitBias,
-        reasoning_effort:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning &&
-          !this.modelName.toLowerCase().includes("o1 mini")
-            ? this.modelConfig.reasoningEffort
-            : undefined,
-        temperature:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? undefined
-            : this.modelConfig.temperature,
-        max_completion_tokens:
-          this.modelConfig.modelType === PsAiModelType.TextReasoning
-            ? undefined
-            : this.modelConfig.maxTokensOut,
-      });
-
-      const timeNow2 = new Date();
-      this.logger.info(
-        `OpenAI model call completed in ${
-          (timeNow2.getTime() - timeNow.getTime()) / 1000
-        } seconds`
-      );
-
-      const content = response.choices[0]?.message?.content;
-      if (!content) {
-        this.logger.error("No content returned from OpenAI");
-        this.logger.error(JSON.stringify(response, null, 2));
-      }
-      const toolCalls: ToolCall[] = [];
-      const tcList = response.choices[0]?.message?.tool_calls;
-      if (tcList && tcList.length) {
-        for (const tc of tcList) {
-          if (tc.type === "function") {
-            try {
-              toolCalls.push({
-                name: tc.function.name,
-                arguments: JSON.parse(
-                  tc.function.arguments || "{}"
-                ) as Record<string, unknown>,
-              });
-            } catch (err) {
-              this.logger.warn(`Failed to parse tool call arguments: ${err}`);
-              toolCalls.push({
-                name: tc.function.name,
-                arguments: {} as Record<string, unknown>,
-              });
-            }
-          }
-        }
-      }
-      const tokensIn = response.usage!.prompt_tokens;
-      const tokensOut = response.usage!.completion_tokens;
-      const cachedInTokens =
-        response.usage!.prompt_tokens_details?.cached_tokens || 0;
-
-      const reasoningTokens =
-        response.usage!.completion_tokens_details?.reasoning_tokens || 0;
-      const audioTokens =
-        response.usage!.completion_tokens_details?.audio_tokens || 0;
-
-      const completion_tokens_details =
-        response.usage!.completion_tokens_details;
-
-      this.logger.debug(
-        JSON.stringify(
-          {
-            tokensIn,
-            cachedInTokens,
-            tokensOut,
-            content,
-            completion_tokens_details,
-            reasoningTokens,
-            audioTokens,
-          },
-          null,
-          2
-        )
-      );
-
-      this.logger.debug(
-        `OpenAI Tool calls: ${JSON.stringify(toolCalls, null, 2)}`
-      );
-
-      return {
-        tokensIn,
-        tokensOut,
-        cachedInTokens,
-        content: content ?? "",
-        reasoningTokens,
-        audioTokens,
-        toolCalls,
+      const params: ChatCompletionCreateParamsNonStreaming = {
+        ...common,
+        stream: false,
+        max_completion_tokens: isReasoning ? this.cfg.maxTokensOut : undefined,
+        max_tokens: isReasoning ? undefined : this.cfg.maxTokensOut,
       };
+
+      return await this.handleNonStreaming(params);
     }
   }
 
-  async getEstimatedNumTokensFromMessages(
-    messages: PsModelMessage[]
-  ): Promise<number> {
-    const encoding = encoding_for_model(this.modelName as TiktokenModel);
-    const formattedMessages = messages.map((msg) => ({
-      role: msg.role as "system" | "user" | "assistant",
-      content: msg.message,
-    }));
+  /************************************  Helpers  ************************************/
 
-    const tokenCounts = formattedMessages.map(
-      (msg) => encoding.encode(msg.content).length
-    );
-    return tokenCounts.reduce((acc, count) => acc + count, 0);
+  private preprocessMessages(
+    msgs: PsModelMessage[]
+  ): ChatCompletionMessageParam[] {
+    const m = [...msgs];
+
+    /* ------------------------------------------------------------------ *
+     *  Map internal message structure → OpenAI-SDK message parameters   *
+     * ------------------------------------------------------------------ */
+    return m.map((msg): ChatCompletionMessageParam => {
+      return {
+        role: msg.role as "system" | "developer" | "user" | "assistant",
+        content: msg.message,
+        name: msg.name,
+        tool_calls: msg.toolCall
+          ? [
+              {
+                type: "function",
+                id: msg.toolCall.id,
+                function: {
+                  name: msg.toolCall.name,
+                  arguments: JSON.stringify(msg.toolCall.arguments ?? {}),
+                },
+              },
+            ]
+          : undefined,
+      };
+    });
+  }
+
+  /** Build negative logit‑bias array if the caller limited tool usage. */
+  private buildLogitBias(
+    tools: ChatCompletionTool[],
+    allowed: string[]
+  ): Record<number, number> | undefined {
+    if (!allowed.length || !tools.length) return undefined;
+
+    try {
+      const enc = encoding_for_model(this.cfg.modelName as TiktokenModel);
+      const bias: Record<number, number> = {};
+
+      for (const t of tools) {
+        const name = t.type === "function" ? t.function.name : "";
+        if (!allowed.includes(name)) {
+          enc.encode(name).forEach((tok) => (bias[tok] = -100));
+        }
+      }
+      enc.free();
+      return bias;
+    } catch (err) {
+      this.logger.warn(`Encoding failed for logit bias: ${err}`);
+      return undefined;
+    }
+  }
+
+  /** Handle streaming call, accumulate tool‑calls + usage stats. */
+  private async handleStreaming(
+    params: ChatCompletionCreateParamsStreaming,
+    onChunk?: (c: string) => void
+  ): Promise<PsBaseModelReturnParameters> {
+    const stream = await this.client.chat.completions.create(params);
+
+    let content = "";
+    const toolCallsAccum: Record<
+      number,
+      { id: string; name?: string; args: string }
+    > = {};
+
+    // Usage summary (only sent in final chunk)
+    let usage = {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      prompt_tokens_details: { cached_tokens: 0 },
+      completion_tokens_details: {
+        reasoning_tokens: 0,
+        audio_tokens: 0,
+      },
+    } as any;
+
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta;
+      if (delta?.content) {
+        content += delta.content;
+        onChunk?.(delta.content);
+      }
+
+      if (delta?.tool_calls) {
+        for (const call of delta.tool_calls) {
+          const idx = call.index ?? 0;
+          const acc = toolCallsAccum[idx] ?? { id: call.id, args: "" };
+          if (call.function?.name) acc.name = call.function.name;
+          if (call.function?.arguments) acc.args += call.function.arguments;
+          toolCallsAccum[idx] = acc;
+        }
+      }
+
+      if (chunk.usage) usage = chunk.usage;
+    }
+
+    const toolCalls: ToolCall[] = [];
+    for (const v of Object.values(toolCallsAccum)) {
+      if (v.name) {
+        try {
+          toolCalls.push({
+            id: v.id,
+            name: v.name,
+            arguments: JSON.parse(v.args || "{}"),
+          });
+        } catch {
+          toolCalls.push({ id: v.id, name: v.name, arguments: {} });
+        }
+      }
+    }
+
+    return {
+      content,
+      tokensIn: usage.prompt_tokens,
+      tokensOut: usage.completion_tokens,
+      cachedInTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+      reasoningTokens: usage.completion_tokens_details?.reasoning_tokens ?? 0,
+      audioTokens: usage.completion_tokens_details?.audio_tokens ?? 0,
+      toolCalls,
+    };
+  }
+
+  /** Handle blocking (non‑stream) call. */
+  private async handleNonStreaming(
+    params: ChatCompletionCreateParamsNonStreaming
+  ): Promise<PsBaseModelReturnParameters> {
+    const resp = await this.client.chat.completions.create(params);
+
+    const msg = resp.choices[0].message;
+    const content = msg.content ?? "";
+
+    const toolCalls: ToolCall[] = [];
+    if (msg.tool_calls?.length) {
+      for (const tc of msg.tool_calls) {
+        if (tc.type === "function") {
+          try {
+            toolCalls.push({
+              id: tc.id,
+              name: tc.function.name,
+              arguments: JSON.parse(tc.function.arguments || "{}"),
+            });
+          } catch {
+            toolCalls.push({
+              id: tc.id,
+              name: tc.function.name,
+              arguments: {},
+            });
+          }
+        }
+      }
+    }
+
+    const usage = resp.usage!;
+    return {
+      content,
+      tokensIn: usage.prompt_tokens,
+      tokensOut: usage.completion_tokens,
+      cachedInTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+      reasoningTokens: usage.completion_tokens_details?.reasoning_tokens ?? 0,
+      audioTokens: usage.completion_tokens_details?.audio_tokens ?? 0,
+      toolCalls,
+    };
   }
 }
 

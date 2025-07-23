@@ -12,7 +12,7 @@ interface PsAzureAiModelConfig {
   endpoint: string;
   apiKey: string;
   deploymentName: string;
-  modelName?: string;
+  modelName: string;
   maxTokensOut?: number;
   reasoningEffort?: 'low' | 'medium' | 'high';
   temperature?: number;
@@ -20,7 +20,7 @@ interface PsAzureAiModelConfig {
 
 interface PsAiModelConfig {
   apiKey: string;
-  modelName?: string;
+  modelName: string;
   provider?: string;
   maxTokensOut?: number;
   maxContextTokens?: number;
@@ -31,6 +31,7 @@ interface PsAiModelConfig {
   maxThinkingTokens?: number;
   timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
+  parallelToolCalls?: boolean;
 }
 
 interface PsCallModelOptions {
@@ -117,6 +118,7 @@ interface PsAgentEvalCriterionResult {
 }
 
 interface ToolCall {
+  id: string;
   name: string;
   arguments: Record<string, unknown>;
 }

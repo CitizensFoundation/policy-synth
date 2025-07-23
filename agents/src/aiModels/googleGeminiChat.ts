@@ -89,6 +89,31 @@ export class GoogleGeminiChat extends BaseChatModel {
     );
   }
 
+  static safetySettings =
+  [
+    {
+      category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+    {
+      category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+      threshold: HarmBlockThreshold.BLOCK_NONE,
+    },
+  ]
+
+
   /* ---------- main generate() entry‑point ---------- */
 
   async generate(
@@ -143,6 +168,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       };
     }
 
+
     const params: GenerateContentParameters = {
       model: this.modelName,
       contents: this.buildContents(messages, media),
@@ -152,28 +178,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
         toolConfig,
 
-        safetySettings: [
-          {
-            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-          {
-            category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-            threshold: HarmBlockThreshold.BLOCK_NONE,
-          },
-        ],
+        safetySettings: GoogleGeminiChat.safetySettings,
       },
     };
 
@@ -205,6 +210,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         tokensOut,
         cachedInTokens: cached,
         toolCalls: toolCalls.map((fc) => ({
+          id: fc.id ?? "",
           name: fc.name ?? "unknown",
           arguments: (fc.args as Record<string, unknown>) ?? {},
         })),
@@ -225,6 +231,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       tokensOut,
       cachedInTokens: cached,
       toolCalls: (response.functionCalls ?? []).map((fc) => ({
+        id: fc.id ?? "",
         name: fc.name ?? "unknown",
         arguments: (fc.args as Record<string, unknown>) ?? {},
       })),
