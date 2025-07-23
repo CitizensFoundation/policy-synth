@@ -175,7 +175,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     const call = this.messages.at(-1)!.toolCall!;
     const allow = new Set(this.policy());
     if (!allow.has(call.name)) {
-      console.error(
+      this.logger.error(
         `Policy violation: attempted to call disallowed tool ${call.name}`
       );
       const msg = `Tool ${call.name} is not allowed by policy`;
