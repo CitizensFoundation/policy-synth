@@ -42,6 +42,7 @@ export class ClaudeChat extends BaseChatModel {
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
         `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}`
     );
+
     let systemMessage: string | undefined;
     const formattedMessages = messages
       .filter((msg) => {

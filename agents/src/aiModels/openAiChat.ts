@@ -43,20 +43,20 @@ export class OpenAiChat extends BaseChatModel {
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools: string[] = []
   ): Promise<PsBaseModelReturnParameters> {
-    /* ------------------------------------------------------------------ *
-     * 1  Translate internal message format → OpenAI message params        *
-     * ------------------------------------------------------------------ */
+    if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
+      this.logger.debug(
+        `Messages:\n${this.prettyPrintPromptMessages(messages.map((m) => ({
+          role: m.role,
+          content: m.message,
+        })))}`
+      );
+    }
+
     const formatted: ChatCompletionMessageParam[] =
       this.preprocessMessages(messages);
 
-    /* ------------------------------------------------------------------ *
-     * 2  Optional logit‑bias to suppress not‑allowed tools                *
-     * ------------------------------------------------------------------ */
     const logitBias = this.buildLogitBias(tools, allowedTools);
 
-    /* ------------------------------------------------------------------ *
-     * 3  Build base parameter object (shared by streaming & sync paths)   *
-     * ------------------------------------------------------------------ */
     const isReasoning = this.cfg.modelType === PsAiModelType.TextReasoning;
 
     const common: Omit<
