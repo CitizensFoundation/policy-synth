@@ -1,20 +1,14 @@
 import {
-  GoogleGenerativeAI,
-  GenerativeModel as GoogleAiGenerativeModel,
-  HarmBlockThreshold,
-  HarmCategory as GenerativeHarmCategory, // Rename to avoid clash
+  GoogleGenAI,
+  GenerateContentParameters,
+  GenerateContentResponse,
+  FunctionCallingConfigMode,
   FunctionDeclaration,
-  FunctionCallingMode,
-} from "@google/generative-ai";
-
-import {
-  VertexAI,
-  GenerativeModel as VertexAiGenerativeModel, // Rename to avoid clash
-  Part,
-  Content,
-  GenerateContentResult,
-  HarmCategory as VertexHarmCategory,
-} from "@google-cloud/vertexai";
+  FunctionCall,
+  HarmBlockThreshold,
+  HarmCategory,
+  ToolConfig,
+} from "@google/genai";
 
 import type {
   ChatCompletionTool,
@@ -22,559 +16,218 @@ import type {
 } from "openai/resources/chat/completions";
 
 import { BaseChatModel } from "./baseChatModel.js";
-import { types } from "util";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { appendFile } from "fs/promises";
 
 export class GoogleGeminiChat extends BaseChatModel {
-  private useVertexAi: boolean;
-  private googleAiClient?: GoogleGenerativeAI;
-  private vertexAiClient?: VertexAI;
-  modelName: string;
-  vertexProjectId?: string;
-  vertexLocation?: string;
-
-  // Use a union type for the model instance
-  model!: GoogleAiGenerativeModel | VertexAiGenerativeModel;
+  private readonly ai: GoogleGenAI;
+  readonly modelName: string;
 
   constructor(config: PsAiModelConfig) {
     super(
       config,
-      config.modelName || "gemini-pro",
-      config.maxTokensOut || 16000
-    ); // maxTokensOut might be handled differently or not applicable in Vertex SDK calls directly
+      config.modelName || "gemini-2.0-flash",
+      config.maxTokensOut || 16_000
+    );
 
-    this.modelName = config.modelName || "gemini-pro"; // Store model name
-    this.useVertexAi = process.env.USE_GOOGLE_VERTEX_AI === "true";
+    this.modelName = config.modelName || "gemini-2.0-flash";
 
-    if (!this.useVertexAi && process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS) {
-      const listOfModels =
-        process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS?.split(",");
-      if (listOfModels?.includes(this.modelName)) {
-        this.useVertexAi = true;
-      }
-    }
-
-    if (this.useVertexAi) {
-      this.vertexProjectId = process.env.GOOGLE_CLOUD_PROJECT;
-      this.vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
-
-      if (!this.vertexProjectId) {
-        throw new Error(
-          "Vertex AI requires a Google Cloud Project ID. Provide it in config.project or set GOOGLE_CLOUD_PROJECT environment variable."
-        );
-      }
-      if (!this.vertexLocation) {
-        throw new Error(
-          "Vertex AI requires a Location. Provide it in config.location or set GOOGLE_CLOUD_LOCATION environment variable."
-        );
-      }
-
-      this.vertexAiClient = new VertexAI({
-        project: this.vertexProjectId,
-        location: this.vertexLocation,
-      });
-      this.logger.info("Using Google Cloud Vertex AI");
-    } else {
-      let apiKey = config.apiKey;
-      if (process.env.PS_AGENT_GEMINI_API_KEY) {
-        apiKey = process.env.PS_AGENT_GEMINI_API_KEY;
-        this.logger.debug(
-          "Using Google Gemini API key from PS_AGENT_GEMINI_API_KEY environment variable"
-        );
-      }
-      if (!apiKey) {
-        throw new Error(
-          "Google Generative AI requires an API key. Provide it in config.apiKey."
-        );
-      }
-      this.googleAiClient = new GoogleGenerativeAI(apiKey);
-      this.logger.info("Using Google Generative AI API");
-    }
+    const useVertex = process.env.USE_GOOGLE_VERTEX_AI === "true";
+    this.ai = useVertex
+      ? new GoogleGenAI({
+          vertexai: true,
+          project: process.env.GOOGLE_CLOUD_PROJECT!,
+          location: process.env.GOOGLE_CLOUD_LOCATION!,
+        })
+      : new GoogleGenAI({
+          apiKey:
+            config.apiKey ||
+            process.env.PS_AGENT_GEMINI_API_KEY ||
+            process.env.GOOGLE_API_KEY,
+        });
   }
 
-  private buildVertexContents(
+  /* ---------- helper utilities ---------- */
+
+  private buildContents(
     messages: PsModelMessage[],
     media?: { mimeType: string; data: string }[]
-  ): Content[] {
-    const contents: Content[] = [];
-    for (const msg of messages) {
-      // Skip system/developer messages as they are handled by systemInstruction
-      if (msg.role === "system" || msg.role === "developer") {
-        continue;
-      }
-      // Map roles: 'assistant' maps to 'model' in Vertex AI context
-      const role = msg.role === "assistant" ? "model" : "user";
-      contents.push({ role, parts: [{ text: msg.message }] });
+  ): GenerateContentParameters["contents"] {
+    const out: any[] = [];
+    for (const m of messages) {
+      if (m.role === "system" || m.role === "developer") continue; // handled via systemInstruction
+      const role = m.role === "assistant" ? "model" : "user";
+      out.push({ role, parts: [{ text: m.message }] });
     }
-
-    // --- NEW: append inline media parts if provided
-    if (media?.length) {
-      for (const img of media) {
-        contents.push({
-          role: "user",
-          parts: [
-            {
-              inlineData: {
-                mimeType: img.mimeType,
-                data: img.data,
-              },
-            },
-          ],
-        });
-      }
-    }
-
-    return contents;
+    media?.forEach((img) =>
+      out.push({
+        role: "user",
+        parts: [{ inlineData: { mimeType: img.mimeType, data: img.data } }],
+      })
+    );
+    return out;
   }
 
-  static vertexSafetySettingsBlockNone = [
-    {
-      category: VertexHarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: VertexHarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: VertexHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: VertexHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: VertexHarmCategory.HARM_CATEGORY_UNSPECIFIED,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-  ];
-
-  static generativeAiSafetySettingsBlockNone = [
-    {
-      category: GenerativeHarmCategory.HARM_CATEGORY_HARASSMENT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: GenerativeHarmCategory.HARM_CATEGORY_HATE_SPEECH,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: GenerativeHarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: GenerativeHarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-    {
-      category: GenerativeHarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
-      threshold: HarmBlockThreshold.BLOCK_NONE,
-    },
-  ];
-
-  private async debugTokenCounts(
-    tokensIn: number,
-    tokensOut: number,
-    cachedInTokens: number
-  ) {
-    if (!process.env.DEBUG_TOKENS_COUNTS_TO_CSV_FILE) {
-      return;
+  private tokensOut(usage?: any): number {
+    if (!usage) return 0;
+    if (usage.candidatesTokenCount != null) return usage.candidatesTokenCount;
+    if (usage.totalTokenCount != null && usage.promptTokenCount != null) {
+      return (
+        usage.totalTokenCount -
+        usage.promptTokenCount -
+        (usage.toolUsePromptTokenCount ?? 0)
+      );
     }
-
-    const prices = this.config?.prices;
-    let longContextTokensIn = 0;
-    let longContextTokensOut = 0;
-
-    if (
-      prices?.longContextTokenThreshold &&
-      tokensIn >= prices.longContextTokenThreshold
-    ) {
-      longContextTokensIn = cachedInTokens
-        ? tokensIn - cachedInTokens
-        : tokensIn;
-      longContextTokensOut = tokensOut;
-      tokensIn = 0;
-      tokensOut = 0;
-      cachedInTokens = 0;
-    } else if (cachedInTokens) {
-      tokensIn = tokensIn - cachedInTokens;
-    }
-
-    const line = `${this.modelName},${tokensIn},${tokensOut},${longContextTokensIn},${longContextTokensOut},${cachedInTokens}\n`;
-    try {
-      await appendFile("/tmp/geminiTokenDebug.csv", line);
-    } catch (err) {
-      this.logger.error(`Failed to write token debug data: ${err}`);
-    }
+    return 0;
   }
+
+  private async logTokens(tokensIn: number, tokensOut: number, cached: number) {
+    if (!process.env.DEBUG_TOKENS_COUNTS_TO_CSV_FILE) return;
+    await appendFile(
+      "/tmp/geminiTokenDebug.csv",
+      `${this.modelName},${tokensIn},${tokensOut},${cached}\n`
+    );
+  }
+
+  /* ---------- main generate() entry‑point ---------- */
 
   async generate(
     messages: PsModelMessage[],
-    streaming?: boolean,
+    streaming = false,
     streamingCallback?: (chunk: string) => void,
     media?: { mimeType: string; data: string }[],
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[]
-  ): Promise<PsBaseModelReturnParameters | undefined> {
+  ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
-        `Messages:\n${this.prettyPrintPromptMessages(
-          messages.map((m) => ({ role: m.role, content: m.message }))
-        )}`
+        `Messages:\n${this.prettyPrintPromptMessages(messages.map((m) => ({
+          role: m.role,
+          content: m.message,
+        })))}`
       );
     }
-
-    /**
-     * Helper: robust extraction of "tokens out".
-     * Google / Vertex omit candidatesTokenCount for some (esp. long-context)
-     * calls – but totalTokenCount is still returned.
-     */
-    const getTokensOut = (usage?: any) => {
-      if (!usage) return 0;
-      if (usage.candidatesTokenCount != null) return usage.candidatesTokenCount;
-      if (usage.totalTokenCount != null && usage.promptTokenCount != null) {
-        return (
-          usage.totalTokenCount -
-          usage.promptTokenCount -
-          (usage.toolUsePromptTokenCount ?? 0)
-        );
-      }
-      return 0;
-    };
-
-    // 1. Extract system messages & combine them
-    const systemContent = messages
-      .filter((m) => m.role === "system" || m.role === "developer") // Include developer role as per original
+    /* ----- system prompt ----- */
+    const systemInstruction = messages
+      .filter((m) => m.role === "system" || m.role === "developer")
       .map((m) => m.message)
       .join("\n\n");
 
+    /* ----- tool declarations / config ----- */
     let functionDeclarations: FunctionDeclaration[] | undefined;
-    if (tools && tools.length) {
+    let toolConfig: ToolConfig | undefined;
+
+    if (tools?.length) {
       functionDeclarations = tools
         .filter((t) => t.type === "function")
-        .map(
-          (t) =>
-            ({
-              name: t.function.name,
-              description: t.function.description,
-              parameters: t.function.parameters as any,
-            } as FunctionDeclaration)
-        );
-    }
+        .map((t) => ({
+          name: t.function.name,
+          description: t.function.description,
+          parametersJsonSchema: t.function.parameters as any,
+        }));
 
-    // --- Initialize Model ---
-    // This needs to be done here because systemInstruction is part of model initialization
-    const modelParams: any = {
-      model: this.modelName,
-      systemInstruction: systemContent,
-      safetySettings: this.useVertexAi
-        ? GoogleGeminiChat.vertexSafetySettingsBlockNone
-        : GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
-    };
-
-    if (functionDeclarations && functionDeclarations.length) {
-      let fcMode = FunctionCallingMode.AUTO;
-      let allowedFnNames = allowedTools;
+      let mode = FunctionCallingConfigMode.AUTO;
+      let allowedNames = allowedTools;
 
       if (toolChoice === "none") {
-        fcMode = FunctionCallingMode.NONE;
+        mode = FunctionCallingConfigMode.NONE;
       } else if (toolChoice !== "auto") {
-        fcMode = FunctionCallingMode.ANY;
+        mode = FunctionCallingConfigMode.ANY;
         if (typeof toolChoice !== "string" && toolChoice.type === "function") {
-          allowedFnNames = [toolChoice.function.name];
+          allowedNames = [toolChoice.function.name];
         }
       }
-
-      modelParams.tools = [{ functionDeclarations }];
-      modelParams.toolConfig = {
-        functionCallingConfig: {
-          mode: fcMode,
-          allowedFunctionNames: allowedFnNames,
-        },
+      toolConfig = {
+        functionCallingConfig: { mode, allowedFunctionNames: allowedNames },
       };
     }
 
-    if (this.useVertexAi && this.vertexAiClient) {
-      this.model = this.vertexAiClient.getGenerativeModel(modelParams);
-    } else if (!this.useVertexAi && this.googleAiClient) {
-      this.model = this.googleAiClient.getGenerativeModel(modelParams);
-    } else {
-      throw new Error("Client not initialized correctly."); // Should not happen
-    }
+    const params: GenerateContentParameters = {
+      model: this.modelName,
+      contents: this.buildContents(messages, media),
 
-    // --- Prepare Request Data ---
-    let vertexContents: Content[] | undefined;
-    let googleAiFinalPrompt: string | undefined;
+      config: {
+        systemInstruction: systemInstruction,
+        tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
+        toolConfig,
 
-    if (this.useVertexAi) {
-      vertexContents = this.buildVertexContents(messages, media);
-      this.logger.debug(
-        `Vertex AI Contents:\n${JSON.stringify(vertexContents, null, 2)}`
-      );
-    } else {
-      // Use original logic for Google AI API prompt construction
-      if (
-        messages.length === 2 &&
-        (messages[0].role === "system" || messages[0].role === "developer") &&
-        messages[1].role === "user"
-      ) {
-        googleAiFinalPrompt = messages[1].message;
-      } else {
-        let promptChatlogText = "";
-        for (const msg of messages) {
-          if (msg.role === "system" || msg.role === "developer") continue; // Handled via systemInstruction
-          if (msg.role === "assistant") {
-            promptChatlogText += `[Assistant said]: ${msg.message}\n\n`;
-          } else if (msg.role === "user") {
-            promptChatlogText += `[User said]: ${msg.message}\n\n`;
-          }
-        }
-        googleAiFinalPrompt = promptChatlogText;
-      }
-      if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
-        this.logger.debug(`[Google AI Final prompt]: ${googleAiFinalPrompt}`);
-      }
-    }
+        safetySettings: [
+          {
+            category: HarmCategory.HARM_CATEGORY_HARASSMENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+          {
+            category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
+            threshold: HarmBlockThreshold.BLOCK_NONE,
+          },
+        ],
+      },
+    };
 
-    // --- Execute Request ---
+    /* ========== streaming ========== */
     if (streaming) {
-      this.logger.debug(`Streaming request`);
-      let aggregated = "";
-      if (this.useVertexAi && vertexContents) {
-        const streamResult = await (
-          this.model as VertexAiGenerativeModel
-        ).generateContentStream({ contents: vertexContents });
+      const stream = await this.ai.models.generateContentStream(params);
+      let text = "";
+      const toolCalls: FunctionCall[] = [];
+      let last: GenerateContentResponse | undefined;
 
-        const toolCallsAccum: { name?: string; args?: any }[] = [];
-
-        for await (const item of streamResult.stream) {
-          const candidate = item?.candidates?.[0];
-          const parts = candidate?.content?.parts || [];
-          for (const part of parts) {
-            if (part.text) {
-              aggregated += part.text;
-              if (streamingCallback) {
-                streamingCallback(part.text);
-              }
-            }
-            if (part.functionCall) {
-              toolCallsAccum.push({
-                name: part.functionCall.name,
-                args: part.functionCall.args ?? {},
-              });
-            }
-          }
+      for await (const chunk of stream) {
+        last = chunk;
+        if (chunk.text) {
+          text += chunk.text;
+          streamingCallback?.(chunk.text);
         }
-
-        const finalResponse = await streamResult.response;
-        const tokensIn = finalResponse.usageMetadata?.promptTokenCount ?? 0;
-        const tokensOut = getTokensOut(finalResponse.usageMetadata);
-        const cachedInTokens =
-          finalResponse.usageMetadata?.cachedContentTokenCount ?? 0;
-        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-
-        const toolCalls = toolCallsAccum.map((t) => ({
-          name: t.name ?? "",
-          arguments:
-            (t.args as Record<string, unknown>) ??
-            ({} as Record<string, unknown>),
-        }));
-
-        return {
-          tokensIn,
-          tokensOut,
-          content: aggregated,
-          toolCalls,
-        };
-      } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
-        this.logger.debug(`Google AI Streaming request`);
-        const chat = (this.model as GoogleAiGenerativeModel).startChat(); // Needs history if not single turn
-        const stream = await chat.sendMessageStream(googleAiFinalPrompt); // Note: This simplification might lose context for Google AI API if history wasn't managed correctly before.
-        const toolCallsAccum: { name?: string; args?: any }[] = [];
-        let done = false;
-
-        while (!done) {
-          //@ts-ignore - Assuming stream.next() exists and works as before
-          const { value: chunk, done: streamDone } = await stream.next();
-          done = streamDone || !chunk;
-          if (chunk) {
-            const candidate = chunk.candidates?.[0];
-            const parts = candidate?.content?.parts || [];
-            for (const part of parts) {
-              if (part.text) {
-                aggregated += part.text;
-                if (streamingCallback) {
-                  streamingCallback(part.text);
-                }
-              }
-              if (part.functionCall) {
-                toolCallsAccum.push({
-                  name: part.functionCall.name,
-                  args: part.functionCall.args ?? {},
-                });
-              }
-            }
-          }
-        }
-
-        const finalResponse = await stream.response;
-        const tokensIn = finalResponse.usageMetadata?.promptTokenCount ?? 0;
-        const tokensOut = getTokensOut(finalResponse.usageMetadata);
-        const cachedInTokens =
-          finalResponse.usageMetadata?.cachedContentTokenCount ?? 0;
-        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-
-        const toolCalls = toolCallsAccum.map((t) => ({
-          name: t.name ?? "",
-          arguments:
-            (t.args as Record<string, unknown>) ??
-            ({} as Record<string, unknown>),
-        }));
-
-        return {
-          tokensIn,
-          tokensOut,
-          content: aggregated,
-          toolCalls,
-        };
-      } else {
-        throw new Error("Invalid state for streaming generation.");
+        if (chunk.functionCalls?.length) toolCalls.push(...chunk.functionCalls);
       }
-    } else {
-      // Non-streaming
-      this.logger.debug(`Non-streaming request`);
-      if (this.useVertexAi && vertexContents) {
-        this.logger.debug(
-          `Vertex AI Final prompt with images count: ${vertexContents.length}`
-        );
-        const result: GenerateContentResult = await (
-          this.model as VertexAiGenerativeModel
-        ).generateContent({ contents: vertexContents });
-        const response = result.response;
-        const content =
-          response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        const toolCalls: ToolCall[] = [];
-        const candidate = response.candidates?.[0];
-        if (candidate && candidate.content && candidate.content.parts) {
-          for (const part of candidate.content.parts) {
-            if (part.functionCall) {
-              toolCalls.push({
-                name: part.functionCall.name,
-                arguments:
-                  (part.functionCall.args as Record<string, unknown>) ||
-                  ({} as Record<string, unknown>),
-              });
-            }
-          }
-        }
 
-        if (
-          !content &&
-          toolCalls.length === 0 &&
-          response.candidates?.[0]?.finishReason !== "STOP"
-        ) {
-          const errorMessage =
-            response.candidates?.[0]?.finishReason || "Unknown";
+      const usage = last?.usageMetadata ?? {};
+      const tokensIn = usage.promptTokenCount ?? 0;
+      const tokensOut = this.tokensOut(usage);
+      const cached = usage.cachedContentTokenCount ?? 0;
+      await this.logTokens(tokensIn, tokensOut, cached);
 
-          this.logger.error(
-            `Vertex AI Error: ${errorMessage}`,
-            response.candidates?.[0]?.safetyRatings
-          );
-
-          throw new Error(`Vertex AI Error: ${errorMessage}`);
-        }
-        const tokensIn = response.usageMetadata?.promptTokenCount ?? 0;
-        const tokensOut = getTokensOut(response.usageMetadata);
-        const cachedInTokens =
-          result.response.usageMetadata?.cachedContentTokenCount ?? 0;
-        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-        return {
-          tokensIn,
-          tokensOut,
-          cachedInTokens,
-          content: content,
-          toolCalls,
-        };
-      } else if (!this.useVertexAi && googleAiFinalPrompt !== undefined) {
-        this.logger.debug(
-          `Google AI Final prompt with media length: ${media?.length}`
-        );
-        if (media?.length) {
-          const parts: Part[] = [
-            { text: googleAiFinalPrompt },
-            ...media.map((img) => ({
-              inlineData: { mimeType: img.mimeType, data: img.data },
-            })),
-          ];
-
-          this.logger.debug(
-            `Google AI Final prompt with images parts length: ${parts.length}`
-          );
-
-          const result = await (
-            this.model as GoogleAiGenerativeModel
-          ).generateContent(parts);
-          const content = result.response.text();
-          const toolCalls: ToolCall[] = [];
-          const candidate = result.response.candidates?.[0];
-          if (candidate && candidate.content && candidate.content.parts) {
-            for (const part of candidate.content.parts) {
-              if (part.functionCall) {
-                toolCalls.push({
-                  name: part.functionCall.name,
-                  arguments:
-                    (part.functionCall.args as Record<string, unknown>) ||
-                    ({} as Record<string, unknown>),
-                });
-              }
-            }
-          }
-          const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
-          const tokensOut = getTokensOut(result.response.usageMetadata);
-          const cachedInTokens =
-            result.response.usageMetadata?.cachedContentTokenCount ?? 0;
-          await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-          return { tokensIn, tokensOut, cachedInTokens, content, toolCalls };
-        }
-
-        const chat = (this.model as GoogleAiGenerativeModel).startChat({
-          safetySettings: GoogleGeminiChat.generativeAiSafetySettingsBlockNone,
-        });
-        const result = await chat.sendMessage(googleAiFinalPrompt);
-        const content = result.response.text();
-        const toolCalls: ToolCall[] = [];
-        const candidate = result.response.candidates?.[0];
-        if (candidate && candidate.content && candidate.content.parts) {
-          for (const part of candidate.content.parts) {
-            if (part.functionCall) {
-              toolCalls.push({
-                name: part.functionCall.name,
-                arguments:
-                  (part.functionCall.args as Record<string, unknown>) ||
-                  ({} as Record<string, unknown>),
-              });
-            }
-          }
-        }
-        //this.logger.debug(`GOOGLE AI RESPONSE: ${JSON.stringify(result.response, null, 2)}`);
-        const tokensIn = result.response.usageMetadata?.promptTokenCount ?? 0;
-        const tokensOut = getTokensOut(result.response.usageMetadata);
-        const cachedInTokens =
-          result.response.usageMetadata?.cachedContentTokenCount ?? 0;
-        await this.debugTokenCounts(tokensIn, tokensOut, cachedInTokens);
-        return {
-          tokensIn,
-          tokensOut,
-          cachedInTokens,
-          content,
-          toolCalls,
-        };
-      } else {
-        throw new Error("Invalid state for non-streaming generation.");
-      }
+      return {
+        content: text,
+        tokensIn,
+        tokensOut,
+        cachedInTokens: cached,
+        toolCalls: toolCalls.map((fc) => ({
+          name: fc.name ?? "unknown",
+          arguments: (fc.args as Record<string, unknown>) ?? {},
+        })),
+      };
     }
+
+    /* ========== non‑streaming ========== */
+    const response = await this.ai.models.generateContent(params);
+    const usage = response.usageMetadata ?? {};
+    const tokensIn = usage.promptTokenCount ?? 0;
+    const tokensOut = this.tokensOut(usage);
+    const cached = usage.cachedContentTokenCount ?? 0;
+    await this.logTokens(tokensIn, tokensOut, cached);
+
+    return {
+      content: response.text || "",
+      tokensIn,
+      tokensOut,
+      cachedInTokens: cached,
+      toolCalls: (response.functionCalls ?? []).map((fc) => ({
+        name: fc.name ?? "unknown",
+        arguments: (fc.args as Record<string, unknown>) ?? {},
+      })),
+    };
   }
 }
