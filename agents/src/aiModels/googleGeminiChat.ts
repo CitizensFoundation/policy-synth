@@ -378,7 +378,9 @@ export class GoogleGeminiChat extends BaseChatModel {
 
         const toolCalls = toolCallsAccum.map((t) => ({
           name: t.name ?? "",
-          arguments: t.args ?? {},
+          arguments:
+            (t.args as Record<string, unknown>) ??
+            ({} as Record<string, unknown>),
         }));
 
         return {
@@ -427,7 +429,9 @@ export class GoogleGeminiChat extends BaseChatModel {
 
         const toolCalls = toolCallsAccum.map((t) => ({
           name: t.name ?? "",
-          arguments: t.args ?? {},
+          arguments:
+            (t.args as Record<string, unknown>) ??
+            ({} as Record<string, unknown>),
         }));
 
         return {
@@ -452,14 +456,16 @@ export class GoogleGeminiChat extends BaseChatModel {
         const response = result.response;
         const content =
           response.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        const toolCalls: { name: string; arguments: any }[] = [];
+        const toolCalls: ToolCall[] = [];
         const candidate = response.candidates?.[0];
         if (candidate && candidate.content && candidate.content.parts) {
           for (const part of candidate.content.parts) {
             if (part.functionCall) {
               toolCalls.push({
                 name: part.functionCall.name,
-                arguments: part.functionCall.args || {},
+                arguments:
+                  (part.functionCall.args as Record<string, unknown>) ||
+                  ({} as Record<string, unknown>),
               });
             }
           }
@@ -512,14 +518,16 @@ export class GoogleGeminiChat extends BaseChatModel {
             this.model as GoogleAiGenerativeModel
           ).generateContent(parts);
           const content = result.response.text();
-          const toolCalls: { name: string; arguments: any }[] = [];
+          const toolCalls: ToolCall[] = [];
           const candidate = result.response.candidates?.[0];
           if (candidate && candidate.content && candidate.content.parts) {
             for (const part of candidate.content.parts) {
               if (part.functionCall) {
                 toolCalls.push({
                   name: part.functionCall.name,
-                  arguments: part.functionCall.args || {},
+                  arguments:
+                    (part.functionCall.args as Record<string, unknown>) ||
+                    ({} as Record<string, unknown>),
                 });
               }
             }
@@ -537,14 +545,16 @@ export class GoogleGeminiChat extends BaseChatModel {
         });
         const result = await chat.sendMessage(googleAiFinalPrompt);
         const content = result.response.text();
-        const toolCalls: { name: string; arguments: any }[] = [];
+        const toolCalls: ToolCall[] = [];
         const candidate = result.response.candidates?.[0];
         if (candidate && candidate.content && candidate.content.parts) {
           for (const part of candidate.content.parts) {
             if (part.functionCall) {
               toolCalls.push({
                 name: part.functionCall.name,
-                arguments: part.functionCall.args || {},
+                arguments:
+                  (part.functionCall.args as Record<string, unknown>) ||
+                  ({} as Record<string, unknown>),
               });
             }
           }

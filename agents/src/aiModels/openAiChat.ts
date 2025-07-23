@@ -194,15 +194,21 @@ export class OpenAiChat extends BaseChatModel {
         }
       }
 
-      const toolCalls: { name: string; arguments: any }[] = [];
+      const toolCalls: ToolCall[] = [];
       for (const idx of Object.keys(toolCallsAccum)) {
         const { name, args } = toolCallsAccum[Number(idx)];
         if (name) {
           try {
-            toolCalls.push({ name, arguments: JSON.parse(args || "{}") });
+            toolCalls.push({
+              name,
+              arguments: JSON.parse(args || "{}") as Record<string, unknown>,
+            });
           } catch (err) {
             this.logger.warn(`Failed to parse tool call arguments: ${err}`);
-            toolCalls.push({ name, arguments: {} });
+            toolCalls.push({
+              name,
+              arguments: {} as Record<string, unknown>,
+            });
           }
         }
       }
@@ -257,7 +263,7 @@ export class OpenAiChat extends BaseChatModel {
         this.logger.error("No content returned from OpenAI");
         this.logger.error(JSON.stringify(response, null, 2));
       }
-      const toolCalls: { name: string; arguments: any }[] = [];
+      const toolCalls: ToolCall[] = [];
       const tcList = response.choices[0]?.message?.tool_calls;
       if (tcList && tcList.length) {
         for (const tc of tcList) {
@@ -265,11 +271,16 @@ export class OpenAiChat extends BaseChatModel {
             try {
               toolCalls.push({
                 name: tc.function.name,
-                arguments: JSON.parse(tc.function.arguments || "{}"),
+                arguments: JSON.parse(
+                  tc.function.arguments || "{}"
+                ) as Record<string, unknown>,
               });
             } catch (err) {
               this.logger.warn(`Failed to parse tool call arguments: ${err}`);
-              toolCalls.push({ name: tc.function.name, arguments: {} });
+              toolCalls.push({
+                name: tc.function.name,
+                arguments: {} as Record<string, unknown>,
+              });
             }
           }
         }

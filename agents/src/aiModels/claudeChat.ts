@@ -131,7 +131,7 @@ export class ClaudeChat extends BaseChatModel {
       });
 
       let aggregated = "";
-      const toolCalls: { name: string; arguments: any }[] = [];
+      const toolCalls: ToolCall[] = [];
 
       for await (const messageStreamEvent of stream) {
         if (streamingCallback) {
@@ -144,7 +144,9 @@ export class ClaudeChat extends BaseChatModel {
           } else if (messageStreamEvent.content_block.type === "tool_use") {
             toolCalls.push({
               name: messageStreamEvent.content_block.name ?? "unknown",
-              arguments: messageStreamEvent.content_block.input ?? {},
+              arguments:
+                (messageStreamEvent.content_block.input as Record<string, unknown>) ??
+                ({} as Record<string, unknown>),
             });
           }
         } else if (
@@ -191,12 +193,14 @@ export class ClaudeChat extends BaseChatModel {
       if ((response.usage as any).cache_read_input_tokens) {
         tokensIn += (response.usage as any).cache_read_input_tokens * 0.1;
       }
-      const toolCalls: { name: string; arguments: any }[] = [];
+      const toolCalls: ToolCall[] = [];
       for (const block of response.content) {
         if (block.type === "tool_use") {
           toolCalls.push({
             name: block.name ?? "unknown",
-            arguments: block.input ?? {},
+            arguments:
+              (block.input as Record<string, unknown>) ??
+              ({} as Record<string, unknown>),
           });
         }
       }

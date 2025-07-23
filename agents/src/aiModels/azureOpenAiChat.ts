@@ -8,7 +8,7 @@ interface PsModelMessage {
   role: "system" | "developer" | "user" | "assistant";
   message: string;
   name?: string;
-  toolCall?: { name: string; arguments: Record<string, unknown> };
+  toolCall?: ToolCall;
 }
 
 export class AzureOpenAiChat extends BaseChatModel {

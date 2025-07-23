@@ -40,5 +40,5 @@ interface PsModelMessage {
   role: string;
   message: string;
   name?: string;
-  toolCall?: { name: string; arguments: Record<string, unknown> };
+  toolCall?: ToolCall;
 }
