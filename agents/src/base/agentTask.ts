@@ -19,7 +19,7 @@ export enum AgentPhase {
 export type ToolSpec = ChatCompletionTool;
 
 export abstract class PolicySynthAgentTask extends PolicySynthAgent {
-  protected static readonly TOOLS: ToolSpec[] = [];
+  protected readonly TOOLS: ToolSpec[] = [];
 
   protected readonly messages: PsModelMessage[] = [];
   private pendingToolCalls: ToolCall[] = [];
@@ -34,8 +34,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   constructor(
     agent: PsAgent,
     memory: PsAgentMemoryData,
-    taskId: string,
-    public readonly systemPrompt: string
+    taskId: string
   ) {
     super(agent, memory, 0, 100);
 
@@ -52,8 +51,8 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     );
   }
 
-  async *run(userMessage: string): AsyncIterableIterator<PsModelMessage> {
-    this.messages.push({ role: "system", message: this.systemPrompt.trim() });
+  async *run(userMessage: string, systemPrompt: string): AsyncIterableIterator<PsModelMessage> {
+    this.messages.push({ role: "system", message: systemPrompt.trim() });
     this.messages.push({ role: "user", message: userMessage });
 
     while (this.phase !== AgentPhase.FINISH) {
@@ -144,7 +143,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       this.messages,
       {
         parseJson: false,
-        functions: (this.constructor as typeof PolicySynthAgentTask).TOOLS,
+        functions: this.TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],
       }
