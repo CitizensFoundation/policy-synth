@@ -41,4 +41,5 @@ interface PsModelMessage {
   message: string;
   name?: string;
   toolCall?: ToolCall;
+  toolCallId?: string;
 }
