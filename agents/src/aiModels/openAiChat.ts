@@ -67,7 +67,7 @@ export class OpenAiChat extends BaseChatModel {
       messages: formatted,
       tools,
       tool_choice: toolChoice,
-      logit_bias: logitBias,
+      logit_bias: isReasoning ? undefined : logitBias,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       reasoning_effort: isReasoning ? this.cfg.reasoningEffort : undefined,
      // parallel_tool_calls: this.cfg.parallelToolCalls === true,

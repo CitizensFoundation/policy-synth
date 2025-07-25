@@ -175,12 +175,13 @@ export class GoogleGeminiChat extends BaseChatModel {
         }));
 
       let mode = FunctionCallingConfigMode.AUTO;
-      let allowedNames = allowedTools;
+      let allowedNames: string[] | undefined;
 
       if (toolChoice === "none") {
         mode = FunctionCallingConfigMode.NONE;
       } else if (toolChoice !== "auto") {
         mode = FunctionCallingConfigMode.ANY;
+        allowedNames = allowedTools;
         if (typeof toolChoice !== "string" && toolChoice.type === "function") {
           allowedNames = [toolChoice.function.name];
         }

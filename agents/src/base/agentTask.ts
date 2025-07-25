@@ -31,6 +31,8 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     string
   >;
 
+  modelCallOptions: PsCallModelOptions = {};
+
   constructor(
     agent: PsAgent,
     memory: PsAgentMemoryData,
@@ -146,6 +148,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
         functions: this.TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],
+        ...this.modelCallOptions
       }
     );
 
