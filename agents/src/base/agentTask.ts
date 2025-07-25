@@ -181,13 +181,23 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
         `Policy violation: attempted to call disallowed tool ${call.name}`
       );
       const msg = `Tool ${call.name} is not allowed by policy`;
-      this.messages.push({ role: "tool", name: call.name, message: msg });
+      this.messages.push({
+        role: "tool",
+        name: call.name,
+        message: msg,
+        toolCallId: call.id,
+      });
       this.phase = AgentPhase.OBSERVE;
       return;
     }
 
     const result = await this.runTool(call.name, call.arguments);
-    this.messages.push({ role: "tool", name: call.name, message: result });
+    this.messages.push({
+      role: "tool",
+      name: call.name,
+      message: result,
+      toolCallId: call.id,
+    });
     if (this.pendingToolCalls.length) {
       const next = this.pendingToolCalls.shift()!;
       this.messages.push({ role: "assistant", message: "", toolCall: next });

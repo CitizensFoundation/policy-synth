@@ -5,10 +5,11 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModel } from "../dbModels/aiModel.js";
 
 interface PsModelMessage {
-  role: "system" | "developer" | "user" | "assistant";
+  role: "system" | "developer" | "user" | "assistant" | "tool";
   message: string;
   name?: string;
   toolCall?: ToolCall;
+  toolCallId?: string;
 }
 
 export class AzureOpenAiChat extends BaseChatModel {
@@ -41,6 +42,14 @@ export class AzureOpenAiChat extends BaseChatModel {
     media?: { mimeType: string; data: string }[]
   ) {
     const chatMessages = messages.map((msg) => {
+      if (msg.role === "tool") {
+        return {
+          role: "tool",
+          content: msg.message,
+          tool_call_id: msg.toolCallId,
+        } as any;
+      }
+
       const base: any = { role: msg.role, content: msg.message };
       if (msg.name) {
         base.name = msg.name;
