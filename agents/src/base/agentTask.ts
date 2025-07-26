@@ -63,7 +63,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
           this.phase = AgentPhase.PLAN;
           break;
         case AgentPhase.PLAN:
+          await this.planningStart();
           await this.planStep();
+          await this.planningEnd();
           break;
         case AgentPhase.CALL_TOOL:
           await this.callToolStep();
@@ -77,6 +79,13 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   }
 
   protected abstract policy(): readonly string[];
+
+  protected async planningStart(): Promise<void> {
+    this.logger.info("Planning started");
+  }
+  protected async planningEnd(): Promise<void> {
+    this.logger.info("Planning ended");
+  }
 
   protected isDone(): boolean {
     const last = this.messages.at(-1);
