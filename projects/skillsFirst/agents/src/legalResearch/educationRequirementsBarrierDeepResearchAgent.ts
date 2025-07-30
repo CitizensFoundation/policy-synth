@@ -46,7 +46,6 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       "Starting education requirement deep research"
     );
 
-
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
@@ -56,7 +55,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 30);
+    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 60);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 

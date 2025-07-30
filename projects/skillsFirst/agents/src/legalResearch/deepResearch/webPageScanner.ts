@@ -77,6 +77,8 @@ Return your analysis strictly as JSON array in the following format:
   typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" | "other";
   reasoning: string;
   matchTypeForJobTitle: "exact" | "partial";
+  typeOfDegreeRequirement: "legalRequirement" | "jobDescriptionRequirement" | "other";
+  mandatoryDegreeRequirementStatus: "isMandatory" | "hasAlternativePathsToJob" | "other";
   }
 ]`;
     this.logger.debug("Rendering Deep Scanning Prompt:" + systemMessage);

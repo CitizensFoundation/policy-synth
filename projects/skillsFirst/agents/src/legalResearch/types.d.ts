@@ -8,6 +8,8 @@ interface EducationRequirementResearchResult extends PsEloRateable {
   degreeRequirementType: "Associate's degree" | "Bachelor's degree" | "Master's degree" | "Doctoral degree" | "Other";
   typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "courtDecision" | "administrativeDecision" | "jobPosting" | "other";
   matchTypeForJobTitle: "exact" | "partial";
+  typeOfDegreeRequirement: "legalRequirement" | "jobDescriptionRequirement" | "other";
+  mandatoryDegreeRequirementStatus: "isMandatory" | "hasAlternativePathsToJob" | "other";
   error?: string;
 }
 

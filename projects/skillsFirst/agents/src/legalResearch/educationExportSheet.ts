@@ -39,9 +39,11 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
       "Job Title",
       "Statute Title",
       "Type of Official Document",
-      "Match Type for Job Title",
+      "Legal Match for Job Title",
       "Stated Degree Requirement",
       "Degree Requirement Type",
+      "Type of Degree Requirement",
+      "Mandatory Degree Requirement Status",
       "Reasoning",
       "Source URL"
     ];
@@ -60,6 +62,8 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
         this.toStr(row.matchTypeForJobTitle),
         this.toStr(row.statedDegreeRequirement),
         this.toStr(row.degreeRequirementType),
+        this.toStr(row.typeOfDegreeRequirement),
+        this.toStr(row.mandatoryDegreeRequirementStatus),
         this.toStr(row.reasoning),
         this.toStr(row.sourceUrl)
       ]);
