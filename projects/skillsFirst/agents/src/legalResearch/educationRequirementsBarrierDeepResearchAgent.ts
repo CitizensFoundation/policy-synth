@@ -46,6 +46,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       "Starting education requirement deep research"
     );
 
+
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
@@ -115,7 +116,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
         cleanedJobTitle = cleanedJobTitle.replace(/\d+/g, "").trim();
 
         const deepResearchResults: EducationRequirementResearchResult[] =
-          (await researcher.doWebResearch(cleanedJobTitle, job.name, {
+          (await researcher.doWebResearch(cleanedJobTitle, job.name, job.titleCode, {
             ...webResearchCfg,
           })) as EducationRequirementResearchResult[];
 

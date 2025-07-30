@@ -76,6 +76,7 @@ Return your analysis strictly as JSON array in the following format:
   degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's";
   typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" | "other";
   reasoning: string;
+  matchTypeForJobTitle: "exact" | "partial";
   }
 ]`;
     this.logger.debug("Rendering Deep Scanning Prompt:" + systemMessage);

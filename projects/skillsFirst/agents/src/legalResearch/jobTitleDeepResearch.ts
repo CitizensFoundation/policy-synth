@@ -4,14 +4,16 @@ export class JobTitleDeepResearchAgent extends BaseDeepResearchAgent {
   override scanType: DeepResearchWebResearchTypes = "jobDescription";
 
   jobTitle = "";
+  titleCode = "";
 
   searchInstructions = "";
   rankingInstructions = "";
 
   attributeNameToUseForDedup = "url";
 
-  private updatePrompts(jobTitle: string) {
+  private updatePrompts(jobTitle: string, titleCode: string) {
     this.jobTitle = jobTitle;
+    this.titleCode = titleCode;
 
     this.searchInstructions = `Search for New Jersey laws, statutes, regulations, administrative code provisions, formal policy documents,
 court decisions, or similar official legally binding documents produced by New Jersey government that describe or otherwise contain
@@ -44,17 +46,19 @@ Important: Do not output items into the array if there is no explicit or implici
   async doWebResearch(
     cleanedJobTitle: string,
     fullJobTitle: string,
+    titleCode: string,
     config: any
   ) {
-    this.updatePrompts(cleanedJobTitle);
+    this.updatePrompts(cleanedJobTitle, titleCode);
     const results = (await super.doWebResearch(
       cleanedJobTitle,
+      titleCode,
       config
     )) as any[];
     if (Array.isArray(results)) {
       return results.map((r) =>
         typeof r === "object" && r !== null
-          ? { jobTitle: fullJobTitle, ...r }
+          ? { jobTitle: fullJobTitle, titleCode: titleCode, ...r }
           : r
       );
     }

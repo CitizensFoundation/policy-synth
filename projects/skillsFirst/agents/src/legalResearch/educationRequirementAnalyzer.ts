@@ -33,6 +33,7 @@ export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
 
   async analyze(
     extractedText: string,
+    titleCode: string,
     jobTitle: string,
     title: string,
     sourceUrl: string
@@ -79,6 +80,7 @@ Return your analysis strictly as JSON in the following format:
     degreeRequirementType: "Explicit Bachelor's" | "Explicit Associate's" | "Explicit Graduate/Professional" | "Implicit Bachelor's" | "Implicit Associate's";
     typeOfOfficialDocument: "regulation" | "statute" | "classification" | "policy" | "administrativeDecision" | "courtDecision" | "jobPosting" |"other";
     reasoning: string;
+    matchTypeForJobTitle: "exact" | "partial";
   }
 ]`;
 
@@ -134,6 +136,7 @@ Your JSON array output:`;
             obj.sourceUrl = "file://nj-statutes.txt";
             obj.jobTitle = jobTitle;
             obj.title = title;
+            obj.titleCode = titleCode;
           }
         }
       } else {

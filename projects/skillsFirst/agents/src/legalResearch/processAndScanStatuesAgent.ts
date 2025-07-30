@@ -193,7 +193,8 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
   }
 
   async analyseJob(
-    jobTitle: string
+    jobTitle: string,
+    titleCode: string
   ): Promise<EducationRequirementResearchResult[]> {
     //await this.loadAndScanStatuesIfNeeded();
 
@@ -257,6 +258,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             const analysis = (await analyzer.analyze(
               chunk.extractedJobTitleDegreeInformation.join("\n"),
               jobTitle,
+              titleCode,
               chunk.title,
               "file://nj-statutes.txt"
             )) as EducationRequirementResearchResult[];

@@ -35,9 +35,11 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
 
   private generateSheetData(rows: EducationRequirementResearchResult[]): (string | number)[][] {
     const headers = [
+      "Title Code",
       "Job Title",
       "Statute Title",
       "Type of Official Document",
+      "Match Type for Job Title",
       "Stated Degree Requirement",
       "Degree Requirement Type",
       "Reasoning",
@@ -51,9 +53,11 @@ export class SheetsEducationRequirementExportAgent extends PolicySynthAgent {
 
     for (const row of rows) {
       sheetRows.push([
+        this.toStr(row.titleCode),
         this.toStr(row.jobTitle),
         this.toStr(row.title),
         this.toStr(row.typeOfOfficialDocument),
+        this.toStr(row.matchTypeForJobTitle),
         this.toStr(row.statedDegreeRequirement),
         this.toStr(row.degreeRequirementType),
         this.toStr(row.reasoning),

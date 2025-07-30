@@ -64,6 +64,7 @@ export abstract class BaseDeepResearchAgent extends PolicySynthAgent {
 
   async doWebResearch(
     jobTitle: string,
+    jobCode: string,
     config: any,//WebResearchConfig,
     dataType: string | undefined = undefined,
     statusPrefix: string = ""
