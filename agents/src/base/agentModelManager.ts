@@ -4,17 +4,35 @@ import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
-import { Transaction, Op } from "sequelize";
-import { sequelize } from "../dbModels/index.js";
-import { PsAiModel } from "../dbModels/aiModel.js";
+import type { Transaction, Op } from "sequelize";
+import type { Sequelize } from "sequelize";
+import type { PsAiModel as PsAiModelDb } from "../dbModels/aiModel.js";
 import { TiktokenModel, encoding_for_model } from "tiktoken";
 import { PolicySynthAgentBase } from "./agentBase.js";
-import { PsModelUsage } from "../dbModels/modelUsage.js";
+import type { PsModelUsage as PsModelUsageType } from "../dbModels/modelUsage.js";
 import { TokenLimitChunker } from "./tokenLimitChunker.js";
 import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
 } from "openai/resources/chat/completions";
+
+// Lazy loaded database modules
+let SequelizeModule: any;
+let sequelize: Sequelize | undefined;
+let PsAiModel: typeof PsAiModelDb | undefined;
+let PsModelUsage: typeof PsModelUsageType | undefined;
+
+async function loadDbModules() {
+  if (process.env.DISABLE_DB_INIT) {
+    return;
+  }
+  if (!SequelizeModule) {
+    SequelizeModule = await import("sequelize");
+    ({ sequelize } = await import("../dbModels/index.js"));
+    ({ PsAiModel: PsAiModel } = await import("../dbModels/aiModel.js"));
+    ({ PsModelUsage: PsModelUsage } = await import("../dbModels/modelUsage.js"));
+  }
+}
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   models: Map<string, BaseChatModel> = new Map();
@@ -301,29 +319,32 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const apiKey = this.getApiKeyForProvider(provider);
 
     // Try to load model configuration from database for cost reporting
-    let dbModel: PsAiModel | null = null;
-    try {
-      dbModel = await PsAiModel.findOne({
-        where: {
-          [Op.and]: [
-            sequelize.literal(`configuration->>'provider' = '${provider}'`),
-            sequelize.literal(
-              `configuration->>'model' = '${options.modelName}'`
-            ),
-          ],
-        },
-      });
-      if (dbModel) {
-        this.logger.info(
-          `Loaded ephemeral model from DB: ${provider} ${options.modelName}`
-        );
-      } else {
-        this.logger.warn(
-          `Ephemeral model ${provider} ${options.modelName} not found in DB`
-        );
+    let dbModel: PsAiModelDb | null = null;
+    if (!process.env.DISABLE_DB_INIT) {
+      await loadDbModules();
+      try {
+        dbModel = await PsAiModel!.findOne({
+          where: {
+            [SequelizeModule.Op.and]: [
+              sequelize!.literal(`configuration->>'provider' = '${provider}'`),
+              sequelize!.literal(
+                `configuration->>'model' = '${options.modelName}'`
+              ),
+            ],
+          },
+        });
+        if (dbModel) {
+          this.logger.info(
+            `Loaded ephemeral model from DB: ${provider} ${options.modelName}`
+          );
+        } else {
+          this.logger.warn(
+            `Ephemeral model ${provider} ${options.modelName} not found in DB`
+          );
+        }
+      } catch (err) {
+        this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
       }
-    } catch (err) {
-      this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
     }
 
     const dbConfig = dbModel?.configuration as
@@ -1005,15 +1026,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     options: PsCallModelOptions
   ): Promise<PsBaseModelPriceConfiguration | undefined> {
     // 1) Ephemeral override - try to fetch config from DB
-    if (options.modelProvider && options.modelName) {
+    if (options.modelProvider && options.modelName && !process.env.DISABLE_DB_INIT) {
+      await loadDbModules();
       try {
-        const dbModel = await PsAiModel.findOne({
+        const dbModel = await PsAiModel!.findOne({
           where: {
-            [Op.and]: [
-              sequelize.literal(
+            [SequelizeModule.Op.and]: [
+              sequelize!.literal(
                 `configuration->>'provider' = '${options.modelProvider}'`
               ),
-              sequelize.literal(
+              sequelize!.literal(
                 `configuration->>'model' = '${options.modelName}'`
               ),
             ],
@@ -1030,15 +1052,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     // 2) Fallback model from options
-    if (options.fallbackModelProvider && options.fallbackModelName) {
+    if (
+      options.fallbackModelProvider &&
+      options.fallbackModelName &&
+      !process.env.DISABLE_DB_INIT
+    ) {
+      await loadDbModules();
       try {
-        const dbFallback = await PsAiModel.findOne({
+        const dbFallback = await PsAiModel!.findOne({
           where: {
-            [Op.and]: [
-              sequelize.literal(
+            [SequelizeModule.Op.and]: [
+              sequelize!.literal(
                 `configuration->>'provider' = '${options.fallbackModelProvider}'`
               ),
-              sequelize.literal(
+              sequelize!.literal(
                 `configuration->>'model' = '${options.fallbackModelName}'`
               ),
             ],
@@ -1162,8 +1189,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     try {
-      await sequelize.transaction(async (t: Transaction) => {
-        const [usage, created] = await PsModelUsage.findOrCreate({
+      await loadDbModules();
+      await sequelize!.transaction(async (t: Transaction) => {
+        const [usage, created] = await PsModelUsage!.findOrCreate({
           where: {
             model_id: finalModelId,
             agent_id: this.agentId,
