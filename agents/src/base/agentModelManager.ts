@@ -347,7 +347,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelReasoningEffort ?? (this.reasoningEffort as any),
       maxThinkingTokens:
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
-      modelType: dbConfig?.type ?? modelType,
+      modelType: options.modelType ?? dbConfig?.type ?? modelType,
       modelSize: dbConfig?.modelSize ?? modelSize,
       timeoutMs: dbConfig?.timeoutMs ?? this.modelCallTimeoutMs,
       prices: dbConfig?.prices ?? fallbackModel.config?.prices ?? ({} as any),
