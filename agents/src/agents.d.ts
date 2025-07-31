@@ -42,6 +42,7 @@ interface PsCallModelOptions {
   streamingCallbacks?: Function;
   modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
   modelName?: string; // e.g. "gpt-4o", "gemin-2.5-pro", etc.
+  modelType?: import("./aiModelTypes.js").PsAiModelType;
   modelTemperature?: number;
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
