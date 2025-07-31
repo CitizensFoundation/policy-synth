@@ -705,6 +705,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             results;
 
           await this.saveTokenUsage(
+            model.modelName,
             model.config.prices,
             modelType,
             modelSize,
@@ -874,6 +875,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
                   fallbackResults;
                 await this.saveTokenUsage(
+                  fallbackEphemeral.modelName,
                   fallbackEphemeral.config.prices,
                   fallbackEphemeral.config?.modelType ?? modelType,
                   fallbackEphemeral.config?.modelSize ?? modelSize,
@@ -1132,6 +1134,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   public async saveTokenUsage(
+    modelName: string,
     prices: PsBaseModelPriceConfiguration,
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
@@ -1145,7 +1148,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       process.env.DISABLE_DB_USAGE_TRACKING === "true";
     if (disableUsageTracking) {
       this.logger.info(
-        `(Database Usage Tracking Disabled) Token usage for ${modelType} (${modelSize}): in=${tokensIn} out=${tokensOut}`
+        `(Database Usage Tracking Disabled) Token usage for ${modelName} (${modelType} ${modelSize}): in=${tokensIn} cached=${cachedInTokens} out=${tokensOut}`
       );
       return;
     }

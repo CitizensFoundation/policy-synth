@@ -52,6 +52,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
 
     // Override the token usage saving to avoid any database calls.
     this.modelManager.saveTokenUsage = async (
+      modelName: string,
       prices: PsBaseModelPriceConfiguration,
       modelType: PsAiModelType,
       modelSize: PsAiModelSize,
@@ -60,7 +61,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       tokensOut: number
     ) => {
       this.logger.info(
-        `(Standalone) Token usage for model ${modelType} (${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`
+        `(Standalone) Token usage for model ${modelName} (${modelType} ${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`
       );
     };
   }
