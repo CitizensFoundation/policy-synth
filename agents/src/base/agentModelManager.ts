@@ -808,7 +808,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               }
             );
             if (!fallbackEphemeral) {
-              this.logger.crit(
+              this.logger.error(
                 `Unable to create fallback ephemeral model, rethrowing error. All debug information: ${JSON.stringify(
                   {
                     error,
@@ -875,7 +875,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             } catch (fallbackError) {
               if (TokenLimitChunker.isTokenLimitError(fallbackError)) {
                 if (options.disableChunkingRetry) {
-                  this.logger.crit(
+                  this.logger.error(
                     "Token limit error encountered after chunking; giving up."
                   );
                   throw fallbackError;
@@ -919,7 +919,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       }
     }
 
-    this.logger.crit(
+    this.logger.error(
       "Unrecoverable Error in runTextModelCall method - no valid response after retries"
     );
     throw new Error("Model call failed after maximum retries");

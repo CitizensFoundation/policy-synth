@@ -22,11 +22,11 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected readonly TOOLS: ToolSpec[] = [];
 
   protected readonly messages: PsModelMessage[] = [];
-  private pendingToolCalls: ToolCall[] = [];
+  protected pendingToolCalls: ToolCall[] = [];
   protected phase: AgentPhase = AgentPhase.START;
 
   readonly runDir: string;
-  private readonly dirs: Record<
+  protected readonly dirs: Record<
     "scratch" | "memory" | "artifacts" | "logs",
     string
   >;
@@ -145,7 +145,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     },
   };
 
-  private async planStep(): Promise<void> {
+  protected async planStep(): Promise<void> {
     const allow = new Set(this.policy());
 
     const result = await this.callModel(
@@ -182,7 +182,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       : AgentPhase.OBSERVE;
   }
 
-  private async callToolStep(): Promise<void> {
+  protected async callToolStep(): Promise<void> {
     const call = this.messages.at(-1)!.toolCall!;
     const allow = new Set(this.policy());
     if (!allow.has(call.name)) {
