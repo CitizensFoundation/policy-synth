@@ -53,10 +53,14 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     );
   }
 
-  async *run(userMessage: string, systemPrompt: string): AsyncIterableIterator<PsModelMessage> {
+  async *run(
+    userMessage: string,
+    systemPrompt: string
+  ): AsyncIterableIterator<PsModelMessage> {
     this.messages.push({ role: "system", message: systemPrompt.trim() });
     this.messages.push({ role: "user", message: userMessage });
 
+    let idx = this.messages.length;
     while (this.phase !== AgentPhase.FINISH) {
       switch (this.phase) {
         case AgentPhase.START:
@@ -74,7 +78,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
           this.phase = this.isDone() ? AgentPhase.FINISH : AgentPhase.PLAN;
           break;
       }
-      yield this.messages.at(-1)!;
+      while (idx < this.messages.length) {
+        yield this.messages[idx++];
+      }
     }
   }
 
