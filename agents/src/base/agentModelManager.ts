@@ -49,7 +49,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   maxThinkingTokens: number;
 
   limitedLLMmaxRetryCount = 3;
-  mainLLMmaxRetryCount = 75;
+  mainLLMmaxRetryCount = 10;
   modelCallTimeoutMs: number = parseInt(
     process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000"
   );
@@ -807,6 +807,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           (is5xxError(error, retryCount) ||
             PsAiModelManager.isProhibitedContentError(error) ||
             tooMany429s ||
+            retryCount >= maxRetries - 3 ||
             isUnknownError(error)) &&
           !usedFallback
         ) {
