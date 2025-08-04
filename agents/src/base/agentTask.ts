@@ -167,59 +167,56 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       }
     );
 
-    let assistantMsg: PsModelMessage;
     if (
       result &&
       typeof result === "object" &&
       Array.isArray(result.toolCalls) &&
       result.toolCalls.length
     ) {
-      const [first, ...rest] = result.toolCalls as ToolCall[];
-      this.pendingToolCalls = rest;
-      assistantMsg = { role: "assistant", message: "", toolCall: first };
+      this.pendingToolCalls = result.toolCalls as ToolCall[];
+      for (const call of this.pendingToolCalls) {
+        this.messages.push({ role: "assistant", message: "", toolCall: call });
+      }
+      this.phase = AgentPhase.CALL_TOOL;
     } else {
       const text = typeof result === "string" ? result : JSON.stringify(result);
-      assistantMsg = { role: "assistant", message: text };
+      this.messages.push({ role: "assistant", message: text });
+      this.phase = AgentPhase.OBSERVE;
     }
-
-    this.messages.push(assistantMsg);
-    this.phase = assistantMsg.toolCall
-      ? AgentPhase.CALL_TOOL
-      : AgentPhase.OBSERVE;
   }
 
   protected async callToolStep(): Promise<void> {
-    const call = this.messages.at(-1)!.toolCall!;
+    const calls = this.pendingToolCalls;
+    this.pendingToolCalls = [];
     const allow = new Set(this.policy());
-    if (!allow.has(call.name)) {
-      this.logger.error(
-        `Policy violation: attempted to call disallowed tool ${call.name}`
-      );
-      const msg = `Tool ${call.name} is not allowed by policy`;
-      this.messages.push({
-        role: "tool",
-        name: call.name,
-        message: msg,
-        toolCallId: call.id,
-      });
-      this.phase = AgentPhase.OBSERVE;
-      return;
-    }
 
-    const result = await this.runTool(call.name, call.arguments);
-    this.messages.push({
-      role: "tool",
-      name: call.name,
-      message: result,
-      toolCallId: call.id,
-    });
-    if (this.pendingToolCalls.length) {
-      const next = this.pendingToolCalls.shift()!;
-      this.messages.push({ role: "assistant", message: "", toolCall: next });
-      this.phase = AgentPhase.CALL_TOOL;
-    } else {
-      this.phase = AgentPhase.OBSERVE;
-    }
+    const results = await Promise.all(
+      calls.map(async (call) => {
+        if (!allow.has(call.name)) {
+          this.logger.error(
+            `Policy violation: attempted to call disallowed tool ${call.name}`
+          );
+          const msg = `Tool ${call.name} is not allowed by policy`;
+          return {
+            role: "tool" as const,
+            name: call.name,
+            message: msg,
+            toolCallId: call.id,
+          };
+        }
+
+        const result = await this.runTool(call.name, call.arguments);
+        return {
+          role: "tool" as const,
+          name: call.name,
+          message: result,
+          toolCallId: call.id,
+        };
+      })
+    );
+
+    this.messages.push(...results);
+    this.phase = AgentPhase.OBSERVE;
   }
 
   protected async runTool(
