@@ -729,6 +729,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               this.logger.warn(
                 `JSON parse failure: retrying callTextModel. Attempt #${retryCount}`
               );
+              if (retryCount >= this.limitedLLMmaxRetryCount-1) {
+                throw new Error(
+                  `500 Internal Server Error: JSON parse failure, max retries reached, rethrowing error.`
+                ) ;
+              }
               await this.sleepBeforeRetry(retryCount);
               continue;
             }
