@@ -30,7 +30,9 @@ async function loadDbModules() {
     SequelizeModule = await import("sequelize");
     ({ sequelize } = await import("../dbModels/index.js"));
     ({ PsAiModel: PsAiModel } = await import("../dbModels/aiModel.js"));
-    ({ PsModelUsage: PsModelUsage } = await import("../dbModels/modelUsage.js"));
+    ({ PsModelUsage: PsModelUsage } = await import(
+      "../dbModels/modelUsage.js"
+    ));
   }
 }
 
@@ -48,8 +50,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   reasoningEffort: "low" | "medium" | "high" = "medium";
   maxThinkingTokens: number;
 
-  limitedLLMmaxRetryCount = 3;
-  mainLLMmaxRetryCount = 10;
+  limitedLLMmaxRetryCount = 5;
+  mainLLMmaxRetryCount = 50;
   modelCallTimeoutMs: number = parseInt(
     process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000"
   );
@@ -803,11 +805,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             `Encountered too many 429 errors. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
           );
         }
+
+        let tooManyRetriesWithFallback = false;
+        if (
+          retryCount >= this.limitedLLMmaxRetryCount - 1 &&
+          options.fallbackModelProvider &&
+          !usedFallback
+        ) {
+          tooManyRetriesWithFallback = true;
+        }
+
         if (
           (is5xxError(error, retryCount) ||
             PsAiModelManager.isProhibitedContentError(error) ||
             tooMany429s ||
-            retryCount >= maxRetries - 3 ||
+            tooManyRetriesWithFallback ||
             isUnknownError(error)) &&
           !usedFallback
         ) {
@@ -873,8 +885,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               )) as PsBaseModelReturnParameters | undefined;
 
               if (fallbackResults) {
-                const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
-                  fallbackResults;
+                const {
+                  tokensIn,
+                  tokensOut,
+                  cachedInTokens,
+                  content,
+                  toolCalls,
+                } = fallbackResults;
                 await this.saveTokenUsage(
                   fallbackEphemeral.modelName,
                   fallbackEphemeral.config.prices,
@@ -1029,7 +1046,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     options: PsCallModelOptions
   ): Promise<PsBaseModelPriceConfiguration | undefined> {
     // 1) Ephemeral override - try to fetch config from DB
-    if (options.modelProvider && options.modelName && !process.env.DISABLE_DB_INIT) {
+    if (
+      options.modelProvider &&
+      options.modelName &&
+      !process.env.DISABLE_DB_INIT
+    ) {
       await loadDbModules();
       try {
         const dbModel = await PsAiModel!.findOne({
