@@ -598,6 +598,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     return isError;
   };
 
+  static isMissingParameterError = (err: any) => {
+    const status = err?.response?.status;
+    const message = err?.response?.data?.error?.message || err?.message || "";
+    return (
+      status === 400 &&
+      typeof message === "string" &&
+      message.toLowerCase().includes("missing parameter")
+    );
+  };
+
   private logDetailedServerError(
     model: BaseChatModel,
     error: any,
@@ -761,6 +771,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
+        if (PsAiModelManager.isMissingParameterError(error)) {
+          this.logger.error(
+            `Missing parameter error from model: ${error.message || error}`
+          );
+          throw error;
+        }
         if (error.message === "Model call timed out") {
           retryCount++;
           this.logger.warn(
