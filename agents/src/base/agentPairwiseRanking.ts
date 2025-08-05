@@ -158,7 +158,6 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
 
     while (retry && retryCount < maxRetryCount) {
       try {
-        // Suppose we call the model (placeholder):
         const winningItemText = await this.callModel(
           this.defaultModelType,
           this.defaultModelSize,
@@ -202,7 +201,10 @@ export abstract class PairwiseRankingAgent extends PolicySynthAgent {
               setTimeout(resolve, 4500 + retryCount * 5000)
             );
           } else {
-            throw err;
+            this.logger.error("Error getting results from LLM in pairwise ranking, skipping");
+            wonItemIndex = -1;
+            lostItemIndex = -1;
+            retry = false;
           }
         }
       }
