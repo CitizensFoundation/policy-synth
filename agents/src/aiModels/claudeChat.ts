@@ -6,6 +6,7 @@ import {
 } from "@anthropic-ai/sdk/resources/messages/messages.js";
 import type {
   ChatCompletionTool,
+  ChatCompletionFunctionTool,
   ChatCompletionToolChoiceOption,
 } from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
@@ -33,7 +34,7 @@ export class ClaudeChat extends BaseChatModel {
     streaming?: boolean,
     streamingCallback?: Function,
     media?: { mimeType: string; data: string }[],
-    tools?: ChatCompletionTool[],
+    tools?: ChatCompletionFunctionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {

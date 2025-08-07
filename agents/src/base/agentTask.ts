@@ -3,7 +3,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import crypto from "crypto";
 
-import type { ChatCompletionTool } from "openai/resources/chat/completions";
+import type { ChatCompletionFunctionTool, ChatCompletionTool } from "openai/resources/chat/completions";
 import { PolicySynthAgent } from "./agent.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { PsAgent } from "../dbModels/agent.js";
@@ -16,7 +16,7 @@ export enum AgentPhase {
   FINISH,
 }
 
-export type ToolSpec = ChatCompletionTool;
+export type ToolSpec = ChatCompletionFunctionTool;
 
 export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   protected readonly TOOLS: ToolSpec[] = [];
