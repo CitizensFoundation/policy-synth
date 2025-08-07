@@ -608,6 +608,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  static general400Error = (err: any) => {
+    const status = err?.response?.status;
+    const message = err?.response?.data?.error?.message || err?.message || "";
+    return (status === 400 || (typeof message === "string" && message.startsWith("400")));
+  };
+
   private logDetailedServerError(
     model: BaseChatModel,
     error: any,
@@ -777,6 +783,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           );
           throw error;
         }
+
+        if (
+          PsAiModelManager.general400Error(error) &&
+          retryCount > 1
+        ) {
+          this.logger.error(
+            `General 400 error from model: ${error.message || error}`
+          );
+          throw error;
+        }
+
         if (error.message === "Model call timed out") {
           retryCount++;
           this.logger.warn(

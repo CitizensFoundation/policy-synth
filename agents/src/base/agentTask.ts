@@ -33,11 +33,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
 
   modelCallOptions: PsCallModelOptions = {};
 
-  constructor(
-    agent: PsAgent,
-    memory: PsAgentMemoryData,
-    taskId: string
-  ) {
+  constructor(agent: PsAgent, memory: PsAgentMemoryData, taskId: string) {
     super(agent, memory, 0, 100);
 
     const here = path.dirname(fileURLToPath(import.meta.url));
@@ -163,7 +159,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
         functions: this.TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],
-        ...this.modelCallOptions
+        ...this.modelCallOptions,
       }
     );
 
@@ -173,10 +169,9 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       Array.isArray(result.toolCalls) &&
       result.toolCalls.length
     ) {
+      // Defer emitting assistant tool_call messages until callToolStep,
+      // so we can interleave each assistant(tool_call) with its tool response.
       this.pendingToolCalls = result.toolCalls as ToolCall[];
-      for (const call of this.pendingToolCalls) {
-        this.messages.push({ role: "assistant", message: "", toolCall: call });
-      }
       this.phase = AgentPhase.CALL_TOOL;
     } else {
       const text = typeof result === "string" ? result : JSON.stringify(result);
@@ -190,7 +185,8 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     this.pendingToolCalls = [];
     const allow = new Set(this.policy());
 
-    const results = await Promise.all(
+    // Run all tools in parallel to keep performance
+    const toolResults = await Promise.all(
       calls.map(async (call) => {
         if (!allow.has(call.name)) {
           this.logger.error(
@@ -215,7 +211,21 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       })
     );
 
-    this.messages.push(...results);
+    // Interleave messages to satisfy the API:
+    // assistant(tool_call) → tool(response) for each call
+    for (const call of calls) {
+      this.messages.push({ role: "assistant", message: "", toolCall: call });
+      const toolMsg = toolResults.find((m) => m.toolCallId === call.id);
+      this.messages.push(
+        toolMsg ?? {
+          role: "tool" as const,
+          name: call.name,
+          message: `No tool result available for call id ${call.id}`,
+          toolCallId: call.id,
+        }
+      );
+    }
+
     this.phase = AgentPhase.OBSERVE;
   }
 
