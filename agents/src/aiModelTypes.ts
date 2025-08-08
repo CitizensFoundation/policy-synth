@@ -15,3 +15,10 @@ export enum PsAiModelSize {
   Small = "small"
 }
 
+export enum PsAiModelProvider {
+  OpenAI = "openai",
+  OpenAIResponses = "openaiResponses",
+  Anthropic = "anthropic",
+  Google = "google",
+  Azure = "azure",
+}

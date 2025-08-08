@@ -1,6 +1,7 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
+import { OpenAiResponses } from "../aiModels/openAiResponses.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
@@ -15,6 +16,7 @@ import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
 } from "openai/resources/chat/completions";
+import { PsAiModelProvider } from "../aiModelTypes.js";
 
 // Lazy loaded database modules
 let SequelizeModule: any;
@@ -82,20 +84,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   initializeOneModelFromEnv() {
     const modelType = process.env.PS_AI_MODEL_TYPE as PsAiModelType;
     const modelSize = process.env.PS_AI_MODEL_SIZE as PsAiModelSize;
-    const modelProvider = process.env.PS_AI_MODEL_PROVIDER;
+    const modelProvider = process.env.PS_AI_MODEL_PROVIDER as PsAiModelProvider;
     const modelName = process.env.PS_AI_MODEL_NAME;
     let apiKey;
     switch (modelProvider?.toLowerCase()) {
-      case "openai":
-        apiKey = process.env.OPENAI_API_KEY;
+      case PsAiModelProvider.OpenAI:
+      case PsAiModelProvider.OpenAIResponses:
+          apiKey = process.env.OPENAI_API_KEY;
         break;
-      case "anthropic":
+      case PsAiModelProvider.Anthropic:
         apiKey = process.env.ANTHROPIC_API_KEY;
         break;
-      case "google":
+      case PsAiModelProvider.Google:
         apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
         break;
-      case "azure":
+      case PsAiModelProvider.Azure:
         apiKey = process.env.AZURE_API_KEY;
         break;
       default:
@@ -127,16 +130,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       };
 
       switch (modelProvider.toLowerCase()) {
-        case "anthropic":
+        case PsAiModelProvider.Anthropic:
           model = new ClaudeChat(baseConfig);
           break;
-        case "openai":
+        case PsAiModelProvider.OpenAI:
           model = new OpenAiChat(baseConfig);
           break;
-        case "google":
+        case PsAiModelProvider.OpenAIResponses:
+          model = new OpenAiResponses(baseConfig);
+          break;
+        case PsAiModelProvider.Google:
           model = new GoogleGeminiChat(baseConfig);
           break;
-        case "azure":
+        case PsAiModelProvider.Azure:
           if (
             !process.env.PS_AI_MODEL_ENDPOINT ||
             !process.env.PS_AI_MODEL_DEPLOYMENT_NAME
@@ -226,16 +232,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       let newModel: BaseChatModel;
 
       switch (model.configuration.provider) {
-        case "anthropic":
+        case PsAiModelProvider.Anthropic:
           newModel = new ClaudeChat(baseConfig);
           break;
-        case "openai":
+        case PsAiModelProvider.OpenAI:
           newModel = new OpenAiChat(baseConfig);
           break;
-        case "google":
+        case PsAiModelProvider.OpenAIResponses:
+          newModel = new OpenAiResponses(baseConfig);
+          break;
+        case PsAiModelProvider.Google:
           newModel = new GoogleGeminiChat(baseConfig);
           break;
-        case "azure":
+        case PsAiModelProvider.Azure:
           newModel = new AzureOpenAiChat({
             ...baseConfig,
             endpoint: model.configuration.endpoint!,
@@ -383,16 +392,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     // Construct ephemeral model
     let ephemeralModel: BaseChatModel;
     switch (provider.toLowerCase()) {
-      case "openai":
-        ephemeralModel = new OpenAiChat(ephemeralConfig);
+      case PsAiModelProvider.OpenAI:
+        if (options.useOpenAiResponsesIfOpenAi) {
+          ephemeralModel = new OpenAiResponses(ephemeralConfig);
+        } else {
+          ephemeralModel = new OpenAiChat(ephemeralConfig);
+        }
         break;
-      case "anthropic":
+      case PsAiModelProvider.Anthropic:
         ephemeralModel = new ClaudeChat(ephemeralConfig);
         break;
-      case "google":
+      case PsAiModelProvider.Google:
         ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
         break;
-      case "azure":
+      case PsAiModelProvider.Azure:
         // You may want to incorporate fallback's endpoint and deployment
         // or see if user provided them in `options` somehow
         ephemeralModel = new AzureOpenAiChat({
@@ -426,13 +439,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   private getApiKeyForProvider(provider: string): string {
     switch (provider.toLowerCase()) {
-      case "openai":
+      case PsAiModelProvider.OpenAI:
+      case PsAiModelProvider.OpenAIResponses:
         return process.env.OPENAI_API_KEY || "";
-      case "anthropic":
+      case PsAiModelProvider.Anthropic:
         return process.env.ANTHROPIC_API_KEY || "";
-      case "google":
+      case PsAiModelProvider.Google:
         return process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
-      case "azure":
+      case PsAiModelProvider.Azure:
         return process.env.AZURE_API_KEY || "";
       default:
         return "";

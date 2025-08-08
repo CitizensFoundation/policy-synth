@@ -40,15 +40,16 @@ interface PsCallModelOptions {
   overrideMaxRetries?: number;
   tokenOutEstimate?: number;
   streamingCallbacks?: Function;
-  modelProvider?: string; // e.g. "openai", "anthropic", "google", "azure"
-  modelName?: string; // e.g. "gpt-4o", "gemin-2.5-pro", etc.
+  modelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
+  useOpenAiResponsesIfOpenAi?: boolean;
+  modelName?: string;
   modelType?: import("./aiModelTypes.js").PsAiModelType;
   modelTemperature?: number;
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: "low" | "medium" | "high";
   retryLimitFor429sUntilFallback?: number;
-  fallbackModelProvider?: string;
+  fallbackModelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   fallbackModelName?: string;
   fallbackModelType?: import("./aiModelTypes.js").PsAiModelType;
   simulateContentErrorForFallbackDebugging?: boolean;
