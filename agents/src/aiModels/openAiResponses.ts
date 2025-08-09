@@ -2,30 +2,21 @@ import OpenAI from "openai";
 import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
-  ChatCompletionMessageParam,
-  ChatCompletionCreateParamsBase, // kept for parity with existing types in your codebase
-  ChatCompletionCreateParamsStreaming,
-  ChatCompletionCreateParamsNonStreaming,
   ChatCompletionMessageToolCall,
 } from "openai/resources/chat/completions";
 
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
-
 import { PsAiModelType } from "../aiModelTypes.js";
 
 /**
- * NOTE:
- * - Interface-compatible with OpenAiChat.
- * - Uses Responses API under the hood.
- * - When using reasoning models, sends `previous_response_id` (and `store: true`) to reuse prior reasoning items.
+ * Interface-compatible with OpenAiChat, but uses the Responses API.
+ * - Flattens Chat Completions tool defs -> Responses tool defs
+ * - Uses previous_response_id for reasoning models (with store: true)
  */
-
 export class OpenAiResponses extends BaseChatModel {
   private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
-
-  // Track last response id so we can chain with `previous_response_id` for reasoning models
   private previousResponseId?: string;
 
   constructor(config: PsOpenAiModelConfig) {
@@ -36,17 +27,16 @@ export class OpenAiResponses extends BaseChatModel {
     } = config;
 
     super(config, modelName, maxTokensOut);
-
     this.client = new OpenAI({ apiKey });
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
   }
 
-  /************************************  Public API  ************************************/
+  /************************************  Public API  ************************************/
   async generate(
     messages: PsModelMessage[],
     streaming = false,
     streamingCallback?: (chunk: string) => void,
-    /** Future vision/audio media input */
+    /** Future vision/audio media input */
     media?: { mimeType: string; data: string }[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
@@ -55,67 +45,52 @@ export class OpenAiResponses extends BaseChatModel {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
         `Messages:\n${this.prettyPrintPromptMessages(
-          messages.map((m) => ({
-            role: m.role,
-            content: m.message,
-          }))
+          messages.map((m) => ({ role: m.role, content: m.message }))
         )}`
       );
     }
 
     const isReasoning = this.cfg.modelType === PsAiModelType.TextReasoning;
 
-    // Build Responses API input + (optional) instructions
+    // Transform tool defs for Responses API
+    const responsesTools = this.mapToolsForResponses(tools);
+    const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
+
+    // Negative logit-bias to discourage unallowed tools (same behavior as your original).
+    const logitBias = this.buildLogitBias(tools, allowedTools);
+
     const { inputItems, instructions } = this.preprocessForResponses(
       messages,
       isReasoning && !!this.previousResponseId
     );
 
-    // Common request payload for Responses API
-    // - We use `max_output_tokens` (Responses API) instead of max_tokens / max_completion_tokens.
-    // - For reasoning models, use `reasoning: { effort: ... }` (instead of reasoning_effort).
     const common: any = {
       model: this.cfg.modelName,
       input: inputItems.length ? inputItems : [{ role: "user", content: "" }],
-      tools: tools as any, // Types differ between endpoints; pass-through keeps interface parity.
-      tool_choice: toolChoice as any,
+      tools: responsesTools,
+      tool_choice: responsesToolChoice,
+      logit_bias: isReasoning ? undefined : logitBias,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       max_output_tokens: this.cfg.maxTokensOut,
     };
 
-    if (instructions) {
-      common.instructions = instructions;
-    }
+    if (instructions) common.instructions = instructions;
 
     if (isReasoning) {
-      // Use Responses API reasoning parameters
       if (this.cfg.reasoningEffort) {
         common.reasoning = { effort: this.cfg.reasoningEffort };
       }
-      // Persist state so previous_response_id is meaningful across turns
       common.store = true;
       if (this.previousResponseId) {
         common.previous_response_id = this.previousResponseId;
       }
     }
 
-    /* ------------------------------------------------------------------ *
-     * 4  Streaming vs Non‑streaming                                      *
-     * ------------------------------------------------------------------ */
     if (streaming) {
-      // The Responses API streams Server-Sent Events (SSE) with typed events.
-      const params = {
-        ...common,
-        stream: true,
-      };
-
+      const params = { ...common, stream: true };
       return await this.handleStreaming(params, streamingCallback);
     } else {
-      const params = {
-        ...common,
-        stream: false, // explicit for clarity; omitted by SDK internally
-      };
-
+      const params = { ...common, stream: false };
       return await this.handleNonStreaming(params);
     }
   }
@@ -123,14 +98,57 @@ export class OpenAiResponses extends BaseChatModel {
   /************************************  Helpers  ************************************/
 
   /**
-   * Convert internal message structure → Responses API input items.
-   *
-   * Key differences from Chat Completions:
-   * - Tool outputs must be sent as `{ type: "function_call_output", call_id, output }`
-   *   instead of a `role: "tool"` chat message.
-   * - We optionally omit prior assistant/user turns if chaining with `previous_response_id` for reasoning models
-   *   (send only the new tail since the last assistant turn to reduce tokens).
-   * - System/developer content can be passed via `instructions` (preferred) to keep caching stable.
+   * Map Chat Completions tools -> Responses API tools
+   * Chat: { type:"function", function:{ name, description, parameters } }
+   * Responses: { type:"function", name, description, parameters }
+   */
+  private mapToolsForResponses(tools: ChatCompletionTool[]): any[] {
+    if (!tools?.length) return [];
+    return tools.map((t: any) => {
+      if (t?.type === "function") {
+        const fn = t.function ?? {};
+        const maybeStrict = typeof t.strict === "boolean" ? { strict: t.strict } : {};
+        return {
+          type: "function",
+          name: fn.name,
+          description: fn.description,
+          parameters: fn.parameters,
+          ...maybeStrict,
+        };
+      }
+      // Pass through non-function tools if present (rare with Chat Completions)
+      return t;
+    });
+  }
+
+  /**
+   * Map Chat Completions tool_choice -> Responses API tool_choice
+   * - "auto" stays "auto"
+   * - {type:"function", function:{name}} => {type:"function", name}
+   * - "none" passes through as "none" (if caller uses it)
+   */
+  private mapToolChoiceForResponses(
+    toolChoice: ChatCompletionToolChoiceOption | "auto"
+  ): any {
+    if (!toolChoice || toolChoice === "auto") return "auto";
+    if ((toolChoice as any) === "none") return "none";
+
+    const tc: any = toolChoice;
+    if (typeof tc === "object") {
+      if (tc.type === "function" && tc.function && tc.function.name) {
+        return { type: "function", name: tc.function.name };
+      }
+      // Fallback: pass through (Responses will error if it doesn't like it)
+      return tc;
+    }
+    return "auto";
+  }
+
+  /**
+   * Convert internal messages -> Responses API input items.
+   * - system/developer -> instructions
+   * - tool role -> { type:"function_call_output", call_id, output }
+   * - if chaining reasoning, send only tail after the last assistant turn
    */
   private preprocessForResponses(
     msgs: PsModelMessage[],
@@ -138,8 +156,6 @@ export class OpenAiResponses extends BaseChatModel {
   ): { inputItems: any[]; instructions?: string } {
     const inputItems: any[] = [];
 
-    // 1) Pull out any system/developer instructions
-    //    If multiple system/developer messages exist, join with newlines (preserves behavior).
     const instructionParts: string[] = [];
     for (const m of msgs) {
       if (m.role === "system" || m.role === "developer") {
@@ -147,11 +163,8 @@ export class OpenAiResponses extends BaseChatModel {
       }
     }
     const instructions =
-      instructionParts.length > 0 ? instructionParts.join("\n\n") : undefined;
+      instructionParts.length ? instructionParts.join("\n\n") : undefined;
 
-    // 2) Choose slice of messages to pass as `input`:
-    //    If we're chaining with previous_response_id for reasoning models, send only the new tail
-    //    (everything *after* the last assistant turn). Otherwise, send full history.
     let sliceStart = 0;
     if (useTailForChainedReasoning) {
       for (let i = msgs.length - 1; i >= 0; i--) {
@@ -163,11 +176,8 @@ export class OpenAiResponses extends BaseChatModel {
     }
     const sliced = msgs.slice(sliceStart);
 
-    // 3) Map messages to Responses API input items
     for (const msg of sliced) {
       if (msg.role === "tool") {
-        // Responses API expects function results using function_call_output items
-        // Chat-completions semantics: msg.toolCallId is the tool_call_id we must map to call_id
         inputItems.push({
           type: "function_call_output",
           call_id: msg.toolCallId!,
@@ -176,42 +186,70 @@ export class OpenAiResponses extends BaseChatModel {
         continue;
       }
 
-      // Normal user/assistant content
-      if (msg.role === "user" || msg.role === "assistant") {
+      if (msg.role === "assistant" && msg.toolCall) {
+        const { id, name, arguments: args } = msg.toolCall;
         inputItems.push({
-          role: msg.role,
-          content: msg.message ?? "",
+          type: "function_call",
+          name,
+          call_id: id,
+          // The Responses API expects a JSON string for arguments
+          arguments: JSON.stringify(args ?? {}),
         });
         continue;
       }
 
-      // Other roles (system/developer) are already captured in `instructions`,
-      // but if callers previously mixed them into conversation, it's safe to ignore here.
+      if (msg.role === "user" || msg.role === "assistant") {
+        inputItems.push({ role: msg.role, content: msg.message ?? "" });
+        continue;
+      }
+      // system/developer already captured in instructions
     }
 
-    // Ensure we always send *something* in input to satisfy API requirements
-    if (inputItems.length === 0) {
-      inputItems.push({ role: "user", content: "" });
-    }
+    if (!inputItems.length) inputItems.push({ role: "user", content: "" });
 
+    this.logger.info(`Input items: ${JSON.stringify(inputItems, null, 2)}`);
+    this.logger.info(`Instructions: ${instructions?.slice(0, 100)}`);
     return { inputItems, instructions };
+  }
+
+  /** Negative logit-bias if allowedTools limits are provided. */
+  private buildLogitBias(
+    tools: ChatCompletionTool[],
+    allowed: string[]
+  ): Record<number, number> | undefined {
+    if (!allowed.length || !tools.length) return undefined;
+
+    try {
+      const enc = encoding_for_model(this.cfg.modelName as TiktokenModel);
+      const bias: Record<number, number> = {};
+      for (const t of tools as any[]) {
+        const name = t?.type === "function" ? t.function?.name : "";
+        if (name && !allowed.includes(name)) {
+          enc.encode(name).forEach((tok) => (bias[tok] = -100));
+        }
+      }
+      enc.free();
+      return bias;
+    } catch (err) {
+      this.logger.warn(`Encoding failed for logit bias: ${err}`);
+      return undefined;
+    }
   }
 
   private async handleStreaming(
     params: any,
     onChunk?: (c: string) => void
   ): Promise<PsBaseModelReturnParameters> {
-    // For Responses API, streaming is via async iterator of events
+    // Responses SSE: create({ stream: true }) returns an async iterator of events
     const stream = await this.client.responses.create(params);
 
     let content = "";
     let finalResponse: any | undefined;
 
-    // Collect tool calls we’ll parse from the completed response (safer than piecemeal)
     for await (const event of stream as any) {
       const type: string | undefined = event?.type;
 
-      // Text delta events may be named `response.output_text.delta` or `response.text.delta` depending on SDK version.
+      // Text deltas (SDK emits either of these)
       if (type === "response.output_text.delta" || type === "response.text.delta") {
         const delta = event?.delta ?? event?.data ?? "";
         if (delta) {
@@ -223,21 +261,25 @@ export class OpenAiResponses extends BaseChatModel {
 
       if (type === "response.completed") {
         finalResponse = event.response;
-        // no break; continue to drain if any trailing events
         continue;
       }
 
       if (type === "response.error") {
-        // Bubble up a descriptive error
         const msg = event.error?.message ?? "Streaming error from Responses API";
         throw new Error(msg);
       }
     }
 
-    // Fallback: if stream didn't include a response.completed, try to coerce
+    // Some SDK versions expose `finalResponse()`
+    if (!finalResponse && typeof (stream as any).finalResponse === "function") {
+      try {
+        finalResponse = await (stream as any).finalResponse();
+      } catch {
+        // ignore; we'll fall back to content-only stats
+      }
+    }
+
     if (!finalResponse) {
-      // Some SDKs expose a helper; here we rely on the iterator having yielded completed.
-      // If not present, return whatever content we collected.
       return {
         content,
         tokensIn: 0,
@@ -249,32 +291,19 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    // Persist response id for chained reasoning turns
     this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
 
     const usage = finalResponse?.usage ?? {};
-    const tokensIn: number =
-      usage.input_tokens ??
-      usage.prompt_tokens ??
-      0;
-    const tokensOut: number =
-      usage.output_tokens ??
-      usage.completion_tokens ??
-      0;
-
-    // Responses API typically exposes input_tokens_details.{cached_tokens}, output_tokens_details.{reasoning_tokens,audio_tokens}
+    const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
+    const tokensOut: number = usage.output_tokens ?? usage.completion_tokens ?? 0;
     const cachedInTokens: number =
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
-
     const reasoningTokens: number =
-      usage.output_tokens_details?.reasoning_tokens ??
-      0;
-
+      usage.output_tokens_details?.reasoning_tokens ?? 0;
     const audioTokens: number =
-      usage.output_tokens_details?.audio_tokens ??
-      0;
+      usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(finalResponse);
 
@@ -291,34 +320,28 @@ export class OpenAiResponses extends BaseChatModel {
 
   private async handleNonStreaming(params: any): Promise<PsBaseModelReturnParameters> {
     const resp: any = await this.client.responses.create(params);
+    this.logger.info(`Response: ${JSON.stringify(resp, null, 2)}`);
 
-    // Persist response id for chained reasoning turns
     this.previousResponseId = resp?.id ?? this.previousResponseId;
 
-    // Prefer convenience property; fall back to walking output items
-    const content: string = (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "";
+    const content: string =
+      (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "";
 
     const usage = resp?.usage ?? {};
-    const tokensIn: number =
-      usage.input_tokens ??
-      usage.prompt_tokens ??
-      0;
-    const tokensOut: number =
-      usage.output_tokens ??
-      usage.completion_tokens ??
-      0;
+    const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
+    const tokensOut: number = usage.output_tokens ?? usage.completion_tokens ?? 0;
     const cachedInTokens: number =
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
     const reasoningTokens: number =
-      usage.output_tokens_details?.reasoning_tokens ??
-      0;
+      usage.output_tokens_details?.reasoning_tokens ?? 0;
     const audioTokens: number =
-      usage.output_tokens_details?.audio_tokens ??
-      0;
+      usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(resp);
+
+    this.logger.info(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
 
     return {
       content,
@@ -331,9 +354,6 @@ export class OpenAiResponses extends BaseChatModel {
     };
   }
 
-  /**
-   * Extract assistant-visible text from a Responses API object by scanning output items.
-   */
   private extractTextFromResponse(resp: any): string {
     try {
       const out = resp?.output;
@@ -342,8 +362,12 @@ export class OpenAiResponses extends BaseChatModel {
       for (const item of out) {
         if (item?.type === "message" && Array.isArray(item.content)) {
           for (const c of item.content) {
-            if (c?.type === "output_text" || c?.type === "text") {
-              if (typeof c?.text === "string") buffer += c.text;
+            if (
+              c?.type === "output_text" ||
+              c?.type === "text" ||
+              typeof c?.text === "string"
+            ) {
+              buffer += c.text ?? "";
             }
           }
         }
@@ -354,10 +378,6 @@ export class OpenAiResponses extends BaseChatModel {
     }
   }
 
-  /**
-   * Convert Responses API function call items → your ToolCall[] shape
-   * (compatible with how your Chat Completions code handled tool_calls).
-   */
   private extractToolCallsFromResponse(resp: any): ToolCall[] {
     const calls: ToolCall[] = [];
     try {
@@ -373,10 +393,6 @@ export class OpenAiResponses extends BaseChatModel {
           } catch {
             parsed = {};
           }
-          // Important mapping:
-          // - Responses API exposes both `id` and `call_id` on function_call items.
-          // - The "call_id" is the identifier you must echo back in a subsequent `function_call_output`.
-          // - Your upstream code uses `tool_call_id`, so set ToolCall.id to `call_id`.
           calls.push({
             id: item?.call_id ?? item?.id ?? "",
             name: item?.name ?? "",
