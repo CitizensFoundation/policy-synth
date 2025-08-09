@@ -18,6 +18,7 @@ export class OpenAiResponses extends BaseChatModel {
   private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
   private previousResponseId?: string;
+  private sentToolOutputIds = new Set<string>();
 
   constructor(config: PsOpenAiModelConfig) {
     const {
@@ -144,71 +145,67 @@ export class OpenAiResponses extends BaseChatModel {
     return "auto";
   }
 
-  /**
-   * Convert internal messages -> Responses API input items.
-   * - system/developer -> instructions
-   * - tool role -> { type:"function_call_output", call_id, output }
-   * - if chaining reasoning, send only tail after the last assistant turn
-   */
   private preprocessForResponses(
     msgs: PsModelMessage[],
     useTailForChainedReasoning: boolean
   ): { inputItems: any[]; instructions?: string } {
     const inputItems: any[] = [];
 
+    // Build instructions from system/developer messages (unchanged)
     const instructionParts: string[] = [];
     for (const m of msgs) {
-      if (m.role === "system" || m.role === "developer") {
-        if (m.message) instructionParts.push(m.message);
+      if ((m.role === "system" || m.role === "developer") && m.message) {
+        instructionParts.push(m.message);
       }
     }
     const instructions =
       instructionParts.length ? instructionParts.join("\n\n") : undefined;
 
-    let sliceStart = 0;
     if (useTailForChainedReasoning) {
-      for (let i = msgs.length - 1; i >= 0; i--) {
-        if (msgs[i].role === "assistant") {
-          sliceStart = i + 1;
-          break;
+      // Only send NEW function_call_output items that haven't been sent yet
+      for (const m of msgs) {
+        if (m.role === "tool" && m.toolCallId && !this.sentToolOutputIds.has(m.toolCallId)) {
+          inputItems.push({
+            type: "function_call_output",
+            call_id: m.toolCallId,
+            output: m.message ?? ""
+          });
+          this.sentToolOutputIds.add(m.toolCallId);
         }
       }
-    }
-    const sliced = msgs.slice(sliceStart);
 
-    for (const msg of sliced) {
+      // If we found new tool outputs, return ONLY those (that’s what the API expects).
+      if (inputItems.length > 0) {
+        return { inputItems, instructions };
+      }
+      // Otherwise fall through and treat it like a fresh turn (e.g., new user msg).
+    }
+
+    // FIRST TURN / NON-CONTINUATION:
+    for (const msg of msgs) {
       if (msg.role === "tool") {
-        inputItems.push({
-          type: "function_call_output",
-          call_id: msg.toolCallId!,
-          output: msg.message ?? "",
-        });
+        // If someone feeds us tool outputs without previous_response_id, pass them through.
+        if (msg.toolCallId) {
+          inputItems.push({
+            type: "function_call_output",
+            call_id: msg.toolCallId,
+            output: msg.message ?? "",
+          });
+        }
         continue;
       }
 
+      // IMPORTANT: never resend assistant(function_call) back to the API
       if (msg.role === "assistant" && msg.toolCall) {
-        const { id, name, arguments: args } = msg.toolCall;
-        inputItems.push({
-          type: "function_call",
-          name,
-          call_id: id,
-          // The Responses API expects a JSON string for arguments
-          arguments: JSON.stringify(args ?? {}),
-        });
         continue;
       }
 
       if (msg.role === "user" || msg.role === "assistant") {
         inputItems.push({ role: msg.role, content: msg.message ?? "" });
-        continue;
       }
-      // system/developer already captured in instructions
     }
 
     if (!inputItems.length) inputItems.push({ role: "user", content: "" });
-
-    this.logger.info(`Input items: ${JSON.stringify(inputItems, null, 2)}`);
-    this.logger.info(`Instructions: ${instructions?.slice(0, 100)}`);
     return { inputItems, instructions };
   }
 
