@@ -53,6 +53,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
     // Override the token usage saving to avoid any database calls.
     this.modelManager.saveTokenUsage = async (
       modelName: string,
+      modelProvider: string,
       prices: PsBaseModelPriceConfiguration,
       modelType: PsAiModelType,
       modelSize: PsAiModelSize,

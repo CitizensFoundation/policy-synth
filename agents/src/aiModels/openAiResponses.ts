@@ -56,12 +56,9 @@ export class OpenAiResponses extends BaseChatModel {
     const responsesTools = this.mapToolsForResponses(tools);
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
 
-    // Negative logit-bias to discourage unallowed tools (same behavior as your original).
-    const logitBias = this.buildLogitBias(tools, allowedTools);
-
     const { inputItems, instructions } = this.preprocessForResponses(
       messages,
-      isReasoning && !!this.previousResponseId
+      !!this.previousResponseId
     );
 
     const common: any = {
@@ -69,9 +66,9 @@ export class OpenAiResponses extends BaseChatModel {
       input: inputItems.length ? inputItems : [{ role: "user", content: "" }],
       tools: responsesTools,
       tool_choice: responsesToolChoice,
-      logit_bias: isReasoning ? undefined : logitBias,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       max_output_tokens: this.cfg.maxTokensOut,
+      safety_identifier: this.cfg.safetyIdentifier,
     };
 
     if (instructions) common.instructions = instructions;
@@ -80,11 +77,14 @@ export class OpenAiResponses extends BaseChatModel {
       if (this.cfg.reasoningEffort) {
         common.reasoning = { effort: this.cfg.reasoningEffort };
       }
-      common.store = true;
-      if (this.previousResponseId) {
-        common.previous_response_id = this.previousResponseId;
-      }
     }
+
+    common.store = true;
+    if (this.previousResponseId) {
+      common.previous_response_id = this.previousResponseId;
+    }
+
+    this.logger.info(`Common model params: ${JSON.stringify(common, null, 2)}`);
 
     if (streaming) {
       const params = { ...common, stream: true };
@@ -212,30 +212,6 @@ export class OpenAiResponses extends BaseChatModel {
     return { inputItems, instructions };
   }
 
-  /** Negative logit-bias if allowedTools limits are provided. */
-  private buildLogitBias(
-    tools: ChatCompletionTool[],
-    allowed: string[]
-  ): Record<number, number> | undefined {
-    if (!allowed.length || !tools.length) return undefined;
-
-    try {
-      const enc = encoding_for_model(this.cfg.modelName as TiktokenModel);
-      const bias: Record<number, number> = {};
-      for (const t of tools as any[]) {
-        const name = t?.type === "function" ? t.function?.name : "";
-        if (name && !allowed.includes(name)) {
-          enc.encode(name).forEach((tok) => (bias[tok] = -100));
-        }
-      }
-      enc.free();
-      return bias;
-    } catch (err) {
-      this.logger.warn(`Encoding failed for logit bias: ${err}`);
-      return undefined;
-    }
-  }
-
   private async handleStreaming(
     params: any,
     onChunk?: (c: string) => void
@@ -293,6 +269,8 @@ export class OpenAiResponses extends BaseChatModel {
 
     this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
 
+    this.logger.info(`previousResponseId: ${this.previousResponseId}`);
+
     const usage = finalResponse?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
     const tokensOut: number = usage.output_tokens ?? usage.completion_tokens ?? 0;
@@ -306,6 +284,16 @@ export class OpenAiResponses extends BaseChatModel {
       usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(finalResponse);
+
+    this.logger.info(`Token debug: ${JSON.stringify({
+      content,
+      tokensIn,
+      tokensOut,
+      cachedInTokens,
+      reasoningTokens,
+      audioTokens,
+      toolCalls,
+    }, null, 2)}`);
 
     return {
       content,
@@ -323,6 +311,8 @@ export class OpenAiResponses extends BaseChatModel {
     this.logger.info(`Response: ${JSON.stringify(resp, null, 2)}`);
 
     this.previousResponseId = resp?.id ?? this.previousResponseId;
+
+    this.logger.info(`previousResponseId: ${this.previousResponseId}`);
 
     const content: string =
       (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "";
@@ -342,6 +332,16 @@ export class OpenAiResponses extends BaseChatModel {
     const toolCalls = this.extractToolCallsFromResponse(resp);
 
     this.logger.info(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
+
+    this.logger.info(`Token debug: ${JSON.stringify({
+      content,
+      tokensIn,
+      tokensOut,
+      cachedInTokens,
+      reasoningTokens,
+      audioTokens,
+      toolCalls,
+    }, null, 2)}`);
 
     return {
       content,

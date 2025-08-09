@@ -27,6 +27,7 @@ interface PsAiModelConfig {
   modelType: import("./aiModelTypes.js").PsAiModelType;
   modelSize: import("./aiModelTypes.js").PsAiModelSize;
   temperature?: number;
+  safetyIdentifier?: string;
   reasoningEffort?: 'low' | 'medium' | 'high';
   maxThinkingTokens?: number;
   timeoutMs?: number;
@@ -48,6 +49,7 @@ interface PsCallModelOptions {
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: "low" | "medium" | "high";
+  safetyIdentifier?: string;
   retryLimitFor429sUntilFallback?: number;
   fallbackModelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   fallbackModelName?: string;

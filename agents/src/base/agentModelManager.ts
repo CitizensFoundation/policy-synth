@@ -375,6 +375,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelTemperature ??
         dbConfig?.defaultTemperature ??
         this.modelTemperature,
+      safetyIdentifier: options.safetyIdentifier,
       reasoningEffort:
         options.modelReasoningEffort ?? (this.reasoningEffort as any),
       maxThinkingTokens:
@@ -738,6 +739,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
           await this.saveTokenUsage(
             model.modelName,
+            model.provider ?? "Unknown",
             model.config.prices,
             modelType,
             modelSize,
@@ -889,6 +891,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelProvider: options.fallbackModelProvider,
                 modelName: options.fallbackModelName,
                 modelTemperature: options.modelTemperature,
+                safetyIdentifier: options.safetyIdentifier,
                 maxTokensOut: options.maxTokensOut,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
@@ -946,6 +949,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 } = fallbackResults;
                 await this.saveTokenUsage(
                   fallbackEphemeral.modelName,
+                  fallbackEphemeral.provider ?? "Unknown",
                   fallbackEphemeral.config.prices,
                   fallbackEphemeral.config?.modelType ?? modelType,
                   fallbackEphemeral.config?.modelSize ?? modelSize,
@@ -1209,6 +1213,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   public async saveTokenUsage(
     modelName: string,
+    modelProvider: string,
     prices: PsBaseModelPriceConfiguration,
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
@@ -1233,7 +1238,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelId = this.modelIds.get(modelKey);
 
     // If modelIdOverride is provided use it, otherwise fall back to map
-    const finalModelId = modelIdOverride ?? modelId ?? -1; // -1 for ephemeral or not found
+    const finalModelId = modelIdOverride ?? modelId ?? -1;
 
     let longContextTokenIn = 0;
     let longContextTokenInCached = 0;
@@ -1304,10 +1309,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
       });
 
-      const provider = (model as any)?.provider ?? "unknown";
-      const modelName = model?.modelName ?? "unknown";
       this.logger.info(
-        `Saved tokens id:${finalModelId} type:${modelType}/${modelSize} provider:${provider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${tokensIn} cached:${cachedInTokens} longIn:${longContextTokenIn} longCached:${longContextTokenInCached} out:${tokensOut} longOut:${longContextTokenOut}`
+        `Saved tokens id: ${finalModelId} type:${modelType}/${modelSize} provider:${modelProvider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${tokensIn} cached:${cachedInTokens} longIn:${longContextTokenIn} longCached:${longContextTokenInCached} out:${tokensOut} longOut:${longContextTokenOut}`
       );
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
