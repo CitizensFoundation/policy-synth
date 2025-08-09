@@ -390,6 +390,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       `Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`
     );
 
+    // Try to reuse a cached ephemeral model keyed by configuration
+    const cacheKey = JSON.stringify(ephemeralConfig);
+    const cachedModel = this.models.get(cacheKey);
+    if (cachedModel) {
+      this.logger.debug(
+        `Using cached ephemeral model for config: ${cacheKey}`
+      );
+      return cachedModel;
+    }
+
     // Construct ephemeral model
     let ephemeralModel: BaseChatModel;
     switch (provider.toLowerCase()) {
@@ -434,6 +444,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     ephemeralModel.provider = provider;
+
+    // Cache the ephemeral model so subsequent calls reuse the instance
+    this.models.set(cacheKey, ephemeralModel);
+    this.modelIds.set(cacheKey, dbModel?.id ?? -1);
 
     return ephemeralModel;
   }
