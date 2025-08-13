@@ -195,8 +195,15 @@ export class OpenAiResponses extends BaseChatModel {
         continue;
       }
 
-      // IMPORTANT: never resend assistant(function_call) back to the API
       if (msg.role === "assistant" && msg.toolCall) {
+        if (msg.toolCall.id) {
+          inputItems.push({
+            type: "function_call",
+            call_id: msg.toolCall.id,
+            name: msg.toolCall.name,
+            arguments: JSON.stringify(msg.toolCall.arguments),
+          });
+        }
         continue;
       }
 
