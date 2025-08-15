@@ -314,6 +314,23 @@ interface PsModelTokenUsage {
   contextCacheTokensOut?: number;
 }
 
+interface PsTokenUsageEvent {
+  modelName: string;
+  modelProvider: string;
+  modelType: import("./aiModelTypes.js").PsAiModelType;
+  modelSize: import("./aiModelTypes.js").PsAiModelSize;
+  tokensIn: number;
+  tokensOut: number;
+  cachedInTokens?: number;
+  longContextTokenIn?: number;
+  longContextTokenInCached?: number;
+  longContextTokenOut?: number;
+  agentId?: number;
+  userId?: number;
+  modelId?: number;
+  timestamp: number;
+}
+
 interface PsAgentClassAttributesConfiguration {
   category: import("./agentCategories.js").PsAgentClassCategories;
   subCategory: string;

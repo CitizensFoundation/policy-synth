@@ -17,6 +17,7 @@ import type {
   ChatCompletionToolChoiceOption,
 } from "openai/resources/chat/completions";
 import { PsAiModelProvider } from "../aiModelTypes.js";
+import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
 
 // Lazy loaded database modules
 let SequelizeModule: any;
@@ -90,7 +91,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     switch (modelProvider?.toLowerCase()) {
       case PsAiModelProvider.OpenAI:
       case PsAiModelProvider.OpenAIResponses:
-          apiKey = process.env.OPENAI_API_KEY;
+        apiKey = process.env.OPENAI_API_KEY;
         break;
       case PsAiModelProvider.Anthropic:
         apiKey = process.env.ANTHROPIC_API_KEY;
@@ -290,7 +291,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!isOverrideRequested) {
       return undefined;
     } else {
-      this.logger.info(
+      this.logger.debug(
         `Ephemeral override requested for ${modelType} ${modelSize} ${JSON.stringify(
           options,
           null,
@@ -394,9 +395,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const cacheKey = JSON.stringify(ephemeralConfig);
     const cachedModel = this.models.get(cacheKey);
     if (cachedModel) {
-      this.logger.debug(
-        `Using cached ephemeral model for config: ${cacheKey}`
-      );
+      this.logger.debug(`Using cached ephemeral model for config: ${cacheKey}`);
       return cachedModel;
     }
 
@@ -640,7 +639,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   static general400Error = (err: any) => {
     const status = err?.response?.status;
     const message = err?.response?.data?.error?.message || err?.message || "";
-    return (status === 400 || (typeof message === "string" && message.startsWith("400")));
+    return (
+      status === 400 ||
+      (typeof message === "string" && message.startsWith("400"))
+    );
   };
 
   private logDetailedServerError(
@@ -775,10 +777,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               this.logger.warn(
                 `JSON parse failure: retrying callTextModel. Attempt #${retryCount}`
               );
-              if (retryCount >= this.limitedLLMmaxRetryCount-1) {
+              if (retryCount >= this.limitedLLMmaxRetryCount - 1) {
                 throw new Error(
                   `500 Internal Server Error: JSON parse failure, max retries reached, rethrowing error.`
-                ) ;
+                );
               }
               await this.sleepBeforeRetry(retryCount);
               continue;
@@ -814,10 +816,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           throw error;
         }
 
-        if (
-          PsAiModelManager.general400Error(error) &&
-          retryCount > 1
-        ) {
+        if (PsAiModelManager.general400Error(error) && retryCount > 1) {
           this.logger.error(
             `General 400 error from model: ${error.message || error}`
           );
@@ -1243,6 +1242,24 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.info(
         `(Database Usage Tracking Disabled) Token usage for ${modelName} (${modelType} ${modelSize}): in=${tokensIn} cached=${cachedInTokens} out=${tokensOut}`
       );
+      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+          modelName,
+          modelProvider,
+          modelType,
+          modelSize,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          agentId: this.agentId,
+          userId: this.userId,
+          modelId:
+            modelIdOverride ??
+            this.modelIds.get(`${modelType}_${modelSize}`) ??
+            -1,
+          timestamp: Date.now(),
+        });
+      }
       return;
     }
 
@@ -1281,6 +1298,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.error(
         `Token usage not saved in data base (modelId:${finalModelId}) for agent ${this.agentId} but model is ephemeral`
       );
+      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+          modelName,
+          modelProvider,
+          modelType,
+          modelSize,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          agentId: this.agentId,
+          userId: this.userId,
+          modelId: finalModelId,
+          timestamp: Date.now(),
+        });
+      }
       return;
     }
 
@@ -1326,6 +1358,24 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.info(
         `Saved tokens id: ${finalModelId} type:${modelType}/${modelSize} provider:${modelProvider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${tokensIn} cached:${cachedInTokens} longIn:${longContextTokenIn} longCached:${longContextTokenInCached} out:${tokensOut} longOut:${longContextTokenOut}`
       );
+      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+          modelName,
+          modelProvider,
+          modelType,
+          modelSize,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          longContextTokenIn: longContextTokenIn,
+          longContextTokenInCached: longContextTokenInCached,
+          longContextTokenOut: longContextTokenOut,
+          agentId: this.agentId,
+          userId: this.userId,
+          modelId: finalModelId,
+          timestamp: Date.now(),
+        });
+      }
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);

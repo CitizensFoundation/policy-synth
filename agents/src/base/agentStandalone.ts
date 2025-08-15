@@ -1,6 +1,7 @@
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { PsAiModelManager } from "./agentModelManager.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
 
 /**
  * PolicySynthStandaloneAgent
@@ -64,6 +65,21 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       this.logger.info(
         `(Standalone) Token usage for model ${modelName} (${modelType} ${modelSize}): tokensIn=${tokensIn}, tokensOut=${tokensOut}`
       );
+      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+          modelName,
+          modelProvider,
+          modelType,
+          modelSize,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          agentId: -1,
+          userId: -1,
+          modelId: -1,
+          timestamp: Date.now(),
+        });
+      }
     };
   }
 
@@ -73,7 +89,6 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
    */
   async process(): Promise<void> {
     this.logger.debug("PolicySynthStandaloneAgent processing started.");
-
   }
 
   /**
@@ -96,15 +111,10 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
       tokenOutEstimate: 120,
       streamingCallbacks: undefined,
       numberOfLastWordsToPreserveForTooManyTokenSplitting: 50,
-      maximumNumberOfSplitDocumentChunks: 10
+      maximumNumberOfSplitDocumentChunks: 10,
     }
   ): Promise<any> {
-    return this.modelManager.callModel(
-      modelType,
-      modelSize,
-      messages,
-      options
-    );
+    return this.modelManager.callModel(modelType, modelSize, messages, options);
   }
 
   // The following methods from the core agent that rely on Redis or DB have been omitted
