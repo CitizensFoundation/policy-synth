@@ -47,6 +47,15 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     Promise.all(
       Object.values(this.dirs).map((d) => fsp.mkdir(d, { recursive: true }))
     );
+
+    this.setReasoningEffort(this.reasoningEffort);
+  }
+
+  setReasoningEffort(effort: "low" | "medium" | "high") {
+    this.modelCallOptions.modelReasoningEffort = effort;
+    if (this.modelManager) {
+      this.modelManager.reasoningEffort = effort;
+    }
   }
 
   async *run(
