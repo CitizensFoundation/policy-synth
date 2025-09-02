@@ -9,6 +9,8 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
 
+type ImageRef = { mimeType: string; data: string } | { url: string };
+
 /**
  * Interface-compatible with OpenAiChat, but uses the Responses API.
  * - Flattens Chat Completions tool defs -> Responses tool defs
@@ -30,6 +32,39 @@ export class OpenAiResponses extends BaseChatModel {
     super(config, modelName, maxTokensOut);
     this.client = new OpenAI({ apiKey });
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
+  }
+
+  private attachImagesToLastUserMessage(
+    inputItems: any[],
+    images?: ImageRef[],
+    detail: "low" | "medium" | "high" | "auto" = "auto"
+  ) {
+    if (!images?.length) return;
+
+    const toImageUrl = (img: ImageRef) =>
+      "url" in img ? img.url : `data:${img.mimeType};base64,${img.data}`;
+
+    const parts = images.map((img) => ({
+      type: "input_image",
+      image_url: toImageUrl(img),
+      detail, // Responses API accepts "auto" | "low" | "high"
+    }));
+
+    // Find the last user message; if none, create one
+    for (let i = inputItems.length - 1; i >= 0; i--) {
+      const item = inputItems[i];
+      if (item?.role === "user") {
+        if (typeof item.content === "string") {
+          item.content = [{ type: "input_text", text: item.content }, ...parts];
+        } else if (Array.isArray(item.content)) {
+          item.content.push(...parts);
+        } else {
+          item.content = parts;
+        }
+        return;
+      }
+    }
+    inputItems.push({ role: "user", content: parts });
   }
 
   /************************************  Public API  ************************************/
@@ -61,6 +96,11 @@ export class OpenAiResponses extends BaseChatModel {
       messages,
       !!this.previousResponseId
     );
+
+    if (media && media.length > 0) {
+      this.logger.debug("Attaching images to last user message", media.length);
+      this.attachImagesToLastUserMessage(inputItems, media, this.cfg.reasoningEffort ? "auto" : "auto");
+    }
 
     const common: any = {
       model: this.cfg.modelName,
@@ -108,7 +148,8 @@ export class OpenAiResponses extends BaseChatModel {
     return tools.map((t: any) => {
       if (t?.type === "function") {
         const fn = t.function ?? {};
-        const maybeStrict = typeof t.strict === "boolean" ? { strict: t.strict } : {};
+        const maybeStrict =
+          typeof t.strict === "boolean" ? { strict: t.strict } : {};
         return {
           type: "function",
           name: fn.name,
@@ -158,17 +199,22 @@ export class OpenAiResponses extends BaseChatModel {
         instructionParts.push(m.message);
       }
     }
-    const instructions =
-      instructionParts.length ? instructionParts.join("\n\n") : undefined;
+    const instructions = instructionParts.length
+      ? instructionParts.join("\n\n")
+      : undefined;
 
     if (useTailForChainedReasoning) {
       // Only send NEW function_call_output items that haven't been sent yet
       for (const m of msgs) {
-        if (m.role === "tool" && m.toolCallId && !this.sentToolOutputIds.has(m.toolCallId)) {
+        if (
+          m.role === "tool" &&
+          m.toolCallId &&
+          !this.sentToolOutputIds.has(m.toolCallId)
+        ) {
           inputItems.push({
             type: "function_call_output",
             call_id: m.toolCallId,
-            output: m.message ?? ""
+            output: m.message ?? "",
           });
           this.sentToolOutputIds.add(m.toolCallId);
         }
@@ -230,7 +276,10 @@ export class OpenAiResponses extends BaseChatModel {
       const type: string | undefined = event?.type;
 
       // Text deltas (SDK emits either of these)
-      if (type === "response.output_text.delta" || type === "response.text.delta") {
+      if (
+        type === "response.output_text.delta" ||
+        type === "response.text.delta"
+      ) {
         const delta = event?.delta ?? event?.data ?? "";
         if (delta) {
           content += delta;
@@ -245,7 +294,8 @@ export class OpenAiResponses extends BaseChatModel {
       }
 
       if (type === "response.error") {
-        const msg = event.error?.message ?? "Streaming error from Responses API";
+        const msg =
+          event.error?.message ?? "Streaming error from Responses API";
         throw new Error(msg);
       }
     }
@@ -277,27 +327,33 @@ export class OpenAiResponses extends BaseChatModel {
 
     const usage = finalResponse?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
-    const tokensOut: number = usage.output_tokens ?? usage.completion_tokens ?? 0;
+    const tokensOut: number =
+      usage.output_tokens ?? usage.completion_tokens ?? 0;
     const cachedInTokens: number =
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
     const reasoningTokens: number =
       usage.output_tokens_details?.reasoning_tokens ?? 0;
-    const audioTokens: number =
-      usage.output_tokens_details?.audio_tokens ?? 0;
+    const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(finalResponse);
 
-    this.logger.info(`Token debug: ${JSON.stringify({
-      content,
-      tokensIn,
-      tokensOut,
-      cachedInTokens,
-      reasoningTokens,
-      audioTokens,
-      toolCalls,
-    }, null, 2)}`);
+    this.logger.info(
+      `Token debug: ${JSON.stringify(
+        {
+          content,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          reasoningTokens,
+          audioTokens,
+          toolCalls,
+        },
+        null,
+        2
+      )}`
+    );
 
     return {
       content,
@@ -310,7 +366,9 @@ export class OpenAiResponses extends BaseChatModel {
     };
   }
 
-  private async handleNonStreaming(params: any): Promise<PsBaseModelReturnParameters> {
+  private async handleNonStreaming(
+    params: any
+  ): Promise<PsBaseModelReturnParameters> {
     const resp: any = await this.client.responses.create(params);
     this.logger.info(`Response: ${JSON.stringify(resp, null, 2)}`);
 
@@ -323,29 +381,35 @@ export class OpenAiResponses extends BaseChatModel {
 
     const usage = resp?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
-    const tokensOut: number = usage.output_tokens ?? usage.completion_tokens ?? 0;
+    const tokensOut: number =
+      usage.output_tokens ?? usage.completion_tokens ?? 0;
     const cachedInTokens: number =
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
     const reasoningTokens: number =
       usage.output_tokens_details?.reasoning_tokens ?? 0;
-    const audioTokens: number =
-      usage.output_tokens_details?.audio_tokens ?? 0;
+    const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(resp);
 
     this.logger.info(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
 
-    this.logger.info(`Token debug: ${JSON.stringify({
-      content,
-      tokensIn,
-      tokensOut,
-      cachedInTokens,
-      reasoningTokens,
-      audioTokens,
-      toolCalls,
-    }, null, 2)}`);
+    this.logger.info(
+      `Token debug: ${JSON.stringify(
+        {
+          content,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          reasoningTokens,
+          audioTokens,
+          toolCalls,
+        },
+        null,
+        2
+      )}`
+    );
 
     return {
       content,

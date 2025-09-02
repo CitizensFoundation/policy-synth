@@ -30,12 +30,19 @@ async function loadDbModules() {
     return;
   }
   if (!SequelizeModule) {
+    PolicySynthAgentBase.logger.debug("Loading Sequelize modules");
     SequelizeModule = await import("sequelize");
     ({ sequelize } = await import("../dbModels/index.js"));
     ({ PsAiModel: PsAiModel } = await import("../dbModels/aiModel.js"));
     ({ PsModelUsage: PsModelUsage } = await import(
       "../dbModels/modelUsage.js"
     ));
+    PolicySynthAgentBase.logger.debug("Sequelize modules loaded");
+    if (!PsAiModel) {
+      PolicySynthAgentBase.logger.error("PsAiModel not found after loading Sequelize modules");
+    }
+  } else {
+    PolicySynthAgentBase.logger.debug("Sequelize modules already loaded");
   }
 }
 
