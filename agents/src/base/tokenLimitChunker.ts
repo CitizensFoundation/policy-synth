@@ -410,7 +410,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
           } catch (e) {
             if (TokenLimitChunker.isTokenLimitError(e)) {
               this.logger.error(
-                `Token limit error inside chunk loop – aborting further processing. ${idx} ${chunkText.length} ${e}`
+                `Token limit error inside chunk loop – aborting further processing. idx=${idx} chunkText.length=${chunkText.length} error=${e}`
               );
             }
             throw e;
