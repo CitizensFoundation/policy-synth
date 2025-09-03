@@ -8,7 +8,7 @@ import {
 export class EducationRequirementAnalyzerAgent extends PolicySynthAgent {
   memory: JobDescriptionMemoryData;
 
-  modelSize: PsAiModelSize = PsAiModelSize.Medium;
+  modelSize: PsAiModelSize = PsAiModelSize.Large;
   modelType: PsAiModelType = PsAiModelType.TextReasoning;
 
   override get maxModelTokensOut(): number {

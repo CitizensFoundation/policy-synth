@@ -10,6 +10,7 @@ import { PsAgent } from "@policysynth/agents/dbModels/agent.js";
 import {
   PsAiModelSize,
   PsAiModelType,
+  PsAiModelProvider,
 } from "@policysynth/agents/aiModelTypes.js";
 import { EducationRequirementAnalyzerAgent } from "./educationRequirementAnalyzer.js";
 
@@ -248,7 +249,7 @@ export class ProcessAndScanStatuesAgent extends PolicySynthAgent {
             {
               parseJson: true,
               modelName: "gpt-4.1-mini",
-              modelProvider: "openai",
+              modelProvider: PsAiModelProvider.OpenAI,
               maxTokensOut: 10000,
             }
           )) as { mentionsJob: boolean };

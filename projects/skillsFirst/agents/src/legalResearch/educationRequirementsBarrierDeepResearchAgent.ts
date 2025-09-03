@@ -10,6 +10,7 @@ import { SheetsEducationRequirementExportAgent } from "./educationExportSheet.js
 import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
 import pLimit from "p-limit";
 import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
+import fs from "fs";
 
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -46,6 +47,8 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       "Starting education requirement deep research"
     );
 
+    this.ensureCsvHeaderIfNeeded();
+
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
@@ -55,7 +58,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       );
     });
 
-    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 60);
+    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 4);
 
     (this.memory as any).jobLicenceTypesForLicenceAnalysis = [];
 
@@ -130,6 +133,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           job.degreeAnalysis.deepResearchResults =
             job.degreeAnalysis.deepResearchResults || [];
           job.degreeAnalysis.deepResearchResults.push(...deepResearchResults);
+          this.appendResultsToCsv(deepResearchResults);
         }
 
         if (statuteResults.length > 0) {
@@ -137,6 +141,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           job.degreeAnalysis.statutesResearchResults =
             job.degreeAnalysis.statutesResearchResults || [];
           job.degreeAnalysis.statutesResearchResults.push(...statuteResults);
+          this.appendResultsToCsv(statuteResults);
         }
 
         processed++;
@@ -166,6 +171,76 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       100,
       "Completed education requirement research"
     );
+  }
+
+  static readonly CSV_PATH = "/home/robert/legalResearchImportProcess.csv";
+
+  private ensureCsvHeaderIfNeeded(): void {
+    try {
+      const csvPath = EducationRequirementsBarrierDeepResearchAgent.CSV_PATH;
+      let needsHeader = true;
+      if (fs.existsSync(csvPath)) {
+        const stats = fs.statSync(csvPath);
+        needsHeader = stats.size === 0;
+      }
+      if (needsHeader) {
+        const headers = [
+          "titleCode",
+          "jobTitle",
+          "sourceUrl",
+          "title",
+          "statedDegreeRequirement",
+          "degreeRequirementType",
+          "typeOfOfficialDocument",
+          "matchTypeForJobTitle",
+          "typeOfDegreeRequirement",
+          "mandatoryDegreeRequirementStatus",
+          "reasoning",
+          "error",
+        ];
+        fs.appendFileSync(csvPath, headers.join(",") + "\n");
+      }
+    } catch (err) {
+      // Non-fatal: continue processing even if CSV header init fails
+      console.error("Failed to initialize CSV header:", err);
+    }
+  }
+
+  private csvEscape(value: unknown): string {
+    const str = value === undefined || value === null ? "" : String(value);
+    const escaped = str.replace(/"/g, '""');
+    return `"${escaped}"`;
+  }
+
+  private appendResultsToCsv(results: EducationRequirementResearchResult[]): void {
+    this.logger.info(`Appending ${results.length} results to CSV`);
+    try {
+      const csvPath = EducationRequirementsBarrierDeepResearchAgent.CSV_PATH;
+      const lines = results.map((r) => {
+        const row = [
+          r.titleCode,
+          r.jobTitle,
+          r.sourceUrl,
+          (r as any).title || "",
+          r.statedDegreeRequirement,
+          r.degreeRequirementType,
+          r.typeOfOfficialDocument,
+          r.matchTypeForJobTitle,
+          r.typeOfDegreeRequirement,
+          r.mandatoryDegreeRequirementStatus,
+          r.reasoning,
+          r.error || "",
+        ];
+        return row.map((v) => this.csvEscape(v)).join(",");
+      });
+      if (lines.length > 0) {
+        this.logger.info(`Appending ${lines.length} lines to CSV with path ${csvPath}`);
+        fs.appendFileSync(csvPath, lines.join("\n") + "\n");
+      }
+    } catch (err) {
+      // Non-fatal: continue processing even if CSV append fails
+      console.error("Failed to append to CSV:", err);
+    }
   }
 
   static getAgentClass(): PsAgentClassCreationAttributes {

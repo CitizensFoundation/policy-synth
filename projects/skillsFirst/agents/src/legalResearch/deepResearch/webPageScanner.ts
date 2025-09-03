@@ -34,7 +34,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   urlToCrawl: string | undefined = undefined;
 
   override get reasoningEffort(): "low" | "medium" | "high" {
-    return "high";
+    return "medium";
   }
 
   constructor(
@@ -115,7 +115,7 @@ Return your analysis strictly as JSON array in the following format:
 
       const analysis = (await this.callModel(
         PsAiModelType.TextReasoning,
-        PsAiModelSize.Medium,
+        PsAiModelSize.Large,
         messages
       )) as any;
 
