@@ -34,7 +34,7 @@ export class WebPageScanner extends GetWebPagesBaseAgent {
   urlToCrawl: string | undefined = undefined;
 
   override get reasoningEffort(): "low" | "medium" | "high" {
-    return "medium";
+    return "high";
   }
 
   constructor(
