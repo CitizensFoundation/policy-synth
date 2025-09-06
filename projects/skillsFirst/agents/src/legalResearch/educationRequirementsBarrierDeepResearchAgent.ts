@@ -11,6 +11,7 @@ import { ProcessAndScanStatuesAgent } from "./processAndScanStatuesAgent.js";
 import pLimit from "p-limit";
 import { JobTitleDeepResearchAgent } from "./jobTitleDeepResearch.js";
 import fs from "fs";
+import csv from "csv-parser";
 
 export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAgent {
   declare memory: JobDescriptionMemoryData;
@@ -49,6 +50,9 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
 
     this.ensureCsvHeaderIfNeeded();
 
+    // Read processed title codes from CSV to allow resuming without reprocessing
+    const processedTitleCodes = await this.readProcessedTitleCodesFromCsv();
+
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
@@ -57,6 +61,14 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
           maxReq === EducationType.AssociatesDegree)
       );
     });
+
+    // Skip jobs whose titleCode is already present in the CSV
+    if (processedTitleCodes.size > 0) {
+      const before = qualifyingJobs.length;
+      qualifyingJobs = qualifyingJobs.filter((j) => !processedTitleCodes.has(j.titleCode));
+      const after = qualifyingJobs.length;
+      console.log(`---------------------> Skipping ${before - after} already-processed jobs based on CSV`);
+    }
 
 //    qualifyingJobs = this.shuffleArray(qualifyingJobs).slice(0, 4);
 
@@ -74,7 +86,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(5);
+    const limit = pLimit(2);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
@@ -241,6 +253,35 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       // Non-fatal: continue processing even if CSV append fails
       console.error("Failed to append to CSV:", err);
     }
+  }
+
+  private async readProcessedTitleCodesFromCsv(): Promise<Set<string>> {
+    const csvPath = EducationRequirementsBarrierDeepResearchAgent.CSV_PATH;
+    const processed = new Set<string>();
+    try {
+      if (!fs.existsSync(csvPath)) {
+        return processed;
+      }
+      await new Promise<void>((resolve, reject) => {
+        try {
+          const stream = fs.createReadStream(csvPath)
+            .pipe(csv())
+            .on("data", (row: any) => {
+              const titleCode = (row && (row.titleCode || row["titleCode"])) as string | undefined;
+              if (titleCode) {
+                processed.add(String(titleCode));
+              }
+            })
+            .on("end", () => resolve())
+            .on("error", (err: any) => reject(err));
+        } catch (err) {
+          reject(err);
+        }
+      });
+    } catch (err) {
+      console.error("Failed to read processed title codes from CSV:", err);
+    }
+    return processed;
   }
 
   static getAgentClass(): PsAgentClassCreationAttributes {
