@@ -86,7 +86,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
       this.memory
     );
     await statutesAgent.loadAndScanStatuesIfNeeded();
-    const limit = pLimit(2);
+    const limit = pLimit(1);
     let processed = 0;
     const tasks = qualifyingJobs.map((job) =>
       limit(async () => {
