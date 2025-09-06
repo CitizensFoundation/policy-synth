@@ -130,8 +130,19 @@ export class OpenAiResponses extends BaseChatModel {
     if (this.previousResponseId) {
       common.previous_response_id = this.previousResponseId;
     }
-
-    this.logger.info(`Common model params: ${JSON.stringify(common, null, 2)}`);
+    const logParams = JSON.parse(JSON.stringify(common));
+    if (Array.isArray(logParams.input)) {
+      for (const item of logParams.input) {
+        if (Array.isArray(item?.content)) {
+          for (const c of item.content) {
+            if (typeof c?.image_url === "string" && c.image_url.length > 200) {
+              c.image_url = `${c.image_url.slice(0, 200)}…`;
+            }
+          }
+        }
+      }
+    }
+    this.logger.info(`Common model params: ${JSON.stringify(logParams, null, 2)}`);
 
     if (streaming) {
       const params = { ...common, stream: true };
