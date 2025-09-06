@@ -298,9 +298,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!isOverrideRequested) {
       return undefined;
     } else {
+      const loggingOptions: PsCallModelOptions = {
+        ...options,
+        promptImages: options.promptImages?.map((image) => ({
+          ...image,
+          data: image.data.slice(0, 200),
+        })),
+      };
       this.logger.debug(
         `Ephemeral override requested for ${modelType} ${modelSize} ${JSON.stringify(
-          options,
+          loggingOptions,
           null,
           2
         )}`
