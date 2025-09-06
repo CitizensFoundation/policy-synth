@@ -23,13 +23,19 @@ export class OpenAiResponses extends BaseChatModel {
   private sentToolOutputIds = new Set<string>();
 
   constructor(config: PsOpenAiModelConfig) {
-    const {
-      apiKey = process.env.PS_AGENT_OPENAI_API_KEY!,
+    let {
+      apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY!,
       modelName = "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
 
     super(config, modelName, maxTokensOut);
+
+    if (process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
+      apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
+      this.logger.warn("Using PS_AGENT_OPENAI_API_KEY from environment variables");
+    }
+
     this.client = new OpenAI({ apiKey });
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
   }
