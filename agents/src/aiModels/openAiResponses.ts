@@ -33,7 +33,7 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
-      this.logger.warn("Using PS_AGENT_OPENAI_API_KEY from environment variables");
+      this.logger.warn("Using PS_AGENT_OVERRIDE_OPENAI_API_KEY from environment variables");
     }
 
     this.client = new OpenAI({ apiKey });
