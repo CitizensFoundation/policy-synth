@@ -70,7 +70,9 @@ export class GoogleGeminiChat extends BaseChatModel {
 
   private tokensOut(usage?: any): number {
     if (!usage) return 0;
-    if (usage.candidatesTokenCount != null) return usage.candidatesTokenCount;
+    const thoughts = usage.thoughtsTokenCount ?? 0;
+    if (usage.candidatesTokenCount != null)
+      return usage.candidatesTokenCount + thoughts;
     if (usage.totalTokenCount != null && usage.promptTokenCount != null) {
       return (
         usage.totalTokenCount -
@@ -249,6 +251,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     const tokensIn = usage.promptTokenCount ?? 0;
     const tokensOut = this.tokensOut(usage);
     const cached = usage.cachedContentTokenCount ?? 0;
+    this.logger.debug("Gemini usage: " + JSON.stringify(usage, null, 2));
     await this.logTokens(tokensIn, tokensOut, cached);
 
     return {
