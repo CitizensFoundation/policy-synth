@@ -108,6 +108,8 @@ export class OpenAiResponses extends BaseChatModel {
       this.attachImagesToLastUserMessage(inputItems, media, this.cfg.reasoningEffort ? "auto" : "auto");
     }
 
+    this.logger.debug(`maxTokenOut debug: ${this.cfg.maxTokensOut} ${this.maxTokensOut}`);
+
     const common: any = {
       model: this.cfg.modelName,
       input: inputItems.length ? inputItems : [{ role: "user", content: "" }],
@@ -327,6 +329,7 @@ export class OpenAiResponses extends BaseChatModel {
     }
 
     if (!finalResponse) {
+      this.logger.error("No final response from Responses API");
       return {
         content,
         tokensIn: 0,

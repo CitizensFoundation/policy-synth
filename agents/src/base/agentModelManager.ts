@@ -384,7 +384,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelName ?? dbConfig?.model ?? fallbackModel.modelName,
       provider: provider,
       maxTokensOut:
-        options.maxTokensOut ?? dbConfig?.maxTokensOut ?? this.maxTokensOut,
+        options.maxTokensOut ?? this.maxTokensOut ?? dbConfig?.maxTokensOut,
       maxContextTokens: dbConfig?.maxContextTokens,
       temperature:
         options.modelTemperature ??
@@ -851,6 +851,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             );
             throw error;
           }
+          // Disable chunking when using the OpenAI Responses API
+          const usingOpenAiResponses =
+            model instanceof OpenAiResponses ||
+            (model.provider || "").toLowerCase() ===
+              PsAiModelProvider.OpenAIResponses;
+          if (usingOpenAiResponses) {
+            this.logger.warn(
+              "TokenLimitChunker disabled for OpenAI Responses; rethrowing error."
+            );
+            throw error;
+          }
           this.logger.error(
             "Token limit exceeded, invoking chunking handler and retrying"
           );
@@ -1001,6 +1012,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 if (options.disableChunkingRetry) {
                   this.logger.error(
                     "Token limit error encountered after chunking; giving up."
+                  );
+                  throw fallbackError;
+                }
+                // Disable chunking when using the OpenAI Responses API
+                const fallbackUsingOpenAiResponses =
+                  fallbackEphemeral instanceof OpenAiResponses ||
+                  ((fallbackEphemeral.provider || "").toLowerCase() ===
+                    PsAiModelProvider.OpenAIResponses);
+                if (fallbackUsingOpenAiResponses) {
+                  this.logger.warn(
+                    "TokenLimitChunker disabled for OpenAI Responses (fallback); rethrowing error."
                   );
                   throw fallbackError;
                 }

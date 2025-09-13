@@ -4,7 +4,7 @@
  * for context‑window overflow.  Revised July 2025.
  ****************************************************************************************/
 
-import { encoding_for_model, TiktokenModel } from "tiktoken";
+import { encoding_for_model } from "tiktoken";
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
@@ -36,7 +36,9 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
   }
 
   private static geminiAi = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY!,
+    // If the key is missing we still construct the client, but will fall back
+    // to tiktoken counting when requests fail.
+    apiKey: process.env.GEMINI_API_KEY || "",
   });
 
   private static async geminiTokenCount(
@@ -155,8 +157,12 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     /** 1 . One-off calibration on a small sample */
     const SAMPLE_CHARS = 8_000;
     const sample = text.slice(0, SAMPLE_CHARS);
-    const sampleTokens = await this.countTokens(model, sample);
-    const tokensPerChar = sampleTokens / sample.length || 0.25; // fallback
+    const sampleTokens = sample.length
+      ? await this.countTokens(model, sample)
+      : 0;
+    const tokensPerChar = sample.length
+      ? sampleTokens / sample.length
+      : 0.25; // sensible fallback when sample is empty
 
     /** 2 . Choose a fixed safety multiplier so estimation never overruns. */
     const SAFETY = 1.1; // 10 % head-room
@@ -235,6 +241,7 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
         const chunks: string[] = [];
         for (let i = 0; i < allIds.length; i += allowedTokens) {
           const slice = allIds.subarray(i, i + allowedTokens);
+          // enc.decode returns a Uint8Array; convert to string via TextDecoder.
           chunks.push(new TextDecoder().decode(enc.decode(slice)));
         }
         return chunks;
@@ -300,8 +307,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
     const tagName = options.xmlTagToPreserveForTooManyTokenSplitting;
     const tagRegex = tagName
       ? new RegExp(`<${tagName}[^>]*>[\\s\\S]*?<\\/${tagName}>`, "i")
-      : /<[^>]+>/;
-    const tagMatch = docMessage.message.match(tagRegex);
+      : undefined;
+    const tagMatch = tagRegex ? docMessage.message.match(tagRegex) : null;
     const lastTag = tagMatch ? tagMatch[0] : "";
     let bodyWithoutTag = lastTag
       ? docMessage.message.replace(lastTag, "")
