@@ -111,6 +111,7 @@ export class OpenAiResponses extends BaseChatModel {
       );
       this.sentToolOutputIds.clear();
       this.lastSubmittedMessageCount = 0;
+      this.previousResponseId = undefined;
     }
 
     if (!hasPreviousResponse && this.lastSubmittedMessageCount > 0) {
