@@ -21,6 +21,7 @@ export class OpenAiResponses extends BaseChatModel {
   private cfg: PsOpenAiModelConfig;
   private previousResponseId?: string;
   private sentToolOutputIds = new Set<string>();
+  private lastSubmittedMessageCount = 0;
 
   constructor(config: PsOpenAiModelConfig) {
     let {
@@ -98,9 +99,26 @@ export class OpenAiResponses extends BaseChatModel {
     const responsesTools = this.mapToolsForResponses(tools);
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
 
+    const hasPreviousResponse = !!this.previousResponseId;
+    const hasTruncatedHistory =
+      hasPreviousResponse && messages.length < this.lastSubmittedMessageCount;
+
+    if (hasTruncatedHistory) {
+      this.logger.debug(
+        "Detected truncated message history; resetting Responses delta state."
+      );
+      this.sentToolOutputIds.clear();
+      this.lastSubmittedMessageCount = 0;
+    }
+
+    if (!hasPreviousResponse && this.lastSubmittedMessageCount > 0) {
+      this.sentToolOutputIds.clear();
+      this.lastSubmittedMessageCount = 0;
+    }
     const { inputItems, instructions } = this.preprocessForResponses(
       messages,
-      !!this.previousResponseId
+      hasPreviousResponse,
+      this.lastSubmittedMessageCount
     );
 
     if (media && media.length > 0) {
@@ -148,10 +166,14 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (streaming) {
       const params = { ...common, stream: true };
-      return await this.handleStreaming(params, streamingCallback);
+      const result = await this.handleStreaming(params, streamingCallback);
+      this.lastSubmittedMessageCount = messages.length;
+      return result;
     } else {
       const params = { ...common, stream: false };
-      return await this.handleNonStreaming(params);
+      const result = await this.handleNonStreaming(params);
+      this.lastSubmittedMessageCount = messages.length;
+      return result;
     }
   }
 
@@ -207,7 +229,8 @@ export class OpenAiResponses extends BaseChatModel {
 
   private preprocessForResponses(
     msgs: PsModelMessage[],
-    useTailForChainedReasoning: boolean
+    useTailForChainedReasoning: boolean,
+    lastSubmittedMessageCount: number
   ): { inputItems: any[]; instructions?: string } {
     const inputItems: any[] = [];
 
@@ -243,7 +266,39 @@ export class OpenAiResponses extends BaseChatModel {
       if (inputItems.length > 0) {
         return { inputItems, instructions };
       }
-      // Otherwise fall through and treat it like a fresh turn (e.g., new user msg).
+
+      // Otherwise only send the delta since the last submission.
+      const startIndex = Math.min(
+        Math.max(lastSubmittedMessageCount, 0),
+        msgs.length
+      );
+      for (let idx = startIndex; idx < msgs.length; idx++) {
+        const msg = msgs[idx];
+        if (msg.role === "user") {
+          inputItems.push({ role: "user", content: msg.message ?? "" });
+          continue;
+        }
+        if (msg.role === "assistant") {
+          // Assistant messages are already stored when previous_response_id is set.
+          continue;
+        }
+        if (msg.role === "tool") {
+          // Already handled via the tool output loop above.
+          continue;
+        }
+        if (msg.role === "system" || msg.role === "developer") {
+          // Included through the instructions field.
+          continue;
+        }
+
+        inputItems.push({ role: msg.role, content: msg.message ?? "" });
+      }
+
+      if (inputItems.length === 0) {
+        inputItems.push({ role: "user", content: "" });
+      }
+
+      return { inputItems, instructions };
     }
 
     // FIRST TURN / NON-CONTINUATION:
