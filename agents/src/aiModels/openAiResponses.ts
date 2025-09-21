@@ -34,7 +34,9 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
-      this.logger.warn("Using PS_AGENT_OVERRIDE_OPENAI_API_KEY from environment variables");
+      this.logger.warn(
+        "Using PS_AGENT_OVERRIDE_OPENAI_API_KEY from environment variables"
+      );
     }
 
     this.client = new OpenAI({ apiKey });
@@ -121,12 +123,25 @@ export class OpenAiResponses extends BaseChatModel {
       this.lastSubmittedMessageCount
     );
 
-    if (media && media.length > 0) {
+    const onlyToolOutputs =
+      inputItems.length > 0 &&
+      inputItems.every(
+        (it) =>
+          it && typeof it === "object" && it.type === "function_call_output"
+      );
+
+    if (media && media.length > 0 && !onlyToolOutputs) {
       this.logger.debug("Attaching images to last user message", media.length);
-      this.attachImagesToLastUserMessage(inputItems, media, this.cfg.reasoningEffort ? "auto" : "auto");
+      this.attachImagesToLastUserMessage(
+        inputItems,
+        media,
+        this.cfg.reasoningEffort ? "auto" : "auto"
+      );
     }
 
-    this.logger.debug(`maxTokenOut debug: ${this.cfg.maxTokensOut} ${this.maxTokensOut}`);
+    this.logger.debug(
+      `maxTokenOut debug: ${this.cfg.maxTokensOut} ${this.maxTokensOut}`
+    );
 
     const common: any = {
       model: this.cfg.modelName,
@@ -162,17 +177,19 @@ export class OpenAiResponses extends BaseChatModel {
         }
       }
     }
-    this.logger.info(`Common model params: ${JSON.stringify(logParams, null, 2)}`);
+    this.logger.info(
+      `Common model params: ${JSON.stringify(logParams, null, 2)}`
+    );
 
     if (streaming) {
       const params = { ...common, stream: true };
       const result = await this.handleStreaming(params, streamingCallback);
-      this.lastSubmittedMessageCount = messages.length;
+      if (!onlyToolOutputs) this.lastSubmittedMessageCount = messages.length;
       return result;
     } else {
       const params = { ...common, stream: false };
       const result = await this.handleNonStreaming(params);
-      this.lastSubmittedMessageCount = messages.length;
+      if (!onlyToolOutputs) this.lastSubmittedMessageCount = messages.length;
       return result;
     }
   }
@@ -229,7 +246,7 @@ export class OpenAiResponses extends BaseChatModel {
 
   private preprocessForResponses(
     msgs: PsModelMessage[],
-    useTailForChainedReasoning: boolean,
+    hasPreviousResponses: boolean,
     lastSubmittedMessageCount: number
   ): { inputItems: any[]; instructions?: string } {
     const inputItems: any[] = [];
@@ -245,7 +262,7 @@ export class OpenAiResponses extends BaseChatModel {
       ? instructionParts.join("\n\n")
       : undefined;
 
-    if (useTailForChainedReasoning) {
+    if (hasPreviousResponses) {
       // Only send NEW function_call_output items that haven't been sent yet
       for (const m of msgs) {
         if (
@@ -291,6 +308,8 @@ export class OpenAiResponses extends BaseChatModel {
           continue;
         }
 
+        this.logger.error(`Unexpected message role: ${msg.role}`);
+
         inputItems.push({ role: msg.role, content: msg.message ?? "" });
       }
 
@@ -311,6 +330,7 @@ export class OpenAiResponses extends BaseChatModel {
             call_id: msg.toolCallId,
             output: msg.message ?? "",
           });
+          this.sentToolOutputIds.add(msg.toolCallId);
         }
         continue;
       }
@@ -329,10 +349,15 @@ export class OpenAiResponses extends BaseChatModel {
 
       if (msg.role === "user" || msg.role === "assistant") {
         inputItems.push({ role: msg.role, content: msg.message ?? "" });
+      } else {
+        this.logger.error(`Unexpected message role: ${msg.role}`);
       }
     }
 
-    if (!inputItems.length) inputItems.push({ role: "user", content: "" });
+    if (!inputItems.length) {
+      this.logger.error("No input items found for openai responses");
+    }
+
     return { inputItems, instructions };
   }
 
