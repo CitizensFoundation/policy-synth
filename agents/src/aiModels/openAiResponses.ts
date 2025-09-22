@@ -178,7 +178,7 @@ export class OpenAiResponses extends BaseChatModel {
         }
       }
     }
-    this.logger.info(
+    this.logger.debug(
       `Common model params: ${JSON.stringify(logParams, null, 2)}`
     );
 
@@ -424,7 +424,7 @@ export class OpenAiResponses extends BaseChatModel {
 
     this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
 
-    this.logger.info(`previousResponseId: ${this.previousResponseId}`);
+    this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
     const usage = finalResponse?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
@@ -441,7 +441,7 @@ export class OpenAiResponses extends BaseChatModel {
     const toolCalls = this.extractToolCallsFromResponse(finalResponse);
 
     this.logger.info(
-      `Token debug: ${JSON.stringify(
+      `Token info: ${JSON.stringify(
         {
           content,
           tokensIn,
@@ -471,11 +471,11 @@ export class OpenAiResponses extends BaseChatModel {
     params: any
   ): Promise<PsBaseModelReturnParameters> {
     const resp: any = await this.client.responses.create(params);
-    this.logger.info(`Response: ${JSON.stringify(resp, null, 2)}`);
+    this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
 
     this.previousResponseId = resp?.id ?? this.previousResponseId;
 
-    this.logger.info(`previousResponseId: ${this.previousResponseId}`);
+    this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
     const content: string =
       (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "";
@@ -494,10 +494,10 @@ export class OpenAiResponses extends BaseChatModel {
 
     const toolCalls = this.extractToolCallsFromResponse(resp);
 
-    this.logger.info(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
+    this.logger.debug(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
 
     this.logger.info(
-      `Token debug: ${JSON.stringify(
+      `Token info: ${JSON.stringify(
         {
           content,
           tokensIn,
