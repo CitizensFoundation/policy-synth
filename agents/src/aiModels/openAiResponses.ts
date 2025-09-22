@@ -350,6 +350,8 @@ export class OpenAiResponses extends BaseChatModel {
 
       if (msg.role === "user" || msg.role === "assistant") {
         inputItems.push({ role: msg.role, content: msg.message ?? "" });
+      } else if (msg.role === "system" || msg.role === "developer") {
+        continue;
       } else {
         this.logger.error(`Unexpected message role: ${msg.role}`);
       }
