@@ -118,11 +118,12 @@ export class OpenAiResponses extends BaseChatModel {
       this.sentToolOutputIds.clear();
       this.lastSubmittedMessageCount = 0;
     }
-    const { inputItems, instructions } = this.preprocessForResponses(
-      messages,
-      hasPreviousResponse,
-      this.lastSubmittedMessageCount
-    );
+    const { inputItems, instructions, pendingToolCallIds } =
+      this.preprocessForResponses(
+        messages,
+        hasPreviousResponse,
+        this.lastSubmittedMessageCount
+      );
 
     const onlyToolOutputs =
       inputItems.length > 0 &&
@@ -178,21 +179,28 @@ export class OpenAiResponses extends BaseChatModel {
         }
       }
     }
-    this.logger.debug(
+    /*this.logger.debug(
       `Common model params: ${JSON.stringify(logParams, null, 2)}`
-    );
+    );*/
+
+    const params = { ...common, stream: streaming };
+    let result: PsBaseModelReturnParameters;
 
     if (streaming) {
-      const params = { ...common, stream: true };
-      const result = await this.handleStreaming(params, streamingCallback);
-      if (!onlyToolOutputs) this.lastSubmittedMessageCount = messages.length;
-      return result;
+      result = await this.handleStreaming(params, streamingCallback);
     } else {
-      const params = { ...common, stream: false };
-      const result = await this.handleNonStreaming(params);
-      if (!onlyToolOutputs) this.lastSubmittedMessageCount = messages.length;
-      return result;
+      result = await this.handleNonStreaming(params);
     }
+
+    for (const id of pendingToolCallIds) {
+      this.sentToolOutputIds.add(id);
+    }
+
+    if (!onlyToolOutputs) {
+      this.lastSubmittedMessageCount = messages.length;
+    }
+
+    return result;
   }
 
   /************************************  Helpers  ************************************/
@@ -249,8 +257,9 @@ export class OpenAiResponses extends BaseChatModel {
     msgs: PsModelMessage[],
     hasPreviousResponses: boolean,
     lastSubmittedMessageCount: number
-  ): { inputItems: any[]; instructions?: string } {
+  ): { inputItems: any[]; instructions?: string; pendingToolCallIds: string[] } {
     const inputItems: any[] = [];
+    const pendingToolCallIds: string[] = [];
 
     // Build instructions from system/developer messages (unchanged)
     const instructionParts: string[] = [];
@@ -276,13 +285,13 @@ export class OpenAiResponses extends BaseChatModel {
             call_id: m.toolCallId,
             output: m.message ?? "",
           });
-          this.sentToolOutputIds.add(m.toolCallId);
+          pendingToolCallIds.push(m.toolCallId);
         }
       }
 
       // If we found new tool outputs, return ONLY those (that’s what the API expects).
       if (inputItems.length > 0) {
-        return { inputItems, instructions };
+        return { inputItems, instructions, pendingToolCallIds };
       }
 
       // Otherwise only send the delta since the last submission.
@@ -318,7 +327,7 @@ export class OpenAiResponses extends BaseChatModel {
         inputItems.push({ role: "user", content: "" });
       }
 
-      return { inputItems, instructions };
+      return { inputItems, instructions, pendingToolCallIds };
     }
 
     // FIRST TURN / NON-CONTINUATION:
@@ -331,7 +340,7 @@ export class OpenAiResponses extends BaseChatModel {
             call_id: msg.toolCallId,
             output: msg.message ?? "",
           });
-          this.sentToolOutputIds.add(msg.toolCallId);
+          pendingToolCallIds.push(msg.toolCallId);
         }
         continue;
       }
@@ -361,7 +370,7 @@ export class OpenAiResponses extends BaseChatModel {
       this.logger.error("No input items found for openai responses");
     }
 
-    return { inputItems, instructions };
+    return { inputItems, instructions, pendingToolCallIds };
   }
 
   private async handleStreaming(
@@ -473,7 +482,7 @@ export class OpenAiResponses extends BaseChatModel {
     params: any
   ): Promise<PsBaseModelReturnParameters> {
     const resp: any = await this.client.responses.create(params);
-    this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
+    //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
 
     this.previousResponseId = resp?.id ?? this.previousResponseId;
 

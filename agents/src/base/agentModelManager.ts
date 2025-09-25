@@ -310,7 +310,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           loggingOptions,
           null,
           2
-        )}`
+        ).slice(0, 500)}…`
       );
     }
 
