@@ -56,7 +56,7 @@ export class EducationRequirementsBarrierDeepResearchAgent extends PolicySynthAg
     let qualifyingJobs = (this.memory.jobDescriptions || []).filter((j) => {
       const maxReq = j.degreeAnalysis?.maximumDegreeRequirement;
       return (
-        j.degreeAnalysis?.needsCollegeDegree &&
+        j.degreeAnalysis?.degreeRequirementStatus?.isDegreeAbsolutelyRequired &&
         (maxReq === EducationType.BachelorsDegree ||
           maxReq === EducationType.AssociatesDegree)
       );
