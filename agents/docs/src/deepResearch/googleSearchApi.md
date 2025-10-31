@@ -1,8 +1,6 @@
 # GoogleSearchApi
 
-A simple agent class for performing Google Custom Search queries with automatic retry and exponential backoff on rate limits (HTTP 429). This agent is designed to be used within the PolicySynth agent framework and does **not** require an AI model.
-
-**File:** `@policysynth/agents/deepResearch/googleSearchApi.js`
+A simple agent class for performing Google Custom Search API queries with automatic retry and backoff on rate limits. Inherits from `PolicySynthSimpleAgentBase`. Designed for use within the PolicySynth agent framework.
 
 ## Properties
 
@@ -12,72 +10,89 @@ A simple agent class for performing Google Custom Search queries with automatic 
 
 ## Methods
 
-| Name    | Parameters                                                                 | Return Type                | Description                                                                                      |
-|---------|----------------------------------------------------------------------------|----------------------------|--------------------------------------------------------------------------------------------------|
-| search  | `query: string, numberOfResults: number`                                   | `Promise<PsSearchResultItem[]>` | Performs a Google Custom Search for the given query, returning up to the specified number of results. Handles pagination and rate limiting. |
+| Name                    | Parameters                                                                                      | Return Type                | Description                                                                                                 |
+|-------------------------|-------------------------------------------------------------------------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------|
+| googleRequestWithRetry   | fn: () => Promise<T>                                                                           | Promise<T>                 | Executes a function with retry logic and exponential backoff for HTTP 429 errors (rate limits).             |
+| search                  | query: string, numberOfResults: number, options?: PsSearchOptions                               | Promise<PsSearchResultItem[]> | Performs a Google Custom Search API query, returning up to `numberOfResults` results, with optional filters.|
 
-## Helper Functions (Internal)
+---
 
-- **sleep(ms: number): Promise<void>**  
-  Pauses execution for the specified number of milliseconds.
+### Method Details
 
-- **googleRequestWithRetry<T>(fn: () => Promise<T>): Promise<T>**  
-  Wraps a promise-returning function with retry logic for HTTP 429 errors, using exponential backoff.
+#### googleRequestWithRetry
 
-## Usage Example
+Executes a provided async function, retrying up to 30 times with exponential backoff (up to 60 seconds) if a 429 (rate limit) error is encountered. Throws on other errors or if the retry limit is exceeded.
+
+**Parameters:**
+- `fn`: A function returning a Promise (typically an axios request).
+
+**Returns:**  
+- The resolved value of the function, or throws an error if retries are exhausted.
+
+#### search
+
+Performs a Google Custom Search API query, handling pagination and optional date filters. Uses `googleRequestWithRetry` to handle rate limits.
+
+**Parameters:**
+- `query`: The search query string.
+- `numberOfResults`: The total number of results to fetch.
+- `options` (optional): An object of type `PsSearchOptions` to specify date filters and sorting.
+
+**Returns:**  
+- A Promise resolving to an array of `PsSearchResultItem` objects.
+
+---
+
+## Example
 
 ```typescript
 import { GoogleSearchApi } from '@policysynth/agents/deepResearch/googleSearchApi.js';
 
-async function example() {
-  const googleSearch = new GoogleSearchApi();
+const googleSearchAgent = new GoogleSearchApi();
 
-  // Search for the top 15 results for "climate change policy"
-  const results = await googleSearch.search("climate change policy", 15);
-
-  results.forEach((result, idx) => {
-    console.log(`${idx + 1}. ${result.title} (${result.date})`);
-    console.log(result.url);
-    console.log(result.description);
-    console.log('---');
-  });
-}
-
-example();
+(async () => {
+  const results = await googleSearchAgent.search(
+    "climate change policy",
+    5,
+    { dateRestrict: "d7" } // last 7 days
+  );
+  console.log(results);
+})();
 ```
-
-## Details
-
-### search(query: string, numberOfResults: number): Promise<PsSearchResultItem[]>
-
-Performs a Google Custom Search using the provided query string and returns up to `numberOfResults` results. Handles pagination (Google API returns up to 10 results per request) and rate limiting (HTTP 429) with exponential backoff.
-
-- **query**: The search query string.
-- **numberOfResults**: The maximum number of results to return.
-
-**Returns:**  
-A promise that resolves to an array of `PsSearchResultItem` objects, each containing:
-
-| Field             | Type    | Description                                 |
-|-------------------|---------|---------------------------------------------|
-| originalPosition  | number  | The 1-based index of the result in the output list. |
-| title             | string  | The title of the search result.             |
-| url               | string  | The URL of the search result.               |
-| description       | string  | The snippet/description of the result.      |
-| date              | string  | ISO date string if available, otherwise empty. |
-
-### Rate Limiting and Retry
-
-If the Google API returns a 429 (Too Many Requests) error, the agent will automatically back off and retry, doubling the wait time up to a maximum of 60 seconds, for up to 30 attempts.
-
-### Environment Variables
-
-- `GOOGLE_SEARCH_API_KEY`: Your Google Custom Search API key.
-- `GOOGLE_SEARCH_API_CX_ID`: Your Google Custom Search Engine ID.
-
-These must be set in your environment for the agent to function.
 
 ---
 
-**Note:**  
-This agent is intended for use within the PolicySynth agent ecosystem and extends `PolicySynthSimpleAgentBase`. It can be used as a building block for more complex research or data-gathering agents.
+## Types Used
+
+### PsSearchOptions
+
+```typescript
+interface PsSearchOptions {
+  before?: string;
+  after?: string;
+  dateRestrict?: string; // e.g., "d7" for last 7 days
+  sort?: string;         // e.g., "date:r:20240101:20240601"
+}
+```
+
+### PsSearchResultItem
+
+```typescript
+interface PsSearchResultItem {
+  title: string;
+  originalPosition: number;
+  description: string;
+  url: string;
+  date: string;
+  eloRating?: number;
+}
+```
+
+---
+
+## Notes
+
+- Requires `GOOGLE_SEARCH_API_KEY` and `GOOGLE_SEARCH_API_CX_ID` to be set in environment variables.
+- Handles Google Custom Search API pagination and rate limits automatically.
+- Logs debug information for each result and errors encountered.
+- Does **not** require an AI model (`needsAiModel = false`).

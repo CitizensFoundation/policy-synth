@@ -1,6 +1,6 @@
 # Sequelize Database Connection Utility
 
-This module provides a configured [Sequelize](https://sequelize.org/) instance for connecting to a PostgreSQL database, with environment-aware settings for production and development. It also exports a utility function to establish and verify the database connection.
+This module provides a configured Sequelize instance for connecting to a PostgreSQL database, with environment-aware settings for production and development. It also exports a utility function to establish and verify the database connection.
 
 **File:** `@policysynth/agents/dbModels/sequelize.js`
 
@@ -8,9 +8,9 @@ This module provides a configured [Sequelize](https://sequelize.org/) instance f
 
 ## Properties
 
-| Name       | Type         | Description                                                                                 |
-|------------|--------------|---------------------------------------------------------------------------------------------|
-| sequelize  | Sequelize    | The configured Sequelize instance for interacting with the PostgreSQL database.             |
+| Name        | Type         | Description                                                                                 |
+|-------------|--------------|---------------------------------------------------------------------------------------------|
+| sequelize   | Sequelize    | The configured Sequelize instance for database operations.                                   |
 
 ---
 
@@ -18,26 +18,33 @@ This module provides a configured [Sequelize](https://sequelize.org/) instance f
 
 | Name                | Parameters | Return Type | Description                                                                                      |
 |---------------------|------------|-------------|--------------------------------------------------------------------------------------------------|
-| connectToDatabase   | none       | Promise<void> | Authenticates the Sequelize instance and logs the connection status. Exits process on failure.   |
+| connectToDatabase   | none       | Promise<void> | Authenticates and verifies the connection to the database. Logs success or exits on failure.      |
 
 ---
 
-## Environment Variables
+## Details
 
-The configuration is controlled by the following environment variables:
+### Environment-Aware Configuration
 
-- `NODE_ENV`: Determines the environment (`production`, `development`, etc.).
-- `DATABASE_URL`: The full database connection string (used in production).
-- `DISABLE_PG_SSL`: If set, disables SSL in production.
-- `PSQL_DB_NAME`, `PSQL_DB_USER`, `PSQL_DB_PASS`, `DB_HOST`, `DB_PORT`: Used for custom development database configuration.
-- `YP_DEV_DATABASE_NAME`, `YP_DEV_DATABASE_USERNAME`, `YP_DEV_DATABASE_PASSWORD`: Alternative development database credentials.
+- **Production**:  
+  - Uses `process.env.DATABASE_URL` for connection.
+  - Optionally disables SSL if `DISABLE_PG_SSL` is set.
+  - Enables SQL logging if `PS_LOG_SQL` is `"true"`.
+  - Sets `minifyAliases` and disables operator aliases for security.
+- **Development**:  
+  - Uses individual environment variables (`PSQL_DB_NAME`, `PSQL_DB_USER`, etc.) or `YP_DEV_DATABASE_NAME` and related variables.
+  - Defaults to `localhost` and disables SSL.
+  - Enables SQL logging if `PS_LOG_SQL` is `"true"`.
+  - Logs an error if no database configuration is found.
 
----
+### Logging
 
-## Logging
+- Uses the `PolicySynthAgentBase.logger` for logging connection attempts, queries, and errors.
+- SQL queries are optionally logged with colored output using the `colors` package.
 
-- In non-production environments, SQL queries are logged with colored output using the [colors](https://www.npmjs.com/package/colors) package.
-- The `logQuery` function logs the query, bind parameters, and a timestamp.
+### Error Handling
+
+- If authentication fails, logs the error and exits the process with a non-zero status.
 
 ---
 
@@ -49,61 +56,44 @@ import { sequelize, connectToDatabase } from '@policysynth/agents/dbModels/seque
 (async () => {
   await connectToDatabase();
 
-  // You can now use `sequelize` to define models, run queries, etc.
+  // Now you can use sequelize to define models, run queries, etc.
   // Example: await sequelize.query('SELECT 1+1 AS result');
 })();
 ```
 
 ---
 
-## Implementation Details
+## Usage Notes
 
-- **Production Mode:**  
-  - Uses `DATABASE_URL` for connection.
-  - SSL is enabled by default unless `DISABLE_PG_SSL` is set.
-  - Query logging is disabled.
-- **Development Mode:**  
-  - Uses individual environment variables for database credentials.
-  - SSL is not required.
-  - Query logging is enabled with colored output.
-- **Error Handling:**  
-  - If connection fails, logs the error and exits the process.
-  - If no database configuration is found, logs an error.
+- Always call `connectToDatabase()` before performing any database operations to ensure the connection is established.
+- The exported `sequelize` instance should be used to define and interact with your models throughout your application.
+- SQL logging can be enabled or disabled via the `PS_LOG_SQL` environment variable.
+- For production, ensure your `DATABASE_URL` is set and SSL is configured as needed.
 
 ---
 
-## Notes
+## Environment Variables
 
-- The `sequelize` instance is exported and can be used to define models or run raw queries.
-- The `connectToDatabase` function should be called before performing any database operations to ensure the connection is established.
-- The code uses ES module syntax and utilities like `fileURLToPath` and `dirname` for path resolution.
+- `NODE_ENV`: Determines if the environment is `"production"` or not.
+- `DATABASE_URL`: The full database connection string (used in production).
+- `DISABLE_PG_SSL`: If set, disables SSL in production.
+- `PS_LOG_SQL`: If set to `"true"`, enables SQL query logging.
+- `PSQL_DB_NAME`, `PSQL_DB_USER`, `PSQL_DB_PASS`, `DB_HOST`, `DB_PORT`: Used for development database configuration.
+- `YP_DEV_DATABASE_NAME`, `YP_DEV_DATABASE_USERNAME`, `YP_DEV_DATABASE_PASSWORD`: Alternative development database configuration.
 
 ---
 
 ## Dependencies
 
-- [sequelize](https://www.npmjs.com/package/sequelize)
+- [sequelize](https://sequelize.org/)
 - [pg](https://www.npmjs.com/package/pg)
 - [colors](https://www.npmjs.com/package/colors)
-- [lodash](https://www.npmjs.com/package/lodash)
+- [lodash](https://lodash.com/)
 - [path](https://nodejs.org/api/path.html)
 - [url](https://nodejs.org/api/url.html)
 
 ---
 
-## Summary Table
+## Summary
 
-| Export                | Type         | Description                                      |
-|-----------------------|--------------|--------------------------------------------------|
-| `sequelize`           | Sequelize    | The Sequelize instance for DB operations.         |
-| `connectToDatabase`   | Function     | Authenticates and connects to the database.       |
-
----
-
-## Usage Recommendations
-
-- Always call `connectToDatabase()` before using the `sequelize` instance.
-- Use environment variables to control database configuration for different environments.
-- Extend this module to define and import your Sequelize models as needed.
-
----
+This module centralizes the database connection logic for PolicySynth agents, ensuring consistent and secure configuration across environments. Use the exported `sequelize` instance for all ORM operations and call `connectToDatabase()` at application startup to verify connectivity.

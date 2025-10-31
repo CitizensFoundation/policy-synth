@@ -1,72 +1,97 @@
 # PsParallelValidationAgent
 
-The `PsParallelValidationAgent` class extends the `PsBaseValidationAgent` class and is designed to execute multiple validation agents in parallel. It aggregates the results from all the agents and provides a combined validation result.
+A validation agent that runs multiple validation agents in parallel and aggregates their results. This agent is useful when you want to validate an input using several independent validation strategies and combine their outcomes.
+
+**File:** `@policysynth/agents/validations/parallelAgent.js`
 
 ## Properties
 
-| Name    | Type                     | Description                        |
-|---------|--------------------------|------------------------------------|
-| agents  | PsBaseValidationAgent[]  | An array of validation agents to be executed in parallel. |
+| Name    | Type                              | Description                                      |
+|---------|-----------------------------------|--------------------------------------------------|
+| agents  | PsBaseValidationAgent[]           | The array of validation agents to run in parallel.|
 
 ## Constructor
 
-### `constructor(name: string, options: PsBaseValidationAgentOptions = {}, agents: PsBaseValidationAgent[])`
+```typescript
+constructor(
+  name: string,
+  options: PsBaseValidationAgentOptions = {},
+  agents: PsBaseValidationAgent[],
+)
+```
 
-Creates an instance of `PsParallelValidationAgent`.
+- **name**: `string`  
+  The name of the parallel validation agent.
 
-| Parameter | Type                          | Description                                      |
-|-----------|-------------------------------|--------------------------------------------------|
-| name      | string                        | The name of the validation agent.                |
-| options   | PsBaseValidationAgentOptions  | Optional configuration options for the agent.    |
-| agents    | PsBaseValidationAgent[]       | An array of validation agents to be executed.    |
+- **options**: `PsBaseValidationAgentOptions` (optional)  
+  Configuration options for the agent.
+
+- **agents**: `PsBaseValidationAgent[]`  
+  The list of validation agents to execute in parallel.
 
 ## Methods
 
-### `async execute(): Promise<PsValidationAgentResult>`
+| Name              | Parameters                                   | Return Type                | Description                                                                                 |
+|-------------------|----------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------|
+| execute           | none                                         | Promise<PsValidationAgentResult> | Executes all child agents in parallel, aggregates their results, and returns the combined result. |
+| aggregateResults  | results: PsValidationAgentResult[]           | PsValidationAgentResult    | Aggregates the results from all parallel agents into a single validation result.             |
 
-Executes all the validation agents in parallel and aggregates their results.
+### execute
 
-#### Returns
-
-| Type                      | Description                                      |
-|---------------------------|--------------------------------------------------|
-| Promise<PsValidationAgentResult> | A promise that resolves to the aggregated validation result. |
-
-### `private aggregateResults(results: PsValidationAgentResult[]): PsValidationAgentResult`
-
-Aggregates the results from multiple validation agents.
-
-| Parameter | Type                          | Description                                      |
-|-----------|-------------------------------|--------------------------------------------------|
-| results   | PsValidationAgentResult[]     | An array of validation results from the agents.  |
+Runs all the child validation agents in parallel, aggregates their results, and returns a single `PsValidationAgentResult`. The `nextAgent` property is set from the options if provided.
 
 #### Returns
 
-| Type                      | Description                                      |
-|---------------------------|--------------------------------------------------|
-| PsValidationAgentResult   | The aggregated validation result.                |
+- `Promise<PsValidationAgentResult>`: The aggregated validation result.
+
+### aggregateResults
+
+Aggregates the results from all parallel agents. If any agent returns `isValid: false`, the overall result is invalid. All validation errors are combined.
+
+#### Parameters
+
+- **results**: `PsValidationAgentResult[]`  
+  The results from each parallel agent.
+
+#### Returns
+
+- `PsValidationAgentResult`: The aggregated result.
 
 ## Example
 
 ```typescript
 import { PsParallelValidationAgent } from '@policysynth/agents/validations/parallelAgent.js';
-import { PsBaseValidationAgent, PsValidationAgentResult } from '@policysynth/agents/baseValidationAgent.js';
+import { PsBaseValidationAgent } from '@policysynth/agents/validations/baseValidationAgent.js';
 
-class SampleValidationAgent extends PsBaseValidationAgent {
-  async execute(): Promise<PsValidationAgentResult> {
-    // Sample validation logic
+// Example: Two simple validation agents
+class AlwaysValidAgent extends PsBaseValidationAgent {
+  async execute() {
     return { isValid: true, validationErrors: [] };
   }
 }
 
-const agent1 = new SampleValidationAgent('Agent1');
-const agent2 = new SampleValidationAgent('Agent2');
+class AlwaysInvalidAgent extends PsBaseValidationAgent {
+  async execute() {
+    return { isValid: false, validationErrors: ['Invalid input'] };
+  }
+}
 
-const parallelAgent = new PsParallelValidationAgent('ParallelAgent', {}, [agent1, agent2]);
+const agent1 = new AlwaysValidAgent('ValidAgent');
+const agent2 = new AlwaysInvalidAgent('InvalidAgent');
+
+const parallelAgent = new PsParallelValidationAgent(
+  'ParallelAgent',
+  {},
+  [agent1, agent2]
+);
 
 parallelAgent.execute().then(result => {
-  console.log(result);
+  console.log(result.isValid); // false
+  console.log(result.validationErrors); // ['Invalid input']
 });
 ```
 
-This example demonstrates how to create and use the `PsParallelValidationAgent` to execute multiple validation agents in parallel and aggregate their results.
+---
+
+**Summary:**  
+`PsParallelValidationAgent` is a composite validation agent that executes multiple validation agents in parallel and aggregates their results, making it easy to combine several validation strategies in a single step.

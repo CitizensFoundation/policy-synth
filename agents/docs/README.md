@@ -8,6 +8,7 @@
   - [claudeChat](src/aiModels/claudeChat.md)
   - [googleGeminiChat](src/aiModels/googleGeminiChat.md)
   - [openAiChat](src/aiModels/openAiChat.md)
+  - [openAiResponses](src/aiModels/openAiResponses.md)
 - base
   - [agent](src/base/agent.md)
   - [agentBase](src/base/agentBase.md)
@@ -19,11 +20,17 @@
   - [agentRateLimiter](src/base/agentRateLimiter.md)
   - [agentRunner](src/base/agentRunner.md)
   - [agentStandalone](src/base/agentStandalone.md)
+  - [agentTask](src/base/agentTask.md)
+  - [events](src/base/events.md)
   - [redisClient](src/base/redisClient.md)
   - [simpleAgent](src/base/simpleAgent.md)
   - [simplePairwiseRanking](src/base/simplePairwiseRanking.md)
+  - [tokenLimitChunker](src/base/tokenLimitChunker.md)
+  - [winstonAirbrake](src/base/winstonAirbrake.md)
 - [connectorTypes](src/connectorTypes.md)
 - connectors
+  - agents
+    - [subAgentsConnector](src/connectors/agents/subAgentsConnector.md)
   - base
     - [baseCollaborationConnector](src/connectors/base/baseCollaborationConnector.md)
     - [baseConnector](src/connectors/base/baseConnector.md)
@@ -73,11 +80,16 @@
   - [ypOrganization](src/dbModels/ypOrganization.md)
   - [ypUser](src/dbModels/ypUser.md)
 - deepResearch
+  - [bingSearchApi](src/deepResearch/bingSearchApi.md)
   - [fireCrawlApi](src/deepResearch/fireCrawlApi.md)
   - [getWebPagesBase](src/deepResearch/getWebPagesBase.md)
   - [getWebPagesOperations](src/deepResearch/getWebPagesOperations.md)
   - [googleSearchApi](src/deepResearch/googleSearchApi.md)
   - [searchQueriesRanker](src/deepResearch/searchQueriesRanker.md)
+  - [searchResultsRanker](src/deepResearch/searchResultsRanker.md)
+  - [searchWeb](src/deepResearch/searchWeb.md)
+  - [searchWebWithAi](src/deepResearch/searchWebWithAi.md)
+  - [webPageScanner](src/deepResearch/webPageScanner.md)
   - [webScraper](src/deepResearch/webScraper.md)
 - operations
   - [agentConnectorManager](src/operations/agentConnectorManager.md)

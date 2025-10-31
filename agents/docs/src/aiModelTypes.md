@@ -1,48 +1,64 @@
-# PsAiModelType
+# PsAiModelType, PsAiModelSize, PsAiModelProvider
 
-The `PsAiModelType` is an enumeration that defines the various types of AI models that can be used within the system. Each type represents a different kind of AI capability, such as text processing, image recognition, or audio analysis.
+This file defines key enumerations for describing AI model types, sizes, and providers within the PolicySynth Agents framework. These enums are used throughout the system to specify and restrict the kinds of AI models that can be configured, selected, or referenced in agent and connector configurations.
 
-## Enum Values
+---
 
-| Name                  | Description                                                                 |
-|-----------------------|-----------------------------------------------------------------------------|
-| `Embedding`           | Represents models that generate embeddings, which are vector representations of data. |
-| `Text`                | Represents models that process and generate text.                           |
-| `MultiModal`          | Represents models that can handle multiple types of data inputs, such as text and images. |
-| `Audio`               | Represents models that process and analyze audio data.                      |
-| `Video`               | Represents models that process and analyze video data.                      |
-| `Image`               | Represents models that process and analyze image data.                      |
-| `TextReasoning`       | Represents models that perform reasoning tasks on text data.                |
-| `MultiModalReasoning` | Represents models that perform reasoning tasks on multiple types of data.   |
+## PsAiModelType
+
+Describes the functional type of an AI model. This is used to indicate what kind of data the model processes or generates.
+
+| Name                 | Value                  | Description                                                                 |
+|----------------------|------------------------|-----------------------------------------------------------------------------|
+| Embedding            | "embedding"            | Model for generating vector embeddings from text or other data.              |
+| Text                 | "text"                 | Model for generating or processing text.                                     |
+| MultiModal           | "multiModal"           | Model that can process/generate multiple data types (e.g., text + image).    |
+| Audio                | "audio"                | Model for processing or generating audio data.                               |
+| Video                | "video"                | Model for processing or generating video data.                               |
+| Image                | "image"                | Model for processing or generating images.                                   |
+| TextReasoning        | "reasoning"            | Model specialized in text-based reasoning tasks.                             |
+| MultiModalReasoning  | "multiModalReasoning"  | Model specialized in reasoning across multiple modalities.                   |
+
+---
+
+## PsAiModelSize
+
+Describes the relative size or capacity of an AI model. This is typically used to select between different performance/cost tradeoffs.
+
+| Name   | Value    | Description                        |
+|--------|----------|------------------------------------|
+| Large  | "large"  | Large model (highest capacity).    |
+| Medium | "medium" | Medium-sized model.                |
+| Small  | "small"  | Small model (lowest capacity).     |
+
+---
+
+## PsAiModelProvider
+
+Enumerates the supported providers for AI models. Used to specify which external service or platform supplies the model.
+
+| Name            | Value            | Description                                               |
+|-----------------|------------------|-----------------------------------------------------------|
+| OpenAI          | "openai"         | OpenAI API (e.g., GPT-3, GPT-4, DALL·E, etc.).            |
+| OpenAIResponses | "openaiResponses"| OpenAI with custom response handling.                     |
+| Anthropic       | "anthropic"      | Anthropic API (e.g., Claude models).                      |
+| Google          | "google"         | Google AI APIs (e.g., PaLM, Gemini, etc.).                |
+| Azure           | "azure"          | Microsoft Azure OpenAI Service.                           |
+
+---
 
 ## Example
 
 ```typescript
-import { PsAiModelType } from '@policysynth/agents/aiModelTypes.js';
+import { PsAiModelType, PsAiModelSize, PsAiModelProvider } from '@policysynth/agents/aiModelTypes.js';
 
-const modelType: PsAiModelType = PsAiModelType.Text;
-console.log(modelType); // Output: "text"
+// Example: Defining a model configuration
+const myModelConfig = {
+  modelType: PsAiModelType.Text,
+  modelSize: PsAiModelSize.Large,
+  provider: PsAiModelProvider.OpenAI,
+  modelName: "gpt-4-turbo"
+};
 ```
 
-# PsAiModelSize
-
-The `PsAiModelSize` is an enumeration that defines the size of AI models. The size typically correlates with the model's capacity and computational requirements.
-
-## Enum Values
-
-| Name    | Description                                      |
-|---------|--------------------------------------------------|
-| `Large` | Represents a large-sized AI model.               |
-| `Medium`| Represents a medium-sized AI model.              |
-| `Small` | Represents a small-sized AI model.               |
-
-## Example
-
-```typescript
-import { PsAiModelSize } from '@policysynth/agents/aiModelTypes.js';
-
-const modelSize: PsAiModelSize = PsAiModelSize.Large;
-console.log(modelSize); // Output: "large"
-```
-
-These enumerations are used to specify the type and size of AI models in various configurations and settings within the system.
+These enums help ensure type safety and clarity when working with AI model configurations in the PolicySynth Agents system.

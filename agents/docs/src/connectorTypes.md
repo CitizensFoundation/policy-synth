@@ -1,27 +1,30 @@
 # PsConnectorClassTypes
 
-The `PsConnectorClassTypes` is an enumeration that defines various types of connector classes. These connector classes represent different functionalities or services that can be integrated into a system.
+The `PsConnectorClassTypes` enum defines the various types of connector classes available in the PolicySynth Agents system. These connector types categorize the nature and purpose of connectors, such as document handling, spreadsheets, notifications, collaboration, and more.
 
 ## Enum Values
 
-| Name                   | Value                  | Description                                      |
-|------------------------|------------------------|--------------------------------------------------|
-| Document               | "docs"                 | Represents a connector for document-related services. |
-| Spreadsheet            | "sheets"               | Represents a connector for spreadsheet-related services. |
-| NotificationsAndChat   | "notificationsAndChat" | Represents a connector for notifications and chat services. |
-| IdeasCollaboration     | "ideasCollaboration"   | Represents a connector for ideas collaboration services. |
-| VotingCollaboration    | "votingCollaboration"  | Represents a connector for voting collaboration services. |
-| Drive                  | "drive"                | Represents a connector for drive-related services. |
+| Name                   | Value                  | Description                                                                 |
+|------------------------|------------------------|-----------------------------------------------------------------------------|
+| Document               | "docs"                 | Represents connectors for document management (e.g., Google Docs).          |
+| Spreadsheet            | "sheets"               | Represents connectors for spreadsheet management (e.g., Google Sheets).     |
+| NotificationsAndChat   | "notificationsAndChat" | Connectors for notifications and chat platforms (e.g., Slack, Discord).     |
+| IdeasCollaboration     | "ideasCollaboration"   | Connectors for collaborative idea management (e.g., Your Priorities).       |
+| VotingCollaboration    | "votingCollaboration"  | Connectors for collaborative voting systems (e.g., All Our Ideas).          |
+| Drive                  | "drive"                | Connectors for file storage and drive services (e.g., Google Drive).        |
+| SubAgents              | "subAgents"            | Connectors for managing or linking sub-agents within the agent system.      |
 
 ## Example
 
 ```typescript
 import { PsConnectorClassTypes } from '@policysynth/agents/connectorTypes.js';
 
-// Example usage of PsConnectorClassTypes
+// Example: Assigning a connector type to a variable
 const connectorType: PsConnectorClassTypes = PsConnectorClassTypes.Document;
 
-console.log(connectorType); // Output: "docs"
+if (connectorType === PsConnectorClassTypes.Document) {
+  console.log("This connector handles documents.");
+}
 ```
 
-This enumeration is useful for categorizing and managing different types of connectors within a system, allowing for more organized and efficient integration of various services.
+This enum is typically used when defining or registering connector classes, ensuring that each connector is categorized appropriately for its intended integration or functionality.

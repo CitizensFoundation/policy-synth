@@ -1,161 +1,173 @@
 # generateDocumentation.js
 
-This script automates the generation of Markdown API documentation for a TypeScript project, specifically for the PolicySynth Agents codebase. It leverages OpenAI's GPT models to generate documentation based on the source code and type definitions, and organizes the output into a structured `docs/` directory with checksums to avoid unnecessary regeneration.
+This file provides an automated documentation generator for a TypeScript project, specifically for the PolicySynth Agents codebase. It scans the project for `.ts` files, generates Markdown documentation for each, and maintains a directory tree of documentation files. The documentation is generated using OpenAI's GPT-4.1 model, and only updates when source files change (using checksums for efficiency).
 
 ## Overview
 
-- **Purpose:**  
-  Automatically generate and update Markdown documentation for all TypeScript files in the project, using type definitions and a consistent prompt for the AI model.
-- **Key Features:**  
-  - Recursively scans the project for `.ts` files (excluding `index.ts` and `.d.ts`).
-  - Reads all type definitions to provide context for documentation.
-  - Uses OpenAI's GPT-4.1 model to generate documentation in a standard Markdown format.
-  - Maintains a checksum for each file to avoid regenerating unchanged documentation.
+- **Purpose:** Automatically generate and update Markdown API documentation for all TypeScript files in the project, using AI to ensure detailed and standardized output.
+- **Key Features:**
+  - Scans the project for `.ts` files (excluding `index.ts` and `.d.ts`).
+  - Uses OpenAI to generate Markdown documentation for each file.
+  - Maintains a checksum for each file to avoid unnecessary regeneration.
   - Builds a navigable directory tree in `docs/README.md`.
+  - Ensures documentation is always in sync with the latest code changes.
 
 ## Main Functions
 
+| Name                       | Parameters         | Return Type | Description                                                                                 |
+|----------------------------|--------------------|-------------|---------------------------------------------------------------------------------------------|
+| renderSystemPrompt         | path: string, allTypeDefsData: string | string      | Renders the system prompt for the OpenAI API, embedding type definitions and instructions.   |
+| buildDirectoryTree         | dir: string, basePath?: string, isSrc?: boolean | any[]       | Recursively builds a tree structure of the documentation directory for navigation.           |
+| generateMarkdownFromTree   | tree: any, depth?: number, basePath?: string    | string      | Converts the directory tree into Markdown navigation links.                                  |
+| generateDocsReadme         |                    | void        | Generates the `docs/README.md` file with the documentation tree.                             |
+| findTSFiles                | dir: string, fileList?: string[]                | string[]    | Recursively finds all `.ts` files (excluding `index.ts` and `.d.ts`) in the project.         |
+| generateChecksum           | content: string                                 | string      | Generates a SHA-256 checksum for a file's content.                                          |
+| getAllTypeDefContents      | rootDir: string                                 | string      | Aggregates all `.d.ts` type definition files for inclusion in the AI prompt.                 |
+| generateDocumentation      | fileList: string[]                              | Promise<void> | Generates documentation for each TypeScript file using OpenAI, if the file has changed.      |
+| main                       |                                                    | Promise<void> | Orchestrates the documentation generation process.                                           |
+
+## Properties
+
+| Name         | Type     | Description                                                                 |
+|--------------|----------|-----------------------------------------------------------------------------|
+| indexHeader  | string   | The header for the main documentation index.                                |
+| openaiClient | OpenAI   | The OpenAI client instance for generating documentation.                    |
+| rootDir      | string   | The root directory of the project.                                          |
+| docsDir      | string   | The directory where documentation is stored.                                |
+| checksumDir  | string   | The directory where file checksums are stored.                              |
+
+## Example
+
+```typescript
+// Example usage: Run this script to generate documentation for all TypeScript files in the project.
+
+import * as glob from 'glob';
+import { PolicySynthAgentBase } from "../base/agentBase.js";
+import * as fs from 'fs';
+import * as path from 'path';
+import * as crypto from 'crypto';
+import { OpenAI } from 'openai';
+
+// ... (all function definitions as in the file above)
+
+async function main(): Promise<void> {
+  const tsFiles = findTSFiles(rootDir);
+  generateDocsReadme();
+  await generateDocumentation(tsFiles);
+  generateDocsReadme();
+}
+
+main().then(() => PolicySynthAgentBase.logger.info('Documentation generation complete.'));
+```
+
+## Detailed Function Descriptions
+
 ### renderSystemPrompt
 
-Generates the system prompt for the OpenAI API, embedding all type definitions and instructions for documentation format.
+Renders a system prompt for the OpenAI API, embedding all type definitions and instructions for generating Markdown documentation.
 
-| Name             | Type     | Description                                                                                 |
-|------------------|----------|---------------------------------------------------------------------------------------------|
-| path             | string   | The file path to be documented, used for example import paths.                              |
-| allTypeDefsData  | string   | All type definitions in the project, provided as context for the AI model.                  |
-| **Returns**      | string   | The full system prompt to be sent to the OpenAI API.                                        |
-
----
+- **Parameters:**
+  - `path`: The file path for which documentation is being generated.
+  - `allTypeDefsData`: All type definitions used in the project.
+- **Returns:** A string containing the system prompt.
 
 ### buildDirectoryTree
 
-Recursively builds a representation of the documentation directory, flattening the `src` directory and skipping certain files.
+Recursively builds a tree structure representing the documentation directory, used for generating navigation in the README.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| dir       | string   | The directory to scan.                                                                      |
-| basePath  | string   | The base path for relative links (default: '').                                             |
-| isSrc     | boolean  | Whether the current directory is the `src` directory (default: false).                      |
-| **Returns** | any[]  | An array representing the directory structure (directories and files).                      |
-
----
+- **Parameters:**
+  - `dir`: The directory to scan.
+  - `basePath`: The base path for relative links (optional).
+  - `isSrc`: Whether the current directory is the `src` directory (optional).
+- **Returns:** An array representing the directory tree.
 
 ### generateMarkdownFromTree
 
-Converts the directory tree structure into a Markdown-formatted navigation list.
+Converts the directory tree into a Markdown-formatted navigation list.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| tree      | any[]    | The directory tree as returned by `buildDirectoryTree`.                                     |
-| depth     | number   | The current depth in the tree (default: 0).                                                 |
-| basePath  | string   | The base path for links (default: 'src/').                                                  |
-| **Returns** | string | The Markdown-formatted navigation list.                                                     |
-
----
+- **Parameters:**
+  - `tree`: The directory tree structure.
+  - `depth`: The current depth in the tree (optional).
+  - `basePath`: The base path for links (optional).
+- **Returns:** A Markdown string.
 
 ### generateDocsReadme
 
-Generates or updates the `docs/README.md` file with a navigable index of all generated documentation.
+Generates the main `docs/README.md` file, containing the documentation index.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| *(none)*  |          | Scans the `docs/` directory and writes the index to `docs/README.md`.                      |
-
----
+- **Parameters:** None.
+- **Returns:** None.
 
 ### findTSFiles
 
 Recursively finds all `.ts` files in the project, excluding `index.ts` and `.d.ts` files.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| dir       | string   | The directory to scan.                                                                      |
-| fileList  | string[] | The accumulator for found files (default: []).                                              |
-| **Returns** | string[] | An array of file paths to `.ts` files.                                                    |
-
----
+- **Parameters:**
+  - `dir`: The directory to scan.
+  - `fileList`: The list of files found so far (optional).
+- **Returns:** An array of file paths.
 
 ### generateChecksum
 
-Generates a SHA-256 checksum for a given string.
+Generates a SHA-256 checksum for a given string (file content).
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| content   | string   | The content to hash.                                                                        |
-| **Returns** | string | The SHA-256 checksum as a hex string.                                                      |
-
----
+- **Parameters:**
+  - `content`: The content to hash.
+- **Returns:** The checksum string.
 
 ### getAllTypeDefContents
 
-Reads all `.d.ts` files in the `src/` directory and concatenates their contents.
+Aggregates the contents of all `.d.ts` files in the `src` directory.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| rootDir   | string   | The root directory of the project.                                                          |
-| **Returns** | string | The concatenated contents of all type definition files.                                     |
-
----
+- **Parameters:**
+  - `rootDir`: The root directory of the project.
+- **Returns:** A string containing all type definitions.
 
 ### generateDocumentation
 
-Main function to generate documentation for all TypeScript files.
+Generates documentation for each TypeScript file using OpenAI, only if the file has changed since the last generation.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| fileList  | string[] | List of TypeScript file paths to document.                                                  |
-| **Returns** | Promise<void> | Asynchronous; generates documentation and writes files as needed.                    |
-
-**Key Steps:**
-- Reads all type definitions for context.
-- For each `.ts` file:
-  - Computes a checksum and skips unchanged files.
-  - Calls OpenAI's API with the system prompt and file content.
-  - Writes the generated Markdown to the corresponding location in `docs/`.
-  - Updates the checksum.
-
----
+- **Parameters:**
+  - `fileList`: An array of TypeScript file paths.
+- **Returns:** A Promise that resolves when documentation generation is complete.
 
 ### main
 
-Orchestrates the documentation generation process.
+Orchestrates the documentation generation process: finds files, generates documentation, and updates the README.
 
-| Name      | Type     | Description                                                                                 |
-|-----------|----------|---------------------------------------------------------------------------------------------|
-| *(none)*  |          | Finds all `.ts` files, generates the docs index, and calls `generateDocumentation`.         |
-
----
-
-## Example
-
-```typescript
-// Example usage: Run this script from the project root to generate documentation
-// for all TypeScript files in the project.
-
-import { main } from '@policysynth/agents/tools/generateDocumentation.js';
-
-main().then(() => console.log('Documentation generation complete.'));
-```
+- **Parameters:** None.
+- **Returns:** A Promise.
 
 ---
 
-## Notes
-
-- **OpenAI API Key:**  
-  The script expects the `OPENAI_API_KEY` environment variable to be set.
-- **Directory Structure:**  
-  - Documentation is written to `docs/` mirroring the source structure.
-  - Checksums are stored in `docs/cks/` to avoid unnecessary regeneration.
-- **Customization:**  
-  - The system prompt can be adjusted in `renderSystemPrompt` for different documentation styles.
-  - The script is designed to be extensible for other codebases with similar needs.
+**Note:**  
+- The script expects an `OPENAI_API_KEY` environment variable to be set.
+- Documentation is generated in the `docs/` directory, with checksums stored in `docs/cks/`.
+- The script is intended to be run as a Node.js process.
 
 ---
 
-## File Path
+## Example Output Structure
 
-This script is located at:
+After running the script, the `docs/` directory will contain:
 
+- Markdown documentation for each `.ts` file (mirroring the source structure).
+- A `README.md` with a navigable index of all documentation files.
+- A `cks/` directory with checksums for each documented file.
+
+---
+
+## Example Usage
+
+```bash
+OPENAI_API_KEY=sk-... node @policysynth/agents/tools/generateDocumentation.js
 ```
-@policysynth/agents/tools/generateDocumentation.js
-```
+
+This will generate and update all documentation in the `docs/` directory.
+
+---
+
+## See Also
+
+- [OpenAI API Documentation](https://platform.openai.com/docs/)
+- [PolicySynth Agent Base](../base/agentBase.js)

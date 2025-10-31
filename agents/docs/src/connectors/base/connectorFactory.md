@@ -1,52 +1,112 @@
 # PsConnectorFactory
 
-The `PsConnectorFactory` class is responsible for creating and managing different types of connectors based on the provided configuration. It supports various connector types such as document, spreadsheet, notifications, ideas collaboration, and voting collaboration connectors.
+The `PsConnectorFactory` class is a factory utility for instantiating various types of connector classes in the PolicySynth agent framework. It provides static methods to create connectors for documents, spreadsheets, notifications, ideas collaboration, voting collaboration, and sub-agents, based on the connector class type and configuration. It also provides utility methods to retrieve connectors from an agent instance.
+
+**File:** `@policysynth/agents/connectors/base/connectorFactory.js`
+
+---
+
+## Properties
+
+This class does not define instance properties, but inherits from `PolicySynthAgentBase` (which may provide logging and other base functionality).
+
+---
 
 ## Methods
 
-| Name                               | Parameters                                                                                          | Return Type                  | Description                                                                 |
-|------------------------------------|-----------------------------------------------------------------------------------------------------|------------------------------|-----------------------------------------------------------------------------|
-| `createConnector`                  | `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseConnectorTypes \| null` | Creates a connector based on the class type specified in the configuration. |
-| `createDocumentConnector`          | `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseDocumentConnector \| null` | Creates a document connector such as Google Docs or Microsoft Word.         |
-| `createSheetConnector`             | `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseSheetConnector \| null` | Creates a sheet connector such as Google Sheets or Microsoft Excel.         |
-| `createNotificationsConnector`     | `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseNotificationsConnector \| null` | Creates a notifications connector such as Discord or Slack.                 |
-| `createIdeasCollaborationConnector`| `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseIdeasCollaborationConnector \| null` | Creates an ideas collaboration connector such as Your Priorities.           |
-| `createVotingCollaborationConnector`| `connector: PsAgentConnectorAttributes`, `connectorClass: PsAgentConnectorClassAttributes`, `agent: PsAgent`, `memory: any` | `PsBaseVotingCollaborationConnector \| null` | Creates a voting collaboration connector such as All Our Ideas.             |
-| `getConnector`                     | `agent: PsAgent`, `memory: any`, `connectorType: PsConnectorClassTypes`, `isInput: boolean = true` | `PsBaseConnectorTypes \| null` | Retrieves a specific connector based on the type and whether it's an input or output connector. |
-| `getAllConnectors`                 | `agent: PsAgent`, `memory: any`, `connectorType: PsConnectorClassTypes`, `isInput: boolean = true` | `PsBaseConnectorTypes[]`     | Retrieves all connectors of a specific type, either input or output.        |
+| Name                                   | Parameters                                                                                                                                                                                                                                    | Return Type                                   | Description                                                                                                 |
+|---------------------------------------- |-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `createConnector`                      | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseConnectorTypes \| null`                | Factory method to create a connector instance based on the connector class type.                            |
+| `createDocumentConnector`              | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseDocumentConnector \| null`             | Creates a document connector (e.g., Google Docs).                                                           |
+| `createSheetConnector`                 | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseSheetConnector \| null`                | Creates a spreadsheet connector (e.g., Google Sheets).                                                      |
+| `createNotificationsConnector`         | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseNotificationsConnector \| null`        | Creates a notifications/chat connector (e.g., Discord).                                                     |
+| `createIdeasCollaborationConnector`    | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseIdeasCollaborationConnector \| null`   | Creates an ideas collaboration connector (e.g., Your Priorities).                                           |
+| `createVotingCollaborationConnector`   | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsBaseVotingCollaborationConnector \| null`  | Creates a voting collaboration connector (e.g., All Our Ideas).                                             |
+| `createSubAgentsConnector`             | `connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory: any`                                                                                                                        | `PsSubAgentsConnector`                        | Creates a sub-agents connector.                                                                             |
+| `getConnector`                         | `agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput: boolean = true`                                                                                                                                                | `PsBaseConnectorTypes \| null`                | Retrieves a single connector of the specified type from the agent (input or output).                        |
+| `getAllConnectors`                     | `agent: PsAgent, memory: any, connectorType: PsConnectorClassTypes, isInput: boolean = true`                                                                                                                                                | `PsBaseConnectorTypes[]`                      | Retrieves all connectors of the specified type from the agent (input or output).                            |
+
+---
+
+## Connector Types
+
+The following connector base types are supported by the factory:
+
+- `PsBaseDocumentConnector`
+- `PsBaseSheetConnector`
+- `PsBaseNotificationsConnector`
+- `PsBaseVotingCollaborationConnector`
+- `PsBaseIdeasCollaborationConnector`
+- `PsSubAgentsConnector`
+
+---
 
 ## Example
 
 ```typescript
 import { PsConnectorFactory } from '@policysynth/agents/connectors/base/connectorFactory.js';
-import { PsAgent } from '../../dbModels/agent.js';
-import { PsConnectorClassTypes } from '../../connectorTypes.js';
+import { PsConnectorClassTypes } from '@policysynth/agents/connectorTypes.js';
 
-// Example usage of PsConnectorFactory
-const agent = new PsAgent();
-const memory = {}; // Example memory object
+// Example agent, memory, and connector setup (simplified)
+const agent: PsAgent = ...; // Your agent instance
+const memory: PsBaseMemoryData | undefined = ...;
 
-// Create a document connector
-const documentConnector = PsConnectorFactory.createConnector(
-  connectorAttributes,
-  connectorClassAttributes,
-  agent,
-  memory
-);
-
-// Get a specific connector
-const specificConnector = PsConnectorFactory.getConnector(
+// Get a Google Docs connector (if present as input connector)
+const googleDocsConnector = PsConnectorFactory.getConnector(
   agent,
   memory,
-  PsConnectorClassTypes.Document
+  PsConnectorClassTypes.Document,
+  true // isInput
 );
 
-// Get all connectors of a specific type
-const allConnectors = PsConnectorFactory.getAllConnectors(
+if (googleDocsConnector) {
+  // Use the connector, e.g., to read or write documents
+}
+
+// Get all spreadsheet connectors (e.g., Google Sheets)
+const sheetConnectors = PsConnectorFactory.getAllConnectors(
   agent,
   memory,
-  PsConnectorClassTypes.NotificationsAndChat
+  PsConnectorClassTypes.Spreadsheet,
+  true
 );
+
+sheetConnectors.forEach(connector => {
+  // Use each sheet connector
+});
 ```
 
-This class provides a flexible way to manage different types of connectors by using a factory pattern, allowing for easy extension and maintenance of connector types.
+---
+
+## Usage Notes
+
+- The factory uses the `connectorClass.configuration.classType` and `connectorClass.configuration.name` to determine which connector class to instantiate.
+- If a connector type or name is not supported, a warning is logged and `null` is returned.
+- The `getConnector` and `getAllConnectors` methods help retrieve connectors from an agent's input or output connectors, filtering by type.
+- The factory is designed to be extensible: to add support for new connector types, extend the relevant `switch` statements and import the new connector class.
+
+---
+
+## Related Types
+
+- `PsAgentConnectorAttributes`
+- `PsAgentConnectorClassAttributes`
+- `PsAgent`
+- `PsConnectorClassTypes`
+- `PsBaseConnectorTypes` (union of all supported connector base classes)
+- `PolicySynthAgentBase` (base class for logging and shared functionality)
+
+---
+
+## Extending
+
+To add a new connector type (e.g., Slack, GitHub), import the connector class and add a case to the relevant `switch` statement in the appropriate factory method.
+
+---
+
+## Error Handling
+
+- If an unsupported connector type or name is provided, the factory logs a warning and returns `null`.
+- Some connector instantiations are commented out (e.g., Microsoft Word, Slack, GitHub) and can be enabled as needed.
+
+---

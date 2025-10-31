@@ -1,56 +1,137 @@
 # PsGoogleDocsConnector
 
-The `PsGoogleDocsConnector` class is a connector for Google Docs, allowing interaction with Google Docs documents through the Google Docs API. It extends the `PsBaseDocumentConnector` class and provides methods to retrieve, update, and manipulate Google Docs documents.
+A connector class for integrating with Google Docs, allowing agents to read from and write to Google Docs documents. This connector supports authentication via Google Service Account credentials and provides methods for retrieving, updating, and converting Markdown to Google Docs format, including support for images and links.
+
+**File:** `@policysynth/agents/connectors/documents/googleDocsConnector.js`
+
+---
 
 ## Properties
 
-| Name                          | Type                              | Description                                                                 |
-|-------------------------------|-----------------------------------|-----------------------------------------------------------------------------|
-| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID | string                            | A static constant representing the base ID for the Google Docs connector class. |
-| GOOGLE_DOCS_CONNECTOR_VERSION | number                            | A static constant representing the version of the Google Docs connector.    |
-| getConnectorClass             | PsAgentConnectorClassCreationAttributes | Static property defining the connector class attributes for Google Docs.    |
-| client                        | JWT                               | An instance of the JWT client for authentication with Google APIs.          |
-| docs                          | docs_v1.Docs                      | An instance of the Google Docs API client.                                  |
+| Name         | Type                                   | Description                                                                                 |
+|--------------|----------------------------------------|---------------------------------------------------------------------------------------------|
+| client       | `JWT`                                  | Authenticated Google JWT client for API requests.                                           |
+| docs         | `docs_v1.Docs`                         | Google Docs API client instance.                                                            |
+
+---
+
+## Static Properties
+
+| Name                                    | Type      | Description                                                                                 |
+|------------------------------------------|-----------|---------------------------------------------------------------------------------------------|
+| GOOGLE_DOCS_CONNECTOR_CLASS_BASE_ID      | `string`  | Unique base ID for the connector class.                                                     |
+| GOOGLE_DOCS_CONNECTOR_VERSION            | `number`  | Version number of the connector class.                                                      |
+| getConnectorClass                        | `PsAgentConnectorClassCreationAttributes` | Connector class definition with configuration and structured questions.                     |
+
+---
+
+## Constructor
+
+```typescript
+constructor(
+  connector: PsAgentConnectorAttributes,
+  connectorClass: PsAgentConnectorClassAttributes,
+  agent: PsAgent,
+  memory?: PsAgentMemoryData,
+  startProgress?: number,
+  endProgress?: number
+)
+```
+
+- **Description:** Initializes the connector, authenticates with Google using Service Account credentials, and sets up the Google Docs API client.
+- **Throws:** Error if credentials are missing or invalid.
+
+---
 
 ## Methods
 
-| Name                          | Parameters                                                                 | Return Type                          | Description                                                                 |
-|-------------------------------|----------------------------------------------------------------------------|--------------------------------------|-----------------------------------------------------------------------------|
-| constructor                   | connector: PsAgentConnectorAttributes, connectorClass: PsAgentConnectorClassAttributes, agent: PsAgent, memory?: PsAgentMemoryData, startProgress?: number, endProgress?: number | void                                 | Initializes a new instance of the `PsGoogleDocsConnector` class.            |
-| getDocument                   | -                                                                          | Promise<string>                      | Retrieves the content of a Google Docs document as a string.                |
-| updateDocument                | doc: string                                                                | Promise<void>                        | Updates the content of a Google Docs document with the provided string.     |
-| getData                       | documentId: string                                                         | Promise<docs_v1.Schema$Document>     | Retrieves the data of a Google Docs document by its ID.                     |
-| markdownToGoogleDocs          | markdown: string                                                           | { requests: docs_v1.Schema$Request[] } | Converts Markdown content to Google Docs API requests.                      |
-| updateDocumentFromMarkdown    | markdown: string                                                           | Promise<void>                        | Updates a Google Docs document with content converted from Markdown.        |
-| extractText                   | content: docs_v1.Schema$StructuralElement[]                                | string                               | Extracts text content from Google Docs structural elements.                 |
-| getExtraConfigurationQuestions| -                                                                          | YpStructuredQuestionData[]           | Returns additional configuration questions for the connector.               |
+| Name                        | Parameters                                                                 | Return Type                                      | Description                                                                                       |
+|-----------------------------|----------------------------------------------------------------------------|--------------------------------------------------|---------------------------------------------------------------------------------------------------|
+| getDocument                 | none                                                                       | `Promise<string>`                                | Retrieves the document content as plain text from Google Docs.                                     |
+| updateDocument              | `doc: string`                                                              | `Promise<void>`                                  | Updates the Google Doc with the provided plain text.                                               |
+| getData                     | `documentId: string`                                                       | `Promise<docs_v1.Schema$Document>`               | Fetches the full Google Docs document object.                                                      |
+| markdownToGoogleDocs        | `markdown: string`                                                         | `{ requests: docs_v1.Schema$Request[] }`         | Converts Markdown text to a series of Google Docs API requests (supports headings, images, links). |
+| updateDocumentFromMarkdown  | `markdown: string`                                                         | `Promise<void>`                                  | Updates the Google Doc by converting Markdown to Google Docs format and applying the changes.      |
+| extractText                 | `content: docs_v1.Schema$StructuralElement[]`                              | `string`                                         | Extracts plain text from the Google Docs document structure.                                       |
+| static getExtraConfigurationQuestions | none                                                              | `YpStructuredQuestionData[]`                     | Returns extra configuration questions required for this connector.                                 |
+
+---
 
 ## Example
 
 ```typescript
 import { PsGoogleDocsConnector } from '@policysynth/agents/connectors/documents/googleDocsConnector.js';
 
-// Example usage of PsGoogleDocsConnector
-const connectorAttributes = { /* ... */ };
-const connectorClassAttributes = { /* ... */ };
-const agent = { /* ... */ };
+// Example: Initialize connector (assume you have the required attributes)
+const connector = /* PsAgentConnectorAttributes */;
+const connectorClass = /* PsAgentConnectorClassAttributes */;
+const agent = /* PsAgent */;
+const memory = undefined;
 
-const googleDocsConnector = new PsGoogleDocsConnector(connectorAttributes, connectorClassAttributes, agent);
+const googleDocsConnector = new PsGoogleDocsConnector(
+  connector,
+  connectorClass,
+  agent,
+  memory
+);
 
-async function updateGoogleDoc() {
-  try {
-    const documentContent = await googleDocsConnector.getDocument();
-    console.log("Document Content:", documentContent);
+// Get document content as plain text
+const text = await googleDocsConnector.getDocument();
+console.log(text);
 
-    const newContent = "Updated content for the document.";
-    await googleDocsConnector.updateDocument(newContent);
-    console.log("Document updated successfully.");
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
+// Update document with new plain text
+await googleDocsConnector.updateDocument("Hello, world!");
 
-updateGoogleDoc();
+// Update document from Markdown (with images and links)
+const markdown = `
+# Title
+
+This is a **bold** and *italic* text.
+
+![Alt text](https://example.com/image.png)
+
+[Link text](https://example.com)
+`;
+
+await googleDocsConnector.updateDocumentFromMarkdown(markdown);
 ```
 
-This class provides a robust interface for interacting with Google Docs, including methods for retrieving and updating document content, as well as converting Markdown to Google Docs format. It handles authentication using a Google Service Account and manages API requests to Google Docs.
+---
+
+## Structured Configuration Questions
+
+The connector requires the following configuration fields (used for setup in UI or API):
+
+| uniqueId         | text                | type       | required | Description                        |
+|------------------|---------------------|------------|----------|------------------------------------|
+| name             | Name                | textField  | true     | Name for this connector instance   |
+| description      | Description         | textArea   | false    | Optional description               |
+| googleDocsId     | Document ID         | textField  | true     | Google Docs document ID            |
+| credentialsJson  | ServiceAccount JSON | textArea   | true     | Google Service Account credentials |
+
+---
+
+## Notes
+
+- **Authentication:** Uses Google Service Account credentials (JSON) for API access.
+- **Markdown Support:** The `markdownToGoogleDocs` method supports headings, bold, italic, images, and links.
+- **Error Handling:** Throws descriptive errors for missing credentials, rate limits, and server errors.
+- **Extensibility:** Inherits from `PsBaseDocumentConnector` for base document connector functionality.
+
+---
+
+## Utility Functions (Internal)
+
+- `deepClone(obj: any): any` — Deeply clones an object or array.
+- `getFieldsFromAttributes(attributes: any, prefix = ''): string` — Recursively builds a comma-separated list of attribute paths for Google Docs API field updates.
+
+---
+
+## See Also
+
+- [Google Docs API Documentation](https://developers.google.com/docs/api)
+- [PsBaseDocumentConnector](../base/baseDocumentConnector.js)
+- [PsAgentConnectorClassAttributes](../../dbModels/agentConnectorClass.js)
+- [YpStructuredQuestionData](see AllTypeDefsUsedInProject)
+
+---

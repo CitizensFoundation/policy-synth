@@ -1,29 +1,30 @@
 # PsBaseIdeasCollaborationConnector
 
-The `PsBaseIdeasCollaborationConnector` is an abstract class that extends the `PsBaseConnector`. It serves as a base class for connectors that facilitate collaboration on ideas within a group. This class defines a set of abstract methods that must be implemented by any subclass, ensuring that the necessary functionality for collaboration is provided.
+An abstract base class for implementing connectors to ideas collaboration platforms (such as Your Priorities, All Our Ideas, etc). This class defines the required interface for connectors that enable posting, voting, and interacting with group-based idea collaboration systems. It extends `PsBaseConnector`.
 
 ## Properties
 
-This class does not define any properties of its own, but it inherits properties from the `PsBaseConnector`.
+This class does not define additional properties beyond those inherited from `PsBaseConnector`.
 
 ## Methods
 
-| Name             | Parameters                                                                                          | Return Type       | Description                                                                                   |
-|------------------|-----------------------------------------------------------------------------------------------------|-------------------|-----------------------------------------------------------------------------------------------|
-| `login`          | None                                                                                                | `Promise<void>`   | Abstract method that must be implemented to handle the login process for the collaboration platform. |
-| `post`           | `groupId: number`, `name: string`, `structuredAnswersData: YpStructuredAnswer[]`, `imagePrompt: string`, `imageLocalPath: string \| undefined` | `Promise<YpPostData>` | Abstract method that must be implemented to post a new idea or content to a group.            |
-| `vote`           | `itemId: number`, `value: number`                                                                   | `Promise<void>`   | Abstract method that must be implemented to handle voting on a specific item.                |
-| `getGroupPosts`  | `groupId: number`                                                                                   | `Promise<YpPostData[]>` | Abstract method that must be implemented to retrieve posts from a specific group.            |
-| `generateImage?` | `groupId: number`, `prompt: string`                                                                 | `Promise<number>` | Optional method for generating an image based on a prompt. Throws an error if not supported. |
+| Name            | Parameters                                                                                                                                         | Return Type                | Description                                                                                                 |
+|-----------------|----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------|-------------------------------------------------------------------------------------------------------------|
+| **login**       | *(none)*                                                                                                                                          | `Promise<void>`            | Abstract. Authenticates or initializes the connector with the collaboration platform.                        |
+| **post**        | `groupId: number, name: string, structuredAnswersData: YpStructuredAnswer[], imagePrompt: string, imageLocalPath: string \| undefined`             | `Promise<YpPostData>`      | Abstract. Posts a new idea to a group, with optional structured answers and image.                           |
+| **vote**        | `itemId: number, value: number`                                                                                                                    | `Promise<void>`            | Abstract. Casts a vote (e.g., upvote/downvote) on a post or item.                                            |
+| **postPoint**   | `groupId: number, postId: number, userId: number, value: number, content: string`                                                                  | `Promise<YpPointData>`     | Abstract. Posts a point (argument, comment, etc.) to a post within a group.                                  |
+| **getGroupPosts** | `groupId: number`                                                                                                                               | `Promise<YpPostData[]>`    | Abstract. Retrieves all posts for a given group.                                                             |
+| **generateImage?** | `groupId: number, prompt: string`                                                                                                              | `Promise<number>`          | Optional/async. Generates an image for a group using a prompt. Throws if not supported by the connector.     |
 
 ## Example
 
 ```typescript
 import { PsBaseIdeasCollaborationConnector } from '@policysynth/agents/connectors/base/baseIdeasCollaborationConnector.js';
 
-class MyCollaborationConnector extends PsBaseIdeasCollaborationConnector {
+class MyIdeasConnector extends PsBaseIdeasCollaborationConnector {
   async login(): Promise<void> {
-    // Implementation for logging into the collaboration platform
+    // Implement authentication logic here
   }
 
   async post(
@@ -33,21 +34,38 @@ class MyCollaborationConnector extends PsBaseIdeasCollaborationConnector {
     imagePrompt: string,
     imageLocalPath: string | undefined
   ): Promise<YpPostData> {
-    // Implementation for posting a new idea or content
+    // Implement post creation logic here
+    return {} as YpPostData;
   }
 
   async vote(itemId: number, value: number): Promise<void> {
-    // Implementation for voting on an item
+    // Implement voting logic here
+  }
+
+  async postPoint(
+    groupId: number,
+    postId: number,
+    userId: number,
+    value: number,
+    content: string
+  ): Promise<YpPointData> {
+    // Implement point posting logic here
+    return {} as YpPointData;
   }
 
   async getGroupPosts(groupId: number): Promise<YpPostData[]> {
-    // Implementation for retrieving group posts
+    // Implement group posts retrieval logic here
+    return [];
   }
 
+  // Optionally override generateImage if supported
   async generateImage(groupId: number, prompt: string): Promise<number> {
-    // Optional implementation for generating an image
+    // Implement image generation logic here
+    return 123;
   }
 }
 ```
 
-This example demonstrates how to extend the `PsBaseIdeasCollaborationConnector` to create a custom connector for a specific collaboration platform. Each abstract method must be implemented to provide the necessary functionality. The optional `generateImage` method can be implemented if the platform supports image generation.
+---
+
+**File:** `@policysynth/agents/connectors/base/baseIdeasCollaborationConnector.js`

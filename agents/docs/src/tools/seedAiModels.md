@@ -1,14 +1,14 @@
 # seedAiModels.js
 
-This script seeds the database with example AI models, a user, a group, and a top-level agent class for the PolicySynth Agents system. It is intended to be run as a one-time setup or for development/testing purposes.
+This script seeds the PolicySynth database with example AI models and a top-level agent class, and demonstrates how to associate API keys with a group for model access. It is intended for use in initializing a PolicySynth instance with default AI models and agent classes.
 
 ## Overview
 
 - Connects to the database and initializes models.
 - Creates a user.
-- Creates several AI model configurations (Anthropic Sonnet, OpenAI GPT-4o, GPT-4o Mini).
-- Creates a group with private access configurations for the AI models and their API keys.
-- Creates a top-level agent class for coordinating other agents.
+- Defines and creates several AI model configurations (Anthropic Claude 3.5 Sonnet, OpenAI GPT-4o, OpenAI GPT-4o Mini).
+- Creates a group and associates it with the created AI models and their API keys.
+- Defines and creates a top-level agent class for coordinating other agents.
 
 ## Example Path
 
@@ -16,30 +16,28 @@ This script seeds the database with example AI models, a user, a group, and a to
 
 ---
 
-## Main Steps
+## Main Script Logic
 
 ### 1. Database Initialization
+
+Connects to the database and initializes all models.
 
 ```typescript
 await connectToDatabase();
 await initializeModels();
 ```
-Connects to the database and initializes all Sequelize models.
-
----
 
 ### 2. User Creation
+
+Creates a new user for associating with models and agent classes.
 
 ```typescript
 const user = await User.create({ email: "example@example.com", name: "Example User" });
 ```
-Creates a new user with the specified email and name.
 
----
+### 3. AI Model Configuration and Creation
 
-### 3. AI Model Configurations
-
-#### a. Anthropic Sonnet 3.5
+#### Anthropic Claude 3.5 Sonnet
 
 ```typescript
 const anthropicSonnetConfig: PsAiModelConfiguration = {
@@ -66,7 +64,7 @@ const anthropicSonnet = await PsAiModel.create({
 });
 ```
 
-#### b. OpenAI GPT-4o
+#### OpenAI GPT-4o
 
 ```typescript
 const openAiGpt4oConfig: PsAiModelConfiguration = {
@@ -93,7 +91,7 @@ const openAiGpt4 = await PsAiModel.create({
 });
 ```
 
-#### c. OpenAI GPT-4o Mini
+#### OpenAI GPT-4o Mini
 
 ```typescript
 const openAiGpt4oMiniConfig: PsAiModelConfiguration = {
@@ -120,9 +118,9 @@ const openAiGpt4Mini = await PsAiModel.create({
 });
 ```
 
----
-
 ### 4. Group Creation with AI Model API Keys
+
+Creates a group and associates it with the created AI models and their API keys using the `private_access_configuration` property.
 
 ```typescript
 await Group.create({
@@ -147,11 +145,10 @@ await Group.create({
   ]
 });
 ```
-Creates a group and associates it with the created AI models and their API keys for private access.
-
----
 
 ### 5. Top-Level Agent Class Creation
+
+Defines and creates a top-level agent class for coordinating other agents.
 
 ```typescript
 const topLevelAgentClassConfig: PsAgentClassAttributesConfiguration = {
@@ -177,72 +174,82 @@ await PsAgentClass.create({
   user_id: user.id,
 });
 ```
-Creates a top-level agent class for coordinating other agents, with public access and support for multiple AI model sizes.
+
+---
+
+## Example
+
+```typescript
+import { initializeModels, models } from "../dbModels/index.js";
+import { connectToDatabase } from "../dbModels/sequelize.js";
+import { User } from "../dbModels/ypUser.js";
+import { Group } from "../dbModels/ypGroup.js";
+import { PsAiModel } from "../dbModels/aiModel.js";
+import { PsAgentClass } from "../dbModels/agentClass.js";
+import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
+import { PsAgentClassCategories } from "../agentCategories.js";
+
+// Connect and initialize
+await connectToDatabase();
+await initializeModels();
+
+// Create user
+const user = await User.create({ email: "example@example.com", name: "Example User" });
+
+// Define and create AI models
+const anthropicSonnet = await PsAiModel.create({ ... });
+const openAiGpt4 = await PsAiModel.create({ ... });
+const openAiGpt4Mini = await PsAiModel.create({ ... });
+
+// Create group with model API keys
+await Group.create({
+  name: "Example Group",
+  user_id: user.id,
+  configuration: { agents: {} },
+  private_access_configuration: [
+    { aiModelId: anthropicSonnet.id, apiKey: process.env.ANTHROPIC_CLAUDE_API_KEY || "" },
+    { aiModelId: openAiGpt4.id, apiKey: process.env.OPENAI_API_KEY || "" },
+    { aiModelId: openAiGpt4Mini.id, apiKey: process.env.OPENAI_API_KEY || "" }
+  ]
+});
+
+// Create top-level agent class
+await PsAgentClass.create({
+  class_base_id: "c375c1fb-58ca-4372-a567-0e02b2c3d479",
+  name: "Operations",
+  version: 1,
+  available: true,
+  configuration: {
+    category: PsAgentClassCategories.PolicySynthTopLevel,
+    subCategory: "group",
+    hasPublicAccess: true,
+    description: "A top-level agent that coordinates other agents",
+    queueName: "noqueue",
+    imageUrl: "...",
+    iconName: "coordinator",
+    capabilities: ["process coordination", "task management", "result aggregation"],
+    questions: [],
+    requestedAiModelSizes: ["large", "medium", "small"],
+    supportedConnectors: [],
+  },
+  user_id: user.id,
+});
+```
 
 ---
 
 ## Types Used
 
-### PsAiModelConfiguration
-
-| Name                                | Type      | Description                                      |
-|------------------------------------- |-----------|--------------------------------------------------|
-| type                                | string    | The type of AI model (e.g., "text").             |
-| modelSize                           | string    | The size of the model (e.g., "medium", "small"). |
-| provider                            | string    | The provider name (e.g., "openai", "anthropic"). |
-| prices                              | object    | Pricing details for the model.                   |
-| maxTokensOut                        | number    | Maximum output tokens.                           |
-| defaultTemperature                  | number    | Default temperature for model responses.         |
-| model                               | string    | Model identifier string.                         |
-| active                              | boolean   | Whether the model is active.                     |
-
-### YpGroupPrivateAccessConfiguration
-
-| Name         | Type    | Description                                 |
-|--------------|---------|---------------------------------------------|
-| aiModelId    | number  | ID of the AI model for this access config.  |
-| apiKey       | string  | API key for the AI model.                   |
-| externalApiId| number  | (optional) ID of an external API.           |
-| projectId    | string  | (optional) Project ID.                      |
-
-### PsAgentClassAttributesConfiguration
-
-| Name                  | Type      | Description                                               |
-|-----------------------|-----------|-----------------------------------------------------------|
-| category              | string    | Agent class category.                                     |
-| subCategory           | string    | Sub-category for the agent class.                         |
-| hasPublicAccess       | boolean   | Whether the agent class is public.                        |
-| description           | string    | Description of the agent class.                           |
-| queueName             | string    | Name of the queue for the agent.                          |
-| imageUrl              | string    | URL to the agent class image.                             |
-| iconName              | string    | Icon name for the agent class.                            |
-| capabilities          | string[]  | List of agent capabilities.                               |
-| questions             | array     | Structured questions for agent configuration.             |
-| requestedAiModelSizes | string[]  | Supported AI model sizes.                                 |
-| supportedConnectors   | array     | Supported connectors for the agent class.                 |
+- **PsAiModelConfiguration**: Configuration for an AI model, including type, size, provider, pricing, and other parameters.
+- **YpGroupPrivateAccessConfiguration**: Associates an AI model with an API key for group-level access.
+- **PsAgentClassAttributesConfiguration**: Configuration for an agent class, including category, description, capabilities, and supported model sizes.
 
 ---
 
-## Example Usage
+## Usage
 
-```typescript
-// Run this script to seed the database with example AI models, a user, a group, and a top-level agent class.
-node @policysynth/agents/tools/seedAiModels.js
-```
+Run this script to seed your PolicySynth database with default AI models and a top-level agent class. This is typically done as part of the initial setup or for testing purposes.
 
 ---
 
-## Environment Variables
-
-- `ANTHROPIC_CLAUDE_API_KEY` — API key for Anthropic Claude model.
-- `OPENAI_API_KEY` — API key for OpenAI models.
-
----
-
-## Notes
-
-- This script is intended for development or initial setup. Do not run in production unless you intend to overwrite or add these records.
-- The script assumes the existence of the referenced models and their methods.
-- The group created will have access to the seeded AI models via the provided API keys.
-
----
+**File:** `@policysynth/agents/tools/seedAiModels.js`

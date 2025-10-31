@@ -1,33 +1,28 @@
 # AgentCostManager
 
-The `AgentCostManager` class provides methods to calculate and retrieve cost breakdowns for AI agent usage within the PolicySynth Agents system. It aggregates token usage and cost data for agents and their sub-agents, supporting detailed and summary cost reporting.
+The `AgentCostManager` class provides methods to calculate and retrieve detailed cost breakdowns for AI agent usage within the PolicySynth platform. It aggregates model usage statistics, applies pricing configurations, and computes costs for individual agents and agent hierarchies.
 
-This class interacts with the database using Sequelize and expects the relevant model usage and pricing data to be available in the `ps_model_usage`, `ps_ai_models`, and `ps_agents` tables.
+This class extends `PolicySynthAgentBase` and interacts with the database using Sequelize to fetch usage and pricing data.
 
 ---
 
 ## Properties
 
-This class does not expose public properties. All methods are instance methods.
+| Name | Type | Description |
+|------|------|-------------|
+| *(inherited)* | | Inherits all properties from `PolicySynthAgentBase`. |
 
 ---
 
 ## Methods
 
-| Name                       | Parameters                                                                 | Return Type                        | Description                                                                                                 |
-|----------------------------|----------------------------------------------------------------------------|------------------------------------|-------------------------------------------------------------------------------------------------------------|
-| `getDetailedAgentCosts`    | `agentId: number`                                                          | `Promise<PsDetailedAgentCostResults[]>` | Returns a detailed breakdown of costs for the specified agent and all its sub-agents.                       |
-| `getAgentCosts`            | `agentId: number`                                                          | `Promise<PsAgentCostResults>`      | Returns a summary of costs for the specified agent and its sub-agents, grouped by agent and hierarchy level.|
-| `getSingleAgentCosts`      | `agentId: number`                                                          | `Promise<string>`                  | Returns the total cost for a single agent (no sub-agents), as a string formatted to two decimal places.     |
-
----
-
-### Private Methods
-
-| Name             | Parameters                                  | Return Type                | Description                                                                                 |
-|------------------|---------------------------------------------|----------------------------|---------------------------------------------------------------------------------------------|
-| `getSubAgentIds` | `rootId: number`                            | `Promise<number[]>`        | Recursively retrieves all agent IDs under the given root agent, including the root itself.   |
-| `calcCosts`      | `mu: PsModelUsageAttributes, prices: PsBaseModelPriceConfiguration` | `PsCostBreakdown`          | Calculates the cost breakdown for a single model usage record and its associated price config.|
+| Name | Parameters | Return Type | Description |
+|------|------------|-------------|-------------|
+| `getDetailedAgentCosts` | `agentId: number` | `Promise<PsDetailedAgentCostResults[]>` | Returns a detailed breakdown of costs for the specified agent and all its sub-agents, including token usage and cost components. |
+| `getAgentCosts` | `agentId: number` | `Promise<PsAgentCostResults>` | Returns a summary of costs for the specified agent and its sub-agents, grouped by agent and hierarchy level. |
+| `getSingleAgentCosts` | `agentId: number` | `Promise<string>` | Returns the total cost (as a string) for a single agent (not including sub-agents). |
+| `getSubAgentIds` *(private)* | `rootId: number` | `Promise<number[]>` | Recursively retrieves all sub-agent IDs for a given root agent. |
+| `calcCosts` *(private)* | `mu: PsModelUsageAttributes, prices: PsBaseModelPriceConfiguration` | `PsCostBreakdown` | Calculates the cost breakdown for a given model usage and price configuration. |
 
 ---
 
@@ -46,13 +41,7 @@ interface PsCostBreakdown {
   totalCost: number;
 }
 ```
-- **costInNormal**: Cost for normal input tokens.
-- **costInCached**: Cost for cached context input tokens.
-- **costInLong**: Cost for long context input tokens.
-- **costOutNormal**: Cost for normal output tokens (including reasoning, audio, image).
-- **costInCachedLong**: Cost for cached context input tokens in long context.
-- **costOutLong**: Cost for long context output tokens (including reasoning, audio, image).
-- **totalCost**: Sum of all above costs.
+*Represents the breakdown of costs for a single model usage record.*
 
 ---
 
@@ -63,23 +52,17 @@ import { AgentCostManager } from '@policysynth/agents/operations/agentCostsManag
 
 const agentCostManager = new AgentCostManager();
 
-async function example() {
-  const agentId = 42;
+// Get detailed cost breakdown for an agent and its sub-agents
+const detailedCosts = await agentCostManager.getDetailedAgentCosts(42);
+console.log(detailedCosts);
 
-  // Get detailed cost breakdown for agent and all sub-agents
-  const detailedCosts = await agentCostManager.getDetailedAgentCosts(agentId);
-  console.log('Detailed Costs:', detailedCosts);
+// Get summarized costs for an agent hierarchy
+const summary = await agentCostManager.getAgentCosts(42);
+console.log(summary);
 
-  // Get summary costs for agent and all sub-agents
-  const summaryCosts = await agentCostManager.getAgentCosts(agentId);
-  console.log('Summary Costs:', summaryCosts);
-
-  // Get total cost for a single agent (no sub-agents)
-  const singleAgentCost = await agentCostManager.getSingleAgentCosts(agentId);
-  console.log('Single Agent Cost:', singleAgentCost);
-}
-
-example();
+// Get total cost for a single agent (excluding sub-agents)
+const singleCost = await agentCostManager.getSingleAgentCosts(42);
+console.log(`Total cost: $${singleCost}`);
 ```
 
 ---
@@ -88,62 +71,55 @@ example();
 
 ### getDetailedAgentCosts
 
-```typescript
-public async getDetailedAgentCosts(agentId: number): Promise<PsDetailedAgentCostResults[]>
-```
-- **Description**: Returns a detailed breakdown of costs for the specified agent and all its sub-agents. Each entry includes timestamps, agent/model names, token counts, and a full cost breakdown.
-- **Returns**: Array of `PsDetailedAgentCostResults` objects.
+**Signature:**  
+`public async getDetailedAgentCosts(agentId: number): Promise<PsDetailedAgentCostResults[]>`
+
+- Returns an array of detailed cost records for the specified agent and all its sub-agents.
+- Each record includes token usage, cost breakdowns, agent/model names, and timestamps.
 
 ---
 
 ### getAgentCosts
 
-```typescript
-public async getAgentCosts(agentId: number): Promise<PsAgentCostResults>
-```
-- **Description**: Returns a summary of costs for the specified agent and all its sub-agents, grouped by agent and hierarchy level. Includes the total cost.
-- **Returns**: An object with `agentCosts` (array of agent cost summaries) and `totalCost` (string).
+**Signature:**  
+`public async getAgentCosts(agentId: number): Promise<PsAgentCostResults>`
+
+- Returns a summary object with an array of agent costs (including hierarchy level) and the total cost for the agent and all sub-agents.
 
 ---
 
 ### getSingleAgentCosts
 
-```typescript
-public async getSingleAgentCosts(agentId: number): Promise<string>
-```
-- **Description**: Returns the total cost for a single agent (no sub-agents), formatted as a string with two decimal places.
-- **Returns**: String representing the total cost.
+**Signature:**  
+`public async getSingleAgentCosts(agentId: number): Promise<string>`
+
+- Returns the total cost as a string for a single agent (does not include sub-agents).
 
 ---
 
 ### getSubAgentIds (private)
 
-```typescript
-private async getSubAgentIds(rootId: number): Promise<number[]>
-```
-- **Description**: Recursively retrieves all agent IDs under the given root agent, including the root itself.
-- **Returns**: Array of agent IDs.
+**Signature:**  
+`private async getSubAgentIds(rootId: number): Promise<number[]>`
+
+- Recursively finds all sub-agent IDs for a given root agent, including the root itself.
 
 ---
 
 ### calcCosts (private)
 
-```typescript
-private calcCosts(
-  mu: PsModelUsageAttributes,
-  prices: PsBaseModelPriceConfiguration
-): PsCostBreakdown
-```
-- **Description**: Calculates the cost breakdown for a single model usage record and its associated price configuration.
-- **Returns**: `PsCostBreakdown` object.
+**Signature:**  
+`private calcCosts(mu: PsModelUsageAttributes, prices: PsBaseModelPriceConfiguration): PsCostBreakdown`
+
+- Calculates the cost breakdown for a single model usage record using the provided price configuration.
 
 ---
 
 ## Notes
 
-- All methods are asynchronous and interact with the database.
-- The class expects the database schema to match the PolicySynth Agents system, with appropriate fields for token usage and pricing.
-- Error handling is included; errors are logged and rethrown as `Error` objects.
+- All cost calculations are based on token usage and the corresponding price configuration for each AI model.
+- The class is designed to work with a hierarchical agent structure, supporting recursive cost aggregation.
+- Error handling is included; errors are logged and rethrown with descriptive messages.
 
 ---
 
@@ -151,7 +127,10 @@ private calcCosts(
 
 - `PsModelUsageAttributes`
 - `PsBaseModelPriceConfiguration`
-- `PsAgentCostResults`
 - `PsDetailedAgentCostResults`
+- `PsAgentCostResults`
+- `PolicySynthAgentBase` (base class)
 
-These types are defined in the PolicySynth Agents type system and are used throughout the cost calculation logic.
+---
+
+**File:** `@policysynth/agents/operations/agentCostsManager.js`

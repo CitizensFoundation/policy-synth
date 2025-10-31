@@ -1,43 +1,64 @@
 # BaseChatModel
 
-An abstract base class for chat-based AI models in the PolicySynth agent framework. It provides utility methods for prompt formatting, XML tag truncation, and colorized output for debugging. Subclasses must implement the `generate` method to interact with specific AI models.
+An abstract base class for chat-based AI models in the PolicySynth agent framework. This class provides a foundation for implementing chat models with support for message formatting, XML tag truncation, and color-coded prompt debugging. It extends `PolicySynthAgentBase` and is designed to be subclassed for specific AI model providers.
+
+**File:** `@policysynth/agents/aiModels/baseChatModel.js`
 
 ## Properties
 
 | Name         | Type                        | Description                                                                                 |
 |--------------|-----------------------------|---------------------------------------------------------------------------------------------|
-| modelName    | string \| TiktokenModel     | The name or Tiktoken identifier of the model.                                               |
-| maxTokensOut | number                      | The maximum number of output tokens the model can generate.                                 |
-| provider     | string \| undefined         | (Optional) The provider of the model (e.g., "openai", "anthropic").                         |
-| config       | PsAiModelConfig             | The configuration object for the AI model, including API keys, model type, and other params.|
+| modelName    | `string \| TiktokenModel`   | The name or Tiktoken identifier of the model.                                               |
+| maxTokensOut | `number`                    | The maximum number of output tokens the model can generate.                                 |
+| provider     | `string \| undefined`       | (Optional) The provider name for the model (e.g., "openai", "azure").                       |
+| config       | `PsAiModelConfig`           | The configuration object for the AI model.                                                  |
+| dbModelId    | `number \| undefined`       | (Optional) The database model ID associated with this model instance.                       |
+
+## Constructor
+
+```typescript
+constructor(
+  config: PsAiModelConfig,
+  modelName: string | TiktokenModel,
+  maxTokensOut = 4096
+)
+```
+
+- **config**: The configuration object for the AI model.
+- **modelName**: The name or Tiktoken identifier of the model.
+- **maxTokensOut**: (Optional) The maximum number of output tokens (default: 4096).
 
 ## Methods
 
-| Name                     | Parameters                                                                                                                                         | Return Type                              | Description                                                                                                   |
-|--------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| constructor              | config: PsAiModelConfig, modelName: string \| TiktokenModel, maxTokensOut?: number                                                                 | BaseChatModel                            | Constructs a new BaseChatModel instance.                                                                      |
-| generate (abstract)      | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: Function                                                                      | Promise&lt;PsBaseModelReturnParameters \| undefined&gt; | Abstract method. Generates a model response given a list of messages. Must be implemented by subclasses.      |
-| truncateXmlTags          | text: string, maxChars?: number                                                                                                                    | string                                   | Truncates the content inside XML tags in the given text to a maximum number of characters.                    |
-| prettyPrintPromptMessages| messages: { role: string; content: string }[]                                                                                                      | string                                   | Formats and color-codes a list of prompt messages for pretty-printing (e.g., for debugging).                  |
-| colorCodeXml             | text: string                                                                                                                                       | string                                   | Color-codes XML tags in the given text using [chalk](https://www.npmjs.com/package/chalk) for terminal output.|
+| Name                    | Parameters                                                                                                                                                                                                                                   | Return Type                                 | Description                                                                                                 |
+|-------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| `generate` _(abstract)_ | `messages: PsModelMessage[]`,<br>`streaming?: boolean`,<br>`streamingCallback?: Function`,<br>`media?: { mimeType: string; data: string }[]`,<br>`tools?: ChatCompletionTool[]`,<br>`toolChoice?: ChatCompletionToolChoiceOption \| "auto"`,<br>`allowedTools?: string[]` | `Promise<PsBaseModelReturnParameters \| undefined>` | Abstract method to generate a model response. Must be implemented by subclasses.                            |
+| `truncateXmlTags`       | `text: string`,<br>`maxChars = 500`                                                                                                                                                                                                         | `string`                                    | Truncates the inner text of XML tags in a string to a maximum number of characters, appending a notice.     |
+| `prettyPrintPromptMessages` | `messages: { role: string; content: string }[]`                                                                                                                                                                                         | `string`                                    | Formats and color-codes an array of prompt messages for debugging, truncating XML tags as needed.           |
+| `colorCodeXml`          | `text: string`                                                                                                                                                                                                                              | `string`                                    | Color-codes XML tags in a string using `chalk` for improved readability in the console.                     |
 
 ## Example
 
 ```typescript
 import { BaseChatModel } from '@policysynth/agents/aiModels/baseChatModel.js';
-import { PsAiModelConfig, PsModelMessage } from '@policysynth/agents/aiModels/aiModelTypes.js';
+import { PsAiModelConfig, PsModelMessage, PsBaseModelReturnParameters } from '@policysynth/agents/aiModels/types.js';
 
-// Example subclass implementing the abstract generate method
-class MyChatModel extends BaseChatModel {
+// Example subclass implementation
+class MyOpenAiChatModel extends BaseChatModel {
   async generate(
     messages: PsModelMessage[],
     streaming?: boolean,
-    streamingCallback?: Function
+    streamingCallback?: Function,
+    media?: { mimeType: string; data: string }[],
+    tools?: any[],
+    toolChoice?: any,
+    allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters | undefined> {
-    // Implement your model call here
+    // Implement the logic to call the OpenAI API here
+    // Return a PsBaseModelReturnParameters object
     return {
       tokensIn: 100,
-      tokensOut: 50,
+      tokensOut: 200,
       content: "Hello, world!"
     };
   }
@@ -46,32 +67,36 @@ class MyChatModel extends BaseChatModel {
 // Usage
 const config: PsAiModelConfig = {
   apiKey: "sk-...",
-  modelType: "openai",
+  modelName: "gpt-4",
+  modelType: "chat",
   modelSize: "large",
-  modelName: "gpt-4"
-  // ...other config
+  prices: {
+    costInTokensPerMillion: 10,
+    costOutTokensPerMillion: 20,
+    costInCachedContextTokensPerMillion: 5,
+    currency: "USD"
+  }
 };
 
-const model = new MyChatModel(config, "gpt-4", 4096);
+const chatModel = new MyOpenAiChatModel(config, "gpt-4", 2048);
 
 const messages: PsModelMessage[] = [
-  { role: "system", message: "<prompt>Hello</prompt>" },
-  { role: "user", message: "<question>What is AI?</question>" }
+  { role: "user", message: "What is the capital of France?" }
 ];
 
-const pretty = model.prettyPrintPromptMessages(
-  messages.map(m => ({ role: m.role, content: m.message }))
-);
-console.log(pretty);
-
-model.generate(messages).then(response => {
-  console.log(response?.content);
+chatModel.generate(messages).then(response => {
+  console.log(response?.content); // "Hello, world!"
 });
+
+// Debugging prompt messages
+console.log(chatModel.prettyPrintPromptMessages([
+  { role: "user", content: "<question>What is the capital of France?</question>" }
+]));
 ```
 
 ---
 
 **Note:**  
-- This class is intended to be subclassed for specific AI model providers.
-- The `generate` method must be implemented in subclasses to provide actual model inference logic.
-- Utility methods like `truncateXmlTags` and `prettyPrintPromptMessages` are useful for debugging and prompt engineering.
+- The `generate` method is abstract and must be implemented by subclasses for specific AI model providers.
+- The `prettyPrintPromptMessages` and `colorCodeXml` methods are useful for debugging and inspecting prompt formatting, especially when working with XML-structured prompts.
+- The `truncateXmlTags` method helps prevent excessively long XML content in debug output.

@@ -1,6 +1,8 @@
 # addNewAiModel.js
 
-A command-line utility script for adding a new AI model configuration to the database in the PolicySynth Agents system. This script ensures that only one active model with a given name exists by deactivating any existing models with the same name before creating a new one.
+A command-line utility script for adding a new AI model configuration to the PolicySynth database. This script deactivates any existing models with the same name before creating a new model entry, ensuring only one active configuration per model name.
+
+---
 
 ## Functions
 
@@ -8,9 +10,9 @@ A command-line utility script for adding a new AI model configuration to the dat
 
 Deactivates all existing AI models in the database with the specified name by setting their `active` flag to `false` in the configuration.
 
-| Parameter | Type   | Description                        |
-|-----------|--------|------------------------------------|
-| name      | string | The name of the AI model to search for and deactivate. |
+| Parameter | Type     | Description                        |
+|-----------|----------|------------------------------------|
+| name      | string   | The name of the AI model to search for and deactivate. |
 
 **Returns:** `Promise<void>`
 
@@ -18,24 +20,24 @@ Deactivates all existing AI models in the database with the specified name by se
 
 ### addAiModel
 
-Adds a new AI model configuration to the database. Before adding, it deactivates any existing models with the same name. The function expects all model configuration parameters and creates a new entry in the `ps_ai_models` table.
+Adds a new AI model configuration to the database. If a model with the same name exists, it is first deactivated. The function logs the result of the operation.
 
-| Parameter                           | Type                | Description                                                                 |
-|--------------------------------------|---------------------|-----------------------------------------------------------------------------|
-| name                                | string              | Name of the AI model.                                                       |
-| organizationId                      | number              | Organization ID to associate the model with.                                |
-| userId                              | number              | User ID of the creator.                                                     |
-| type                                | PsAiModelType       | Type of the AI model (e.g., "openai", "anthropic").                         |
-| modelSize                           | PsAiModelSize       | Size of the model (e.g., "small", "medium", "large").                       |
-| provider                            | string              | Provider name (e.g., "openai", "azure").                                    |
-| costInTokensPerMillion              | number              | Cost per million input tokens.                                              |
-| costOutTokensPerMillion             | number              | Cost per million output tokens.                                             |
-| costInCachedContextTokensPerMillion  | number              | Cost per million cached context tokens.                                     |
-| currency                            | string              | Currency code (e.g., "USD").                                                |
-| maxTokensOut                        | number              | Maximum number of output tokens allowed.                                    |
-| defaultTemperature                  | number              | Default temperature for the model.                                          |
-| model                               | string              | Model identifier (e.g., "gpt-4", "claude-3").                               |
-| active                              | boolean             | Whether the model should be active.                                         |
+| Parameter                        | Type                | Description                                                      |
+|-----------------------------------|---------------------|------------------------------------------------------------------|
+| name                             | string              | The name of the AI model.                                        |
+| organizationId                   | number              | The organization ID to associate with the model.                 |
+| userId                           | number              | The user ID of the creator.                                      |
+| type                             | PsAiModelType       | The type of the AI model (see `PsAiModelType`).                  |
+| modelSize                        | PsAiModelSize       | The size of the AI model (see `PsAiModelSize`).                  |
+| provider                         | string              | The provider of the AI model (e.g., "openai", "azure").          |
+| costInTokensPerMillion           | number              | Cost per million input tokens.                                   |
+| costOutTokensPerMillion          | number              | Cost per million output tokens.                                  |
+| costInCachedContextTokensPerMillion | number           | Cost per million cached context tokens.                          |
+| currency                         | string              | The currency for the costs (e.g., "USD").                        |
+| maxTokensOut                     | number              | Maximum output tokens allowed for the model.                     |
+| defaultTemperature               | number              | Default temperature setting for the model.                       |
+| model                            | string              | The model identifier (e.g., "gpt-4-turbo").                      |
+| active                           | boolean             | Whether the model should be active.                              |
 
 **Returns:** `Promise<void>`
 
@@ -43,77 +45,96 @@ Adds a new AI model configuration to the database. Before adding, it deactivates
 
 ## Command-Line Usage
 
-This script is intended to be run from the command line using `ts-node` or `node` (after compilation). It expects **13 arguments** in the following order:
+This script is intended to be run via the command line using `ts-node` or `node` (after compilation). It expects **13 arguments** in the following order:
 
 ```
-ts-node @policysynth/agents/tools/addNewAiModel.js <name> <organizationId> <userId> <type> <modelSize> <provider> <costInTokensPerMillion> <costOutTokensPerMillion> <costInCachedContextTokensPerMillion> <currency> <maxTokensOut> <defaultTemperature> <model> <active>
+ts-node addNewAiModel.js <name> <organizationId> <userId> <type> <modelSize> <provider> <costInTokensPerMillion> <costOutTokensPerMillion> <costInCachedContextTokensPerMillion> <currency> <maxTokensOut> <defaultTemperature> <model> <active>
 ```
 
-- `<name>`: Name of the AI model.
-- `<organizationId>`: Organization ID (number).
-- `<userId>`: User ID (number).
-- `<type>`: AI model type (must match a value from `PsAiModelType`).
-- `<modelSize>`: Model size (must match a value from `PsAiModelSize`).
-- `<provider>`: Provider name.
-- `<costInTokensPerMillion>`: Cost per million input tokens (number).
-- `<costOutTokensPerMillion>`: Cost per million output tokens (number).
-- `<costInCachedContextTokensPerMillion>`: Cost per million cached context tokens (number).
-- `<currency>`: Currency code (e.g., "USD").
-- `<maxTokensOut>`: Maximum output tokens (number).
-- `<defaultTemperature>`: Default temperature (number).
-- `<model>`: Model identifier.
-- `<active>`: "true" or "false" (whether the model is active).
+- `<name>`: Name of the AI model (string)
+- `<organizationId>`: Organization ID (number)
+- `<userId>`: User ID (number)
+- `<type>`: AI model type (must match a value in `PsAiModelType`)
+- `<modelSize>`: AI model size (must match a value in `PsAiModelSize`)
+- `<provider>`: Provider name (string)
+- `<costInTokensPerMillion>`: Cost per million input tokens (number)
+- `<costOutTokensPerMillion>`: Cost per million output tokens (number)
+- `<costInCachedContextTokensPerMillion>`: Cost per million cached context tokens (number)
+- `<currency>`: Currency code (string)
+- `<maxTokensOut>`: Maximum output tokens (number)
+- `<defaultTemperature>`: Default temperature (number)
+- `<model>`: Model identifier (string)
+- `<active>`: Whether the model is active ("true" or "false")
 
-**Example:**
+If the arguments are invalid or missing, the script will log an error and exit.
 
-```bash
-ts-node @policysynth/agents/tools/addNewAiModel.js "gpt-4" 1 1 "openai" "large" "openai" 3000 6000 1000 "USD" 4096 0.7 "gpt-4" true
-```
+---
 
 ## Example
 
-```typescript
-// Example usage from the command line
-// (Assuming you have ts-node installed and are in the correct directory)
-
+```bash
 ts-node @policysynth/agents/tools/addNewAiModel.js \
-  "gpt-4" \
+  "gpt-4-turbo" \
   1 \
   1 \
-  "openai" \
+  "chat" \
   "large" \
   "openai" \
-  3000 \
-  6000 \
-  1000 \
+  100 \
+  200 \
+  50 \
   "USD" \
   4096 \
   0.7 \
-  "gpt-4" \
+  "gpt-4-turbo" \
   true
 ```
 
-This will:
-- Deactivate any existing models named "gpt-4"
-- Add a new "gpt-4" model with the specified configuration and mark it as active
+---
+
+## Example Code Usage
+
+```typescript
+import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
+
+// Example: Add a new AI model programmatically
+addAiModel(
+  "gpt-4-turbo",
+  1, // organizationId
+  1, // userId
+  PsAiModelType.chat,
+  PsAiModelSize.large,
+  "openai",
+  100, // costInTokensPerMillion
+  200, // costOutTokensPerMillion
+  50,  // costInCachedContextTokensPerMillion
+  "USD",
+  4096, // maxTokensOut
+  0.7,  // defaultTemperature
+  "gpt-4-turbo",
+  true  // active
+);
+```
+
+---
 
 ## Notes
 
-- The script validates that the `type` and `modelSize` arguments are valid values from the `PsAiModelType` and `PsAiModelSize` enums.
-- If the argument count or values are invalid, the script will print usage instructions and exit.
-- The script connects to the database, initializes models, and performs the necessary create/update operations.
-- The model configuration is stored in the `configuration` field of the `ps_ai_models` table.
+- The script ensures only one active model per name by deactivating existing models before adding a new one.
+- The model configuration is stored in the `configuration` field of the `PsAiModel` database model.
+- Logging is handled via `PolicySynthAgentBase.logger`.
+- Argument validation is performed for model type and size.
 
 ---
 
-**Types Used:**
+## Related Types
 
-- `PsAiModelType`: Enum of supported AI model types.
-- `PsAiModelSize`: Enum of supported model sizes.
-- `PsAiModelConfiguration`: Configuration object for an AI model (see type definitions).
-- `PsAiModel`: Sequelize model for the `ps_ai_models` table.
+- **PsAiModelType**: Enum of supported AI model types (e.g., "chat", "completion").
+- **PsAiModelSize**: Enum of supported model sizes (e.g., "small", "medium", "large").
+- **PsAiModelConfiguration**: Configuration object for an AI model, including pricing and operational parameters.
 
 ---
 
-**File Path:**  
+## File Location
+
 `@policysynth/agents/tools/addNewAiModel.js`

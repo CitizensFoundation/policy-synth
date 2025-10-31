@@ -1,58 +1,111 @@
 # GoogleGeminiChat
 
-A chat model class for interacting with Google's Gemini (Generative AI) models, supporting both the [Google Generative AI API](https://ai.google.dev/) and [Google Vertex AI](https://cloud.google.com/vertex-ai/docs/generative-ai/learn/overview). This class provides a unified interface for generating chat completions, with support for both streaming and non-streaming responses, token usage tracking, and safety settings.
+A class for interacting with Google's Gemini AI chat models, providing both streaming and non-streaming chat completions, tool/function calling, and token usage logging. This class is designed to be used as a drop-in replacement for OpenAI-style chat models, with support for Google Gemini's specific API features.
+
+**File:** `@policysynth/agents/aiModels/googleGeminiChat.js`
+
+## Inheritance
+
+- **Extends:** `BaseChatModel`
 
 ## Properties
 
-| Name              | Type                                                                 | Description                                                                                      |
-|-------------------|----------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| useVertexAi       | boolean                                                              | Indicates whether to use Vertex AI (`true`) or Google Generative AI API (`false`).               |
-| googleAiClient    | GoogleGenerativeAI \| undefined                                      | Instance of the Google Generative AI client (if used).                                           |
-| vertexAiClient    | VertexAI \| undefined                                                | Instance of the Vertex AI client (if used).                                                      |
-| modelName         | string                                                               | The name of the model to use (e.g., `"gemini-pro"`).                                             |
-| vertexProjectId   | string \| undefined                                                  | Google Cloud Project ID for Vertex AI.                                                           |
-| vertexLocation    | string \| undefined                                                  | Google Cloud location for Vertex AI.                                                             |
-| model             | GoogleAiGenerativeModel \| VertexAiGenerativeModel                   | The underlying model instance (either Google or Vertex).                                         |
-| config (inherited)| PsAiModelConfig                                                      | Model configuration, including API key, model name, max tokens, etc.                             |
-| logger (inherited)| any                                                                  | Logger instance for debug/info/error logging.                                                    |
+| Name         | Type         | Description                                                                                 |
+|--------------|--------------|---------------------------------------------------------------------------------------------|
+| ai           | GoogleGenAI  | Instance of the GoogleGenAI client, configured for either Vertex AI or API key usage.        |
+| modelName    | string       | The name of the Gemini model being used (e.g., "gemini-2.0-flash").                         |
+| safetySettings | object[]   | Static. Array of safety settings for harm categories and block thresholds.                   |
 
-## Static Properties
+## Constructor
 
-| Name                                 | Type    | Description                                                                                      |
-|-------------------------------------- |---------|--------------------------------------------------------------------------------------------------|
-| vertexSafetySettingsBlockNone         | Array   | Safety settings for Vertex AI to block no content categories.                                     |
-| generativeAiSafetySettingsBlockNone   | Array   | Safety settings for Google Generative AI API to block no content categories.                      |
+```typescript
+constructor(config: PsAiModelConfig)
+```
+
+- **config**: `PsAiModelConfig`  
+  The configuration object for the AI model, including API key, model name, and other options.
+
+**Behavior:**  
+Initializes the Gemini client, choosing between Vertex AI and API key authentication based on environment variables. Sets the model name and maximum output tokens.
 
 ## Methods
 
-| Name                | Parameters                                                                                                                                         | Return Type                              | Description                                                                                                   |
-|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------|---------------------------------------------------------------------------------------------------------------|
-| constructor         | config: PsAiModelConfig                                                                                                                            | GoogleGeminiChat                         | Initializes the chat model, sets up the appropriate client (Vertex or Google), and validates configuration.   |
-| buildVertexContents | messages: PsModelMessage[]                                                                                                                         | Content[]                                | Converts an array of chat messages into the format required by Vertex AI.                                     |
-| debugTokenCounts    | tokensIn: number, tokensOut: number, cachedInTokens: number                                                                                        | Promise<void>                            | (Private) Logs token usage to a CSV file if debugging is enabled.                                             |
-| generate            | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: (chunk: string) => void                                                       | Promise<PsBaseModelReturnParameters \| undefined> | Generates a chat completion using the configured model. Supports both streaming and non-streaming modes.      |
+| Name                    | Parameters                                                                                                                                                                                                                                    | Return Type                        | Description                                                                                                   |
+|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------|---------------------------------------------------------------------------------------------------------------|
+| buildContents           | messages: PsModelMessage[], media?: { mimeType: string; data: string }[]                                                                                                                               | GenerateContentParameters["contents"] | Helper. Converts chat messages and optional media into Gemini's content format.                               |
+| tokensOut               | usage?: any                                                                                                                                                                                            | number                              | Helper. Calculates the number of output tokens from Gemini's usage metadata.                                  |
+| logTokens               | tokensIn: number, tokensOut: number, cached: number                                                                                                                                                    | Promise<void>                       | Helper. Logs token usage to a CSV file if debugging is enabled.                                               |
+| assertGeminiNotBlocked  | response: GenerateContentResponse                                                                                                                                                                      | void                                | Throws an error if Gemini blocks the prompt or response for safety or other reasons.                          |
+| generate                | messages: PsModelMessage[], streaming?: boolean, streamingCallback?: (chunk: string) => void, media?: { mimeType: string; data: string }[], tools?: ChatCompletionTool[], toolChoice?: ChatCompletionToolChoiceOption \| "auto", allowedTools?: string[] | Promise<PsBaseModelReturnParameters> | Main entry point. Sends chat messages to Gemini, with support for streaming, tool calling, and media input.   |
 
-## Method Details
+---
 
-### constructor(config: PsAiModelConfig)
+### Method Details
 
-Initializes the `GoogleGeminiChat` instance. Determines whether to use Vertex AI or Google Generative AI API based on environment variables and configures the appropriate client. Throws errors if required configuration is missing.
+#### buildContents
 
-### buildVertexContents(messages: PsModelMessage[]): Content[]
+```typescript
+private buildContents(
+  messages: PsModelMessage[],
+  media?: { mimeType: string; data: string }[]
+): GenerateContentParameters["contents"]
+```
+- Converts an array of chat messages and optional media into the format required by Gemini's API.
+- Skips "system" and "developer" roles (handled via systemInstruction).
+- Adds media as user parts.
 
-Converts an array of chat messages (`PsModelMessage[]`) into the `Content[]` format required by Vertex AI, mapping roles appropriately.
+#### tokensOut
 
-### debugTokenCounts(tokensIn: number, tokensOut: number, cachedInTokens: number): Promise<void>
+```typescript
+private tokensOut(usage?: any): number
+```
+- Calculates the number of output tokens from Gemini's usage metadata, handling different possible fields.
 
-If the environment variable `DEBUG_TOKENS_COUNTS_TO_CSV_FILE` is set, logs token usage statistics to `/tmp/geminiTokenDebug.csv` for debugging and cost analysis.
+#### logTokens
 
-### generate(messages: PsModelMessage[], streaming?: boolean, streamingCallback?: (chunk: string) => void): Promise<PsBaseModelReturnParameters | undefined>
+```typescript
+private async logTokens(tokensIn: number, tokensOut: number, cached: number): Promise<void>
+```
+- If the environment variable `DEBUG_TOKENS_COUNTS_TO_CSV_FILE` is set, appends token usage to `/tmp/geminiTokenDebug.csv`.
 
-Generates a chat completion using the configured model. Handles both streaming and non-streaming requests, and adapts the prompt/message format for the selected backend (Vertex AI or Google Generative AI API). Returns token usage statistics and the generated content.
+#### assertGeminiNotBlocked
 
-- **messages**: Array of chat messages, including roles such as `"system"`, `"user"`, and `"assistant"`.
-- **streaming**: If `true`, returns results as they are generated via the `streamingCallback`.
-- **streamingCallback**: Function called with each chunk of generated text in streaming mode.
+```typescript
+assertGeminiNotBlocked(response: GenerateContentResponse): void
+```
+- Throws an error if the Gemini API response indicates the prompt or candidate was blocked for safety or other reasons.
+
+#### generate
+
+```typescript
+async generate(
+  messages: PsModelMessage[],
+  streaming?: boolean,
+  streamingCallback?: (chunk: string) => void,
+  media?: { mimeType: string; data: string }[],
+  tools?: ChatCompletionTool[],
+  toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
+  allowedTools?: string[]
+): Promise<PsBaseModelReturnParameters>
+```
+- **messages**: Array of chat messages (role, message, etc.).
+- **streaming**: If true, uses Gemini's streaming API and calls `streamingCallback` for each chunk.
+- **streamingCallback**: Function to call with each streamed text chunk.
+- **media**: Optional array of media (images, etc.) to include in the prompt.
+- **tools**: Optional array of function/tool definitions (OpenAI-style).
+- **toolChoice**: Tool selection mode ("auto", "none", or a specific function).
+- **allowedTools**: List of allowed tool names.
+
+**Returns:**  
+A promise resolving to a `PsBaseModelReturnParameters` object, including the generated content, token usage, and any tool calls.
+
+**Behavior:**
+- Handles system instructions, tool/function declarations, and safety settings.
+- Supports both streaming and non-streaming completions.
+- Handles Gemini-specific function calling and tool configuration.
+- Logs token usage if enabled.
+
+---
 
 ## Example
 
@@ -60,58 +113,47 @@ Generates a chat completion using the configured model. Handles both streaming a
 import { GoogleGeminiChat } from '@policysynth/agents/aiModels/googleGeminiChat.js';
 
 const config = {
-  apiKey: process.env.GOOGLE_API_KEY, // For Google Generative AI API
-  modelName: "gemini-pro",
-  maxTokensOut: 2048,
-  prices: {
-    costInTokensPerMillion: 1,
-    costOutTokensPerMillion: 1,
-    costInCachedContextTokensPerMillion: 1,
-    currency: "USD"
-  },
-  modelType: "chat",
-  modelSize: "medium"
+  apiKey: 'YOUR_GOOGLE_API_KEY',
+  modelName: 'gemini-2.0-flash',
+  maxTokensOut: 4096,
+  // ...other PsAiModelConfig fields
 };
 
-const chatModel = new GoogleGeminiChat(config);
+const gemini = new GoogleGeminiChat(config);
 
 const messages = [
-  { role: "system", message: "You are a helpful assistant." },
-  { role: "user", message: "What's the weather like in Paris today?" }
+  { role: 'user', message: 'Hello, Gemini!' }
 ];
 
 (async () => {
-  // Non-streaming example
-  const result = await chatModel.generate(messages);
-  console.log("Response:", result?.content);
-
-  // Streaming example
-  await chatModel.generate(messages, true, (chunk) => {
-    process.stdout.write(chunk);
-  });
+  const result = await gemini.generate(messages);
+  console.log(result.content); // Output from Gemini
 })();
 ```
 
-## Notes
-
-- The class automatically chooses between Vertex AI and Google Generative AI API based on environment variables:
-  - `USE_GOOGLE_VERTEX_AI` (set to `"true"` to use Vertex AI for all models)
-  - `USE_GOOGLE_VERTEX_AI_FOR_MODELS` (comma-separated list of model names to use Vertex AI for)
-  - `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` are required for Vertex AI.
-- The environment variable `PS_AGENT_GEMINI_API_KEY` overrides `config.apiKey` when using the Google Generative AI API.
-- Safety settings are set to "block none" for all harm categories by default.
-- Token usage is tracked and can be logged for debugging/cost analysis.
-- The `generate` method supports both streaming and non-streaming completions.
-- System and developer messages are handled as system instructions for the model.
-
 ---
 
-**TypeScript Definitions Used:**
+## Types Used
+
 - `PsAiModelConfig`
 - `PsModelMessage`
 - `PsBaseModelReturnParameters`
-- `Content` (from Vertex AI SDK)
-- `GoogleGenerativeAI`, `GenerativeModel` (from Google Generative AI SDK)
-- `VertexAI`, `GenerativeModel` (from Vertex AI SDK)
+- `ChatCompletionTool`
+- `ChatCompletionToolChoiceOption`
+- `GenerateContentParameters`
+- `GenerateContentResponse`
+- `FunctionDeclaration`
+- `FunctionCall`
+- `ToolConfig`
+- `HarmBlockThreshold`
+- `HarmCategory`
 
-See the [AllTypeDefsUsedInProject] for more details on these types.
+---
+
+## Notes
+
+- The class is designed to be compatible with OpenAI-style chat interfaces, but uses Google's Gemini API under the hood.
+- Supports function/tool calling, system instructions, and media input.
+- Handles safety settings and prompt/response blocking as per Gemini's requirements.
+- Token usage can be logged for debugging and cost tracking.
+- Streaming and non-streaming completions are both supported.

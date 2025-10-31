@@ -1,111 +1,120 @@
-# addUserToAgentClasses
+# addUserToAgentClasses Utility
 
-This script adds a user to multiple agent classes as either a regular user or an admin. It takes three command line arguments: `agentClassBaseId`, `userId`, and `role`.
+This script provides a command-line utility to add a user to all agent classes with a given `class_base_id` as either a regular user or an admin. It is intended for administrative or setup tasks in the PolicySynth Agents system.
 
-## Properties
+**File:** `@policysynth/agents/tools/addUserToAgentClass.js`
 
-| Name               | Type   | Description                                                                 |
-|--------------------|--------|-----------------------------------------------------------------------------|
-| agentClassBaseId   | string | The base ID of the agent class to which the user will be added.              |
-| userId             | number | The ID of the user to be added to the agent classes.                         |
-| role               | string | The role of the user in the agent classes. It can be either "user" or "admin".|
+---
 
-## Methods
+## Function
 
 ### addUserToAgentClasses
 
-Adds a user to multiple agent classes as a regular user or admin.
+Adds a user to all agent classes matching a given `class_base_id`, with the specified role (`user` or `admin`).
 
-| Name                | Parameters                                                                 | Return Type | Description                                                                 |
-|---------------------|----------------------------------------------------------------------------|-------------|-----------------------------------------------------------------------------|
-| addUserToAgentClasses | agentClassBaseId: string, userId: number, role: "user" \| "admin" | Promise<void> | Adds the user to the agent classes with the specified role. |
+#### Parameters
 
-## Example
+| Name              | Type                | Description                                                                 |
+|-------------------|---------------------|-----------------------------------------------------------------------------|
+| agentClassBaseId  | `string`            | The `class_base_id` to match agent classes.                                 |
+| userId            | `number`            | The ID of the user to add.                                                  |
+| role              | `"user" \| "admin"` | The role to assign to the user in the agent class (`user` or `admin`).      |
 
-```typescript
-import { PsAgentClass } from "../dbModels/agentClass.js";
-import { initializeModels } from "../dbModels/index.js";
-import { sequelize } from "../dbModels/sequelize.js";
-import { User } from "../dbModels/ypUser.js";
+#### Behavior
 
-// Function to add a user to multiple agent classes as a regular user or admin
-async function addUserToAgentClasses(
-  agentClassBaseId: string,
-  userId: number,
-  role: "user" | "admin"
-) {
-  try {
-    await initializeModels();
+- Initializes database models.
+- Finds all agent classes with the given `class_base_id`.
+- Looks up the user by `userId`.
+- For each matching agent class:
+  - Checks if the user already has the specified role.
+  - If not, adds the user as either a user or admin.
+  - Logs the action.
+- Handles errors and closes the database connection.
 
-    // Find all agent classes with the given class_base_id
-    const agentClasses = await PsAgentClass.findAll({
-      where: {
-        class_base_id: agentClassBaseId,
-      },
-    });
+#### Returns
 
-    if (agentClasses.length === 0) {
-      console.error("No agent classes found with the given class_base_id");
-      return;
-    }
+- No explicit return value. Logs actions and errors to the console.
 
-    // Find the user
-    const user = await User.findByPk(userId);
-    if (!user) {
-      console.error("User not found");
-      return;
-    }
+---
 
-    for (const agentClass of agentClasses) {
-      // Check if the user already has access to this agent class
-      const hasAccess = role === "user"
-        ? await agentClass.hasUser(user)
-        : await agentClass.hasAdmin(user);
+## Command-Line Usage
 
-      if (!hasAccess) {
-        // Add the user to the agent class with the specified role
-        if (role === "user") {
-          await agentClass.addUser(user);
-          console.log(
-            `User ${userId} added as user to agent class ${agentClass.id}`
-          );
-        } else if (role === "admin") {
-          await agentClass.addAdmin(user);
-          console.log(
-            `User ${userId} added as admin to agent class ${agentClass.id}`
-          );
-        }
-      } else {
-        console.log(
-          `User ${userId} already has ${role} access to agent class ${agentClass.id}`
-        );
-      }
-    }
-  } catch (error) {
-    console.error("Error adding user to agent classes:", error);
-  } finally {
-    await sequelize.close();
-  }
-}
+This script is intended to be run from the command line using `ts-node` or similar tools.
 
-// Parse command line arguments
-const args = process.argv.slice(2);
-if (args.length !== 3) {
-  console.error(
-    "Usage: ts-node addUserToAgentClasses.ts <agentClassBaseId> <userId> <role>"
-  );
-  process.exit(1);
-}
+### Arguments
 
-const [agentClassBaseId, userId, role] = args;
+1. `agentClassBaseId` (string): The base ID of the agent class.
+2. `userId` (number): The user ID to add.
+3. `role` (`user` or `admin`): The role to assign.
 
-if (role !== "user" && role !== "admin") {
-  console.error('Role must be either "user" or "admin"');
-  process.exit(1);
-}
+### Example
 
-// Run the function
-addUserToAgentClasses(agentClassBaseId, Number(userId), role as "user" | "admin");
+```bash
+ts-node addUserToAgentClasses.ts smarter_crowdsourcing 42 admin
 ```
 
-This script initializes the models, finds the agent classes with the given `class_base_id`, and adds the user to these agent classes with the specified role. If the user already has access to an agent class, it logs a message indicating that the user already has the specified role in that agent class.
+---
+
+## Example Usage in Code
+
+```typescript
+import { addUserToAgentClasses } from '@policysynth/agents/tools/addUserToAgentClass.js';
+
+// Add user 42 as an admin to all agent classes with base ID 'smarter_crowdsourcing'
+await addUserToAgentClasses('smarter_crowdsourcing', 42, 'admin');
+```
+
+---
+
+## Implementation Details
+
+- **Database Models:** Uses Sequelize models for `PsAgentClass` and `User`.
+- **Role Assignment:** Uses `addUser` and `addAdmin` methods on agent class instances.
+- **Logging:** Uses `PolicySynthAgentBase.logger` for info and error messages.
+- **Error Handling:** Catches and logs errors, ensures the database connection is closed.
+- **CLI Argument Parsing:** Validates arguments and role, provides usage instructions if invalid.
+
+---
+
+## Related Types
+
+- **PsAgentClass**: Represents an agent class in the system.
+- **User**: Represents a user in the system.
+- **PolicySynthAgentBase**: Provides logging utilities.
+
+---
+
+## Full Example
+
+```typescript
+import { addUserToAgentClasses } from '@policysynth/agents/tools/addUserToAgentClass.js';
+
+// Add user 101 as a regular user to all agent classes with base ID 'root_causes'
+await addUserToAgentClasses('root_causes', 101, 'user');
+```
+
+---
+
+## Notes
+
+- This script is typically used for administrative setup or migration tasks.
+- Ensure you have the correct permissions and environment variables set for database access.
+- The script will exit with an error if arguments are missing or invalid.
+
+---
+
+## Error Handling
+
+- Logs and exits if:
+  - No agent classes are found for the given `class_base_id`.
+  - The user is not found.
+  - The role is not `"user"` or `"admin"`.
+  - Any other error occurs during execution.
+
+---
+
+## See Also
+
+- [PsAgentClass](../dbModels/agentClass.js)
+- [User](../dbModels/ypUser.js)
+- [PolicySynthAgentBase](../base/agentBase.js)
