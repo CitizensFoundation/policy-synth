@@ -8,7 +8,6 @@ import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { htmlToText } from "html-to-text";
 import { PdfReader } from "pdfreader";
-import FirecrawlApp from "@mendable/firecrawl-js";
 import { PolicySynthAgent } from "../base/agent.js";
 import { PsAgent } from "../dbModels/agent.js";
 import { FirecrawlScrapeAgent } from "./fireCrawlApi.js";
@@ -254,7 +253,7 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
     url: string,
     format: PageFormat,
     crawlIfDomainIs: string | undefined = undefined
-  ): Promise<string[]> {
+  ): Promise<string | string[]> {
     // Try cache first
     const cached = await this.getCachedData(url, format);
     if (cached) {
@@ -275,16 +274,17 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       throw new Error(`Failed to scrape: ${scrapeResponse.error}`);
     }
 
-    let markdownArray;
+    let markdownArray: string[];
 
     if (scrapeResponse.markdownArray) {
       markdownArray = scrapeResponse.markdownArray;
       this.logger.debug(`Got markdownArray: ${markdownArray.length}`);
     } else {
-      markdownArray = [scrapeResponse.markdown];
+      const markdownSingle = scrapeResponse.markdown ?? "";
+      markdownArray = [markdownSingle];
       this.logger.debug(`Got markdown single: ${markdownArray.length}`);
     }
-    const rawHtml = scrapeResponse.rawHtml;
+    const rawHtml = scrapeResponse.rawHtml ?? "";
 
     // Firecrawl returns markdown and rawHtml properties directly on scrapeResponse
     if (markdownArray) {

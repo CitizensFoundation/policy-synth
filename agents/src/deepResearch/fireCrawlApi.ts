@@ -1,4 +1,8 @@
-import FirecrawlApp from "@mendable/firecrawl-js";
+import Firecrawl, {
+  type Document as FirecrawlDocument,
+  type CrawlJob,
+  type FormatOption,
+} from "@mendable/firecrawl-js";
 import { PolicySynthAgent } from "../base/agent.js";
 import { parse } from "tldts";
 import { PsAgent } from "../dbModels/agent.js";
@@ -10,9 +14,20 @@ interface PrivacyPolicyCheckResult {
   isOnlyPrivacyPolicyOrTermsOfService: boolean;
 }
 
+export interface FirecrawlScrapeResult {
+  success: boolean;
+  error?: string;
+  markdownArray?: string[];
+  markdown?: string;
+  rawHtml?: string;
+  data?: FirecrawlDocument[];
+}
+
+const defaultFirecrawlFormats: FormatOption[] = ["markdown", "rawHtml"];
+
 export class FirecrawlScrapeAgent extends PolicySynthAgent {
   needsAiModel = false;
-  private app: FirecrawlApp;
+  private app: Firecrawl;
 
   crawlPageLimit = 50;
 
@@ -27,7 +42,72 @@ export class FirecrawlScrapeAgent extends PolicySynthAgent {
     if (!apiKey) {
       throw new Error("Missing FIRECRAWL_API_KEY environment variable");
     }
-    this.app = new FirecrawlApp({ apiKey });
+    this.app = new Firecrawl({ apiKey });
+  }
+
+  private async filterOutLegalOrPrivacyDocs(
+    markdownDocs: string[]
+  ): Promise<string[]> {
+    if (!markdownDocs.length) {
+      return markdownDocs;
+    }
+
+    const checks = await Promise.all(
+      markdownDocs.map((doc: string) =>
+        this.checkIfLegalOrPrivacyPolicy(doc)
+      )
+    );
+
+    return markdownDocs.filter(
+      (_doc: string, index: number) =>
+        !checks[index].isOnlyPrivacyPolicyOrTermsOfService
+    );
+  }
+
+  private async normalizeCrawlResponse(
+    crawlResponse: CrawlJob
+  ): Promise<FirecrawlScrapeResult> {
+    const documents = crawlResponse.data ?? [];
+
+    let markdownArray = documents
+      .map((item) => item.markdown)
+      .filter(
+        (doc): doc is string => typeof doc === "string" && doc.length > 0
+      );
+
+    markdownArray = await this.filterOutLegalOrPrivacyDocs(markdownArray);
+
+    const rawHtml = documents
+      .map((item) => item.rawHtml)
+      .filter(
+        (html): html is string => typeof html === "string" && html.length > 0
+      )
+      .join("\n\n");
+
+    return {
+      success: crawlResponse.status === "completed",
+      error:
+        crawlResponse.status === "completed"
+          ? undefined
+          : `Crawl finished with status ${crawlResponse.status}`,
+      data: documents,
+      markdownArray,
+      rawHtml,
+    };
+  }
+
+  private normalizeScrapeResponse(
+    document: FirecrawlDocument
+  ): FirecrawlScrapeResult {
+    const markdown = document.markdown ?? "";
+    const rawHtml = document.rawHtml ?? document.html ?? "";
+
+    return {
+      success: true,
+      data: [document],
+      markdown,
+      rawHtml,
+    };
   }
 
   /**
@@ -120,20 +200,11 @@ Your JSON output:`,
    */
   public async scrapeUrl(
     url: string,
-    formats: (
-      | "markdown"
-      | "html"
-      | "rawHtml"
-      | "content"
-      | "links"
-      | "screenshot"
-      | "screenshot@fullPage"
-      | "extract"
-    )[] = ["markdown", "rawHtml"],
+    formats: FormatOption[] = defaultFirecrawlFormats,
     maxRetries: number = 3,
     skipImages: boolean = false,
     crawlIfDomainIs: string | undefined = undefined
-  ): Promise<any> {
+  ): Promise<FirecrawlScrapeResult> {
     let retries = 0;
     const targetDomain = crawlIfDomainIs
       ? this.getDomainAndPath(crawlIfDomainIs)
@@ -143,7 +214,7 @@ Your JSON output:`,
     while (retries <= maxRetries) {
       try {
         this.logger.debug(`Attempting to scrape: ${url}, try #${retries + 1}`);
-        let scrapeResponse;
+        let scrapeResponse: FirecrawlScrapeResult;
 
         // If a reference domain is specified, only crawl if the current URL's domain matches
         // that of the reference domain. Using the more robust domain extraction here.
@@ -151,7 +222,7 @@ Your JSON output:`,
           this.logger.debug(
             `Crawling ${url} because it matches ${targetDomain}`
           );
-          scrapeResponse = await this.app.crawlUrl(url, {
+          const crawlJob = await this.app.crawl(url, {
             limit: this.crawlPageLimit,
             scrapeOptions: {
               formats,
@@ -161,42 +232,20 @@ Your JSON output:`,
             },
           });
 
-          this.logger.debug(
-            `Crawl response length: ${Object.keys(scrapeResponse).length}`
-          );
+          this.logger.debug(`Crawl response status: ${crawlJob.status}`);
 
-          if (!scrapeResponse.success) {
-            throw new Error(`Failed to crawl: ${scrapeResponse.error}`);
-          }
-
-          let allMarkdownObjects = scrapeResponse.data
-            ? scrapeResponse.data.map((item: any) => item.markdown)
-            : [];
-
-          const checks = await Promise.all(
-            allMarkdownObjects.map((doc) =>
-              this.checkIfLegalOrPrivacyPolicy(doc)
-            )
-          );
-          allMarkdownObjects = allMarkdownObjects.filter(
-            (_, i) => !checks[i].isOnlyPrivacyPolicyOrTermsOfService
-          );
-
-          (scrapeResponse as any).markdownArray = allMarkdownObjects;
-
-          (scrapeResponse as any).rawHtml = scrapeResponse.data
-            ? scrapeResponse.data.map((item: any) => item.rawHtml).join("\n\n")
-            : "";
+          scrapeResponse = await this.normalizeCrawlResponse(crawlJob);
         } else {
           this.logger.debug(
             `Starting to scrape: ${url}`
           );
-          scrapeResponse = await this.app.scrapeUrl(url, {
+          const document = await this.app.scrape(url, {
             formats,
             excludeTags: skipImages
               ? ["img", "svg", "a", "iframe", "script", "style", "br"]
               : [],
           });
+          scrapeResponse = this.normalizeScrapeResponse(document);
         }
         this.logger.debug(
           `Successfully scraped: ${url}`

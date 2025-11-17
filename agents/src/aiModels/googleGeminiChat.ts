@@ -56,8 +56,41 @@ export class GoogleGeminiChat extends BaseChatModel {
     const out: any[] = [];
     for (const m of messages) {
       if (m.role === "system" || m.role === "developer") continue; // handled via systemInstruction
+
+      if (m.role === "assistant" && m.toolCall) {
+        out.push({
+          role: "model",
+          parts: [
+            {
+              functionCall: {
+                name: m.toolCall.name,
+                args: m.toolCall.arguments ?? {},
+              },
+            },
+          ],
+        });
+        continue;
+      }
+
+      if (m.role === "tool") {
+        const responsePayload = this.parseToolResponse(m.message);
+        out.push({
+          role: "function",
+          parts: [
+            {
+              functionResponse: {
+                name: m.name ?? "tool_response",
+                response: responsePayload,
+              },
+            },
+          ],
+        });
+        continue;
+      }
+
       const role = m.role === "assistant" ? "model" : "user";
-      out.push({ role, parts: [{ text: m.message }] });
+      const text = m.message ?? "";
+      out.push({ role, parts: [{ text }] });
     }
     media?.forEach((img) =>
       out.push({
@@ -66,6 +99,15 @@ export class GoogleGeminiChat extends BaseChatModel {
       })
     );
     return out;
+  }
+
+  private parseToolResponse(message: string): Record<string, unknown> {
+    if (!message) return {};
+    try {
+      return JSON.parse(message);
+    } catch {
+      return { result: message };
+    }
   }
 
   private tokensOut(usage?: any): number {
