@@ -166,6 +166,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       {
         parseJson: false,
         useOpenAiResponsesIfOpenAi: true,
+        useThoughtSignatures: true,
         functions: this.TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],

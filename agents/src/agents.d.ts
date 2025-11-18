@@ -43,6 +43,7 @@ interface PsCallModelOptions {
   streamingCallbacks?: Function;
   modelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   useOpenAiResponsesIfOpenAi?: boolean;
+  useThoughtSignatures?: boolean;
   modelName?: string;
   modelType?: import("./aiModelTypes.js").PsAiModelType;
   modelTemperature?: number;

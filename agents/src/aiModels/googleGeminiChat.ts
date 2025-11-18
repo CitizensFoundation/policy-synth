@@ -49,7 +49,7 @@ export class GoogleGeminiChat extends BaseChatModel {
 
   /* ---------- helper utilities ---------- */
 
-  private buildContents(
+  protected buildContents(
     messages: PsModelMessage[],
     media?: { mimeType: string; data: string }[]
   ): GenerateContentParameters["contents"] {
@@ -58,17 +58,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       if (m.role === "system" || m.role === "developer") continue; // handled via systemInstruction
 
       if (m.role === "assistant" && m.toolCall) {
-        out.push({
-          role: "model",
-          parts: [
-            {
-              functionCall: {
-                name: m.toolCall.name,
-                args: m.toolCall.arguments ?? {},
-              },
-            },
-          ],
-        });
+        out.push(this.buildAssistantToolCallMessage(m));
         continue;
       }
 
@@ -99,6 +89,22 @@ export class GoogleGeminiChat extends BaseChatModel {
       })
     );
     return out;
+  }
+
+  protected buildAssistantToolCallMessage(
+    message: PsModelMessage
+  ): { role: string; parts: any[] } {
+    return {
+      role: "model",
+      parts: [
+        {
+          functionCall: {
+            name: message.toolCall!.name,
+            args: message.toolCall!.arguments ?? {},
+          },
+        },
+      ],
+    };
   }
 
   private parseToolResponse(message: string): Record<string, unknown> {
@@ -258,12 +264,17 @@ export class GoogleGeminiChat extends BaseChatModel {
 
       for await (const chunk of stream) {
         this.assertGeminiNotBlocked(chunk);
+        this.handleStreamChunk(chunk);
         last = chunk;
         if (chunk.text) {
           text += chunk.text;
           streamingCallback?.(chunk.text);
         }
         if (chunk.functionCalls?.length) toolCalls.push(...chunk.functionCalls);
+      }
+
+      if (last) {
+        this.handleFinalResponse(last);
       }
 
       const usage = last?.usageMetadata ?? {};
@@ -288,6 +299,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     /* ========== non‑streaming ========== */
     const response = await this.ai.models.generateContent(params);
     this.assertGeminiNotBlocked(response);
+    this.handleFinalResponse(response);
 
     const usage = response.usageMetadata ?? {};
     const tokensIn = usage.promptTokenCount ?? 0;
@@ -307,5 +319,13 @@ export class GoogleGeminiChat extends BaseChatModel {
         arguments: (fc.args as Record<string, unknown>) ?? {},
       })),
     };
+}
+
+  protected handleStreamChunk(_chunk: GenerateContentResponse) {
+    // no-op; subclasses may override
+  }
+
+  protected handleFinalResponse(_response: GenerateContentResponse) {
+    // no-op; subclasses may override
   }
 }

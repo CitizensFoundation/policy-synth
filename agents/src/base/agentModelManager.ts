@@ -3,6 +3,7 @@ import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { OpenAiResponses } from "../aiModels/openAiResponses.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
+import { GoogleGeminiThought } from "../aiModels/googleGeminiThought.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import type { Transaction, Op } from "sequelize";
@@ -459,7 +460,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         ephemeralModel = new ClaudeChat(ephemeralConfig);
         break;
       case PsAiModelProvider.Google:
-        ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
+        if (options.useThoughtSignatures) {
+          ephemeralModel = new GoogleGeminiThought(ephemeralConfig);
+        } else {
+          ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
+        }
         break;
       case PsAiModelProvider.Azure:
         // You may want to incorporate fallback's endpoint and deployment
