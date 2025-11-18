@@ -438,8 +438,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       `Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`
     );
 
-    // Try to reuse a cached ephemeral model keyed by configuration
-    const cacheKey = JSON.stringify(ephemeralConfig);
+    // Try to reuse a cached ephemeral model keyed by configuration and variant-specific options
+    const cacheKey = JSON.stringify({
+      config: ephemeralConfig,
+      useThoughtSignatures: Boolean(options.useThoughtSignatures),
+      useOpenAiResponsesIfOpenAi: Boolean(options.useOpenAiResponsesIfOpenAi),
+    });
     const cachedModel = this.models.get(cacheKey);
     if (cachedModel) {
       this.logger.debug(`Using cached ephemeral model for config: ${cacheKey}`);

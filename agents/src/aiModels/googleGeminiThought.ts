@@ -9,7 +9,6 @@ import { GoogleGeminiChat } from "./googleGeminiChat.js";
 export class GoogleGeminiThought extends GoogleGeminiChat {
   private toolCallParts = new Map<string, any[]>();
   private queuedToolParts: any[][] = [];
-  private queuedToolReplayIndex = 0;
   private pendingParts: any[] = [];
   private pendingSignature?: string;
 
@@ -22,9 +21,12 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[]
   ): Promise<PsBaseModelReturnParameters> {
-    this.resetCachedToolCalls(messages);
-    try {
-      return await super.generate(
+    let result;
+    let retryCount = 0;
+    const maxRetries = 3;
+
+    while (retryCount <= maxRetries) {
+      result = await super.generate(
         messages,
         streaming,
         streamingCallback,
@@ -33,10 +35,20 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
         toolChoice,
         allowedTools
       );
-    } finally {
-      this.pendingParts = [];
-      this.pendingSignature = undefined;
+
+      if (result.content || (result.toolCalls && result.toolCalls.length > 0)) {
+        return result;
+      }
+
+      if (retryCount < maxRetries) {
+        this.logger.error?.(`[GeminiThought] Empty content and no tool calls. Retry number ${retryCount + 1}`, JSON.stringify(result, null, 2));
+      } else {
+        this.logger.error?.(`[GeminiThought] Empty content and no tool calls. Failed after ${retryCount} retries.`, JSON.stringify(result, null, 2));
+      }
+      retryCount++;
     }
+
+    return result!;
   }
 
   protected buildAssistantToolCallMessage(message: PsModelMessage) {
@@ -49,10 +61,10 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
         `[GeminiThought] inject callId=${callId} parts=${storedParts?.length}`
       );
     } else if (!callId && this.queuedToolParts.length) {
-      const idx = this.queuedToolReplayIndex;
-      if (idx < this.queuedToolParts.length) {
-        storedParts = this.queuedToolParts[idx];
-        this.queuedToolReplayIndex += 1;
+      const queuedParts = this.queuedToolParts.shift();
+      if (queuedParts) {
+        storedParts = queuedParts;
+        this.queuedToolParts.push(queuedParts);
       }
       this.logger.debug?.(
         `[GeminiThought] inject queued tool=${message.toolCall?.name} parts=${storedParts?.length}`
@@ -72,8 +84,7 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     this.logger.debug?.(
       `[GeminiThought] inject fallback tool=${message.toolCall?.name}`
     );
-    const fallbackMessage = super.buildAssistantToolCallMessage(message);
-    return this.ensureSyntheticSignature(message, fallbackMessage);
+    return super.buildAssistantToolCallMessage(message);
   }
 
   protected handleStreamChunk(chunk: GenerateContentResponse) {
@@ -146,53 +157,6 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     this.pendingSignature = pendingSignature;
   }
 
-  private resetCachedToolCalls(messages: PsModelMessage[]) {
-    const toolCallMessages = messages.filter((m) => !!m.toolCall);
-    if (!toolCallMessages.length) {
-      if (this.toolCallParts.size || this.queuedToolParts.length) {
-        this.logger.debug?.(
-          "[GeminiThought] clearing cached tool calls for new conversation"
-        );
-      }
-      this.toolCallParts.clear();
-      this.queuedToolParts = [];
-      this.queuedToolReplayIndex = 0;
-      this.pendingParts = [];
-      this.pendingSignature = undefined;
-      return;
-    }
-
-    const referencedIds = new Set(
-      toolCallMessages
-        .map((m) => m.toolCall?.id)
-        .filter((id): id is string => typeof id === "string" && id.length > 0)
-    );
-    for (const cachedId of Array.from(this.toolCallParts.keys())) {
-      if (!referencedIds.has(cachedId)) {
-        this.logger.debug?.(
-          `[GeminiThought] dropping cached callId=${cachedId} not present in current messages`
-        );
-        this.toolCallParts.delete(cachedId);
-      }
-    }
-
-    const unnamedCount = toolCallMessages.filter(
-      (m) => !m.toolCall?.id || m.toolCall.id.length === 0
-    ).length;
-    if (!unnamedCount) {
-      this.queuedToolParts = [];
-    } else if (this.queuedToolParts.length > unnamedCount) {
-      this.logger.debug?.(
-        `[GeminiThought] trimming queued parts from ${this.queuedToolParts.length} to ${unnamedCount}`
-      );
-      this.queuedToolParts = this.queuedToolParts.slice(-unnamedCount);
-    }
-
-    this.queuedToolReplayIndex = 0;
-    this.pendingParts = [];
-    this.pendingSignature = undefined;
-  }
-
   private ensureFunctionCallSignature(parts: any[], signature?: string) {
     if (!signature) {
       this.logger.debug?.(
@@ -207,29 +171,6 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
         `[GeminiThought] applied pending signature len=${signature.length} to function=${last.functionCall.name}`
       );
     }
-  }
-
-  private ensureSyntheticSignature(
-    message: PsModelMessage,
-    payload: { role: string; parts: any[] }
-  ) {
-    const lastPart = payload.parts[payload.parts.length - 1];
-    if (lastPart?.functionCall && !lastPart.thoughtSignature) {
-      const synthetic = this.pendingSignature ?? this.buildSyntheticSignature(message);
-      lastPart.thoughtSignature = synthetic;
-      this.logger.debug?.(
-        `[GeminiThought] injected synthetic signature len=${synthetic.length} for tool=${message.toolCall?.name}`
-      );
-    }
-    return payload;
-  }
-
-  private buildSyntheticSignature(message: PsModelMessage) {
-    const base =
-      (message.toolCall?.id && message.toolCall.id.length
-        ? message.toolCall.id
-        : undefined) ?? message.toolCall?.name ?? "tool-call";
-    return `synthetic_${base}`;
   }
 
   private clonePart(part: any) {

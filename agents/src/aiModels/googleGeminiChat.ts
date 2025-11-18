@@ -20,7 +20,7 @@ import { PsAiModel } from "../dbModels/aiModel.js";
 import { appendFile } from "fs/promises";
 
 export class GoogleGeminiChat extends BaseChatModel {
-  private readonly ai: GoogleGenAI;
+  readonly ai: GoogleGenAI;
   readonly modelName: string;
 
   constructor(config: PsAiModelConfig) {
@@ -91,9 +91,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     return out;
   }
 
-  protected buildAssistantToolCallMessage(
-    message: PsModelMessage
-  ): { role: string; parts: any[] } {
+  protected buildAssistantToolCallMessage(message: PsModelMessage): {
+    role: string;
+    parts: any[];
+  } {
     return {
       role: "model",
       parts: [
@@ -107,7 +108,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     };
   }
 
-  private parseToolResponse(message: string): Record<string, unknown> {
+  parseToolResponse(message: string): Record<string, unknown> {
     if (!message) return {};
     try {
       return JSON.parse(message);
@@ -116,7 +117,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     }
   }
 
-  private tokensOut(usage?: any): number {
+  tokensOut(usage?: any): number {
     if (!usage) return 0;
     const thoughts = usage.thoughtsTokenCount ?? 0;
     if (usage.candidatesTokenCount != null)
@@ -131,7 +132,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     return 0;
   }
 
-  private async logTokens(tokensIn: number, tokensOut: number, cached: number) {
+  async logTokens(tokensIn: number, tokensOut: number, cached: number) {
     if (!process.env.DEBUG_TOKENS_COUNTS_TO_CSV_FILE) return;
     await appendFile(
       "/tmp/geminiTokenDebug.csv",
@@ -139,8 +140,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     );
   }
 
-  static safetySettings =
-  [
+  static safetySettings = [
     {
       category: HarmCategory.HARM_CATEGORY_HARASSMENT,
       threshold: HarmBlockThreshold.BLOCK_NONE,
@@ -160,8 +160,8 @@ export class GoogleGeminiChat extends BaseChatModel {
     {
       category: HarmCategory.HARM_CATEGORY_CIVIC_INTEGRITY,
       threshold: HarmBlockThreshold.BLOCK_NONE,
-    }
-  ]
+    },
+  ];
 
   assertGeminiNotBlocked(response: GenerateContentResponse) {
     if (!response.candidates?.length) {
@@ -169,19 +169,25 @@ export class GoogleGeminiChat extends BaseChatModel {
       if (pf?.blockReason) {
         // The prompt was blocked; include the reason in the error
         throw new Error(
-          `Response was blocked via prompt: ${pf.blockReason} `
-          + (pf.safetyRatings?.map(r => `${r.category}=${r.probability}`).join(', ') || '')
+          `Response was blocked via prompt: ${pf.blockReason} ` +
+            (pf.safetyRatings
+              ?.map((r) => `${r.category}=${r.probability}`)
+              .join(", ") || "")
         );
       }
-      throw new Error('Gemini returned no candidates; the prompt may be malformed.');
+      throw new Error(
+        "Gemini returned no candidates; the prompt may be malformed."
+      );
     }
 
     // check for blocked candidate
     const candidate = response.candidates[0];
-    if (candidate.finishReason === 'SAFETY') {
+    if (candidate.finishReason === "SAFETY") {
       throw new Error(
-        `Response was blocked via safety: `
-        + (candidate.safetyRatings?.map(r => `${r.category}=${r.probability}`).join(', ') || '')
+        `Response was blocked via safety: ` +
+          (candidate.safetyRatings
+            ?.map((r) => `${r.category}=${r.probability}`)
+            .join(", ") || "")
       );
     }
   }
@@ -199,10 +205,12 @@ export class GoogleGeminiChat extends BaseChatModel {
   ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
-        `Messages:\n${this.prettyPrintPromptMessages(messages.map((m) => ({
-          role: m.role,
-          content: m.message,
-        })))}`
+        `Messages:\n${this.prettyPrintPromptMessages(
+          messages.map((m) => ({
+            role: m.role,
+            content: m.message,
+          }))
+        )}`
       );
     }
     /* ----- system prompt ----- */
@@ -241,7 +249,6 @@ export class GoogleGeminiChat extends BaseChatModel {
       };
     }
 
-
     const params: GenerateContentParameters = {
       model: this.modelName,
       contents: this.buildContents(messages, media),
@@ -250,7 +257,6 @@ export class GoogleGeminiChat extends BaseChatModel {
         systemInstruction: systemInstruction,
         tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
         toolConfig,
-
         safetySettings: GoogleGeminiChat.safetySettings,
       },
     };
@@ -319,7 +325,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         arguments: (fc.args as Record<string, unknown>) ?? {},
       })),
     };
-}
+  }
 
   protected handleStreamChunk(_chunk: GenerateContentResponse) {
     // no-op; subclasses may override
