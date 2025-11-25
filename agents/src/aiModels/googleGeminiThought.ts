@@ -41,9 +41,17 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
       }
 
       if (retryCount < maxRetries) {
-        this.logger.error?.(`[GeminiThought] Empty content and no tool calls. Retry number ${retryCount + 1}`, JSON.stringify(result, null, 2));
+        this.logger.error?.(
+          `[GeminiThought] Empty content and no tool calls. Retry number ${
+            retryCount + 1
+          }`,
+          JSON.stringify(result, null, 2)
+        );
       } else {
-        this.logger.error?.(`[GeminiThought] Empty content and no tool calls. Failed after ${retryCount} retries.`, JSON.stringify(result, null, 2));
+        this.logger.error?.(
+          `[GeminiThought] Empty content and no tool calls. Failed after ${retryCount} retries.`,
+          JSON.stringify(result, null, 2)
+        );
       }
       retryCount++;
     }
@@ -134,7 +142,9 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
           this.ensureFunctionCallSignature(clone, pendingSignature);
           this.toolCallParts.set(callId, clone);
           this.logger.debug?.(
-            `[GeminiThought] capture callId=${callId} parts=${clone.length} detail=${this.describeParts(clone)}`
+            `[GeminiThought] capture callId=${callId} parts=${
+              clone.length
+            } detail=${this.describeParts(clone)}`
           );
         } else {
           this.logger.debug?.(
@@ -147,7 +157,9 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
         this.ensureFunctionCallSignature(clone, pendingSignature);
         this.queuedToolParts.push(clone);
         this.logger.debug?.(
-          `[GeminiThought] capture queued parts=${clone.length} totalQueue=${this.queuedToolParts.length} detail=${this.describeParts(clone)}`
+          `[GeminiThought] capture queued parts=${clone.length} totalQueue=${
+            this.queuedToolParts.length
+          } detail=${this.describeParts(clone)}`
         );
         buffer = [];
       }
@@ -160,7 +172,9 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
   private ensureFunctionCallSignature(parts: any[], signature?: string) {
     if (!signature) {
       this.logger.debug?.(
-        `[GeminiThought] no thought signature available for parts=${this.describeParts(parts)}`
+        `[GeminiThought] no thought signature available for parts=${this.describeParts(
+          parts
+        )}`
       );
       return;
     }
@@ -181,7 +195,9 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     return parts
       .map((part) => {
         if (part.functionCall) {
-          return `functionCall:${part.functionCall.name},id=${part.functionCall.id},thoughtSig=${part.thoughtSignature?.length ?? 0}`;
+          return `functionCall:${part.functionCall.name},id=${
+            part.functionCall.id
+          },thoughtSig=${part.thoughtSignature?.length ?? 0}`;
         }
         if (part.thoughtSignature) {
           return `thoughtSig:${part.thoughtSignature.slice(0, 8)}…`;

@@ -17,29 +17,57 @@ type ImageRef = { mimeType: string; data: string } | { url: string };
  * - Uses previous_response_id for reasoning models (with store: true)
  */
 export class OpenAiResponses extends BaseChatModel {
-  private client: OpenAI;
+ private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
   private previousResponseId?: string;
   private sentToolOutputIds = new Set<string>();
   private lastSubmittedMessageCount = 0;
+  private usingAzure = false;
 
   constructor(config: PsOpenAiModelConfig) {
+    const envAzureKey = process.env.AZURE_OPENAI_KEY;
+    const envAzureEndpoint = process.env.AZURE_ENDPOINT;
+    const envAzureDeployment = process.env.AZURE_DEPLOYMENT_NAME;
+    const envAzureApiVersion = process.env.AZURE_OPENAI_API_VERSION;
+    const useAzure =
+      !!envAzureKey && !!envAzureEndpoint && !!envAzureDeployment;
+
     let {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY!,
       modelName = "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
 
+    if (useAzure) {
+      apiKey = envAzureKey;
+      modelName = envAzureDeployment;
+    }
+
     super(config, modelName, maxTokensOut);
 
-    if (process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
+    if (!useAzure && process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
       this.logger.warn(
         "Using PS_AGENT_OVERRIDE_OPENAI_API_KEY from environment variables"
       );
     }
 
-    this.client = new OpenAI({ apiKey });
+    if (useAzure) {
+      this.usingAzure = true;
+      const baseURL = `${envAzureEndpoint!.replace(/\/$/, "")}/openai/v1`;
+      this.client = new OpenAI({
+        apiKey,
+        baseURL,
+        defaultHeaders: { "api-key": apiKey },
+        defaultQuery: { "api-version": envAzureApiVersion ?? "2024-10-21" },
+      });
+      this.logger.info(
+        `Using Azure OpenAI endpoint ${baseURL} with deployment ${modelName}`
+      );
+    } else {
+      this.client = new OpenAI({ apiKey });
+    }
+
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
   }
 
