@@ -54,12 +54,12 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (useAzure) {
       this.usingAzure = true;
-      const baseURL = `${envAzureEndpoint!.replace(/\/$/, "")}/openai/v1`;
+      const baseURL = envAzureEndpoint;
       this.client = new OpenAI({
         apiKey,
         baseURL,
         defaultHeaders: { "api-key": apiKey },
-        defaultQuery: { "api-version": envAzureApiVersion ?? "2024-10-21" },
+        //defaultQuery: { "api-version": envAzureApiVersion ?? "2024-10-21" },
       });
       this.logger.info(
         `Using Azure OpenAI endpoint ${baseURL} with deployment ${modelName}`
