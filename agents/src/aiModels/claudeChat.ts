@@ -28,7 +28,9 @@ export class ClaudeChat extends BaseChatModel {
       maxTokensOut = 4096,
     } = config;
     super(config, modelName, maxTokensOut);
-    this.maxThinkingTokens = config.maxThinkingTokens;
+    this.maxThinkingTokens =
+      config.maxThinkingTokens ??
+      this.mapReasoningEffortToThinkingBudget(config.reasoningEffort);
     this.client = new Anthropic({ apiKey });
     this.config = config;
   }
@@ -471,6 +473,21 @@ export class ClaudeChat extends BaseChatModel {
     }
 
     return merged;
+  }
+
+  private mapReasoningEffortToThinkingBudget(
+    effort?: "low" | "medium" | "high"
+  ): number | undefined {
+    switch (effort) {
+      case "low":
+        return 8_000;
+      case "medium":
+        return 32_000;
+      case "high":
+        return 64_000;
+      default:
+        return undefined;
+    }
   }
 
   getTextTypeFromContent(content: ContentBlock[]): string {
