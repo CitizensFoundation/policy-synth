@@ -1,4 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
+import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
 import type {
   ContentBlock,
   ContentBlockParam,
@@ -16,8 +17,67 @@ import type {
 } from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+
+const mapToBedrockModelId = (modelName: string): string => {
+  // If caller already supplied a full inference profile or Bedrock model id, keep it.
+  if (modelName.includes(":")) {
+    return modelName;
+  }
+
+  const v2Models = new Set<string>(["claude-3-5-sonnet-20241022"]);
+  const suffix = v2Models.has(modelName) ? "-v2:0" : "-v1:0";
+
+  // Bedrock model ids are prefixed with "anthropic."
+  const prefixed = modelName.startsWith("anthropic.")
+    ? modelName
+    : `anthropic.${modelName}`;
+
+  return `${prefixed}${suffix}`;
+};
+
+const buildInferenceProfileId = (
+  modelName: string,
+  preferredRegionSlug = "eu"
+): string => {
+  const explicit = process.env.AWS_INFERENCE_PROFILE?.trim();
+  const baseId = mapToBedrockModelId(modelName); // e.g. anthropic.claude-opus-4-5-20251101-v1:0
+
+  // Helper: prefix a slug if provided and non-empty
+  const prefixWith = (slug: string) => `${slug}.${baseId}`;
+
+  // 1) Explicit override via env var
+  if (explicit) {
+    const isOpus45 = baseId.includes("claude-opus-4-5-20251101");
+
+    // If caller forces Opus 4.5 to a geography that doesn't exist, keep it working by falling back to GLOBAL.
+    if (!explicit.startsWith("global") && isOpus45 && !explicit.includes(":")) {
+      return prefixWith("global");
+    }
+
+    // Full inference profile ID provided
+    if (explicit.includes(":")) {
+      return explicit;
+    }
+    // Shorthand like "global" / "eu" / "us" etc.
+    return prefixWith(explicit);
+  }
+
+  // 2) If caller already passed a full profile id
+  if (/^(global|us|eu|ap|ca|sa|af|jp)\./.test(modelName) && modelName.includes(":")) {
+    return modelName;
+  }
+
+  // 3) Opus 4.5 is only exposed via the GLOBAL inference profile today.
+  if (baseId.includes("claude-opus-4-5-20251101")) {
+    return prefixWith("global");
+  }
+
+  // 4) Default to the regional system profile (keep data closer if available)
+  return prefixWith(preferredRegionSlug);
+};
 export class ClaudeChat extends BaseChatModel {
-  private client: Anthropic;
+  private client: Anthropic | AnthropicBedrock;
+  private usingBedrock: boolean;
   private maxThinkingTokens?: number;
   config: PsAiModelConfig;
 
@@ -27,12 +87,69 @@ export class ClaudeChat extends BaseChatModel {
       modelName = "claude-3-opus-20240229",
       maxTokensOut = 4096,
     } = config;
-    super(config, modelName, maxTokensOut);
+
+    const useBedrock = Boolean(process.env.AWS_BEARER_TOKEN_BEDROCK);
+    const resolvedModelName = useBedrock
+      ? buildInferenceProfileId(modelName, "eu")
+      : modelName;
+
+    super(config, resolvedModelName, maxTokensOut);
+
     this.maxThinkingTokens =
       config.maxThinkingTokens ??
       this.mapReasoningEffortToThinkingBudget(config.reasoningEffort);
-    this.client = new Anthropic({ apiKey });
-    this.config = config;
+    this.usingBedrock = useBedrock;
+
+    if (useBedrock) {
+      const preferredRegion =
+        process.env.AWS_REGION ??
+        process.env.AWS_DEFAULT_REGION ??
+        "eu-west-1";
+      // Claude Opus 4.5 global profile only works from specific source regions; fall back if unsupported.
+      // Source regions allowed for GLOBAL Anthropic profiles (AWS Bedrock doc, Nov 2025)
+      const supportedGlobalRegions = new Set([
+        "us-west-2",
+        "us-east-1",
+        "us-east-2",
+        "eu-west-1",
+        "eu-north-1",
+        "eu-west-2",
+        "ap-northeast-1",
+      ]);
+      const region =
+        resolvedModelName.startsWith("global.") &&
+        !supportedGlobalRegions.has(preferredRegion)
+          ? "eu-west-1" // safest EU source Region supported by GLOBAL profiles
+          : preferredRegion;
+      const bearer = process.env.AWS_BEARER_TOKEN_BEDROCK!;
+      const baseURL =
+        process.env.ANTHROPIC_BEDROCK_BASE_URL ??
+        `https://bedrock-runtime.${region}.amazonaws.com`;
+
+      this.client = new AnthropicBedrock({
+        awsRegion: region,
+        baseURL,
+        skipAuth: true,
+        defaultHeaders: {
+          Authorization: `Bearer ${bearer}`,
+          "x-amz-bedrock-region": region,
+        },
+      });
+      this.logger.info?.(
+        `Using Amazon Bedrock for Claude with region=${region}, model=${resolvedModelName}`
+      );
+      if (
+        resolvedModelName.startsWith("global.") &&
+        !supportedGlobalRegions.has(region)
+      ) {
+        this.logger.warn?.(
+          `AWS region ${region} is not in the supported list for global inference profiles (us-west-2, us-east-1, us-east-2, eu-west-1, ap-northeast-1); requests may fail`
+        );
+      }
+    } else {
+      this.client = new Anthropic({ apiKey });
+    }
+    this.config = { ...config, modelName: resolvedModelName };
   }
 
   async generate(
@@ -47,7 +164,8 @@ export class ClaudeChat extends BaseChatModel {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
-        `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}`
+        `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}, ` +
+        `bedrock=${this.usingBedrock === true}`
     );
 
     const { system, messages: anthropicMessages } = this.formatMessages(
