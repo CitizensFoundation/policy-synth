@@ -45,6 +45,7 @@
     "@airbrake/node": "^2.1.9",
     "@anthropic-ai/bedrock-sdk": "^0.26.0",
     "@anthropic-ai/sdk": "^0.71.0",
+    "@anthropic-ai/vertex-sdk": "^0.14.0",
     "@azure/identity": "^4.13.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@google/genai": "^1.30.0",

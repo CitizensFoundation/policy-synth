@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
+import AnthropicVertex from "@anthropic-ai/vertex-sdk";
 import type {
   ContentBlock,
   ContentBlockParam,
@@ -33,6 +34,27 @@ const mapToBedrockModelId = (modelName: string): string => {
     : `anthropic.${modelName}`;
 
   return `${prefixed}${suffix}`;
+};
+
+const mapToVertexModelId = (modelName: string): string => {
+  // Accept already-correct Vertex IDs with snapshot
+  if (modelName.includes("@")) {
+    return modelName;
+  }
+
+  // Convert Bedrock/inference style ids for Opus 4.5 into Vertex snapshot
+  if (modelName.includes("claude-opus-4-5-20251101")) {
+    return "claude-opus-4-5@20251101";
+  }
+
+  // If user provided a trailing datestamp separated by dash, convert to @
+  const snapshotMatch = modelName.match(/^(.*)-(\d{8})$/);
+  if (snapshotMatch) {
+    return `${snapshotMatch[1]}@${snapshotMatch[2]}`;
+  }
+
+  // Fallback: leave as-is
+  return modelName;
 };
 
 const buildInferenceProfileId = (
@@ -76,8 +98,9 @@ const buildInferenceProfileId = (
   return prefixWith(preferredRegionSlug);
 };
 export class ClaudeChat extends BaseChatModel {
-  private client: Anthropic | AnthropicBedrock;
+  private client: Anthropic | AnthropicBedrock | AnthropicVertex | undefined;
   private usingBedrock: boolean;
+  private usingVertex: boolean;
   private maxThinkingTokens?: number;
   config: PsAiModelConfig;
 
@@ -88,10 +111,17 @@ export class ClaudeChat extends BaseChatModel {
       maxTokensOut = 4096,
     } = config;
 
-    const useBedrock = Boolean(process.env.AWS_BEARER_TOKEN_BEDROCK);
-    const resolvedModelName = useBedrock
-      ? buildInferenceProfileId(modelName, "eu")
-      : modelName;
+    const useVertex =
+      process.env.USE_VERTEX_FOR_CLAUDE === "true" ||
+      process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE === "true";
+    const useBedrock =
+      !useVertex && Boolean(process.env.AWS_BEARER_TOKEN_BEDROCK);
+
+    const resolvedModelName = useVertex
+      ? mapToVertexModelId(modelName)
+      : useBedrock
+        ? buildInferenceProfileId(modelName, "eu")
+        : modelName;
 
     super(config, resolvedModelName, maxTokensOut);
 
@@ -99,8 +129,25 @@ export class ClaudeChat extends BaseChatModel {
       config.maxThinkingTokens ??
       this.mapReasoningEffortToThinkingBudget(config.reasoningEffort);
     this.usingBedrock = useBedrock;
+    this.usingVertex = useVertex;
 
-    if (useBedrock) {
+    if (useVertex) {
+      const projectId =
+        process.env.ANTHROPIC_VERTEX_PROJECT_ID ??
+        process.env.GOOGLE_CLOUD_PROJECT ??
+        process.env.GCLOUD_PROJECT;
+      const region =
+        process.env.CLOUD_ML_REGION ??
+        process.env.GOOGLE_CLOUD_LOCATION ??
+        process.env.GOOGLE_VERTEX_LOCATION ??
+        "europe-west1";
+
+      this.client = new AnthropicVertex({ projectId, region });
+      this.config = { ...config, modelName: resolvedModelName };
+      this.logger.info?.(
+        `Using Anthropic Vertex for Claude with project=${projectId}, region=${region}, model=${resolvedModelName}`
+      );
+    } else if (useBedrock) {
       const preferredRegion =
         process.env.AWS_REGION ??
         process.env.AWS_DEFAULT_REGION ??
@@ -165,7 +212,7 @@ export class ClaudeChat extends BaseChatModel {
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
         `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}, ` +
-        `bedrock=${this.usingBedrock === true}`
+        `bedrock=${this.usingBedrock}, vertex=${this.usingVertex}`
     );
 
     const { system, messages: anthropicMessages } = this.formatMessages(
@@ -191,6 +238,11 @@ export class ClaudeChat extends BaseChatModel {
     const filteredTools = this.buildTools(tools, allowedTools);
     const choice = this.mapToolChoice(toolChoice, filteredTools.length > 0);
 
+    const client = this.client;
+    if (!client) {
+      throw new Error("Anthropic client not initialized");
+    }
+
     const requestOptions: Anthropic.MessageCreateParams = {
       max_tokens: this.maxTokensOut,
       messages: anthropicMessages,
@@ -208,7 +260,7 @@ export class ClaudeChat extends BaseChatModel {
     };
 
     if (streaming) {
-      const stream = await this.client.messages.stream(requestOptions);
+      const stream = await client.messages.stream(requestOptions);
 
       let aggregated = "";
       const toolCalls: ToolCall[] = [];
@@ -264,7 +316,7 @@ export class ClaudeChat extends BaseChatModel {
         toolCalls: mergedToolCalls,
       };
     } else {
-      const response = await this.client.messages.create(requestOptions);
+      const response = await client.messages.create(requestOptions);
       this.logger.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       let tokensIn = response.usage.input_tokens ?? 0;
       let tokensOut = response.usage.output_tokens ?? 0;
