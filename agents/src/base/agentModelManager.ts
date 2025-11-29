@@ -533,7 +533,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!priceOverride || Object.keys(priceOverride).length === 0) {
       return basePrices;
     } else {
-      this.logger.debug(`Price override applied: ${JSON.stringify(priceOverride)}`);
+      this.logger.debug(`Price override created but NOT applied: ${JSON.stringify(priceOverride)}`);
     }
     if (!basePrices) {
       return priceOverride as PsBaseModelPriceConfiguration;
