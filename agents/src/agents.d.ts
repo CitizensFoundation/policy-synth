@@ -104,6 +104,12 @@ interface PsCallModelOptions {
    * thrown to prevent excessive costs.
    */
   maximumNumberOfSplitDocumentChunks?: number;
+  /**
+   * Optional price override to use for this call. Any provided fields will
+   * overwrite the model's configured prices; omitted fields will fall back
+   * to the existing configuration.
+   */
+  priceOverride?: Partial<PsBaseModelPriceConfiguration>;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

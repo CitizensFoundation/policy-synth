@@ -522,6 +522,28 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
   }
 
+  /**
+   * Returns a non-mutating merge of the base prices with any provided override.
+   * If no override is supplied, the original prices are returned.
+   */
+  private applyPriceOverride(
+    basePrices: PsBaseModelPriceConfiguration | undefined,
+    priceOverride?: Partial<PsBaseModelPriceConfiguration>
+  ): PsBaseModelPriceConfiguration | undefined {
+    if (!priceOverride || Object.keys(priceOverride).length === 0) {
+      return basePrices;
+    } else {
+      this.logger.debug(`Price override applied: ${JSON.stringify(priceOverride)}`);
+    }
+    if (!basePrices) {
+      return priceOverride as PsBaseModelPriceConfiguration;
+    }
+    return {
+      ...basePrices,
+      ...priceOverride,
+    };
+  }
+
   async callModel(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
@@ -808,10 +830,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
             results;
 
+          const effectivePrices =
+            this.applyPriceOverride(
+              model.config?.prices,
+              options.priceOverride
+            ) ?? model.config.prices;
+
           await this.saveTokenUsage(
             model.modelName,
             model.provider ?? "Unknown",
-            model.config.prices,
+            effectivePrices,
             modelType,
             modelSize,
             tokensIn,
@@ -1026,10 +1054,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   content,
                   toolCalls,
                 } = fallbackResults;
+                const effectiveFallbackPrices =
+                  this.applyPriceOverride(
+                    fallbackEphemeral.config?.prices,
+                    options.priceOverride
+                  ) ?? fallbackEphemeral.config.prices;
                 await this.saveTokenUsage(
                   fallbackEphemeral.modelName,
                   fallbackEphemeral.provider ?? "Unknown",
-                  fallbackEphemeral.config.prices,
+                  effectiveFallbackPrices,
                   fallbackEphemeral.config?.modelType ?? modelType,
                   fallbackEphemeral.config?.modelSize ?? modelSize,
                   tokensIn,
@@ -1223,7 +1256,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
           if (dbModel) {
             const cfg = dbModel.configuration as PsAiModelConfiguration;
-            return cfg.prices;
+            return this.applyPriceOverride(cfg.prices, options.priceOverride);
           }
         } catch (err) {
           this.logger.error(`Error looking up price configuration: ${err}`);
@@ -1259,16 +1292,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 ),
               ],
             },
-          });
+            });
 
-          if (dbFallback) {
-            const cfg = dbFallback.configuration as PsAiModelConfiguration;
-            return cfg.prices;
-          }
-        } catch (err) {
-          this.logger.error(
-            `Error looking up fallback price configuration: ${err}`
-          );
+            if (dbFallback) {
+              const cfg = dbFallback.configuration as PsAiModelConfiguration;
+              return this.applyPriceOverride(
+                cfg.prices,
+                options.priceOverride
+              );
+            }
+          } catch (err) {
+            this.logger.error(
+              `Error looking up fallback price configuration: ${err}`
+            );
         }
       }
     }
@@ -1307,18 +1343,27 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const key = `${modelType}_${size}`;
       const model = this.models.get(key);
       if (model) {
-        return model.config?.prices;
+        return this.applyPriceOverride(
+          model.config?.prices,
+          options.priceOverride
+        );
       }
     }
 
     const byType = this.modelsByType.get(modelType);
     if (byType) {
-      return byType.config?.prices;
+      return this.applyPriceOverride(
+        byType.config?.prices,
+        options.priceOverride
+      );
     }
 
     // Last chance: check environment-initialized model
     const envModel = this.initializeOneModelFromEnv();
-    return envModel?.config?.prices;
+    return this.applyPriceOverride(
+      envModel?.config?.prices,
+      options.priceOverride
+    );
   }
 
   public async saveTokenUsage(
