@@ -405,6 +405,14 @@ export class ClaudeChat extends BaseChatModel {
     return [{ type: "text", text: "" }];
   }
 
+  // Sanitize tool IDs to match Claude's required pattern: ^[a-zA-Z0-9_-]+$
+  private sanitizeToolId(id: string | undefined): string {
+    if (!id) {
+      return `fallback_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    }
+    return id.replace(/[^a-zA-Z0-9_-]/g, '_');
+  }
+
   private buildAssistantContentBlocks(
     message: PsModelMessage
   ): ContentBlockParam[] {
@@ -416,7 +424,7 @@ export class ClaudeChat extends BaseChatModel {
     if (message.toolCall) {
       const toolBlock: ToolUseBlockParam = {
         type: "tool_use",
-        id: message.toolCall.id,
+        id: this.sanitizeToolId(message.toolCall.id),
         name: message.toolCall.name,
         input: this.normalizeToolInput(message.toolCall.arguments),
       };
@@ -431,12 +439,13 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private buildToolResultBlock(message: PsModelMessage): ToolResultBlockParam {
-    const toolUseId =
+    const toolUseId = this.sanitizeToolId(
       message.toolCallId ??
-      message.toolCall?.id ??
-      message.toolCall?.name ??
-      message.name ??
-      "tool_call";
+        message.toolCall?.id ??
+        message.toolCall?.name ??
+        message.name ??
+        "tool_call"
+    );
 
     if (!message.toolCallId && !message.toolCall?.id) {
       this.logger.warn?.(
