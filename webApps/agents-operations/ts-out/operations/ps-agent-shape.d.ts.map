@@ -1,1 +1,0 @@
-{"version":3,"file":"ps-agent-shape.d.ts","sourceRoot":"","sources":["../../src/operations/ps-agent-shape.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,GAAG,EAAE,MAAM,EAAE,IAAI,EAAK,MAAM,aAAa,CAAC;AAKnD,qBAAa,eAAgB,SAAQ,GAAG,CAAC,WAAW;IAClD,MAAM;IA4DN,kBAAkB,iCASV;CACT;AAED,qBAAa,UAAW,SAAQ,MAAM,CAAC,QAAQ,CAAC,SAAS;IACvD,QAAQ;IAWR,IAAI,yBAAmB;CACxB"}

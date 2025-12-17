@@ -789,12 +789,25 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         typeof err === "string" ? err : err?.message || ""
       ).toLowerCase();
 
+      // Check for socket/network errors (transient connection issues)
+      const causeCode = err?.cause?.code;
+      const isSocketError =
+        causeCode === "UND_ERR_SOCKET" ||
+        causeCode === "ECONNRESET" ||
+        causeCode === "ECONNREFUSED" ||
+        causeCode === "ETIMEDOUT" ||
+        causeCode === "EPIPE" ||
+        message.includes("terminated") ||
+        message.includes("socket hang up") ||
+        message.includes("network error");
+
       if (
         (err?.response?.status >= 500 && err?.response?.status < 600) ||
         message.includes("500 internal server error") ||
         message.includes("503 service unavailable") ||
         message.includes("fetch failed") ||
-        message.includes("model is overloaded")
+        message.includes("model is overloaded") ||
+        isSocketError
       ) {
         this.logDetailedServerError(model, err, messages, retryCount);
         return true;
@@ -1256,6 +1269,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
           if (dbModel) {
             const cfg = dbModel.configuration as PsAiModelConfiguration;
+            this.logger.debug(`Found price configuration for override: ${options.modelProvider} ${options.modelName}: ${JSON.stringify(cfg.prices, null, 2)}`);
             return this.applyPriceOverride(cfg.prices, options.priceOverride);
           }
         } catch (err) {
@@ -1296,6 +1310,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
             if (dbFallback) {
               const cfg = dbFallback.configuration as PsAiModelConfiguration;
+              this.logger.debug(`Found price configuration for fallback: ${options.fallbackModelProvider} ${options.fallbackModelName}: ${JSON.stringify(cfg.prices, null, 2)}`);
               return this.applyPriceOverride(
                 cfg.prices,
                 options.priceOverride
