@@ -1,20 +1,34 @@
 import { Sequelize } from "sequelize";
 import pg from "pg";
 import safe from "colors";
-import path, { dirname, join } from "path";
-import _ from "lodash";
+import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const logQuery = (query: any, options: any) => {
+const logQuery = (query: string, options: any) => {
   PolicySynthAgentBase.logger.debug(safe.bgGreen(new Date().toLocaleString()));
   PolicySynthAgentBase.logger.debug(safe.bgYellow(options.bind));
   PolicySynthAgentBase.logger.debug(safe.bgBlue(query));
   return options;
 };
+
+// Pool configuration from environment variables
+const poolConfig = {
+  max: parseInt(process.env.DB_POOL_MAX ?? "5", 10),
+  min: parseInt(process.env.DB_POOL_MIN ?? "5", 10),
+  acquire: parseInt(process.env.DB_POOL_ACQUIRE_MS ?? "30000", 10),
+  idle: parseInt(process.env.DB_POOL_IDLE_MS ?? "10000", 10),
+};
+
+if (poolConfig.min > poolConfig.max) {
+  PolicySynthAgentBase.logger.error(
+    `DB_POOL_MIN (${poolConfig.min}) cannot be greater than DB_POOL_MAX (${poolConfig.max})`
+  );
+  process.exit(1);
+}
 
 const env = process.env.NODE_ENV || "development";
 
@@ -25,6 +39,7 @@ if (process.env.NODE_ENV === "production") {
     sequelize = new Sequelize(process.env.DATABASE_URL!, {
       dialect: "postgres",
       minifyAliases: true,
+      pool: poolConfig,
       logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       operatorsAliases: {} as any, // You might want to define this properly
     });
@@ -37,6 +52,7 @@ if (process.env.NODE_ENV === "production") {
         },
       },
       minifyAliases: true,
+      pool: poolConfig,
       logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       operatorsAliases: {} as any, // You might want to define this properly
     });
@@ -62,6 +78,7 @@ if (process.env.NODE_ENV === "production") {
         dialectOptions: {
           ssl: false,
         },
+        pool: poolConfig,
         logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       }
     );
@@ -76,11 +93,12 @@ const connectToDatabase = async () => {
     PolicySynthAgentBase.logger.debug(
       "Connection to the database has been established successfully."
     );
-    //await sequelize.sync(); // Sync all models
-    PolicySynthAgentBase.logger.debug("All models were synchronized successfully.");
+    PolicySynthAgentBase.logger.info(
+      `DB Pool configured: max=${poolConfig.max}, min=${poolConfig.min}, acquire=${poolConfig.acquire}ms, idle=${poolConfig.idle}ms`
+    );
   } catch (error) {
     PolicySynthAgentBase.logger.error("Unable to connect to the database:", error);
-    process.exit(1); // Exit the process with failure
+    process.exit(1);
   }
 };
 
