@@ -788,6 +788,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const message = (
         typeof err === "string" ? err : err?.message || ""
       ).toLowerCase();
+      const status =
+        err?.response?.status ?? err?.status ?? err?.statusCode ?? err?.code;
+      const statusNumber =
+        typeof status === "number"
+          ? status
+          : typeof status === "string"
+            ? Number.parseInt(status, 10)
+            : undefined;
+      const has529InMessage = /\b529\b/.test(message);
 
       // Check for socket/network errors (transient connection issues)
       const causeCode = err?.cause?.code;
@@ -802,11 +811,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         message.includes("network error");
 
       if (
-        (err?.response?.status >= 500 && err?.response?.status < 600) ||
+        (typeof statusNumber === "number" &&
+          Number.isFinite(statusNumber) &&
+          statusNumber >= 500 &&
+          statusNumber < 600) ||
+        has529InMessage ||
         message.includes("500 internal server error") ||
         message.includes("503 service unavailable") ||
         message.includes("fetch failed") ||
-        message.includes("model is overloaded") ||
+        message.includes("overloaded") ||
         isSocketError
       ) {
         this.logDetailedServerError(model, err, messages, retryCount);
