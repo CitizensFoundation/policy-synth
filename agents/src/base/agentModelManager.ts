@@ -315,8 +315,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     // Determine if user actually wants ephemeral overrides
     const isOverrideRequested =
       options.modelProvider != null && options.modelName != null;
+    const overrideModelName = options.modelName;
 
-    if (!isOverrideRequested) {
+    if (!isOverrideRequested || overrideModelName == null) {
       return undefined;
     } else {
       const loggingOptions: PsCallModelOptions = {
@@ -379,25 +380,27 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
       } else {
         try {
+          const escapedProvider = sequelizeInstance.escape(provider);
+          const escapedModelName = sequelizeInstance.escape(overrideModelName);
           dbModel = await PsAiModelModel.findOne({
             where: {
               [sequelizeModule.Op.and]: [
                 sequelizeInstance.literal(
-                  `configuration->>'provider' = '${provider}'`
+                  `configuration->>'provider' = ${escapedProvider}`
                 ),
                 sequelizeInstance.literal(
-                  `configuration->>'model' = '${options.modelName}'`
+                  `configuration->>'model' = ${escapedModelName}`
                 ),
               ],
             },
           });
           if (dbModel) {
             this.logger.info(
-              `Loaded ephemeral model from DB: ${provider} ${options.modelName}`
+              `Loaded ephemeral model from DB: ${provider} ${overrideModelName}`
             );
           } else {
             this.logger.warn(
-              `Ephemeral model ${provider} ${options.modelName} not found in DB`
+              `Ephemeral model ${provider} ${overrideModelName} not found in DB`
             );
           }
         } catch (err) {
@@ -414,7 +417,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const ephemeralConfig: PsAiModelConfig = {
       apiKey,
       modelName:
-        options.modelName ?? dbConfig?.model ?? fallbackModel.modelName,
+        overrideModelName ?? dbConfig?.model ?? fallbackModel.modelName,
       provider: provider,
       maxTokensOut:
         options.maxTokensOut ?? this.maxTokensOut ?? dbConfig?.maxTokensOut,
@@ -1267,14 +1270,18 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
       } else {
         try {
+          const escapedProvider = sequelizeInstance.escape(
+            options.modelProvider
+          );
+          const escapedModelName = sequelizeInstance.escape(options.modelName);
           const dbModel = await PsAiModelModel.findOne({
             where: {
               [sequelizeModule.Op.and]: [
                 sequelizeInstance.literal(
-                  `configuration->>'provider' = '${options.modelProvider}'`
+                  `configuration->>'provider' = ${escapedProvider}`
                 ),
                 sequelizeInstance.literal(
-                  `configuration->>'model' = '${options.modelName}'`
+                  `configuration->>'model' = ${escapedModelName}`
                 ),
               ],
             },
@@ -1308,14 +1315,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
       } else {
         try {
+          const escapedProvider = sequelizeInstance.escape(
+            options.fallbackModelProvider
+          );
+          const escapedModelName = sequelizeInstance.escape(
+            options.fallbackModelName
+          );
           const dbFallback = await PsAiModelModel.findOne({
             where: {
               [sequelizeModule.Op.and]: [
                 sequelizeInstance.literal(
-                  `configuration->>'provider' = '${options.fallbackModelProvider}'`
+                  `configuration->>'provider' = ${escapedProvider}`
                 ),
                 sequelizeInstance.literal(
-                  `configuration->>'model' = '${options.fallbackModelName}'`
+                  `configuration->>'model' = ${escapedModelName}`
                 ),
               ],
             },
@@ -1394,6 +1407,51 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   }
 
+  private async getModelIdByProviderAndName(
+    provider?: string,
+    modelName?: string
+  ): Promise<number | undefined> {
+    if (!provider || !modelName || process.env.DISABLE_DB_INIT) {
+      return undefined;
+    }
+
+    await loadDbModules();
+    const sequelizeModule = SequelizeModule;
+    const sequelizeInstance = sequelize;
+    const PsAiModelModel = PsAiModel;
+
+    if (!sequelizeModule || !sequelizeInstance || !PsAiModelModel) {
+      this.logger.error(
+        "Database modules not initialized; skipping model id lookup"
+      );
+      return undefined;
+    }
+
+    try {
+      const escapedProvider = sequelizeInstance.escape(provider);
+      const escapedModelName = sequelizeInstance.escape(modelName);
+      const dbModel = await PsAiModelModel.findOne({
+        where: {
+          [sequelizeModule.Op.and]: [
+            sequelizeInstance.literal(
+              `configuration->>'provider' = ${escapedProvider}`
+            ),
+            sequelizeInstance.literal(
+              `configuration->>'model' = ${escapedModelName}`
+            ),
+          ],
+        },
+      });
+
+      return dbModel?.id;
+    } catch (err) {
+      this.logger.error(
+        `Error looking up model id for ${provider} ${modelName}: ${err}`
+      );
+      return undefined;
+    }
+  }
+
   public async saveTokenUsage(
     modelName: string,
     modelProvider: string,
@@ -1403,8 +1461,36 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     tokensIn: number,
     cachedInTokens: number,
     tokensOut: number,
-    modelIdOverride?: number
+    modelIdOverride?: number,
+    callOptions?: PsCallModelOptions
   ) {
+    const modelKey = `${modelType}_${modelSize}`;
+    let finalModelId =
+      modelIdOverride ??
+      this.modelIds.get(modelKey) ??
+      -1;
+
+    if (
+      (modelIdOverride === undefined || modelIdOverride === null) &&
+      callOptions
+    ) {
+      const overrideModelId = await this.getModelIdByProviderAndName(
+        callOptions.modelProvider,
+        callOptions.modelName
+      );
+      if (overrideModelId !== undefined) {
+        finalModelId = overrideModelId;
+      } else {
+        const fallbackModelId = await this.getModelIdByProviderAndName(
+          callOptions.fallbackModelProvider,
+          callOptions.fallbackModelName
+        );
+        if (fallbackModelId !== undefined) {
+          finalModelId = fallbackModelId;
+        }
+      }
+    }
+
     // Check for usage tracking disable
     const disableUsageTracking =
       process.env.DISABLE_DB_USAGE_TRACKING === "true";
@@ -1423,23 +1509,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           cachedInTokens,
           agentId: this.agentId,
           userId: this.userId,
-          modelId:
-            modelIdOverride ??
-            this.modelIds.get(`${modelType}_${modelSize}`) ??
-            -1,
+          modelId: finalModelId,
           timestamp: Date.now(),
         });
       }
       return;
     }
-
-    // Attempt to find the model in your manager:
-    const modelKey = `${modelType}_${modelSize}`;
-    const model = this.models.get(modelKey);
-    const modelId = this.modelIds.get(modelKey);
-
-    // If modelIdOverride is provided use it, otherwise fall back to map
-    const finalModelId = modelIdOverride ?? modelId ?? -1;
 
     let longContextTokenIn = 0;
     let longContextTokenInCached = 0;
