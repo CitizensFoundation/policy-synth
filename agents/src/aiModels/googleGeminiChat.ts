@@ -19,6 +19,16 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { appendFile } from "fs/promises";
 
+const parseModelAllowlist = (value?: string): Set<string> => {
+  if (!value) return new Set<string>();
+  return new Set(
+    value
+      .split(",")
+      .map((name) => name.trim().toLowerCase())
+      .filter((name) => name.length > 0)
+  );
+};
+
 export class GoogleGeminiChat extends BaseChatModel {
   readonly ai: GoogleGenAI;
   readonly modelName: string;
@@ -32,7 +42,14 @@ export class GoogleGeminiChat extends BaseChatModel {
 
     this.modelName = config.modelName || "gemini-2.0-flash";
 
-    const useVertex = process.env.USE_GOOGLE_VERTEX_AI === "true";
+    const vertexModelAllowlist = parseModelAllowlist(
+      process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS
+    );
+    const useVertexForModel = vertexModelAllowlist.has(
+      this.modelName.toLowerCase()
+    );
+    const useVertex =
+      process.env.USE_GOOGLE_VERTEX_AI === "true" || useVertexForModel;
     this.ai = useVertex
       ? new GoogleGenAI({
           vertexai: true,
