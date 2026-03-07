@@ -1,11 +1,21 @@
 import Anthropic from "@anthropic-ai/sdk";
 import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
 import AnthropicVertex from "@anthropic-ai/vertex-sdk";
+import type { AnthropicBeta } from "@anthropic-ai/sdk/resources/beta/beta.js";
+import type {
+  BetaMessageStreamParams as AnthropicBetaMessageStreamParams,
+  BetaContentBlock,
+  MessageCreateParamsBase as AnthropicBetaMessageCreateParamsBase,
+  MessageCreateParamsNonStreaming as AnthropicBetaMessageCreateParamsNonStreaming,
+} from "@anthropic-ai/sdk/resources/beta/messages/messages.js";
 import type {
   ContentBlock,
   ContentBlockParam,
   ImageBlockParam,
+  MessageCreateParamsBase as AnthropicMessageCreateParamsBase,
+  MessageCreateParamsNonStreaming as AnthropicMessageCreateParamsNonStreaming,
   MessageParam,
+  MessageStreamParams as AnthropicMessageStreamParams,
   TextBlockParam,
   Tool,
   ToolChoice,
@@ -18,6 +28,8 @@ import type {
 } from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+
+const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 
 const mapToBedrockModelId = (modelName: string): string => {
   // If caller already supplied a full inference profile or Bedrock model id, keep it.
@@ -101,6 +113,7 @@ export class ClaudeChat extends BaseChatModel {
   private client: Anthropic | AnthropicBedrock | AnthropicVertex | undefined;
   private usingBedrock: boolean;
   private usingVertex: boolean;
+  private useClaude1mContextBetaFlag: boolean;
   private maxThinkingTokens?: number;
   config: PsAiModelConfig;
 
@@ -130,6 +143,8 @@ export class ClaudeChat extends BaseChatModel {
       this.mapReasoningEffortToThinkingBudget(config.reasoningEffort);
     this.usingBedrock = useBedrock;
     this.usingVertex = useVertex;
+    this.useClaude1mContextBetaFlag =
+      process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG === "true";
 
     if (useVertex) {
       const projectId =
@@ -197,6 +212,11 @@ export class ClaudeChat extends BaseChatModel {
       this.client = new Anthropic({ apiKey });
     }
     this.config = { ...config, modelName: resolvedModelName };
+    if (this.useClaude1mContextBetaFlag) {
+      this.logger.info?.(
+        `Using Claude 1M context beta flag ${CLAUDE_1M_CONTEXT_BETA_FLAG}`
+      );
+    }
   }
 
   async generate(
@@ -212,7 +232,8 @@ export class ClaudeChat extends BaseChatModel {
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
         `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}, ` +
-        `bedrock=${this.usingBedrock}, vertex=${this.usingVertex}`
+        `bedrock=${this.usingBedrock}, vertex=${this.usingVertex}, ` +
+        `context1mBeta=${this.useClaude1mContextBetaFlag}`
     );
 
     const { system, messages: anthropicMessages } = this.formatMessages(
@@ -243,7 +264,7 @@ export class ClaudeChat extends BaseChatModel {
       throw new Error("Anthropic client not initialized");
     }
 
-    const requestOptions: Anthropic.MessageCreateParams = {
+    const requestOptions: AnthropicMessageCreateParamsBase = {
       max_tokens: this.maxTokensOut,
       messages: anthropicMessages,
       model: this.modelName,
@@ -260,7 +281,13 @@ export class ClaudeChat extends BaseChatModel {
     };
 
     if (streaming) {
-      const stream = await client.messages.stream(requestOptions);
+      const streamRequestOptions: AnthropicMessageStreamParams = requestOptions;
+      const betaStreamRequestOptions = this.useClaude1mContextBetaFlag
+        ? this.build1mContextBetaStreamRequestOptions(requestOptions)
+        : undefined;
+      const stream = betaStreamRequestOptions
+        ? await client.beta.messages.stream(betaStreamRequestOptions)
+        : await client.messages.stream(streamRequestOptions);
 
       let aggregated = "";
       const toolCalls: ToolCall[] = [];
@@ -316,7 +343,16 @@ export class ClaudeChat extends BaseChatModel {
         toolCalls: mergedToolCalls,
       };
     } else {
-      const response = await client.messages.create(requestOptions);
+      const createRequestOptions: AnthropicMessageCreateParamsNonStreaming = {
+        ...requestOptions,
+        stream: false,
+      };
+      const betaCreateRequestOptions = this.useClaude1mContextBetaFlag
+        ? this.build1mContextBetaCreateRequestOptions(requestOptions)
+        : undefined;
+      const response = betaCreateRequestOptions
+        ? await client.beta.messages.create(betaCreateRequestOptions)
+        : await client.messages.create(createRequestOptions);
       this.logger.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
       let tokensIn = response.usage.input_tokens ?? 0;
       let tokensOut = response.usage.output_tokens ?? 0;
@@ -616,7 +652,26 @@ export class ClaudeChat extends BaseChatModel {
     return { value: input };
   }
 
-  private extractToolCalls(content: ContentBlock[]): ToolCall[] {
+  private build1mContextBetaCreateRequestOptions(
+    requestOptions: AnthropicMessageCreateParamsBase
+  ): AnthropicBetaMessageCreateParamsNonStreaming {
+    return {
+      ...requestOptions,
+      stream: false,
+      betas: [CLAUDE_1M_CONTEXT_BETA_FLAG],
+    };
+  }
+
+  private build1mContextBetaStreamRequestOptions(
+    requestOptions: AnthropicMessageCreateParamsBase
+  ): AnthropicBetaMessageStreamParams {
+    return {
+      ...requestOptions,
+      betas: [CLAUDE_1M_CONTEXT_BETA_FLAG],
+    };
+  }
+
+  private extractToolCalls(content: Array<ContentBlock | BetaContentBlock>): ToolCall[] {
     const toolCalls: ToolCall[] = [];
     for (const block of content) {
       if (block.type === "tool_use") {
@@ -669,7 +724,7 @@ export class ClaudeChat extends BaseChatModel {
     }
   }
 
-  getTextTypeFromContent(content: ContentBlock[]): string {
+  getTextTypeFromContent(content: Array<ContentBlock | BetaContentBlock>): string {
     const texts: string[] = [];
     for (const block of content) {
       if (block.type === "text") {
