@@ -31,7 +31,7 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
 
   protected get maxModelTokensOut(): number { return 16384; }
   protected get modelTemperature(): number { return 0.7; }
-  protected get reasoningEffort(): 'low' | 'medium' | 'high' { return 'medium'; }
+  protected get reasoningEffort(): PsReasoningEffort { return 'medium'; }
   protected get maxThinkingTokens(): number { return 0; }
 
   pauseCheckInterval = 1000 * 60 * 60 * 48; // 48 hours

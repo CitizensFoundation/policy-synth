@@ -186,7 +186,10 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (isReasoning) {
       if (this.cfg.reasoningEffort) {
-        common.reasoning = { effort: this.cfg.reasoningEffort };
+        const effort = this.cfg.reasoningEffort === 'max'
+          ? 'xhigh'
+          : this.cfg.reasoningEffort;
+        common.reasoning = { effort };
       }
     }
 

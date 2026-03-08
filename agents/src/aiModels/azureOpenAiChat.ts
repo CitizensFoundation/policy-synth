@@ -15,7 +15,7 @@ interface PsModelMessage {
 export class AzureOpenAiChat extends BaseChatModel {
   private client: AzureOpenAI;
   private deploymentName: string;
-  private reasoningEffort: 'low' | 'medium' | 'high' = 'medium';
+  private reasoningEffort: PsReasoningEffort = 'medium';
   private temperature: number = 0.7;
 
   constructor(config: PsAzureAiModelConfig) {
@@ -75,7 +75,7 @@ export class AzureOpenAiChat extends BaseChatModel {
         max_tokens: this.maxTokensOut,
         stream: true,
         model: "", // Model is required, use "" for Azure deployments
-        reasoning_effort: this.reasoningEffort,
+        reasoning_effort: this.reasoningEffort === 'max' ? 'xhigh' : this.reasoningEffort,
         temperature: this.temperature
       });
 
@@ -94,7 +94,7 @@ export class AzureOpenAiChat extends BaseChatModel {
         messages: chatMessages,
         max_tokens: this.maxTokensOut,
         model: "", // Model is required, use "" for Azure deployments
-        reasoning_effort: this.reasoningEffort,
+        reasoning_effort: this.reasoningEffort === 'max' ? 'xhigh' : this.reasoningEffort,
         temperature: this.temperature
       });
 

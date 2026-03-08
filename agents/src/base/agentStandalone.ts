@@ -23,7 +23,7 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
   get modelTemperature(): number {
     return 0.7;
   }
-  get reasoningEffort(): "low" | "medium" | "high" {
+  get reasoningEffort(): PsReasoningEffort {
     return "medium";
   }
   get maxThinkingTokens(): number {

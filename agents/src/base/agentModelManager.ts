@@ -78,7 +78,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   maxTokensOut: number;
   modelTemperature: number;
-  reasoningEffort: "low" | "medium" | "high" = "medium";
+  reasoningEffort: PsReasoningEffort = "medium";
   maxThinkingTokens: number;
 
   limitedLLMmaxRetryCount = 5;
@@ -92,7 +92,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     accessConfiguration: YpGroupPrivateAccessConfiguration[],
     maxTokensOut: number = 4096,
     modelTemperature: number = 0.7,
-    reasoningEffort: "low" | "medium" | "high" = "medium",
+    reasoningEffort: PsReasoningEffort = "medium",
     maxThinkingTokens: number = 0,
     agentId: number,
     userId: number

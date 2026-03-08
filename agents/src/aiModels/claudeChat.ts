@@ -114,6 +114,7 @@ export class ClaudeChat extends BaseChatModel {
   private usingBedrock: boolean;
   private usingVertex: boolean;
   private useClaude1mContextBetaFlag: boolean;
+  private useAdaptiveThinking: boolean;
   private maxThinkingTokens?: number;
   config: PsAiModelConfig;
 
@@ -145,6 +146,8 @@ export class ClaudeChat extends BaseChatModel {
     this.usingVertex = useVertex;
     this.useClaude1mContextBetaFlag =
       process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG === "true";
+    this.useAdaptiveThinking =
+      ClaudeChat.isAdaptiveThinkingModel(resolvedModelName);
 
     if (useVertex) {
       const projectId =
@@ -232,6 +235,7 @@ export class ClaudeChat extends BaseChatModel {
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
         `effort=${this.config.reasoningEffort}, maxtemp=${this.config.temperature}, ` +
         `maxTokens=${this.config.maxTokensOut}, maxThinkingTokens=${this.config.maxThinkingTokens}, ` +
+        `adaptiveThinking=${this.useAdaptiveThinking}, ` +
         `bedrock=${this.usingBedrock}, vertex=${this.usingVertex}, ` +
         `context1mBeta=${this.useClaude1mContextBetaFlag}`
     );
@@ -264,20 +268,39 @@ export class ClaudeChat extends BaseChatModel {
       throw new Error("Anthropic client not initialized");
     }
 
+    // For adaptive models (4.6+), reasoningEffort alone is enough to enable thinking.
+    // For legacy models, require explicit maxThinkingTokens to avoid breaking older
+    // models that don't support thinking or where budget_tokens > max_tokens.
+    const wantsThinking = this.useAdaptiveThinking
+      ? Boolean(this.maxThinkingTokens) || Boolean(this.config.reasoningEffort)
+      : Boolean(this.maxThinkingTokens);
+
+    const thinkingConfig: AnthropicMessageCreateParamsBase["thinking"] = this.useAdaptiveThinking
+      ? wantsThinking
+        ? { type: "adaptive" }
+        : undefined
+      : this.maxThinkingTokens
+        ? { type: "enabled", budget_tokens: this.maxThinkingTokens! }
+        : undefined;
+
+    const adaptiveEffort: "low" | "medium" | "high" | "max" =
+      this.config.reasoningEffort === "xhigh" || this.config.reasoningEffort === "max"
+        ? "max"
+        : this.config.reasoningEffort ?? "high";
+
     const requestOptions: AnthropicMessageCreateParamsBase = {
       max_tokens: this.maxTokensOut,
       messages: anthropicMessages,
       model: this.modelName,
       temperature: this.config.temperature,
-      thinking: this.maxThinkingTokens
-        ? {
-            type: "enabled",
-            budget_tokens: this.maxThinkingTokens!,
-          }
-        : undefined,
+      thinking: thinkingConfig,
       tools: filteredTools.length ? filteredTools : undefined,
       tool_choice: filteredTools.length ? choice : undefined,
       system,
+      output_config:
+        this.useAdaptiveThinking && wantsThinking
+          ? { effort: adaptiveEffort }
+          : undefined,
     };
 
     if (streaming) {
@@ -709,8 +732,22 @@ export class ClaudeChat extends BaseChatModel {
     return merged;
   }
 
+  // Detect Claude 4.6+ models that support adaptive thinking.
+  // Matches new-style names: claude-opus-4-6, claude-sonnet-4-6, claude-opus-5-0, etc.
+  // Also works inside Bedrock/Vertex ids (e.g. eu.anthropic.claude-opus-4-6-v1:0).
+  private static isAdaptiveThinkingModel(modelName: string): boolean {
+    // (\d{1,2})(?!\d) ensures the minor version is 1-2 digits, not a datestamp.
+    // e.g. claude-sonnet-4-20250514 won't match (date is 8 digits),
+    // but claude-opus-4-6 and claude-opus-4-6-20260301 will.
+    const match = modelName.match(/claude-[a-z]+-(\d+)-(\d{1,2})(?!\d)/);
+    if (!match) return false;
+    const major = parseInt(match[1], 10);
+    const minor = parseInt(match[2], 10);
+    return major > 4 || (major === 4 && minor >= 6);
+  }
+
   private mapReasoningEffortToThinkingBudget(
-    effort?: "low" | "medium" | "high"
+    effort?: PsReasoningEffort
   ): number | undefined {
     switch (effort) {
       case "low":
@@ -719,6 +756,9 @@ export class ClaudeChat extends BaseChatModel {
         return 32_000;
       case "high":
         return 64_000;
+      case "xhigh":
+      case "max":
+        return 128_000;
       default:
         return undefined;
     }

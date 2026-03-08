@@ -51,7 +51,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
     this.setReasoningEffort(this.reasoningEffort);
   }
 
-  setReasoningEffort(effort: "low" | "medium" | "high") {
+  setReasoningEffort(effort: PsReasoningEffort) {
     this.modelCallOptions.modelReasoningEffort = effort;
     if (this.modelManager) {
       this.modelManager.reasoningEffort = effort;

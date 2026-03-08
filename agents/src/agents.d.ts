@@ -8,13 +8,15 @@ interface PsBaseModelClass {
 
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, "uuid"> {}
 
+type PsReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+
 interface PsAzureAiModelConfig {
   endpoint: string;
   apiKey: string;
   deploymentName: string;
   modelName: string;
   maxTokensOut?: number;
-  reasoningEffort?: 'low' | 'medium' | 'high';
+  reasoningEffort?: PsReasoningEffort;
   temperature?: number;
 }
 
@@ -28,7 +30,7 @@ interface PsAiModelConfig {
   modelSize: import("./aiModelTypes.js").PsAiModelSize;
   temperature?: number;
   safetyIdentifier?: string;
-  reasoningEffort?: 'low' | 'medium' | 'high';
+  reasoningEffort?: PsReasoningEffort;
   maxThinkingTokens?: number;
   timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
@@ -49,7 +51,7 @@ interface PsCallModelOptions {
   modelTemperature?: number;
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
-  modelReasoningEffort?: "low" | "medium" | "high";
+  modelReasoningEffort?: PsReasoningEffort;
   safetyIdentifier?: string;
   retryLimitFor429sUntilFallback?: number;
   fallbackModelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
