@@ -292,7 +292,7 @@ export class ClaudeChat extends BaseChatModel {
       max_tokens: this.maxTokensOut,
       messages: anthropicMessages,
       model: this.modelName,
-      temperature: this.config.temperature,
+      temperature: thinkingConfig ? 1 : this.config.temperature,
       thinking: thinkingConfig,
       tools: filteredTools.length ? filteredTools : undefined,
       tool_choice: filteredTools.length ? choice : undefined,

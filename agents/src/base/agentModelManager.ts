@@ -691,9 +691,50 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     "not allowed by our safety system",
   ];
 
+  static providerAuthenticationErrors: string[] = [
+    "invalid_grant",
+    "invalid_rapt",
+    "reauth related error",
+    "unauthorized",
+    "unauthenticated",
+    "authentication failed",
+    "invalid api key",
+    "api key not valid",
+    "permission denied",
+  ];
+
+  static getErrorStatus = (err: any): number | undefined => {
+    const status =
+      err?.response?.status ?? err?.status ?? err?.statusCode ?? err?.code;
+    if (typeof status === "number" && Number.isFinite(status)) {
+      return status;
+    }
+    if (typeof status === "string") {
+      const parsed = Number.parseInt(status, 10);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  };
+
+  static getErrorMessage = (err: any): string => {
+    const rawMessage =
+      err?.response?.data?.error?.message ??
+      err?.response?.data?.message ??
+      err?.message ??
+      err?.response?.data ??
+      "";
+    if (typeof rawMessage === "string") {
+      return rawMessage;
+    }
+    try {
+      return JSON.stringify(rawMessage);
+    } catch {
+      return String(rawMessage);
+    }
+  };
+
   static isProhibitedContentError = (err: any) => {
-    if (!err.message) return false;
-    const lowerCaseMessage = err.message.toLowerCase();
+    const lowerCaseMessage = PsAiModelManager.getErrorMessage(err).toLowerCase();
 
     const isError = PsAiModelManager.prohibitedContentErrors.some((error) =>
       lowerCaseMessage.includes(error)
@@ -707,8 +748,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   };
 
   static isMissingParameterError = (err: any) => {
-    const status = err?.response?.status;
-    const message = err?.response?.data?.error?.message || err?.message || "";
+    const status = PsAiModelManager.getErrorStatus(err);
+    const message = PsAiModelManager.getErrorMessage(err);
     return (
       status === 400 &&
       typeof message === "string" &&
@@ -716,9 +757,23 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  static isProviderAuthenticationError = (err: any) => {
+    const status = PsAiModelManager.getErrorStatus(err);
+    const lowerCaseMessage = PsAiModelManager.getErrorMessage(err).toLowerCase();
+    if (
+      status !== undefined &&
+      ![400, 401, 403].includes(status)
+    ) {
+      return false;
+    }
+    return PsAiModelManager.providerAuthenticationErrors.some((error) =>
+      lowerCaseMessage.includes(error)
+    );
+  };
+
   static general400Error = (err: any) => {
-    const status = err?.response?.status;
-    const message = err?.response?.data?.error?.message || err?.message || "";
+    const status = PsAiModelManager.getErrorStatus(err);
+    const message = PsAiModelManager.getErrorMessage(err);
     return (
       status === 400 ||
       (typeof message === "string" && message.startsWith("400"))
@@ -785,6 +840,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     // Track if we've tried the fallback model yet:
     let usedFallback = false;
+    const hasExplicitFallback = !!(
+      options.fallbackModelProvider && options.fallbackModelName
+    );
 
     // Simple helper to check if error is 5xx or "prohibited content".
     const is5xxError = (err: any, retryCount: number) => {
@@ -921,6 +979,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
+        const isProviderAuthenticationError =
+          PsAiModelManager.isProviderAuthenticationError(error);
+
         if (PsAiModelManager.isMissingParameterError(error)) {
           this.logger.error(
             `Missing parameter error from model: ${error.message || error}`
@@ -928,7 +989,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           throw error;
         }
 
-        if (PsAiModelManager.general400Error(error) && retryCount > 1) {
+        // Provider auth failures can be surfaced as 400s by SDKs, but they
+        // are still eligible for an immediate fallback model attempt.
+        if (isProviderAuthenticationError && !hasExplicitFallback) {
+          this.logger.error(
+            `Provider authentication error from model: ${error.message || error}`
+          );
+          throw error;
+        }
+
+        if (
+          PsAiModelManager.general400Error(error) &&
+          retryCount > 1 &&
+          !isProviderAuthenticationError
+        ) {
           this.logger.error(
             `General 400 error from model: ${error.message || error}`
           );
@@ -1007,6 +1081,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
         if (
           (is5xxError(error, retryCount) ||
+            isProviderAuthenticationError ||
             PsAiModelManager.isProhibitedContentError(error) ||
             tooMany429s ||
             tooManyRetriesWithFallback ||
@@ -1016,7 +1091,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           // If we have a fallback model defined in options, try once
           if (options.fallbackModelProvider && options.fallbackModelName) {
             this.logger.warn(
-              `Encountered 5xx, content-prohibited error or too many 429s. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
+              `Encountered 5xx, provider auth, content-prohibited error or too many 429s. Attempting fallback model: ${options.fallbackModelProvider} / ${options.fallbackModelName}`
             );
 
             // Create ephemeral fallback with user-supplied fallback provider/name:
