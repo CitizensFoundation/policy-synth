@@ -939,7 +939,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             return { toolCalls };
           }
           if (options.parseJson) {
-            let parsedJson: any;
+            let parsedJson: unknown;
             try {
               parsedJson = this.parseJsonResponse(content.trim());
             } catch (error) {
@@ -1134,56 +1134,94 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
             // Attempt the call with the fallback ephemeral model (no further fallback if this fails)
             try {
-              this.logger.info(
-                `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
-              );
-              const timeoutMs =
-                fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
-              const fallbackResults = (await this.callWithTimeout(
-                fallbackEphemeral,
-                messages,
-                options.streamingCallbacks,
-                timeoutMs,
-                options.promptImages,
-                options.functions,
-                options.toolChoice,
-                options.allowedTools
-              )) as PsBaseModelReturnParameters | undefined;
+              let fallbackJsonParseRetryCount = 0;
+              const maxFallbackJsonParseRetries = 3;
 
-              if (fallbackResults) {
-                const {
-                  tokensIn,
-                  tokensOut,
-                  cachedInTokens,
-                  content,
-                  toolCalls,
-                } = fallbackResults;
-                const effectiveFallbackPrices =
-                  this.applyPriceOverride(
-                    fallbackEphemeral.config?.prices,
-                    options.priceOverride
-                  ) ?? fallbackEphemeral.config.prices;
-                await this.saveTokenUsage(
-                  fallbackEphemeral.modelName,
-                  fallbackEphemeral.provider ?? "Unknown",
-                  effectiveFallbackPrices,
-                  fallbackEphemeral.config?.modelType ?? modelType,
-                  fallbackEphemeral.config?.modelSize ?? modelSize,
-                  tokensIn,
-                  cachedInTokens ?? 0,
-                  tokensOut,
-                  fallbackEphemeral.dbModelId
+              while (true) {
+                this.logger.info(
+                  `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
                 );
-                if (toolCalls && toolCalls.length) {
-                  return { toolCalls };
+                const timeoutMs =
+                  fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
+                const fallbackResults = (await this.callWithTimeout(
+                  fallbackEphemeral,
+                  messages,
+                  options.streamingCallbacks,
+                  timeoutMs,
+                  options.promptImages,
+                  options.functions,
+                  options.toolChoice,
+                  options.allowedTools
+                )) as PsBaseModelReturnParameters | undefined;
+
+                if (fallbackResults) {
+                  const {
+                    tokensIn,
+                    tokensOut,
+                    cachedInTokens,
+                    content,
+                    toolCalls,
+                  } = fallbackResults;
+                  const effectiveFallbackPrices =
+                    this.applyPriceOverride(
+                      fallbackEphemeral.config?.prices,
+                      options.priceOverride
+                    ) ?? fallbackEphemeral.config.prices;
+                  await this.saveTokenUsage(
+                    fallbackEphemeral.modelName,
+                    fallbackEphemeral.provider ?? "Unknown",
+                    effectiveFallbackPrices,
+                    fallbackEphemeral.config?.modelType ?? modelType,
+                    fallbackEphemeral.config?.modelSize ?? modelSize,
+                    tokensIn,
+                    cachedInTokens ?? 0,
+                    tokensOut,
+                    fallbackEphemeral.dbModelId
+                  );
+                  if (toolCalls && toolCalls.length) {
+                    return { toolCalls };
+                  }
+                  if (options.parseJson) {
+                    let parsedJson: unknown;
+                    try {
+                      parsedJson = this.parseJsonResponse(content.trim());
+                    } catch (parseError) {
+                      if (
+                        fallbackJsonParseRetryCount >=
+                        maxFallbackJsonParseRetries
+                      ) {
+                        throw parseError;
+                      }
+                      fallbackJsonParseRetryCount++;
+                      this.logger.warn(
+                        `Fallback JSON parse failure: retrying fallback model. Attempt #${fallbackJsonParseRetryCount}`
+                      );
+                      await this.sleepBeforeRetry(
+                        fallbackJsonParseRetryCount
+                      );
+                      continue;
+                    }
+
+                    if (
+                      parsedJson === '"[]"' ||
+                      parsedJson === "[]" ||
+                      parsedJson === "'[]'"
+                    ) {
+                      this.logger.warn(
+                        `JSON processing returned an empty array string: ${parsedJson}`
+                      );
+                      parsedJson = [];
+                    }
+
+                    return parsedJson;
+                  }
+
+                  return content.trim();
+                } else {
+                  // Fallback returned empty result; let's break out
+                  this.logger.warn("Fallback returned empty result; aborting");
+                  throw error;
                 }
-                return options.parseJson
-                  ? this.parseJsonResponse(content.trim())
-                  : content.trim();
-              } else {
-                // Fallback returned empty result; let's break out
-                this.logger.warn("Fallback returned empty result; aborting");
-                throw error;
               }
             } catch (fallbackError) {
               if (TokenLimitChunker.isTokenLimitError(fallbackError)) {
