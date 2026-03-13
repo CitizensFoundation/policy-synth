@@ -412,7 +412,11 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
               modelType,
               modelSize,
               chunkMessages,
-              { ...options, disableChunkingRetry: true }
+              {
+                ...options,
+                returnBaseModelResult: false,
+                disableChunkingRetry: true,
+              }
             );
           } catch (e) {
             if (TokenLimitChunker.isTokenLimitError(e)) {

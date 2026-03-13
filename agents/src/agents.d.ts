@@ -9,6 +9,20 @@ interface PsBaseModelClass {
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, "uuid"> {}
 
 type PsReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+type PsAssistantMessagePhase = "commentary" | "final_answer";
+interface PsAssistantResponseMessage {
+  content: string;
+  phase?: PsAssistantMessagePhase;
+}
+type PsResponseOutputItem =
+  | {
+      type: "assistant_message";
+      message: PsAssistantResponseMessage;
+    }
+  | {
+      type: "tool_call";
+      toolCall: ToolCall;
+    };
 
 interface PsAzureAiModelConfig {
   endpoint: string;
@@ -88,6 +102,11 @@ interface PsCallModelOptions {
    */
   disableChunkingRetry?: boolean;
   /**
+   * When true, return the full low-level model result instead of collapsing
+   * it into plain text or tool calls.
+   */
+  returnBaseModelResult?: boolean;
+  /**
    * Optional XML tag name to preserve when the TokenLimitChunker needs to split
    * a document due to token limits. If provided, the chunker will search for
    * this tag instead of blindly grabbing the first XML tag in the message.
@@ -154,6 +173,9 @@ interface PsBaseModelReturnParameters {
   cachedInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
+  phase?: PsAssistantMessagePhase;
+  assistantMessages?: PsAssistantResponseMessage[];
+  orderedOutputItems?: PsResponseOutputItem[];
   toolCalls?: ToolCall[];
 }
 

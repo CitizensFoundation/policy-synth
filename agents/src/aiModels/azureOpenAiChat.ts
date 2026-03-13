@@ -8,6 +8,7 @@ interface PsModelMessage {
   role: "system" | "developer" | "user" | "assistant" | "tool";
   message: string;
   name?: string;
+  phase?: PsAssistantMessagePhase;
   toolCall?: ToolCall;
   toolCallId?: string;
 }
@@ -41,7 +42,11 @@ export class AzureOpenAiChat extends BaseChatModel {
     streamingCallback?: (chunk: string) => void,
     media?: { mimeType: string; data: string }[]
   ) {
-    const chatMessages = messages.map((msg) => {
+    const chatMessages = messages
+      .filter(
+        (msg) => !(msg.role === "assistant" && msg.phase === "commentary")
+      )
+      .map((msg) => {
       if (msg.role === "tool") {
         return {
           role: "tool",
@@ -66,7 +71,7 @@ export class AzureOpenAiChat extends BaseChatModel {
         ];
       }
       return base;
-    });
+      });
 
     if (streaming) {
       // Streaming scenario

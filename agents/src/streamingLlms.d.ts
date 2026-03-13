@@ -40,6 +40,7 @@ interface PsModelMessage {
   role: string;
   message: string;
   name?: string;
+  phase?: PsAssistantMessagePhase;
   toolCall?: ToolCall;
   toolCallId?: string;
 }

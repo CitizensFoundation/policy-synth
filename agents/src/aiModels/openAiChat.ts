@@ -115,13 +115,17 @@ export class OpenAiChat extends BaseChatModel {
     /* ------------------------------------------------------------------ *
      *  Map internal message structure → OpenAI-SDK message parameters   *
      * ------------------------------------------------------------------ */
-    return m.map((msg): ChatCompletionMessageParam => {
+    return m.flatMap((msg): ChatCompletionMessageParam[] => {
+      if (msg.role === "assistant" && msg.phase === "commentary") {
+        return [];
+      }
+
       if (msg.role === "tool") {
-        return {
+        return [{
           role: "tool",
           content: msg.message,
           tool_call_id: msg.toolCallId!,
-        } as any;
+        } as any];
       }
 
       const base: any = {
@@ -141,7 +145,7 @@ export class OpenAiChat extends BaseChatModel {
           },
         ];
       }
-      return base;
+      return [base];
     });
   }
 

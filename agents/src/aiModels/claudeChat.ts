@@ -423,6 +423,9 @@ export class ClaudeChat extends BaseChatModel {
       }
 
       if (msg.role === "assistant") {
+        if (msg.phase === "commentary") {
+          continue;
+        }
         formatted.push({
           role: "assistant",
           content: this.buildAssistantContentBlocks(msg),

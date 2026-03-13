@@ -935,13 +935,22 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             model.dbModelId
           );
 
-          if (toolCalls && toolCalls.length) {
+          const hasToolCalls = Boolean(toolCalls && toolCalls.length);
+          const trimmedContent = content.trim();
+          if (
+            options.returnBaseModelResult &&
+            (hasToolCalls || trimmedContent || results.phase)
+          ) {
+            return { ...results, content: trimmedContent };
+          }
+
+          if (hasToolCalls) {
             return { toolCalls };
           }
           if (options.parseJson) {
             let parsedJson: unknown;
             try {
-              parsedJson = this.parseJsonResponse(content.trim());
+              parsedJson = this.parseJsonResponse(trimmedContent);
             } catch (error) {
               retryCount++;
               this.logger.warn(
@@ -968,7 +977,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             }
             return parsedJson;
           } else {
-            return content.trim();
+            return trimmedContent;
           }
         } else {
           // If results are empty
@@ -1178,13 +1187,28 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     tokensOut,
                     fallbackEphemeral.dbModelId
                   );
-                  if (toolCalls && toolCalls.length) {
+                  const hasFallbackToolCalls = Boolean(
+                    toolCalls && toolCalls.length
+                  );
+                  const trimmedFallbackContent = content.trim();
+                  if (
+                    options.returnBaseModelResult &&
+                    (hasFallbackToolCalls ||
+                      trimmedFallbackContent ||
+                      fallbackResults.phase)
+                  ) {
+                    return {
+                      ...fallbackResults,
+                      content: trimmedFallbackContent,
+                    };
+                  }
+                  if (hasFallbackToolCalls) {
                     return { toolCalls };
                   }
                   if (options.parseJson) {
                     let parsedJson: unknown;
                     try {
-                      parsedJson = this.parseJsonResponse(content.trim());
+                      parsedJson = this.parseJsonResponse(trimmedFallbackContent);
                     } catch (parseError) {
                       if (
                         fallbackJsonParseRetryCount >=
@@ -1216,7 +1240,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     return parsedJson;
                   }
 
-                  return content.trim();
+                  return trimmedFallbackContent;
                 } else {
                   // Fallback returned empty result; let's break out
                   this.logger.warn("Fallback returned empty result; aborting");

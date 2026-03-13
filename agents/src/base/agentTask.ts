@@ -23,6 +23,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
 
   protected readonly messages: PsModelMessage[] = [];
   protected pendingToolCalls: ToolCall[] = [];
+  protected pendingOutputItems: PsResponseOutputItem[] = [];
   protected phase: AgentPhase = AgentPhase.START;
 
   readonly runDir: string;
@@ -84,7 +85,11 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
           break;
       }
       while (idx < this.messages.length) {
-        yield this.messages[idx++];
+        const message = this.messages[idx++];
+        if (message.role === "assistant" && message.phase === "commentary") {
+          continue;
+        }
+        yield message;
       }
     }
   }
@@ -99,8 +104,18 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
   }
 
   protected isDone(): boolean {
-    const last = this.messages.at(-1);
-    return !!last && last.role === "assistant" && !last.toolCall;
+    for (let index = this.messages.length - 1; index >= 0; index--) {
+      const message = this.messages[index];
+      if (message.role !== "assistant" || message.toolCall) {
+        return false;
+      }
+      if (message.phase === "commentary") {
+        continue;
+      }
+      return true;
+    }
+
+    return false;
   }
 
   protected readonly fs = {
@@ -167,6 +182,7 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
         parseJson: false,
         useOpenAiResponsesIfOpenAi: true,
         useThoughtSignatures: true,
+        returnBaseModelResult: true,
         functions: this.TOOLS,
         toolChoice: "auto",
         allowedTools: [...allow],
@@ -174,26 +190,118 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       }
     );
 
+    const text =
+      typeof result === "string"
+        ? result
+        : result && typeof result === "object" && "content" in result
+          ? String(result.content ?? "")
+          : JSON.stringify(result);
+    const assistantPhase =
+      result && typeof result === "object" && "phase" in result
+        ? (result.phase as PsAssistantMessagePhase | undefined)
+        : undefined;
+    const hasAssistantMessage =
+      text.length > 0 || assistantPhase !== undefined;
+    const assistantMessages =
+      result &&
+      typeof result === "object" &&
+      "assistantMessages" in result &&
+      Array.isArray(result.assistantMessages)
+        ? (result.assistantMessages as PsAssistantResponseMessage[]).filter(
+            (message) => message.content.length > 0 || message.phase !== undefined
+          )
+        : hasAssistantMessage
+          ? [{ content: text, phase: assistantPhase }]
+          : [];
+
     if (
       result &&
       typeof result === "object" &&
       Array.isArray(result.toolCalls) &&
       result.toolCalls.length
     ) {
+      const orderedOutputItems =
+        result &&
+        typeof result === "object" &&
+        "orderedOutputItems" in result &&
+        Array.isArray(result.orderedOutputItems)
+          ? (result.orderedOutputItems as PsResponseOutputItem[])
+          : undefined;
+
+      this.pendingOutputItems =
+        orderedOutputItems?.filter(
+          (item) => {
+            if (item.type === "tool_call") {
+              return true;
+            }
+
+            return item.message.phase === "commentary";
+          }
+        ) ??
+        [
+          ...assistantMessages
+            .filter((message) => message.phase === "commentary")
+            .map(
+              (message) =>
+                ({
+                  type: "assistant_message",
+                  message,
+                }) satisfies PsResponseOutputItem
+            ),
+          ...(result.toolCalls as ToolCall[]).map(
+            (toolCall) =>
+              ({
+                type: "tool_call",
+                toolCall,
+              }) satisfies PsResponseOutputItem
+          ),
+        ];
+
       // Defer emitting assistant tool_call messages until callToolStep,
       // so we can interleave each assistant(tool_call) with its tool response.
-      this.pendingToolCalls = result.toolCalls as ToolCall[];
+      this.pendingToolCalls = this.pendingOutputItems
+        .filter(
+          (item): item is Extract<PsResponseOutputItem, { type: "tool_call" }> =>
+            item.type === "tool_call"
+        )
+        .map((item) => item.toolCall);
       this.phase = AgentPhase.CALL_TOOL;
     } else {
-      const text = typeof result === "string" ? result : JSON.stringify(result);
-      this.messages.push({ role: "assistant", message: text });
+      this.pendingOutputItems = [];
+      const finalizedAssistantMessages =
+        assistantPhase === "commentary" && assistantMessages.length > 0
+          ? assistantMessages
+          : [{ content: text, phase: assistantPhase }];
+      for (const assistantMessage of finalizedAssistantMessages) {
+        this.messages.push({
+          role: "assistant",
+          message: assistantMessage.content,
+          phase: assistantMessage.phase,
+        });
+      }
       this.phase = AgentPhase.OBSERVE;
     }
   }
 
   protected async callToolStep(): Promise<void> {
-    const calls = this.pendingToolCalls;
+    const outputItems =
+      this.pendingOutputItems.length > 0
+        ? this.pendingOutputItems
+        : this.pendingToolCalls.map(
+            (toolCall) =>
+              ({
+                type: "tool_call",
+                toolCall,
+              }) satisfies PsResponseOutputItem
+          );
+    const calls = outputItems
+      .filter(
+        (item): item is Extract<PsResponseOutputItem, { type: "tool_call" }> =>
+          item.type === "tool_call"
+      )
+      .map((item) => item.toolCall);
     this.pendingToolCalls = [];
+    this.pendingOutputItems = [];
     const allow = new Set(this.policy());
 
     // Run all tools in parallel to keep performance
@@ -222,9 +330,17 @@ export abstract class PolicySynthAgentTask extends PolicySynthAgent {
       })
     );
 
-    // Interleave messages to satisfy the API:
-    // assistant(tool_call) → tool(response) for each call
-    for (const call of calls) {
+    for (const outputItem of outputItems) {
+      if (outputItem.type === "assistant_message") {
+        this.messages.push({
+          role: "assistant",
+          message: outputItem.message.content,
+          phase: outputItem.message.phase,
+        });
+        continue;
+      }
+
+      const call = outputItem.toolCall;
       this.messages.push({ role: "assistant", message: "", toolCall: call });
       const toolMsg = toolResults.find((m) => m.toolCallId === call.id);
       this.messages.push(

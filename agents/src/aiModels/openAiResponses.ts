@@ -10,6 +10,10 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
 
 type ImageRef = { mimeType: string; data: string } | { url: string };
+type ResponseAssistantMessage = {
+  content: string;
+  phase?: PsAssistantMessagePhase;
+};
 
 /**
  * Interface-compatible with OpenAiChat, but uses the Responses API.
@@ -19,9 +23,11 @@ type ImageRef = { mimeType: string; data: string } | { url: string };
 export class OpenAiResponses extends BaseChatModel {
  private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
+  private phaseAwareModelName: string;
   private previousResponseId?: string;
   private sentToolOutputIds = new Set<string>();
   private lastSubmittedMessageCount = 0;
+  private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
 
   constructor(config: PsOpenAiModelConfig) {
@@ -37,6 +43,11 @@ export class OpenAiResponses extends BaseChatModel {
       modelName = "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
+    const configuredModelName =
+      config.modelName ??
+      process.env.PS_AI_MODEL_NAME ??
+      envAzureDeployment ??
+      modelName;
 
     if (useAzure) {
       apiKey = envAzureKey;
@@ -68,6 +79,31 @@ export class OpenAiResponses extends BaseChatModel {
     }
 
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
+    this.phaseAwareModelName = configuredModelName;
+  }
+
+  private isPhaseAwareResponsesModel(): boolean {
+    const modelName = this.phaseAwareModelName.toLowerCase();
+    const match = modelName.match(/\bgpt-(\d+)(?:\.(\d+))?/);
+    if (!match) return false;
+
+    const major = Number.parseInt(match[1], 10);
+    const minor = match[2] ? Number.parseInt(match[2], 10) : 0;
+
+    if (!Number.isFinite(major) || !Number.isFinite(minor)) {
+      return false;
+    }
+
+    if (major > 5) return true;
+    if (major < 5) return false;
+    return minor >= 3;
+  }
+
+  private resetResponsesState() {
+    this.sentToolOutputIds.clear();
+    this.lastSubmittedMessageCount = 0;
+    this.lastNoInputContinuationSignature = undefined;
+    this.previousResponseId = undefined;
   }
 
   private attachImagesToLastUserMessage(
@@ -128,7 +164,7 @@ export class OpenAiResponses extends BaseChatModel {
     const responsesTools = this.mapToolsForResponses(tools);
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
 
-    const hasPreviousResponse = !!this.previousResponseId;
+    let hasPreviousResponse = !!this.previousResponseId;
     const hasTruncatedHistory =
       hasPreviousResponse && messages.length < this.lastSubmittedMessageCount;
 
@@ -136,14 +172,14 @@ export class OpenAiResponses extends BaseChatModel {
       this.logger.debug(
         "Detected truncated message history; resetting Responses delta state."
       );
-      this.sentToolOutputIds.clear();
-      this.lastSubmittedMessageCount = 0;
-      this.previousResponseId = undefined;
+      this.resetResponsesState();
+      hasPreviousResponse = false;
     }
 
     if (!hasPreviousResponse && this.lastSubmittedMessageCount > 0) {
       this.sentToolOutputIds.clear();
       this.lastSubmittedMessageCount = 0;
+      this.lastNoInputContinuationSignature = undefined;
     }
     const { inputItems, instructions, pendingToolCallIds } =
       this.preprocessForResponses(
@@ -151,6 +187,36 @@ export class OpenAiResponses extends BaseChatModel {
         hasPreviousResponse,
         this.lastSubmittedMessageCount
       );
+
+    const retryingSameMessages =
+      hasPreviousResponse &&
+      inputItems.length === 0 &&
+      messages.length === this.lastSubmittedMessageCount;
+    const noInputContinuationSignature =
+      hasPreviousResponse && inputItems.length === 0
+        ? `${this.previousResponseId}:${messages.length}:${this.lastSubmittedMessageCount}`
+        : undefined;
+    const retryingNoInputContinuation =
+      !!noInputContinuationSignature &&
+      noInputContinuationSignature === this.lastNoInputContinuationSignature;
+
+    if (retryingSameMessages || retryingNoInputContinuation) {
+      this.logger.debug(
+        "No message delta detected with previous_response_id; resetting Responses state for a fresh retry."
+      );
+      this.resetResponsesState();
+      return this.generate(
+        messages,
+        streaming,
+        streamingCallback,
+        media,
+        tools,
+        toolChoice,
+        allowedTools
+      );
+    }
+
+    this.lastNoInputContinuationSignature = noInputContinuationSignature;
 
     const onlyToolOutputs =
       inputItems.length > 0 &&
@@ -174,13 +240,22 @@ export class OpenAiResponses extends BaseChatModel {
 
     const common: any = {
       model: this.cfg.modelName,
-      input: inputItems.length ? inputItems : [{ role: "user", content: "" }],
       tools: responsesTools,
       tool_choice: responsesToolChoice,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       max_output_tokens: this.cfg.maxTokensOut,
       safety_identifier: this.cfg.safetyIdentifier,
     };
+
+    if (inputItems.length) {
+      common.input = inputItems;
+    } else if (this.previousResponseId) {
+      this.logger.debug(
+        "Continuing previous response without new input items."
+      );
+    } else {
+      common.input = [{ role: "user", content: "" }];
+    }
 
     if (instructions) common.instructions = instructions;
 
@@ -229,6 +304,7 @@ export class OpenAiResponses extends BaseChatModel {
     if (!onlyToolOutputs) {
       this.lastSubmittedMessageCount = messages.length;
     }
+    this.lastNoInputContinuationSignature = undefined;
 
     return result;
   }
@@ -350,11 +426,9 @@ export class OpenAiResponses extends BaseChatModel {
 
         this.logger.error(`Unexpected message role: ${msg.role}`);
 
-        inputItems.push({ role: msg.role, content: msg.message ?? "" });
-      }
-
-      if (inputItems.length === 0) {
-        inputItems.push({ role: "user", content: "" });
+        inputItems.push(
+          this.buildResponseMessageItem(msg.role, msg.message ?? "", msg.phase)
+        );
       }
 
       return { inputItems, instructions, pendingToolCallIds };
@@ -388,7 +462,9 @@ export class OpenAiResponses extends BaseChatModel {
       }
 
       if (msg.role === "user" || msg.role === "assistant") {
-        inputItems.push({ role: msg.role, content: msg.message ?? "" });
+        inputItems.push(
+          this.buildResponseMessageItem(msg.role, msg.message ?? "", msg.phase)
+        );
       } else if (msg.role === "system" || msg.role === "developer") {
         continue;
       } else {
@@ -403,28 +479,140 @@ export class OpenAiResponses extends BaseChatModel {
     return { inputItems, instructions, pendingToolCallIds };
   }
 
+  private buildResponseMessageItem(
+    role: string,
+    content: string,
+    phase?: PsAssistantMessagePhase
+  ) {
+    const item: { role: string; content: string; phase?: PsAssistantMessagePhase } = {
+      role,
+      content,
+    };
+
+    if (role === "assistant" && phase) {
+      item.phase = phase;
+    }
+
+    return item;
+  }
+
   private async handleStreaming(
     params: any,
     onChunk?: (c: string) => void
   ): Promise<PsBaseModelReturnParameters> {
     // Responses SSE: create({ stream: true }) returns an async iterator of events
     const stream = await this.client.responses.create(params);
+    const phaseAwareStreaming = this.isPhaseAwareResponsesModel();
 
     let content = "";
     let finalResponse: any | undefined;
+    const streamItemState = new Map<
+      string,
+      {
+        allowOutput?: boolean;
+        hasItemMetadata: boolean;
+        pendingDeltas: string[];
+      }
+    >();
+
+    const emitDelta = (delta: string) => {
+      content += delta;
+      onChunk?.(delta);
+    };
+
+    const getItemState = (itemId: string) => {
+      let state = streamItemState.get(itemId);
+      if (!state) {
+        state = { hasItemMetadata: false, pendingDeltas: [] };
+        streamItemState.set(itemId, state);
+      }
+      return state;
+    };
+
+    const resolveStreamItem = (
+      item: any,
+      allowUnphasedOutput = false
+    ) => {
+      if (item?.type !== "message" || !item?.id) return;
+
+      const state = getItemState(item.id);
+      state.hasItemMetadata = true;
+      const phase =
+        item?.phase === "commentary" || item?.phase === "final_answer"
+          ? item.phase
+          : undefined;
+
+      if (phase) {
+        state.allowOutput = phase !== "commentary";
+      } else if (!phaseAwareStreaming || allowUnphasedOutput) {
+        state.allowOutput = true;
+      } else {
+        return;
+      }
+
+      if (state.pendingDeltas.length > 0) {
+        if (state.allowOutput) {
+          for (const delta of state.pendingDeltas) {
+            emitDelta(delta);
+          }
+        }
+        state.pendingDeltas = [];
+      }
+    };
+
+    const flushPendingStreamDeltas = () => {
+      for (const state of streamItemState.values()) {
+        if (state.pendingDeltas.length === 0) continue;
+
+        if (state.allowOutput) {
+          for (const delta of state.pendingDeltas) {
+            emitDelta(delta);
+          }
+        }
+        state.pendingDeltas = [];
+      }
+    };
 
     for await (const event of stream as any) {
       const type: string | undefined = event?.type;
 
+      if (
+        type === "response.output_item.added" ||
+        type === "response.output_item.done"
+      ) {
+        resolveStreamItem(event?.item);
+        continue;
+      }
+
       // Text deltas (SDK emits either of these)
       if (
         type === "response.output_text.delta" ||
-        type === "response.text.delta"
+        type === "response.text.delta" ||
+        type === "response.refusal.delta"
       ) {
-        const delta = event?.delta ?? event?.data ?? "";
+        const delta =
+          type === "response.refusal.delta"
+            ? event?.delta ?? ""
+            : event?.delta ?? event?.data ?? "";
         if (delta) {
-          content += delta;
-          onChunk?.(delta);
+          const itemId = event?.item_id;
+          if (!itemId) {
+            emitDelta(delta);
+          } else {
+            const stateForItem = getItemState(itemId);
+            if (!stateForItem.hasItemMetadata) {
+              stateForItem.pendingDeltas.push(delta);
+              continue;
+            }
+            if (stateForItem.allowOutput === false) {
+              continue;
+            }
+            if (stateForItem.allowOutput) {
+              emitDelta(delta);
+            } else {
+              stateForItem.pendingDeltas.push(delta);
+            }
+          }
         }
         continue;
       }
@@ -450,7 +638,14 @@ export class OpenAiResponses extends BaseChatModel {
       }
     }
 
+    if (finalResponse?.output && Array.isArray(finalResponse.output)) {
+      for (const item of finalResponse.output) {
+        resolveStreamItem(item, true);
+      }
+    }
+
     if (!finalResponse) {
+      flushPendingStreamDeltas();
       this.logger.error("No final response from Responses API");
       return {
         content,
@@ -467,6 +662,10 @@ export class OpenAiResponses extends BaseChatModel {
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
+    const assistantMessages = this.extractAssistantMessages(finalResponse);
+    const orderedOutputItems = this.extractOrderedOutputItems(finalResponse);
+    const { content: responseContent, phase } =
+      this.selectAssistantReply(finalResponse);
     const usage = finalResponse?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
     const tokensOut: number =
@@ -484,7 +683,8 @@ export class OpenAiResponses extends BaseChatModel {
     this.logger.info(
       `Token info: ${JSON.stringify(
         {
-          content,
+          content: responseContent || content,
+          phase,
           tokensIn,
           tokensOut,
           cachedInTokens,
@@ -498,12 +698,15 @@ export class OpenAiResponses extends BaseChatModel {
     );
 
     return {
-      content,
+      content: responseContent || content,
       tokensIn,
       tokensOut,
       cachedInTokens,
       reasoningTokens,
       audioTokens,
+      phase,
+      assistantMessages,
+      orderedOutputItems,
       toolCalls,
     };
   }
@@ -518,8 +721,9 @@ export class OpenAiResponses extends BaseChatModel {
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
-    const content: string =
-      (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "";
+    const assistantMessages = this.extractAssistantMessages(resp);
+    const orderedOutputItems = this.extractOrderedOutputItems(resp);
+    const { content, phase } = this.selectAssistantReply(resp);
 
     const usage = resp?.usage ?? {};
     const tokensIn: number = usage.input_tokens ?? usage.prompt_tokens ?? 0;
@@ -541,6 +745,7 @@ export class OpenAiResponses extends BaseChatModel {
       `Token info: ${JSON.stringify(
         {
           content,
+          phase,
           tokensIn,
           tokensOut,
           cachedInTokens,
@@ -560,11 +765,19 @@ export class OpenAiResponses extends BaseChatModel {
       cachedInTokens,
       reasoningTokens,
       audioTokens,
+      phase,
+      assistantMessages,
+      orderedOutputItems,
       toolCalls,
     };
   }
 
   private extractTextFromResponse(resp: any): string {
+    const assistantMessages = this.extractAssistantMessages(resp);
+    if (assistantMessages.length > 0) {
+      return this.joinAssistantMessageContent(assistantMessages);
+    }
+
     try {
       const out = resp?.output;
       if (!Array.isArray(out)) return "";
@@ -586,6 +799,158 @@ export class OpenAiResponses extends BaseChatModel {
     } catch {
       return "";
     }
+  }
+
+  private extractAssistantMessages(resp: any): ResponseAssistantMessage[] {
+    const messages: ResponseAssistantMessage[] = [];
+
+    try {
+      const out = resp?.output;
+      if (!Array.isArray(out)) return messages;
+
+      for (const item of out) {
+        if (item?.type !== "message") continue;
+
+        const content = this.extractTextFromMessageItem(item);
+        const phase =
+          item?.phase === "commentary" || item?.phase === "final_answer"
+            ? item.phase
+            : undefined;
+
+        if (!content && !phase) continue;
+
+        messages.push({ content, phase });
+      }
+    } catch {
+      return [];
+    }
+
+    return messages;
+  }
+
+  private extractTextFromMessageItem(item: any): string {
+    if (!Array.isArray(item?.content)) return "";
+
+    let buffer = "";
+    for (const part of item.content) {
+      if (
+        part?.type === "output_text" ||
+        part?.type === "text" ||
+        typeof part?.text === "string"
+      ) {
+        buffer += part.text ?? "";
+      } else if (
+        part?.type === "refusal" ||
+        typeof part?.refusal === "string"
+      ) {
+        buffer += part.refusal ?? "";
+      }
+    }
+
+    return buffer;
+  }
+
+  private joinAssistantMessageContent(messages: ResponseAssistantMessage[]): string {
+    return messages.map((message) => message.content).join("");
+  }
+
+  private extractOrderedOutputItems(resp: any): PsResponseOutputItem[] {
+    const orderedOutputItems: PsResponseOutputItem[] = [];
+
+    try {
+      const out = resp?.output;
+      if (!Array.isArray(out)) return orderedOutputItems;
+
+      for (const item of out) {
+        if (item?.type === "message") {
+          const message = {
+            content: this.extractTextFromMessageItem(item),
+            phase:
+              item?.phase === "commentary" || item?.phase === "final_answer"
+                ? item.phase
+                : undefined,
+          } satisfies PsAssistantResponseMessage;
+
+          if (!message.content && !message.phase) {
+            continue;
+          }
+
+          orderedOutputItems.push({
+            type: "assistant_message",
+            message,
+          });
+          continue;
+        }
+
+        if (item?.type === "function_call") {
+          const rawArgs = item?.arguments ?? "";
+          let parsed: Record<string, unknown> = {};
+          try {
+            parsed = rawArgs ? JSON.parse(rawArgs) : {};
+          } catch {
+            parsed = {};
+          }
+
+          orderedOutputItems.push({
+            type: "tool_call",
+            toolCall: {
+              id: item?.call_id ?? item?.id ?? "",
+              name: item?.name ?? "",
+              arguments: parsed,
+            },
+          });
+        }
+      }
+    } catch {
+      return [];
+    }
+
+    return orderedOutputItems;
+  }
+
+  private selectAssistantReply(resp: any): ResponseAssistantMessage {
+    const assistantMessages = this.extractAssistantMessages(resp);
+    if (assistantMessages.length > 0) {
+      const finalAnswerMessages = assistantMessages.filter(
+        (message) =>
+          message.phase === "final_answer" && message.content.length > 0
+      );
+      if (finalAnswerMessages.length > 0) {
+        return {
+          content: this.joinAssistantMessageContent(finalAnswerMessages),
+          phase: "final_answer",
+        };
+      }
+
+      const unphasedMessages = assistantMessages.filter(
+        (message) => !message.phase && message.content.length > 0
+      );
+      if (unphasedMessages.length > 0) {
+        return {
+          content: this.joinAssistantMessageContent(unphasedMessages),
+        };
+      }
+
+      const commentaryMessages = assistantMessages.filter(
+        (message) =>
+          message.phase === "commentary" && message.content.length > 0
+      );
+      if (commentaryMessages.length > 0) {
+        return {
+          content: this.joinAssistantMessageContent(commentaryMessages),
+          phase: "commentary",
+        };
+      }
+
+      return {
+        content: this.joinAssistantMessageContent(assistantMessages),
+        phase: assistantMessages.at(-1)?.phase,
+      };
+    }
+
+    return {
+      content: (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "",
+    };
   }
 
   private extractToolCallsFromResponse(resp: any): ToolCall[] {

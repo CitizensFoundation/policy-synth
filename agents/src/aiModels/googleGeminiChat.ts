@@ -73,6 +73,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     const out: any[] = [];
     for (const m of messages) {
       if (m.role === "system" || m.role === "developer") continue; // handled via systemInstruction
+      if (m.role === "assistant" && m.phase === "commentary") continue;
 
       if (m.role === "assistant" && m.toolCall) {
         out.push(this.buildAssistantToolCallMessage(m));
