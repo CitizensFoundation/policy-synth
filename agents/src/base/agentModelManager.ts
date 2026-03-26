@@ -19,6 +19,7 @@ import type {
 } from "openai/resources/chat/completions";
 import { PsAiModelProvider } from "../aiModelTypes.js";
 import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
+import { PsModelUsageItemManager } from "./modelUsageItemManager.js";
 
 // Lazy loaded database modules
 let SequelizeModule: any;
@@ -68,6 +69,7 @@ async function loadDbModules() {
 }
 
 export class PsAiModelManager extends PolicySynthAgentBase {
+  private modelUsageItemManager = new PsModelUsageItemManager();
   models: Map<string, BaseChatModel> = new Map();
   modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
   modelIds: Map<string, number> = new Map();
@@ -118,7 +120,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     let apiKey;
     switch (modelProvider?.toLowerCase()) {
       case PsAiModelProvider.OpenAI:
-      case PsAiModelProvider.OpenAIResponses:
+      case PsAiModelProvider.OpenAIResponses.toLowerCase():
         apiKey = process.env.OPENAI_API_KEY;
         break;
       case PsAiModelProvider.Anthropic:
@@ -148,6 +150,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKey,
         modelName: modelName,
+        provider: modelProvider,
         maxTokensOut: this.maxTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
@@ -165,7 +168,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         case PsAiModelProvider.OpenAI:
           model = new OpenAiChat(baseConfig);
           break;
-        case PsAiModelProvider.OpenAIResponses:
+        case PsAiModelProvider.OpenAIResponses.toLowerCase():
           model = new OpenAiResponses(baseConfig);
           break;
         case PsAiModelProvider.Google:
@@ -191,6 +194,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       }
 
       if (model) {
+        model.provider = modelProvider;
         this.models.set(modelKey, model);
         this.modelsByType.set(modelType, model);
         this.modelIds.set(modelKey, -1); // Use -1 to indicate ephemeral/no DB row
@@ -242,6 +246,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.configuration.model,
+        provider: model.configuration.provider,
+        inferenceType: model.configuration.inferenceType,
+        regionalProcessing: model.configuration.regionalProcessing,
         maxTokensOut: this.maxTokensOut,
         maxContextTokens: model.configuration.maxContextTokens,
         temperature: this.modelTemperature,
@@ -287,6 +294,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           continue;
       }
 
+      newModel.provider = model.configuration.provider;
+      newModel.dbModelId = model.id;
       this.models.set(modelKey, newModel);
       this.modelsByType.set(modelType, newModel);
       this.modelIds.set(modelKey, model.id);
@@ -314,10 +323,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   ): Promise<BaseChatModel | undefined> {
     // Determine if user actually wants ephemeral overrides
     const isOverrideRequested =
-      options.modelProvider != null && options.modelName != null;
-    const overrideModelName = options.modelName;
+      (options.modelProvider != null && options.modelName != null) ||
+      options.regionalProcessing != null ||
+      options.inferenceType != null;
 
-    if (!isOverrideRequested || overrideModelName == null) {
+    if (!isOverrideRequested) {
       return undefined;
     } else {
       const loggingOptions: PsCallModelOptions = {
@@ -360,11 +370,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     // We need a provider, name, etc. If user didn't supply `modelProvider`, reuse fallback's
-    const fallbackProvider = (fallbackModel as any).provider || "";
+    const fallbackProvider =
+      fallbackModel.provider ||
+      fallbackModel.config?.provider ||
+      "";
     const provider = options.modelProvider ?? fallbackProvider;
+    const overrideModelName = options.modelName ?? String(fallbackModel.modelName);
+    const isContextOnlyOverride =
+      options.modelProvider == null && options.modelName == null;
 
     // Figure out the best API key for that provider:
-    const apiKey = this.getApiKeyForProvider(provider);
+    const apiKey =
+      (isContextOnlyOverride ? fallbackModel.config?.apiKey : undefined) ??
+      this.getApiKeyForProvider(provider);
 
     // Try to load model configuration from database for cost reporting
     let dbModel: PsAiModelDb | null = null;
@@ -419,6 +437,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       modelName:
         overrideModelName ?? dbConfig?.model ?? fallbackModel.modelName,
       provider: provider,
+      inferenceType:
+        options.inferenceType ??
+        dbConfig?.inferenceType ??
+        fallbackModel.config?.inferenceType,
+      regionalProcessing:
+        options.regionalProcessing ??
+        dbConfig?.regionalProcessing ??
+        fallbackModel.config?.regionalProcessing,
       maxTokensOut:
         options.maxTokensOut ?? this.maxTokensOut ?? dbConfig?.maxTokensOut,
       maxContextTokens: dbConfig?.maxContextTokens,
@@ -462,6 +488,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         } else {
           ephemeralModel = new OpenAiChat(ephemeralConfig);
         }
+        break;
+      case PsAiModelProvider.OpenAIResponses.toLowerCase():
+        ephemeralModel = new OpenAiResponses(ephemeralConfig);
         break;
       case PsAiModelProvider.Anthropic:
         ephemeralModel = new ClaudeChat(ephemeralConfig);
@@ -512,7 +541,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   private getApiKeyForProvider(provider: string): string {
     switch (provider.toLowerCase()) {
       case PsAiModelProvider.OpenAI:
-      case PsAiModelProvider.OpenAIResponses:
+      case PsAiModelProvider.OpenAIResponses.toLowerCase():
         return process.env.OPENAI_API_KEY || "";
       case PsAiModelProvider.Anthropic:
         return process.env.ANTHROPIC_API_KEY || "";
@@ -914,19 +943,45 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
-          const { tokensIn, tokensOut, cachedInTokens, content, toolCalls } =
-            results;
+          const {
+            tokensIn,
+            tokensOut,
+            cachedInTokens,
+            reasoningTokens,
+            audioTokens,
+            usageItemData,
+            content,
+            toolCalls,
+          } = results;
 
-          const effectivePrices =
+          const configuredPrices =
             this.applyPriceOverride(
               model.config?.prices,
               options.priceOverride
             ) ?? model.config.prices;
 
+          await this.saveTokenUsageItem({
+            modelName: String(model.modelName),
+            modelProvider: model.provider ?? "Unknown",
+            prices: configuredPrices,
+            modelType,
+            modelSize,
+            tokensIn,
+            cachedInTokens: cachedInTokens ?? 0,
+            tokensOut,
+            reasoningTokens,
+            audioTokens,
+            streaming: Boolean(options.streamingCallbacks),
+            modelId: model.dbModelId,
+            regionalProcessing: model.config?.regionalProcessing,
+            inferenceType: model.config?.inferenceType,
+            usageItemData,
+          });
+
           await this.saveTokenUsage(
             model.modelName,
             model.provider ?? "Unknown",
-            effectivePrices,
+            configuredPrices,
             modelType,
             modelSize,
             tokensIn,
@@ -1110,6 +1165,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               {
                 modelProvider: options.fallbackModelProvider,
                 modelName: options.fallbackModelName,
+                inferenceType: options.inferenceType,
+                regionalProcessing: options.regionalProcessing,
                 modelTemperature: options.modelTemperature,
                 safetyIdentifier: options.safetyIdentifier,
                 maxTokensOut: options.maxTokensOut,
@@ -1168,18 +1225,41 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                     tokensIn,
                     tokensOut,
                     cachedInTokens,
+                    reasoningTokens,
+                    audioTokens,
+                    usageItemData,
                     content,
                     toolCalls,
                   } = fallbackResults;
-                  const effectiveFallbackPrices =
+                  const configuredFallbackPrices =
                     this.applyPriceOverride(
                       fallbackEphemeral.config?.prices,
                       options.priceOverride
                     ) ?? fallbackEphemeral.config.prices;
+                  await this.saveTokenUsageItem({
+                    modelName: String(fallbackEphemeral.modelName),
+                    modelProvider: fallbackEphemeral.provider ?? "Unknown",
+                    prices: configuredFallbackPrices,
+                    modelType:
+                      fallbackEphemeral.config?.modelType ?? modelType,
+                    modelSize:
+                      fallbackEphemeral.config?.modelSize ?? modelSize,
+                    tokensIn,
+                    cachedInTokens: cachedInTokens ?? 0,
+                    tokensOut,
+                    reasoningTokens,
+                    audioTokens,
+                    streaming: Boolean(options.streamingCallbacks),
+                    modelId: fallbackEphemeral.dbModelId,
+                    regionalProcessing:
+                      fallbackEphemeral.config?.regionalProcessing,
+                    inferenceType: fallbackEphemeral.config?.inferenceType,
+                    usageItemData,
+                  });
                   await this.saveTokenUsage(
                     fallbackEphemeral.modelName,
                     fallbackEphemeral.provider ?? "Unknown",
-                    effectiveFallbackPrices,
+                    configuredFallbackPrices,
                     fallbackEphemeral.config?.modelType ?? modelType,
                     fallbackEphemeral.config?.modelSize ?? modelSize,
                     tokensIn,
@@ -1773,6 +1853,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.error(error);
       throw error;
     }
+  }
+
+  public async saveTokenUsageItem(ctx: PsModelUsageItemSaveContext) {
+    await this.modelUsageItemManager.saveUsageItem({
+      ...ctx,
+      userId: this.userId,
+      agentId: this.agentId,
+    });
   }
 
   public async getTokensFromMessages(

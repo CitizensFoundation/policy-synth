@@ -30,6 +30,11 @@ import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
+const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
+type UsageItemResult = PsBaseModelReturnParameters & {
+  usageItemData?: UsageItemPayload;
+};
+type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
 
 const mapToBedrockModelId = (modelName: string): string => {
   // If caller already supplied a full inference profile or Bedrock model id, keep it.
@@ -114,8 +119,10 @@ export class ClaudeChat extends BaseChatModel {
   private usingBedrock: boolean;
   private usingVertex: boolean;
   private useClaude1mContextBetaFlag: boolean;
+  private useFastMode: boolean;
   private useAdaptiveThinking: boolean;
   private maxThinkingTokens?: number;
+  private requestedInferenceType?: PsInferenceType;
   config: PsAiModelConfig;
 
   constructor(config: PsAiModelConfig) {
@@ -146,8 +153,26 @@ export class ClaudeChat extends BaseChatModel {
     this.usingVertex = useVertex;
     this.useClaude1mContextBetaFlag =
       process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG === "true";
+    const normalizedInferenceType =
+      ClaudeChat.normalizeRequestedInferenceType(config.inferenceType);
+    this.useFastMode =
+      normalizedInferenceType === "fast" &&
+      ClaudeChat.supportsFastMode(resolvedModelName);
     this.useAdaptiveThinking =
       ClaudeChat.isAdaptiveThinkingModel(resolvedModelName);
+    if (
+      normalizedInferenceType === "fast" &&
+      !this.useFastMode
+    ) {
+      this.logger.warn?.(
+        `Anthropic fast mode requested for ${resolvedModelName}, but this model does not support it`
+      );
+    }
+    if (config.inferenceType === "priority" && this.useFastMode) {
+      this.logger.info?.(
+        "Mapping inferenceType=priority to Anthropic speed=fast"
+      );
+    }
 
     if (useVertex) {
       const projectId =
@@ -214,12 +239,100 @@ export class ClaudeChat extends BaseChatModel {
     } else {
       this.client = new Anthropic({ apiKey });
     }
-    this.config = { ...config, modelName: resolvedModelName };
+    this.requestedInferenceType = config.inferenceType;
+    this.config = {
+      ...config,
+      modelName: resolvedModelName,
+      inferenceType: this.useFastMode ? "fast" : undefined,
+    };
     if (this.useClaude1mContextBetaFlag) {
       this.logger.info?.(
         `Using Claude 1M context beta flag ${CLAUDE_1M_CONTEXT_BETA_FLAG}`
       );
     }
+    if (this.useFastMode) {
+      this.logger.info?.(
+        `Using Claude fast mode beta flag ${CLAUDE_FAST_MODE_BETA_FLAG}`
+      );
+    }
+  }
+
+  private getTransport(): "anthropic" | "bedrock" | "vertex" {
+    if (this.usingVertex) {
+      return "vertex";
+    }
+    if (this.usingBedrock) {
+      return "bedrock";
+    }
+    return "anthropic";
+  }
+
+  private buildUsageItemData(
+    response: {
+      id?: string | null;
+      usage?: Record<string, unknown> | null;
+      service_tier?: string | null;
+      speed?: string | null;
+    },
+    requestOptions: AnthropicMessageCreateParamsBase,
+    usage: {
+      tokensIn: number;
+      tokensOut: number;
+      cachedInTokens: number;
+      cacheReadInputTokens: number;
+    },
+    requestKind: "stream" | "non_stream"
+  ): UsageItemPayload {
+    return {
+      provider: "anthropic",
+      apiFamily: "messages",
+      transport: this.getTransport(),
+      modelName: this.config.modelName,
+      request: {
+        mode: requestKind,
+        requestedInferenceType: this.requestedInferenceType ?? null,
+        requestedSpeed: this.useFastMode ? "fast" : null,
+        requestedServiceTier:
+          (requestOptions as { service_tier?: string | null }).service_tier ??
+          null,
+        reasoningEffort: this.config.reasoningEffort ?? null,
+        maxTokensOut: this.config.maxTokensOut ?? null,
+        maxThinkingTokens: this.maxThinkingTokens ?? null,
+        usesAdaptiveThinking: this.useAdaptiveThinking,
+        uses1mContextBetaFlag: this.useClaude1mContextBetaFlag,
+        thinking: requestOptions.thinking ?? null,
+        outputConfig: requestOptions.output_config ?? null,
+      },
+      usageRaw: response.usage ?? undefined,
+      usageNormalized: {
+        tokensIn: usage.tokensIn,
+        tokensOut: usage.tokensOut,
+        cachedInTokens: usage.cachedInTokens,
+        cacheReadInputTokens: usage.cacheReadInputTokens,
+      },
+      providerMetadata: {
+        responseId: response.id ?? null,
+        appliedSpeed: response.speed ?? null,
+        appliedServiceTier: response.service_tier ?? null,
+        usesAdaptiveThinking: this.useAdaptiveThinking,
+        transport: this.getTransport(),
+        contextBeta: this.useClaude1mContextBetaFlag
+          ? CLAUDE_1M_CONTEXT_BETA_FLAG
+          : null,
+        fastModeBeta: this.useFastMode ? CLAUDE_FAST_MODE_BETA_FLAG : null,
+        bedrockRegion: this.usingBedrock
+          ? process.env.AWS_REGION ??
+            process.env.AWS_DEFAULT_REGION ??
+            "eu-west-1"
+          : null,
+        vertexRegion: this.usingVertex
+          ? process.env.CLOUD_ML_REGION ??
+            process.env.GOOGLE_CLOUD_LOCATION ??
+            process.env.GOOGLE_VERTEX_LOCATION ??
+            "europe-west1"
+          : null,
+      },
+    };
   }
 
   async generate(
@@ -305,8 +418,8 @@ export class ClaudeChat extends BaseChatModel {
 
     if (streaming) {
       const streamRequestOptions: AnthropicMessageStreamParams = requestOptions;
-      const betaStreamRequestOptions = this.useClaude1mContextBetaFlag
-        ? this.build1mContextBetaStreamRequestOptions(requestOptions)
+      const betaStreamRequestOptions = this.usesBetaMessages()
+        ? this.buildBetaStreamRequestOptions(requestOptions)
         : undefined;
       const stream = betaStreamRequestOptions
         ? await client.beta.messages.stream(betaStreamRequestOptions)
@@ -344,13 +457,15 @@ export class ClaudeChat extends BaseChatModel {
       let tokensIn = finalMessage.usage.input_tokens ?? 0;
       let tokensOut = finalMessage.usage.output_tokens ?? 0;
       const cachedInTokens = finalMessage.usage.cache_creation_input_tokens ?? 0;
+      const cacheReadInputTokens =
+        finalMessage.usage.cache_read_input_tokens ?? 0;
 
       if (finalMessage.usage.cache_creation_input_tokens != null) {
         tokensIn += finalMessage.usage.cache_creation_input_tokens * 1.25;
       }
 
-      if (finalMessage.usage.cache_read_input_tokens != null) {
-        tokensIn += finalMessage.usage.cache_read_input_tokens * 0.1;
+      if (cacheReadInputTokens !== 0) {
+        tokensIn += cacheReadInputTokens * 0.1;
       }
 
       const mergedToolCalls = this.mergeToolCalls(
@@ -358,20 +473,44 @@ export class ClaudeChat extends BaseChatModel {
         this.extractToolCalls(finalMessage.content)
       );
 
-      return {
+      const result: UsageItemResult = {
         tokensIn,
         tokensOut,
         cachedInTokens,
         content: aggregated || this.getTextTypeFromContent(finalMessage.content),
         toolCalls: mergedToolCalls,
+        usageItemData: this.buildUsageItemData(
+          {
+            id: finalMessage.id ?? null,
+            usage:
+              (finalMessage.usage ?? null) as unknown as
+                | Record<string, unknown>
+                | null,
+            speed: (finalMessage as { speed?: string | null }).speed ?? null,
+            service_tier:
+              (finalMessage as { service_tier?: string | null }).service_tier ??
+              finalMessage.usage.service_tier ??
+              null,
+          },
+          requestOptions,
+          {
+            tokensIn,
+            tokensOut,
+            cachedInTokens,
+            cacheReadInputTokens,
+          },
+          "stream"
+        ),
       };
+
+      return result;
     } else {
       const createRequestOptions: AnthropicMessageCreateParamsNonStreaming = {
         ...requestOptions,
         stream: false,
       };
-      const betaCreateRequestOptions = this.useClaude1mContextBetaFlag
-        ? this.build1mContextBetaCreateRequestOptions(requestOptions)
+      const betaCreateRequestOptions = this.usesBetaMessages()
+        ? this.buildBetaCreateRequestOptions(requestOptions)
         : undefined;
       const response = betaCreateRequestOptions
         ? await client.beta.messages.create(betaCreateRequestOptions)
@@ -380,22 +519,47 @@ export class ClaudeChat extends BaseChatModel {
       let tokensIn = response.usage.input_tokens ?? 0;
       let tokensOut = response.usage.output_tokens ?? 0;
       const cachedInTokens = response.usage.cache_creation_input_tokens ?? 0;
+      const cacheReadInputTokens = response.usage.cache_read_input_tokens ?? 0;
 
       if (response.usage.cache_creation_input_tokens != null) {
         tokensIn += response.usage.cache_creation_input_tokens * 1.25;
       }
 
-      if (response.usage.cache_read_input_tokens != null) {
-        tokensIn += response.usage.cache_read_input_tokens * 0.1;
+      if (cacheReadInputTokens !== 0) {
+        tokensIn += cacheReadInputTokens * 0.1;
       }
       const toolCalls = this.extractToolCalls(response.content);
-      return {
+      const result: UsageItemResult = {
         tokensIn: tokensIn,
         tokensOut: tokensOut,
         cachedInTokens,
         content: this.getTextTypeFromContent(response.content),
         toolCalls,
+        usageItemData: this.buildUsageItemData(
+          {
+            id: response.id ?? null,
+            usage:
+              (response.usage ?? null) as unknown as
+                | Record<string, unknown>
+                | null,
+            speed: (response as { speed?: string | null }).speed ?? null,
+            service_tier:
+              (response as { service_tier?: string | null }).service_tier ??
+              response.usage.service_tier ??
+              null,
+          },
+          requestOptions,
+          {
+            tokensIn,
+            tokensOut,
+            cachedInTokens,
+            cacheReadInputTokens,
+          },
+          "non_stream"
+        ),
       };
+
+      return result;
     }
   }
 
@@ -678,22 +842,42 @@ export class ClaudeChat extends BaseChatModel {
     return { value: input };
   }
 
-  private build1mContextBetaCreateRequestOptions(
+  private usesBetaMessages(): boolean {
+    return this.useClaude1mContextBetaFlag || this.useFastMode;
+  }
+
+  private buildBetaFlags(): AnthropicBeta[] {
+    const betas: AnthropicBeta[] = [];
+
+    if (this.useClaude1mContextBetaFlag) {
+      betas.push(CLAUDE_1M_CONTEXT_BETA_FLAG);
+    }
+
+    if (this.useFastMode) {
+      betas.push(CLAUDE_FAST_MODE_BETA_FLAG);
+    }
+
+    return betas;
+  }
+
+  private buildBetaCreateRequestOptions(
     requestOptions: AnthropicMessageCreateParamsBase
   ): AnthropicBetaMessageCreateParamsNonStreaming {
     return {
       ...requestOptions,
       stream: false,
-      betas: [CLAUDE_1M_CONTEXT_BETA_FLAG],
+      betas: this.buildBetaFlags(),
+      speed: this.useFastMode ? "fast" : undefined,
     };
   }
 
-  private build1mContextBetaStreamRequestOptions(
+  private buildBetaStreamRequestOptions(
     requestOptions: AnthropicMessageCreateParamsBase
   ): AnthropicBetaMessageStreamParams {
     return {
       ...requestOptions,
-      betas: [CLAUDE_1M_CONTEXT_BETA_FLAG],
+      betas: this.buildBetaFlags(),
+      speed: this.useFastMode ? "fast" : undefined,
     };
   }
 
@@ -747,6 +931,20 @@ export class ClaudeChat extends BaseChatModel {
     const major = parseInt(match[1], 10);
     const minor = parseInt(match[2], 10);
     return major > 4 || (major === 4 && minor >= 6);
+  }
+
+  private static supportsFastMode(modelName: string): boolean {
+    return /claude-opus-4-6/.test(modelName);
+  }
+
+  private static normalizeRequestedInferenceType(
+    inferenceType?: PsInferenceType
+  ): PsAnthropicInferenceType | undefined {
+    if (inferenceType === "priority") {
+      return "fast";
+    }
+
+    return inferenceType === "fast" ? inferenceType : undefined;
   }
 
   private mapReasoningEffortToThinkingBudget(

@@ -14,6 +14,10 @@ type ResponseAssistantMessage = {
   content: string;
   phase?: PsAssistantMessagePhase;
 };
+type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
+type UsageItemResult = PsBaseModelReturnParameters & {
+  usageItemData?: UsageItemPayload;
+};
 
 /**
  * Interface-compatible with OpenAiChat, but uses the Responses API.
@@ -21,14 +25,32 @@ type ResponseAssistantMessage = {
  * - Uses previous_response_id for reasoning models (with store: true)
  */
 export class OpenAiResponses extends BaseChatModel {
- private client: OpenAI;
+  private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
+  private requestedInferenceType?: PsInferenceType;
   private phaseAwareModelName: string;
   private previousResponseId?: string;
   private sentToolOutputIds = new Set<string>();
   private lastSubmittedMessageCount = 0;
   private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
+
+  private getRequestedServiceTier():
+    | PsOpenAiInferenceType
+    | undefined {
+    if (this.cfg.inferenceType === "fast") {
+      return "priority";
+    }
+
+    if (
+      this.cfg.inferenceType === "flex" ||
+      this.cfg.inferenceType === "priority"
+    ) {
+      return this.cfg.inferenceType;
+    }
+
+    return undefined;
+  }
 
   constructor(config: PsOpenAiModelConfig) {
     const envAzureKey = process.env.AZURE_OPENAI_KEY;
@@ -43,6 +65,7 @@ export class OpenAiResponses extends BaseChatModel {
       modelName = "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
+    const requestedInferenceType = config.inferenceType;
     const configuredModelName =
       config.modelName ??
       process.env.PS_AI_MODEL_NAME ??
@@ -75,10 +98,44 @@ export class OpenAiResponses extends BaseChatModel {
         `Using Azure OpenAI endpoint ${baseURL} with deployment ${modelName}`
       );
     } else {
-      this.client = new OpenAI({ apiKey });
+      const enforceEuRegion = process.env.OPENAI_ENFORCE_EU_REGION === "true";
+      const effectiveRegionalProcessing =
+        config.regionalProcessing === "eu" || enforceEuRegion
+          ? "eu"
+          : undefined;
+      const effectiveInferenceType =
+        config.inferenceType === "fast" ? "priority" : config.inferenceType;
+      if (enforceEuRegion) {
+        this.logger.info(
+          "OPENAI_ENFORCE_EU_REGION is enabled; forcing OpenAI regional processing to eu"
+        );
+      }
+      const baseURL =
+        effectiveRegionalProcessing === "eu"
+          ? "https://eu.api.openai.com/v1"
+          : undefined;
+      this.client = new OpenAI({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+      });
+      if (baseURL) {
+        this.logger.info(`Using OpenAI regional processing endpoint ${baseURL}`);
+      }
+      config = {
+        ...config,
+        inferenceType: effectiveInferenceType,
+        regionalProcessing: effectiveRegionalProcessing,
+      };
     }
 
     this.cfg = { ...config, apiKey, modelName, maxTokensOut };
+    this.config = this.cfg;
+    this.requestedInferenceType = requestedInferenceType;
+    if (!this.usingAzure && this.requestedInferenceType === "fast") {
+      this.logger.info(
+        "Mapping inferenceType=fast to OpenAI service_tier=priority"
+      );
+    }
     this.phaseAwareModelName = configuredModelName;
   }
 
@@ -245,6 +302,9 @@ export class OpenAiResponses extends BaseChatModel {
       temperature: isReasoning ? undefined : this.cfg.temperature,
       max_output_tokens: this.cfg.maxTokensOut,
       safety_identifier: this.cfg.safetyIdentifier,
+      service_tier: !this.usingAzure
+        ? this.getRequestedServiceTier()
+        : undefined,
     };
 
     if (inputItems.length) {
@@ -496,6 +556,68 @@ export class OpenAiResponses extends BaseChatModel {
     return item;
   }
 
+  private buildUsageItemData(
+    response: {
+      id?: string | null;
+      previous_response_id?: string | null;
+      service_tier?: string | null;
+      usage?: Record<string, unknown> | null;
+    },
+    params: {
+      stream?: boolean;
+      tool_choice?: unknown;
+      tools?: unknown[];
+      store?: boolean;
+      service_tier?: string | null;
+      previous_response_id?: string | null;
+      model?: string;
+    },
+    usage: {
+      tokensIn: number;
+      tokensOut: number;
+      cachedInTokens: number;
+      reasoningTokens: number;
+      audioTokens: number;
+    }
+  ): UsageItemPayload {
+    return {
+      provider: this.usingAzure ? "azure" : "openaiResponses",
+      apiFamily: "responses",
+      transport: this.usingAzure ? "azure-openai-compatible" : "openai",
+      modelName: params.model ?? this.cfg.modelName,
+      request: {
+        stream: Boolean(params.stream),
+        toolChoice: params.tool_choice ?? "auto",
+        toolCount: params.tools?.length ?? 0,
+        requestedInferenceType: this.requestedInferenceType ?? null,
+        requestedServiceTier:
+          (params.service_tier as string | null | undefined) ??
+          this.getRequestedServiceTier() ??
+          null,
+        regionalProcessing: this.cfg.regionalProcessing ?? null,
+        reasoningEffort: this.cfg.reasoningEffort ?? null,
+        maxTokensOut: this.cfg.maxTokensOut ?? null,
+        store: params.store ?? null,
+        requestedPreviousResponseId: params.previous_response_id ?? null,
+      },
+      usageRaw: response.usage ?? undefined,
+      usageNormalized: {
+        tokensIn: usage.tokensIn,
+        tokensOut: usage.tokensOut,
+        cachedInTokens: usage.cachedInTokens,
+        reasoningTokens: usage.reasoningTokens,
+        audioTokens: usage.audioTokens,
+      },
+      providerMetadata: {
+        transport: this.usingAzure ? "azure-openai-compatible" : "openai",
+        responseId: response.id ?? null,
+        responsePreviousId: response.previous_response_id ?? null,
+        appliedServiceTier: response.service_tier ?? null,
+        regionalProcessing: this.cfg.regionalProcessing ?? null,
+      },
+    };
+  }
+
   private async handleStreaming(
     params: any,
     onChunk?: (c: string) => void
@@ -679,6 +801,22 @@ export class OpenAiResponses extends BaseChatModel {
     const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(finalResponse);
+    const usageItemData = this.buildUsageItemData(
+      {
+        id: finalResponse?.id ?? null,
+        previous_response_id: finalResponse?.previous_response_id ?? null,
+        service_tier: finalResponse?.service_tier ?? null,
+        usage: (usage ?? null) as Record<string, unknown> | null,
+      },
+      params,
+      {
+        tokensIn,
+        tokensOut,
+        cachedInTokens,
+        reasoningTokens,
+        audioTokens,
+      }
+    );
 
     this.logger.info(
       `Token info: ${JSON.stringify(
@@ -697,7 +835,7 @@ export class OpenAiResponses extends BaseChatModel {
       )}`
     );
 
-    return {
+    const result: UsageItemResult = {
       content: responseContent || content,
       tokensIn,
       tokensOut,
@@ -708,7 +846,10 @@ export class OpenAiResponses extends BaseChatModel {
       assistantMessages,
       orderedOutputItems,
       toolCalls,
+      usageItemData,
     };
+
+    return result;
   }
 
   private async handleNonStreaming(
@@ -738,6 +879,22 @@ export class OpenAiResponses extends BaseChatModel {
     const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
 
     const toolCalls = this.extractToolCallsFromResponse(resp);
+    const usageItemData = this.buildUsageItemData(
+      {
+        id: resp?.id ?? null,
+        previous_response_id: resp?.previous_response_id ?? null,
+        service_tier: resp?.service_tier ?? null,
+        usage: (usage ?? null) as Record<string, unknown> | null,
+      },
+      params,
+      {
+        tokensIn,
+        tokensOut,
+        cachedInTokens,
+        reasoningTokens,
+        audioTokens,
+      }
+    );
 
     this.logger.debug(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);
 
@@ -758,7 +915,7 @@ export class OpenAiResponses extends BaseChatModel {
       )}`
     );
 
-    return {
+    const result: UsageItemResult = {
       content,
       tokensIn,
       tokensOut,
@@ -769,7 +926,10 @@ export class OpenAiResponses extends BaseChatModel {
       assistantMessages,
       orderedOutputItems,
       toolCalls,
+      usageItemData,
     };
+
+    return result;
   }
 
   private extractTextFromResponse(resp: any): string {

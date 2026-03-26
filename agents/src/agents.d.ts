@@ -9,6 +9,10 @@ interface PsBaseModelClass {
 interface PsBaseModelClassNoUuid extends Omit<PsBaseModelClass, "uuid"> {}
 
 type PsReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
+type PsInferenceType = "flex" | "priority" | "fast";
+type PsOpenAiInferenceType = Extract<PsInferenceType, "flex" | "priority">;
+type PsOpenAiRegionalProcessing = "eu";
+type PsAnthropicInferenceType = Extract<PsInferenceType, "fast">;
 type PsAssistantMessagePhase = "commentary" | "final_answer";
 interface PsAssistantResponseMessage {
   content: string;
@@ -38,6 +42,8 @@ interface PsAiModelConfig {
   apiKey: string;
   modelName: string;
   provider?: string;
+  inferenceType?: PsInferenceType;
+  regionalProcessing?: PsOpenAiRegionalProcessing;
   maxTokensOut?: number;
   maxContextTokens?: number;
   modelType: import("./aiModelTypes.js").PsAiModelType;
@@ -62,6 +68,8 @@ interface PsCallModelOptions {
   useThoughtSignatures?: boolean;
   modelName?: string;
   modelType?: import("./aiModelTypes.js").PsAiModelType;
+  inferenceType?: PsInferenceType;
+  regionalProcessing?: PsOpenAiRegionalProcessing;
   modelTemperature?: number;
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
@@ -155,6 +163,33 @@ interface ToolCall {
   arguments: Record<string, unknown>;
 }
 
+interface PsModelUsageItemProviderData extends Record<string, unknown> {
+  apiFamily: string;
+  request?: Record<string, unknown>;
+  usageRaw?: Record<string, unknown>;
+  usageNormalized?: PsModelUsageNormalizedCounts;
+  providerMetadata?: Record<string, unknown>;
+}
+
+interface PsModelUsageItemSaveContext {
+  modelName: string;
+  modelProvider: string;
+  prices: PsBaseModelPriceConfiguration;
+  modelType: import("./aiModelTypes.js").PsAiModelType;
+  modelSize: import("./aiModelTypes.js").PsAiModelSize;
+  tokensIn: number;
+  cachedInTokens: number;
+  tokensOut: number;
+  reasoningTokens?: number;
+  audioTokens?: number;
+  streaming: boolean;
+  modelId?: number;
+  connectorId?: number;
+  inferenceType?: string;
+  regionalProcessing?: string;
+  usageItemData?: PsModelUsageItemProviderData;
+}
+
 // Configuration for a single evaluation criterion
 interface PsAgentEvalCriterionConfig {
   uuid: string;
@@ -173,6 +208,7 @@ interface PsBaseModelReturnParameters {
   cachedInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
+  usageItemData?: PsModelUsageItemProviderData;
   phase?: PsAssistantMessagePhase;
   assistantMessages?: PsAssistantResponseMessage[];
   orderedOutputItems?: PsResponseOutputItem[];
@@ -203,6 +239,19 @@ interface PsBaseModelPriceConfiguration {
   longContextCostInCachedContextTokensPerMillion?: number;
   longContextCostOutTokensPerMillion?: number;
   longContextTokenThreshold?: number;
+  // Percentage uplift, e.g. 10 means 10%.
+  regionalProcessingMargin?: number;
+  flexTokensIn?: number;
+  flexTokensCachedIn?: number;
+  flexTokensOut?: number;
+  priorityTokensIn?: number;
+  priorityTokensCachedIn?: number;
+  priorityTokensOut?: number;
+  fastTokensIn?: number;
+  fastTokensCachedIn?: number;
+  fastTokensOut?: number;
+  // Undefined behaves as false to preserve current pricing behavior.
+  flexPriorityTokensEnabledOnLongContext?: boolean;
   currency: string;
 }
 
@@ -215,6 +264,8 @@ interface PsAiModelConfiguration {
   modelSize:  import("./aiModelTypes.js").PsAiModelSize;
   model: string;
   provider: string;
+  inferenceType?: PsInferenceType;
+  regionalProcessing?: PsOpenAiRegionalProcessing;
   active: boolean;
   prices: PsBaseModelPriceConfiguration;
   maxTokensOut: number;
@@ -265,6 +316,83 @@ interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
   long_context_token_out_image_count?: number;
   agent_id?: number;
   connector_id?: number;
+}
+
+interface PsModelUsageAccountingSnapshot {
+  tokenInCount: number;
+  tokenOutCount: number;
+  tokenInCachedContextCount: number;
+  longContextTokenInCount: number;
+  longContextTokenInCachedContextCount: number;
+  longContextTokenOutCount: number;
+  longContextApplied: boolean;
+  longContextTokenThreshold?: number;
+}
+
+type PsModelUsageLegacyAccountingSnapshot = PsModelUsageAccountingSnapshot;
+
+interface PsModelUsageNormalizedCounts {
+  tokensIn: number;
+  tokensOut: number;
+  cachedInTokens?: number;
+  reasoningTokens?: number;
+  audioTokens?: number;
+  imageTokens?: number;
+  cacheReadInputTokens?: number;
+}
+
+interface PsModelUsageTokenCounts {
+  token_in_count: number;
+  token_out_count: number;
+  token_in_cached_context_count?: number;
+  token_out_reasoning_count?: number;
+  token_out_audio_count?: number;
+  token_out_image_count?: number;
+  long_context_token_in_count?: number;
+  long_context_token_in_cached_context_count?: number;
+  long_context_token_out_count?: number;
+  long_context_token_out_reasoning_count?: number;
+  long_context_token_out_audio_count?: number;
+  long_context_token_out_image_count?: number;
+}
+
+interface PsModelUsageItemData {
+  version: 1;
+  provider: string;
+  apiFamily: string;
+  timestamp: string;
+  model: {
+    id?: number;
+    name: string;
+    type: import("./aiModelTypes.js").PsAiModelType;
+    size: import("./aiModelTypes.js").PsAiModelSize;
+  };
+  actor: {
+    userId: number;
+    agentId: number;
+    connectorId?: number;
+  };
+  request: Record<string, unknown>;
+  pricing: {
+    configuredPrices: PsBaseModelPriceConfiguration;
+    effectivePrices?: PsBaseModelPriceConfiguration;
+    inferenceType?: string;
+    regionalProcessing?: string;
+  };
+  usage?: PsModelUsageTokenCounts;
+  usageNormalized?: PsModelUsageNormalizedCounts;
+  accountingSnapshot?: PsModelUsageAccountingSnapshot;
+  legacyAccountingSnapshot?: PsModelUsageLegacyAccountingSnapshot;
+  providerData?: PsModelUsageItemProviderData;
+  usageRaw?: Record<string, unknown>;
+  providerMetadata?: Record<string, unknown>;
+}
+
+interface PsModelUsageItemAttributes extends PsBaseModelClassNoUuid {
+  model_id: number;
+  agent_id: number;
+  connector_id?: number;
+  data: PsModelUsageItemData;
 }
 
 // tablename "ps_external_api_usage"
@@ -530,6 +658,7 @@ interface PsAgentCostResults {
 
 interface PsDetailedAgentCostResults {
   createdAt: Date;
+  agentId?: number;
   agentName: string;
   aiModelName: string;
   tokenInCount: number;

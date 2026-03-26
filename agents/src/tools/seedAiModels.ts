@@ -70,6 +70,64 @@ const openAiGpt4oMiniConfig: PsAiModelConfiguration = {
   active: true
 };
 
+const openAiGpt54Config: PsAiModelConfiguration = {
+  type: PsAiModelType.TextReasoning,
+  modelSize: PsAiModelSize.Large,
+  provider: "openai",
+  prices: {
+    costInTokensPerMillion: 2.5,
+    costOutTokensPerMillion: 15.0,
+    costInCachedContextTokensPerMillion: 0.25,
+    longContextTokenThreshold: 272_000,
+    longContextCostInTokensPerMillion: 5.0,
+    longContextCostInCachedContextTokensPerMillion: 0.5,
+    longContextCostOutTokensPerMillion: 22.5,
+    regionalProcessingMargin: 10,
+    flexTokensIn: 1.25,
+    flexTokensCachedIn: 0.125,
+    flexTokensOut: 7.5,
+    priorityTokensIn: 5.0,
+    priorityTokensCachedIn: 0.5,
+    priorityTokensOut: 30.0,
+    flexPriorityTokensEnabledOnLongContext: false,
+    currency: "USD",
+  },
+  maxTokensOut: 128000,
+  maxContextTokens: 1050000,
+  defaultTemperature: 0.7,
+  model: "gpt-5.4",
+  active: true
+};
+
+const openAiGpt54ProConfig: PsAiModelConfiguration = {
+  type: PsAiModelType.TextReasoning,
+  modelSize: PsAiModelSize.Large,
+  provider: "openai",
+  prices: {
+    costInTokensPerMillion: 30.0,
+    costOutTokensPerMillion: 180.0,
+    costInCachedContextTokensPerMillion: 0.0,
+    longContextTokenThreshold: 272_000,
+    longContextCostInTokensPerMillion: 60.0,
+    longContextCostInCachedContextTokensPerMillion: 0.0,
+    longContextCostOutTokensPerMillion: 270.0,
+    regionalProcessingMargin: 10,
+    flexTokensIn: 15.0,
+    flexTokensCachedIn: 0.0,
+    flexTokensOut: 90.0,
+    priorityTokensIn: 60.0,
+    priorityTokensCachedIn: 0.0,
+    priorityTokensOut: 360.0,
+    flexPriorityTokensEnabledOnLongContext: false,
+    currency: "USD",
+  },
+  maxTokensOut: 128000,
+  maxContextTokens: 1050000,
+  defaultTemperature: 0.7,
+  model: "gpt-5.4-pro",
+  active: true,
+};
+
 const openAiGpt4 = await PsAiModel.create({
   name: "GPT-4o",
   organization_id: 1,
@@ -82,6 +140,20 @@ const openAiGpt4Mini = await PsAiModel.create({
   organization_id: 1,
   user_id: user.id,
   configuration: openAiGpt4oMiniConfig,
+});
+
+const openAiGpt54 = await PsAiModel.create({
+  name: "GPT-5.4",
+  organization_id: 1,
+  user_id: user.id,
+  configuration: openAiGpt54Config,
+});
+
+const openAiGpt54Pro = await PsAiModel.create({
+  name: "GPT-5.4 Pro",
+  organization_id: 1,
+  user_id: user.id,
+  configuration: openAiGpt54ProConfig,
 });
 // Create a group with both AI model API keys
 await Group.create({
@@ -102,6 +174,14 @@ await Group.create({
     },
     {
       aiModelId: openAiGpt4Mini.id,
+      apiKey: process.env.OPENAI_API_KEY || "",
+    },
+    {
+      aiModelId: openAiGpt54.id,
+      apiKey: process.env.OPENAI_API_KEY || "",
+    },
+    {
+      aiModelId: openAiGpt54Pro.id,
       apiKey: process.env.OPENAI_API_KEY || "",
     }
   ]

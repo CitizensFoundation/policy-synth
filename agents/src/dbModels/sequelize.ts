@@ -47,12 +47,24 @@ if (process.env.NODE_ENV === "production") {
     sequelize = new Sequelize(process.env.DATABASE_URL!, {
       dialect: "postgres",
       dialectOptions: {
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10000,
         ssl: {
           rejectUnauthorized: false,
         },
       },
       minifyAliases: true,
       pool: poolConfig,
+      retry: {
+        max: 3,
+        match: [
+          /ECONNRESET/i,
+          /ETIMEDOUT/i,
+          /SequelizeConnectionError/i,
+          /SequelizeConnectionTimedOutError/i,
+          /57P01/i,
+        ],
+      },
       logging: process.env.PS_LOG_SQL === "true" ? logQuery : false,
       operatorsAliases: {} as any, // You might want to define this properly
     });

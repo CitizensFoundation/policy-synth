@@ -29,9 +29,15 @@ const parseModelAllowlist = (value?: string): Set<string> => {
   );
 };
 
+type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
+type UsageItemResult = PsBaseModelReturnParameters & {
+  usageItemData?: UsageItemPayload;
+};
+
 export class GoogleGeminiChat extends BaseChatModel {
   readonly ai: GoogleGenAI;
   readonly modelName: string;
+  readonly useVertex: boolean;
 
   constructor(config: PsAiModelConfig) {
     super(
@@ -50,6 +56,8 @@ export class GoogleGeminiChat extends BaseChatModel {
     );
     const useVertex =
       process.env.USE_GOOGLE_VERTEX_AI === "true" || useVertexForModel;
+    this.useVertex = useVertex;
+
     this.ai = useVertex
       ? new GoogleGenAI({
           vertexai: true,
@@ -156,6 +164,68 @@ export class GoogleGeminiChat extends BaseChatModel {
       "/tmp/geminiTokenDebug.csv",
       `${this.modelName},${tokensIn},${tokensOut},${cached}\n`
     );
+  }
+
+  private buildUsageItemData(
+    usageRaw: Record<string, unknown> | null | undefined,
+    request: {
+      stream: boolean;
+      toolChoice: ChatCompletionToolChoiceOption | "auto";
+      toolCount: number;
+      allowedFunctionNames?: string[];
+      systemInstructionPresent: boolean;
+    },
+    usage: {
+      tokensIn: number;
+      tokensOut: number;
+      cachedInTokens: number;
+      reasoningTokens: number;
+    }
+  ): UsageItemPayload {
+    const transport = this.useVertex ? "vertex" : "google-genai";
+
+    return {
+      provider: "google",
+      apiFamily: "generateContent",
+      transport,
+      modelName: this.modelName,
+      request: {
+        stream: request.stream,
+        toolChoice: request.toolChoice,
+        toolCount: request.toolCount,
+        allowedFunctionNames: request.allowedFunctionNames ?? null,
+        systemInstructionPresent: request.systemInstructionPresent,
+        maxTokensOut: this.maxTokensOut ?? null,
+      },
+      usageRaw: usageRaw ?? undefined,
+      usageNormalized: {
+        tokensIn: usage.tokensIn,
+        tokensOut: usage.tokensOut,
+        cachedInTokens: usage.cachedInTokens,
+        reasoningTokens: usage.reasoningTokens,
+      },
+      providerMetadata: {
+        transport,
+        project: this.useVertex
+          ? process.env.GOOGLE_CLOUD_PROJECT ?? null
+          : null,
+        location: this.useVertex
+          ? process.env.GOOGLE_CLOUD_LOCATION ?? null
+          : null,
+        promptTokenCount:
+          (usageRaw?.promptTokenCount as number | undefined) ?? null,
+        candidatesTokenCount:
+          (usageRaw?.candidatesTokenCount as number | undefined) ?? null,
+        thoughtsTokenCount:
+          (usageRaw?.thoughtsTokenCount as number | undefined) ?? null,
+        toolUsePromptTokenCount:
+          (usageRaw?.toolUsePromptTokenCount as number | undefined) ?? null,
+        totalTokenCount:
+          (usageRaw?.totalTokenCount as number | undefined) ?? null,
+        cachedContentTokenCount:
+          (usageRaw?.cachedContentTokenCount as number | undefined) ?? null,
+      },
+    };
   }
 
   static safetySettings = [
@@ -302,22 +372,45 @@ export class GoogleGeminiChat extends BaseChatModel {
       }
 
       const usage = last?.usageMetadata ?? {};
-      const tokensIn = usage.promptTokenCount ?? 0;
+      const tokensIn =
+        (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
       const tokensOut = this.tokensOut(usage);
       const cached = usage.cachedContentTokenCount ?? 0;
+      const reasoningTokens = usage.thoughtsTokenCount ?? 0;
       await this.logTokens(tokensIn, tokensOut, cached);
 
-      return {
+      const result: UsageItemResult = {
         content: text,
         tokensIn,
         tokensOut,
         cachedInTokens: cached,
+        reasoningTokens,
         toolCalls: toolCalls.map((fc) => ({
           id: fc.id ?? "",
           name: fc.name ?? "unknown",
           arguments: (fc.args as Record<string, unknown>) ?? {},
         })),
+        usageItemData: this.buildUsageItemData(
+          (last?.usageMetadata as Record<string, unknown> | null | undefined) ??
+            null,
+          {
+            stream: true,
+            toolChoice,
+            toolCount: functionDeclarations?.length ?? 0,
+            allowedFunctionNames:
+              toolConfig?.functionCallingConfig?.allowedFunctionNames,
+            systemInstructionPresent: Boolean(systemInstruction),
+          },
+          {
+            tokensIn,
+            tokensOut,
+            cachedInTokens: cached,
+            reasoningTokens,
+          }
+        ),
       };
+
+      return result;
     }
 
     /* ========== non‑streaming ========== */
@@ -326,23 +419,46 @@ export class GoogleGeminiChat extends BaseChatModel {
     this.handleFinalResponse(response);
 
     const usage = response.usageMetadata ?? {};
-    const tokensIn = usage.promptTokenCount ?? 0;
+    const tokensIn =
+      (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
     const tokensOut = this.tokensOut(usage);
     const cached = usage.cachedContentTokenCount ?? 0;
+    const reasoningTokens = usage.thoughtsTokenCount ?? 0;
     this.logger.debug("Gemini usage: " + JSON.stringify(usage, null, 2));
     await this.logTokens(tokensIn, tokensOut, cached);
 
-    return {
+    const result: UsageItemResult = {
       content: response.text || "",
       tokensIn,
       tokensOut,
       cachedInTokens: cached,
+      reasoningTokens,
       toolCalls: (response.functionCalls ?? []).map((fc) => ({
         id: fc.id ?? "",
         name: fc.name ?? "unknown",
         arguments: (fc.args as Record<string, unknown>) ?? {},
       })),
+      usageItemData: this.buildUsageItemData(
+        (response.usageMetadata as Record<string, unknown> | null | undefined) ??
+          null,
+        {
+          stream: false,
+          toolChoice,
+          toolCount: functionDeclarations?.length ?? 0,
+          allowedFunctionNames:
+            toolConfig?.functionCallingConfig?.allowedFunctionNames,
+          systemInstructionPresent: Boolean(systemInstruction),
+        },
+        {
+          tokensIn,
+          tokensOut,
+          cachedInTokens: cached,
+          reasoningTokens,
+        }
+      ),
     };
+
+    return result;
   }
 
   protected handleStreamChunk(_chunk: GenerateContentResponse) {

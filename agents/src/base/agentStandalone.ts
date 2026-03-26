@@ -81,6 +81,12 @@ export class PolicySynthStandaloneAgent extends PolicySynthAgentBase {
         });
       }
     };
+
+    this.modelManager.saveTokenUsageItem = async (
+      _ctx: PsModelUsageItemSaveContext
+    ) => {
+      return;
+    };
   }
 
   /**
