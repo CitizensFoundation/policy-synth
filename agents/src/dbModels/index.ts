@@ -64,6 +64,8 @@ const isAlreadyExistsError = (error: unknown) => {
   return code === "42P07" || message.toLowerCase().includes("already exists");
 };
 
+let applicationLevelSyncPromise: Promise<void> | undefined;
+
 const applicationLevelSync = async () => {
   const queryInterface = sequelize.getQueryInterface();
 
@@ -142,6 +144,21 @@ const applicationLevelSync = async () => {
   }
 };
 
+const ensureApplicationLevelSync = async () => {
+  if (process.env.SYNC_DB_FOR_APP !== "true") {
+    return;
+  }
+
+  if (!applicationLevelSyncPromise) {
+    applicationLevelSyncPromise = applicationLevelSync().catch((error) => {
+      applicationLevelSyncPromise = undefined;
+      throw error;
+    });
+  }
+
+  await applicationLevelSyncPromise;
+};
+
 const initializeModels = async () => {
   try {
     // Call associate method to set up associations
@@ -151,9 +168,7 @@ const initializeModels = async () => {
       }
     }
 
-    if (process.env.SYNC_DB_FOR_APP === "true") {
-      await applicationLevelSync();
-    }
+    await ensureApplicationLevelSync();
 
     if (process.env.FORCE_DB_SYNC || process.env.NODE_ENV === "development") {
       sequelize.sync().then(async () => {
@@ -173,6 +188,7 @@ export {
   models,
   initializeModels,
   applicationLevelSync,
+  ensureApplicationLevelSync,
   sequelize,
   PsAgentConnectorClass,
   User,

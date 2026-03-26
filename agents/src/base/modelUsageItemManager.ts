@@ -6,6 +6,9 @@ let sequelize: Sequelize | undefined;
 let PsModelUsageItem:
   | (typeof import("../dbModels/modelUsageItem.js"))["PsModelUsageItem"]
   | undefined;
+let ensureApplicationLevelSync:
+  | (typeof import("../dbModels/index.js"))["ensureApplicationLevelSync"]
+  | undefined;
 let loadDbModulesPromise: Promise<void> | undefined;
 
 async function loadDbModules() {
@@ -15,8 +18,14 @@ async function loadDbModules() {
 
   if (!loadDbModulesPromise) {
     loadDbModulesPromise = (async () => {
-      ({ sequelize } = await import("../dbModels/index.js"));
+      ({ sequelize, ensureApplicationLevelSync } = await import(
+        "../dbModels/index.js"
+      ));
       ({ PsModelUsageItem } = await import("../dbModels/modelUsageItem.js"));
+
+      if (ensureApplicationLevelSync) {
+        await ensureApplicationLevelSync();
+      }
     })();
   }
 

@@ -1,6 +1,6 @@
 import { QueryTypes } from "sequelize";
 
-import { sequelize } from "../dbModels/index.js";
+import { ensureApplicationLevelSync, sequelize } from "../dbModels/index.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { resolvePriceConfigurationForContext } from "../base/modelPriceUtils.js";
 
@@ -401,6 +401,8 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
     if (agentIds.length === 0) {
       return [];
     }
+
+    await ensureApplicationLevelSync();
 
     return sequelize.query<PsUsageItemRow>(
       `
