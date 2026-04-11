@@ -1,7 +1,6 @@
 import { HTTPResponse, Page, Browser } from "puppeteer";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
-import { PdfReader } from "pdfreader";
 import axios from "axios";
 import crypto from "crypto";
 
@@ -17,6 +16,7 @@ const readFileAsync = promisify(readFile);
 import { htmlToText } from "html-to-text";
 
 import { PolicySynthSimpleAgentBase } from "../base/simpleAgent.js";
+import { extractTextFromPdfBuffer } from "../base/pdfText.js";
 
 //@ts-ignore
 puppeteer.use(StealthPlugin());
@@ -440,7 +440,6 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
     return new Promise<void>(async (resolve, reject) => {
       this.logger.info("getAndProcessPdf");
 
-      //TODO: Get PdfReader working with those (or use another library)
       const brokenPdfUrls = [
         "https://www.hi.is/sites/default/files/bgisla/hi_2018_final_minna.pdf",
         "https://www.umbodsmadur.is/asset/10316/skyrsla-umbodsmanns-althingis-1995.pdf",
@@ -464,7 +463,6 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
       }
 
       try {
-        let finalText = "";
         let pdfBuffer;
 
         const directoryPath = `webPagesCache/${
@@ -514,36 +512,17 @@ export class BaseGetWebPagesAgent extends PolicySynthSimpleAgentBase {
         }
 
         if (pdfBuffer && pdfBuffer.length > 0) {
-          //this.logger.debug(pdfBuffer.toString().slice(0, 100));
           try {
-            new PdfReader({ debug: false }).parseBuffer(
-              pdfBuffer,
-              async (err: any, item: any) => {
-                if (err) {
-                  this.logger.error(`Error parsing PDF ${url}`);
-                  this.logger.error(err);
-                  resolve();
-                } else if (!item) {
-                  finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-                  /*this.logger.debug(
-                    `Got final PDF text: ${
-                      finalText ? finalText.slice(0, 100) : ""
-                    }`
-                  );*/
-                  await this.processPageText(
-                    finalText,
-                    subProblemIndex,
-                    url,
-                    type,
-                    entityIndex,
-                    policy
-                  );
-                  resolve();
-                } else if (item.text) {
-                  finalText += item.text + " ";
-                }
-              }
+            const finalText = await extractTextFromPdfBuffer(pdfBuffer);
+            await this.processPageText(
+              finalText,
+              subProblemIndex,
+              url,
+              type,
+              entityIndex,
+              policy
             );
+            resolve();
           } catch (e) {
             this.logger.error(`No PDF buffer`);
             this.logger.error(e);

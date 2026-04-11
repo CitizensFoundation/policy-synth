@@ -1,11 +1,11 @@
 import puppeteer, { Browser, Page } from "puppeteer";
-import { PdfReader } from "pdfreader";
 import axios from "axios";
+import { extractTextFromPdfBuffer } from "../base/pdfText.js";
 
 /**
  * Minimal Puppeteer-based scraper class that supports:
  *  - Shared/static Puppeteer browser instance.
- *  - PDF parsing (via pdfreader) if URL ends with .pdf.
+ *  - PDF parsing if URL ends with .pdf.
  *  - HTML scraping if URL is not a PDF.
  */
 export class WebScraper {
@@ -30,7 +30,7 @@ export class WebScraper {
 
   /**
    * This method scrapes the provided URL:
-   *  1. If it's a PDF (ends with ".pdf"), we fetch + parse text with pdfreader.
+   *  1. If it's a PDF (ends with ".pdf"), we fetch + parse text.
    *  2. Otherwise, we load the URL in Puppeteer, returning the text + HTML.
    *
    *  skipImages: If true, will intercept & block image requests for speed.
@@ -61,9 +61,9 @@ export class WebScraper {
   }
 
   /**
-   * Minimal PDF scraping with pdfreader:
+   * Minimal PDF scraping:
    * - We do a direct Axios GET for the URL as `arraybuffer`.
-   * - Use pdfreader to parse text line-by-line.
+   * - Use the shared PDF parser helper to extract text.
    * - Return a combined text in `pdfText`.
    */
   private async scrapePdf(url: string): Promise<{
@@ -83,27 +83,7 @@ export class WebScraper {
         };
       }
 
-      // We'll parse PDF text asynchronously with pdfreader
-      const pdfText = await new Promise<string>((resolve, reject) => {
-        let finalText = "";
-        try {
-          new PdfReader({}).parseBuffer(pdfBuffer, (err, item) => {
-            if (err) {
-              return reject(err);
-            }
-            // 'item === null' means we've reached end of the PDF
-            if (!item) {
-              return resolve(finalText.trim());
-            }
-            if (item.text) {
-              // Accumulate text content
-              finalText += item.text + " ";
-            }
-          });
-        } catch (error) {
-          reject(error);
-        }
-      });
+      const pdfText = await extractTextFromPdfBuffer(pdfBuffer);
 
       return {
         success: true,

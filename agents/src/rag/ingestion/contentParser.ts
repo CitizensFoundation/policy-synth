@@ -1,6 +1,6 @@
-import { PdfReader } from "pdfreader";
 import { htmlToText } from "html-to-text";
 import mammoth from "mammoth";
+import { extractTextFromPdfBuffer } from "../../base/pdfText.js";
 
 //TODO: Has a high severity vulnerability 20.2.25
 //import * as XLSX from "xlsx";
@@ -9,19 +9,7 @@ import path from "path";
 
 export class IngestionContentParser {
   async parsePdf(pdfBuffer: Buffer): Promise<string> {
-    return new Promise((resolve, reject) => {
-      let text = '';
-      //@ts-ignore //TODO: CHECK
-      new PdfReader().parseBuffer(pdfBuffer, (err: Error | null, item: any) => { // Specify types for err and item
-        if (err) {
-          reject(err);
-        } else if (!item) {
-          resolve(text);
-        } else if (item.text) {
-          text += item.text + ' ';
-        }
-      });
-    });
+    return extractTextFromPdfBuffer(pdfBuffer);
   }
 
   parseHtml(htmlText: string): string {

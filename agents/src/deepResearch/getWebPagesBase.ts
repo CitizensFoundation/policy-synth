@@ -7,10 +7,10 @@ import { gunzipSync, gzipSync } from "zlib";
 import puppeteer from "puppeteer-extra";
 import StealthPlugin from "puppeteer-extra-plugin-stealth";
 import { htmlToText } from "html-to-text";
-import { PdfReader } from "pdfreader";
 import { PolicySynthAgent } from "../base/agent.js";
 import { PsAgent } from "../dbModels/agent.js";
 import { FirecrawlScrapeAgent } from "./fireCrawlApi.js";
+import { extractTextFromPdfBuffer } from "../base/pdfText.js";
 
 puppeteer.use(StealthPlugin());
 
@@ -166,29 +166,18 @@ export class GetWebPagesBaseAgent extends PolicySynthAgent {
       await browser.close();
     }
 
-    return new Promise((resolve) => {
-      if (!pdfBuffer) {
-        this.logger.error("No PDF buffer available");
-        return resolve("");
-      }
+    if (!pdfBuffer) {
+      this.logger.error("No PDF buffer available");
+      return "";
+    }
 
-      let finalText = "";
-      new PdfReader({ debug: false }).parseBuffer(
-        pdfBuffer,
-        (err: any, item: any) => {
-          if (err) {
-            this.logger.error(`Error parsing PDF ${url}`);
-            this.logger.error(err);
-            return resolve("");
-          } else if (!item) {
-            finalText = finalText.replace(/(\r\n|\n|\r){3,}/gm, "\n\n");
-            resolve(finalText);
-          } else if (item.text) {
-            finalText += item.text + " ";
-          }
-        }
-      );
-    });
+    try {
+      return await extractTextFromPdfBuffer(pdfBuffer);
+    } catch (error) {
+      this.logger.error(`Error parsing PDF ${url}`);
+      this.logger.error(error);
+      return "";
+    }
   }
 
   /**
