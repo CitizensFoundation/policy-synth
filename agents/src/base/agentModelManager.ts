@@ -70,6 +70,7 @@ async function loadDbModules() {
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   private modelUsageItemManager = new PsModelUsageItemManager();
+  private statefulResponsesModelCache: Map<string, BaseChatModel> = new Map();
   models: Map<string, BaseChatModel> = new Map();
   modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
   modelIds: Map<string, number> = new Map();
@@ -85,6 +86,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   limitedLLMmaxRetryCount = 5;
   mainLLMmaxRetryCount = 50;
+  maxStatefulResponsesModelCacheEntries: number = Math.max(
+    1,
+    Number.parseInt(
+      process.env.PS_RESPONSES_STATEFUL_CACHE_MAX_ENTRIES || "100",
+      10
+    ) || 100
+  );
   modelCallTimeoutMs: number = parseInt(
     process.env.PS_MODEL_CALL_TIMEOUT_MS || "600000"
   );
@@ -452,7 +460,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelTemperature ??
         dbConfig?.defaultTemperature ??
         this.modelTemperature,
-      safetyIdentifier: options.safetyIdentifier,
       reasoningEffort:
         options.modelReasoningEffort ?? (this.reasoningEffort as any),
       maxThinkingTokens:
@@ -467,13 +474,28 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       `Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`
     );
 
-    // Try to reuse a cached ephemeral model keyed by configuration and variant-specific options
+    const usesOpenAiResponses =
+      provider.toLowerCase() === PsAiModelProvider.OpenAIResponses.toLowerCase() ||
+      (provider.toLowerCase() === PsAiModelProvider.OpenAI &&
+        Boolean(options.useOpenAiResponsesIfOpenAi));
+    const responsesStateKey = this.getResponsesStateKey(options);
+
+    // Try to reuse a cached ephemeral model keyed by configuration and variant-specific options.
+    // OpenAI Responses instances keep continuation state, scoped by an explicit
+    // conversation/thread key when provided, otherwise by safetyIdentifier for
+    // backward-compatible reuse. If neither is present, fall back to the
+    // original config-scoped cache behavior.
     const cacheKey = JSON.stringify({
       config: ephemeralConfig,
       useThoughtSignatures: Boolean(options.useThoughtSignatures),
       useOpenAiResponsesIfOpenAi: Boolean(options.useOpenAiResponsesIfOpenAi),
+      responsesStateKey: usesOpenAiResponses ? responsesStateKey : undefined,
     });
-    const cachedModel = this.models.get(cacheKey);
+    const useStatefulResponsesCache =
+      usesOpenAiResponses && Boolean(responsesStateKey);
+    const cachedModel = useStatefulResponsesCache
+      ? this.getCachedStatefulResponsesModel(cacheKey)
+      : this.models.get(cacheKey);
     if (cachedModel) {
       this.logger.debug(`Using cached ephemeral model for config: ${cacheKey}`);
       return cachedModel;
@@ -532,8 +554,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     ephemeralModel.provider = provider;
 
     // Cache the ephemeral model so subsequent calls reuse the instance
-    this.models.set(cacheKey, ephemeralModel);
-    this.modelIds.set(cacheKey, dbModel?.id ?? -1);
+    if (useStatefulResponsesCache) {
+      this.cacheStatefulResponsesModel(cacheKey, ephemeralModel);
+    } else {
+      this.models.set(cacheKey, ephemeralModel);
+      this.modelIds.set(cacheKey, dbModel?.id ?? -1);
+    }
 
     return ephemeralModel;
   }
@@ -696,6 +722,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         throw new Error(`No model available for type ${modelType}`);
       }
     }
+
+    model = this.getStateIsolatedResponsesModel(model, options);
 
     return this.runTextModelCall(
       model,
@@ -931,6 +959,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
         const timeoutMs = model.config.timeoutMs ?? this.modelCallTimeoutMs;
+        const requestOptions = this.getModelRequestOptions(options);
         const results = (await this.callWithTimeout(
           model,
           messages,
@@ -939,7 +968,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           options.promptImages,
           options.functions,
           options.toolChoice,
-          options.allowedTools
+          options.allowedTools,
+          requestOptions
         )) as PsBaseModelReturnParameters | undefined;
 
         if (results) {
@@ -1169,6 +1199,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 regionalProcessing: options.regionalProcessing,
                 modelTemperature: options.modelTemperature,
                 safetyIdentifier: options.safetyIdentifier,
+                responsesStateKey: options.responsesStateKey,
                 maxTokensOut: options.maxTokensOut,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
@@ -1209,6 +1240,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 );
                 const timeoutMs =
                   fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
+                const requestOptions = this.getModelRequestOptions(options);
                 const fallbackResults = (await this.callWithTimeout(
                   fallbackEphemeral,
                   messages,
@@ -1217,7 +1249,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   options.promptImages,
                   options.functions,
                   options.toolChoice,
-                  options.allowedTools
+                  options.allowedTools,
+                  requestOptions
                 )) as PsBaseModelReturnParameters | undefined;
 
                 if (fallbackResults) {
@@ -1391,6 +1424,102 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     throw new Error("Model call failed after maximum retries");
   }
 
+  private getStateIsolatedResponsesModel(
+    model: BaseChatModel,
+    options: PsCallModelOptions
+  ): BaseChatModel {
+    if (!(model instanceof OpenAiResponses)) {
+      return model;
+    }
+
+    const responsesStateKey = this.getResponsesStateKey(options);
+    if (!responsesStateKey) {
+      return model;
+    }
+
+    const cacheKey = JSON.stringify({
+      configuredResponsesModelId: model.dbModelId ?? null,
+      configuredResponsesModelName: String(model.modelName),
+      configuredResponsesProvider: model.provider ?? null,
+      configuredResponsesStateKey: responsesStateKey,
+    });
+    const cachedModel = this.getCachedStatefulResponsesModel(cacheKey);
+    if (cachedModel) {
+      return cachedModel;
+    }
+
+    const isolatedModel = new OpenAiResponses(model.getCloneConfig());
+    isolatedModel.provider = model.provider;
+    isolatedModel.dbModelId = model.dbModelId;
+    this.cacheStatefulResponsesModel(cacheKey, isolatedModel);
+
+    return isolatedModel;
+  }
+
+  private getCachedStatefulResponsesModel(
+    cacheKey: string
+  ): BaseChatModel | undefined {
+    const cachedModel = this.statefulResponsesModelCache.get(cacheKey);
+    if (!cachedModel) {
+      return undefined;
+    }
+
+    this.statefulResponsesModelCache.delete(cacheKey);
+    this.statefulResponsesModelCache.set(cacheKey, cachedModel);
+    return cachedModel;
+  }
+
+  private cacheStatefulResponsesModel(
+    cacheKey: string,
+    model: BaseChatModel
+  ): void {
+    if (this.statefulResponsesModelCache.has(cacheKey)) {
+      this.statefulResponsesModelCache.delete(cacheKey);
+    }
+
+    this.statefulResponsesModelCache.set(cacheKey, model);
+
+    while (
+      this.statefulResponsesModelCache.size >
+      this.maxStatefulResponsesModelCacheEntries
+    ) {
+      const oldestKey = this.statefulResponsesModelCache.keys().next()
+        .value as string | undefined;
+      if (!oldestKey) {
+        break;
+      }
+
+      this.statefulResponsesModelCache.delete(oldestKey);
+      this.logger.debug(
+        `Evicted stateful OpenAI Responses model from cache: ${oldestKey}`
+      );
+    }
+  }
+
+  private getResponsesStateKey(
+    options: PsCallModelOptions
+  ): string | undefined {
+    const responsesStateKey = options.responsesStateKey?.trim();
+    if (responsesStateKey) {
+      return responsesStateKey;
+    }
+
+    const safetyIdentifier = options.safetyIdentifier?.trim();
+    return safetyIdentifier ? safetyIdentifier : undefined;
+  }
+
+  private getModelRequestOptions(
+    options: PsCallModelOptions
+  ): PsModelRequestOptions | undefined {
+    if (!options.safetyIdentifier) {
+      return undefined;
+    }
+
+    return {
+      safetyIdentifier: options.safetyIdentifier,
+    };
+  }
+
   private callWithTimeout(
     model: BaseChatModel,
     messages: PsModelMessage[],
@@ -1399,7 +1528,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     media?: { mimeType: string; data: string }[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
-    allowedTools?: string[]
+    allowedTools?: string[],
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters | undefined> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(
@@ -1414,7 +1544,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           media,
           tools,
           toolChoice,
-          allowedTools
+          allowedTools,
+          requestOptions
         )
         .then((res) => {
           clearTimeout(timer);

@@ -75,6 +75,14 @@ interface PsCallModelOptions {
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: PsReasoningEffort;
   safetyIdentifier?: string;
+  /**
+   * Optional local conversation/thread key used to isolate OpenAI Responses
+   * continuation state. Pass a stable key per conversation if you want
+   * previous_response_id reuse with conversation/task scope. If omitted, the
+   * model manager falls back to safetyIdentifier for backward-compatible
+   * user-scoped continuation reuse.
+   */
+  responsesStateKey?: string;
   retryLimitFor429sUntilFallback?: number;
   fallbackModelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   fallbackModelName?: string;
@@ -139,6 +147,10 @@ interface PsCallModelOptions {
    * to the existing configuration.
    */
   priceOverride?: Partial<PsBaseModelPriceConfiguration>;
+}
+
+interface PsModelRequestOptions {
+  safetyIdentifier?: string;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

@@ -32,8 +32,13 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
     media?: { mimeType: string; data: string }[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
-    allowedTools?: string[]
+    allowedTools?: string[],
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters | undefined>;
+
+  getCloneConfig(): PsAiModelConfig {
+    return { ...this.config };
+  }
 
   truncateXmlTags(text: string, maxChars = 500): string {
     const xmlTagRegex = /<(\w[\w\d-]*)([^>]*)>([\s\S]*?)<\/\1>/g;

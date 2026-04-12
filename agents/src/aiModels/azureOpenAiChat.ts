@@ -1,5 +1,9 @@
 import { AzureOpenAI } from "openai";
 import { DefaultAzureCredential, getBearerTokenProvider } from "@azure/identity";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModel } from "../dbModels/aiModel.js";
@@ -94,7 +98,11 @@ export class AzureOpenAiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: (chunk: string) => void,
-    media?: { mimeType: string; data: string }[]
+    media?: { mimeType: string; data: string }[],
+    _tools?: ChatCompletionTool[],
+    _toolChoice?: ChatCompletionToolChoiceOption | "auto",
+    _allowedTools?: string[],
+    _requestOptions?: PsModelRequestOptions
   ) {
     const chatMessages = messages
       .filter(

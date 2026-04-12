@@ -19,7 +19,8 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     media?: { mimeType: string; data: string }[],
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools?: string[]
+    allowedTools?: string[],
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     let result;
     let retryCount = 0;
@@ -33,7 +34,8 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
         media,
         tools,
         toolChoice,
-        allowedTools
+        allowedTools,
+        requestOptions
       );
 
       if (result.content || (result.toolCalls && result.toolCalls.length > 0)) {

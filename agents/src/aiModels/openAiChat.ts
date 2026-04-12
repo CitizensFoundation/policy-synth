@@ -101,7 +101,8 @@ export class OpenAiChat extends BaseChatModel {
     media?: { mimeType: string; data: string }[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools: string[] = []
+    allowedTools: string[] = [],
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
@@ -127,6 +128,8 @@ export class OpenAiChat extends BaseChatModel {
       messages: formatted,
       tools,
       tool_choice: toolChoice,
+      safety_identifier:
+        requestOptions?.safetyIdentifier ?? this.cfg.safetyIdentifier,
       service_tier: this.getRequestedServiceTier(),
       logit_bias: isReasoning ? undefined : logitBias,
       temperature: isReasoning ? undefined : this.cfg.temperature,

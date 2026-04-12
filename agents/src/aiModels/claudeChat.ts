@@ -342,7 +342,8 @@ export class ClaudeChat extends BaseChatModel {
     media?: { mimeType: string; data: string }[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools: string[] = []
+    allowedTools: string[] = [],
+    _requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters | undefined> {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +

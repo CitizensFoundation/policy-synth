@@ -289,7 +289,8 @@ export class GoogleGeminiChat extends BaseChatModel {
     media?: { mimeType: string; data: string }[],
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools?: string[]
+    allowedTools?: string[],
+    _requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(

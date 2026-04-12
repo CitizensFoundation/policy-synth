@@ -156,6 +156,13 @@ export class OpenAiResponses extends BaseChatModel {
     return minor >= 3;
   }
 
+  override getCloneConfig(): PsOpenAiModelConfig {
+    return {
+      ...this.cfg,
+      modelName: this.phaseAwareModelName,
+    };
+  }
+
   private resetResponsesState() {
     this.sentToolOutputIds.clear();
     this.lastSubmittedMessageCount = 0;
@@ -205,7 +212,8 @@ export class OpenAiResponses extends BaseChatModel {
     media?: { mimeType: string; data: string }[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
-    allowedTools: string[] = []
+    allowedTools: string[] = [],
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
@@ -269,7 +277,8 @@ export class OpenAiResponses extends BaseChatModel {
         media,
         tools,
         toolChoice,
-        allowedTools
+        allowedTools,
+        requestOptions
       );
     }
 
@@ -301,7 +310,8 @@ export class OpenAiResponses extends BaseChatModel {
       tool_choice: responsesToolChoice,
       temperature: isReasoning ? undefined : this.cfg.temperature,
       max_output_tokens: this.cfg.maxTokensOut,
-      safety_identifier: this.cfg.safetyIdentifier,
+      safety_identifier:
+        requestOptions?.safetyIdentifier ?? this.cfg.safetyIdentifier,
       service_tier: !this.usingAzure
         ? this.getRequestedServiceTier()
         : undefined,
