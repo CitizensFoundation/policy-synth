@@ -1,6 +1,7 @@
 .codex
 .env
 ts-out/
+ts-out-test/
 memoryBackups/
 projectImages/
 node_modules/
