@@ -29,6 +29,7 @@ export class OpenAiResponses extends BaseChatModel {
   private cfg: PsOpenAiModelConfig;
   private requestedInferenceType?: PsInferenceType;
   private phaseAwareModelName: string;
+  private transportBaseUrl?: string;
   private previousResponseId?: string;
   private sentToolOutputIds = new Set<string>();
   private lastSubmittedMessageCount = 0;
@@ -89,6 +90,7 @@ export class OpenAiResponses extends BaseChatModel {
     if (useAzure) {
       this.usingAzure = true;
       const baseURL = envAzureEndpoint;
+      this.transportBaseUrl = baseURL;
       this.client = new OpenAI({
         apiKey,
         baseURL,
@@ -114,6 +116,7 @@ export class OpenAiResponses extends BaseChatModel {
         effectiveRegionalProcessing === "eu"
           ? "https://eu.api.openai.com/v1"
           : undefined;
+      this.transportBaseUrl = baseURL;
       this.client = new OpenAI({
         apiKey,
         ...(baseURL ? { baseURL } : {}),
@@ -161,6 +164,58 @@ export class OpenAiResponses extends BaseChatModel {
       ...this.cfg,
       modelName: this.phaseAwareModelName,
     };
+  }
+
+  getResponsesContinuationIdentity(): {
+    modelName: string;
+    regionalProcessing?: PsOpenAiRegionalProcessing;
+    transportBaseUrl?: string;
+    usingAzure: boolean;
+  } {
+    return {
+      modelName: this.phaseAwareModelName,
+      regionalProcessing: this.cfg.regionalProcessing,
+      transportBaseUrl: this.transportBaseUrl,
+      usingAzure: this.usingAzure,
+    };
+  }
+
+  applyRuntimeResponsesOverrides(
+    overrides: Pick<
+      PsOpenAiModelConfig,
+      | "inferenceType"
+      | "maxTokensOut"
+      | "temperature"
+      | "reasoningEffort"
+      | "maxThinkingTokens"
+    >
+  ): void {
+    if ("inferenceType" in overrides) {
+      this.requestedInferenceType = overrides.inferenceType;
+      this.cfg.inferenceType =
+        !this.usingAzure && overrides.inferenceType === "fast"
+          ? "priority"
+          : overrides.inferenceType;
+    }
+
+    if (overrides.maxTokensOut !== undefined) {
+      this.cfg.maxTokensOut = overrides.maxTokensOut;
+      this.maxTokensOut = overrides.maxTokensOut;
+    }
+
+    if (overrides.temperature !== undefined) {
+      this.cfg.temperature = overrides.temperature;
+    }
+
+    if (overrides.reasoningEffort !== undefined) {
+      this.cfg.reasoningEffort = overrides.reasoningEffort;
+    }
+
+    if (overrides.maxThinkingTokens !== undefined) {
+      this.cfg.maxThinkingTokens = overrides.maxThinkingTokens;
+    }
+
+    this.config = this.cfg;
   }
 
   private resetResponsesState() {

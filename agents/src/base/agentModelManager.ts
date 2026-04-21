@@ -70,7 +70,7 @@ async function loadDbModules() {
 
 export class PsAiModelManager extends PolicySynthAgentBase {
   private modelUsageItemManager = new PsModelUsageItemManager();
-  private statefulResponsesModelCache: Map<string, BaseChatModel> = new Map();
+  private statefulResponsesModelCache: Map<string, OpenAiResponses> = new Map();
   models: Map<string, BaseChatModel> = new Map();
   modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
   modelIds: Map<string, number> = new Map();
@@ -460,8 +460,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelTemperature ??
         dbConfig?.defaultTemperature ??
         this.modelTemperature,
-      reasoningEffort:
-        options.modelReasoningEffort ?? (this.reasoningEffort as any),
+      reasoningEffort: options.modelReasoningEffort ?? this.reasoningEffort,
       maxThinkingTokens:
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
       modelType: options.modelType ?? dbConfig?.type ?? modelType,
@@ -479,26 +478,25 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       (provider.toLowerCase() === PsAiModelProvider.OpenAI &&
         Boolean(options.useOpenAiResponsesIfOpenAi));
     const responsesStateKey = this.getResponsesStateKey(options);
-
-    // Try to reuse a cached ephemeral model keyed by configuration and variant-specific options.
-    // OpenAI Responses instances keep continuation state, scoped by an explicit
-    // conversation/thread key when provided, otherwise by safetyIdentifier for
-    // backward-compatible reuse. If neither is present, fall back to the
-    // original config-scoped cache behavior.
-    const cacheKey = JSON.stringify({
-      config: ephemeralConfig,
-      useThoughtSignatures: Boolean(options.useThoughtSignatures),
-      useOpenAiResponsesIfOpenAi: Boolean(options.useOpenAiResponsesIfOpenAi),
-      responsesStateKey: usesOpenAiResponses ? responsesStateKey : undefined,
-    });
     const useStatefulResponsesCache =
       usesOpenAiResponses && Boolean(responsesStateKey);
-    const cachedModel = useStatefulResponsesCache
-      ? this.getCachedStatefulResponsesModel(cacheKey)
-      : this.models.get(cacheKey);
-    if (cachedModel) {
-      this.logger.debug(`Using cached ephemeral model for config: ${cacheKey}`);
-      return cachedModel;
+    const statelessCacheKey = useStatefulResponsesCache
+      ? undefined
+      : JSON.stringify({
+          config: ephemeralConfig,
+          useThoughtSignatures: Boolean(options.useThoughtSignatures),
+          useOpenAiResponsesIfOpenAi: Boolean(options.useOpenAiResponsesIfOpenAi),
+          responsesStateKey: undefined,
+        });
+
+    if (statelessCacheKey) {
+      const cachedModel = this.models.get(statelessCacheKey);
+      if (cachedModel) {
+        this.logger.debug(
+          `Using cached ephemeral model for config: ${statelessCacheKey}`
+        );
+        return cachedModel;
+      }
     }
 
     // Construct ephemeral model
@@ -553,13 +551,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     ephemeralModel.provider = provider;
 
-    // Cache the ephemeral model so subsequent calls reuse the instance
     if (useStatefulResponsesCache) {
-      this.cacheStatefulResponsesModel(cacheKey, ephemeralModel);
-    } else {
-      this.models.set(cacheKey, ephemeralModel);
-      this.modelIds.set(cacheKey, dbModel?.id ?? -1);
+      return this.getStateIsolatedResponsesModel(
+        ephemeralModel,
+        options,
+        true
+      );
     }
+
+    // Cache the ephemeral model so subsequent calls reuse the instance
+    this.models.set(statelessCacheKey!, ephemeralModel);
+    this.modelIds.set(statelessCacheKey!, dbModel?.id ?? -1);
 
     return ephemeralModel;
   }
@@ -1424,9 +1426,59 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     throw new Error("Model call failed after maximum retries");
   }
 
+  private getResponsesRuntimeOverrides(
+    model: OpenAiResponses,
+    options: PsCallModelOptions
+  ): Pick<
+    PsOpenAiModelConfig,
+    | "inferenceType"
+    | "maxTokensOut"
+    | "temperature"
+    | "reasoningEffort"
+    | "maxThinkingTokens"
+  > {
+    const baseConfig = model.getCloneConfig();
+
+    return {
+      inferenceType: options.inferenceType ?? baseConfig.inferenceType,
+      maxTokensOut:
+        options.maxTokensOut ?? this.maxTokensOut ?? baseConfig.maxTokensOut,
+      temperature:
+        options.modelTemperature ??
+        baseConfig.temperature ??
+        this.modelTemperature,
+      reasoningEffort:
+        options.modelReasoningEffort ??
+        this.reasoningEffort ??
+        baseConfig.reasoningEffort,
+      maxThinkingTokens:
+        options.modelMaxThinkingTokens ??
+        this.maxThinkingTokens ??
+        baseConfig.maxThinkingTokens,
+    };
+  }
+
+  private getStatefulResponsesCacheKey(
+    model: OpenAiResponses,
+    responsesStateKey: string
+  ): string {
+    const transportIdentity = model.getResponsesContinuationIdentity();
+
+    return JSON.stringify({
+      responsesStateKey,
+      provider: model.provider ?? model.config?.provider ?? null,
+      modelName: transportIdentity.modelName,
+      dbModelId: model.dbModelId ?? null,
+      regionalProcessing: transportIdentity.regionalProcessing ?? null,
+      transportBaseUrl: transportIdentity.transportBaseUrl ?? null,
+      usingAzure: transportIdentity.usingAzure,
+    });
+  }
+
   private getStateIsolatedResponsesModel(
     model: BaseChatModel,
-    options: PsCallModelOptions
+    options: PsCallModelOptions,
+    cacheOriginalModel: boolean = false
   ): BaseChatModel {
     if (!(model instanceof OpenAiResponses)) {
       return model;
@@ -1437,20 +1489,23 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       return model;
     }
 
-    const cacheKey = JSON.stringify({
-      configuredResponsesModelId: model.dbModelId ?? null,
-      configuredResponsesModelName: String(model.modelName),
-      configuredResponsesProvider: model.provider ?? null,
-      configuredResponsesStateKey: responsesStateKey,
-    });
+    const cacheKey = this.getStatefulResponsesCacheKey(
+      model,
+      responsesStateKey
+    );
+    const runtimeOverrides = this.getResponsesRuntimeOverrides(model, options);
     const cachedModel = this.getCachedStatefulResponsesModel(cacheKey);
     if (cachedModel) {
+      cachedModel.applyRuntimeResponsesOverrides(runtimeOverrides);
       return cachedModel;
     }
 
-    const isolatedModel = new OpenAiResponses(model.getCloneConfig());
+    const isolatedModel = cacheOriginalModel
+      ? model
+      : new OpenAiResponses(model.getCloneConfig());
     isolatedModel.provider = model.provider;
     isolatedModel.dbModelId = model.dbModelId;
+    isolatedModel.applyRuntimeResponsesOverrides(runtimeOverrides);
     this.cacheStatefulResponsesModel(cacheKey, isolatedModel);
 
     return isolatedModel;
@@ -1458,7 +1513,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   private getCachedStatefulResponsesModel(
     cacheKey: string
-  ): BaseChatModel | undefined {
+  ): OpenAiResponses | undefined {
     const cachedModel = this.statefulResponsesModelCache.get(cacheKey);
     if (!cachedModel) {
       return undefined;
@@ -1471,7 +1526,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   private cacheStatefulResponsesModel(
     cacheKey: string,
-    model: BaseChatModel
+    model: OpenAiResponses
   ): void {
     if (this.statefulResponsesModelCache.has(cacheKey)) {
       this.statefulResponsesModelCache.delete(cacheKey);
