@@ -1566,12 +1566,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   private getModelRequestOptions(
     options: PsCallModelOptions
   ): PsModelRequestOptions | undefined {
-    if (!options.safetyIdentifier) {
+    if (!options.safetyIdentifier && !options.geminiRegions?.length) {
       return undefined;
     }
 
     return {
       safetyIdentifier: options.safetyIdentifier,
+      geminiRegions: options.geminiRegions,
     };
   }
 

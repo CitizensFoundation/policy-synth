@@ -35,6 +35,32 @@ class SpyGoogleGeminiChat extends ExposedGoogleGeminiChat {
   }
 }
 
+type GeminiAiMock = {
+  models: {
+    generateContent?: (params: unknown) => Promise<unknown>;
+    generateContentStream?: (params: unknown) => Promise<AsyncIterable<unknown>>;
+  };
+};
+
+class RegionAwareGoogleGeminiChat extends SpyGoogleGeminiChat {
+  requestedLocations: Array<string | undefined> = [];
+  private readonly aiByLocation = new Map<string, GeminiAiMock>();
+
+  setAiForLocation(location: string | undefined, ai: GeminiAiMock) {
+    this.aiByLocation.set(location ?? "__default__", ai);
+  }
+
+  protected override getAiForLocation(location?: string) {
+    this.requestedLocations.push(location);
+    const ai = this.aiByLocation.get(location ?? "__default__");
+    if (ai) {
+      return ai as unknown as InstanceType<typeof GoogleGeminiChat>["ai"];
+    }
+
+    return super.getAiForLocation(location);
+  }
+}
+
 const createConfig = (
   overrides: Partial<PsAiModelConfig> = {}
 ): PsAiModelConfig => ({
@@ -70,15 +96,28 @@ type RecordedGeminiRequest = {
 
 const setMockAi = (
   model: object,
-  ai: {
-    models: {
-      generateContent?: (params: unknown) => Promise<unknown>;
-      generateContentStream?: (params: unknown) => Promise<AsyncIterable<unknown>>;
-    };
-  }
+  ai: GeminiAiMock
 ) => {
   Reflect.set(model, "ai", ai);
 };
+
+const createGeminiResponse = (
+  text: string,
+  usageMetadata: Record<string, number> = {},
+  functionCalls: Array<{ id?: string; name?: string; args?: Record<string, unknown> }> = []
+) => ({
+  text,
+  functionCalls,
+  usageMetadata,
+  candidates: [
+    {
+      finishReason: "STOP",
+      content: {
+        parts: [{ text }],
+      },
+    },
+  ],
+});
 
 const originalVertexFlag = process.env.USE_GOOGLE_VERTEX_AI;
 const originalVertexAllowlist = process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS;
@@ -208,6 +247,165 @@ describe("GoogleGeminiChat", () => {
     );
   });
 
+  it("rotates across request-supplied Gemini regions and records the selected region", async () => {
+    process.env.USE_GOOGLE_VERTEX_AI = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+
+    const model = new RegionAwareGoogleGeminiChat(createConfig());
+
+    model.setAiForLocation("europe-west1", {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("west-1", {
+            promptTokenCount: 2,
+            candidatesTokenCount: 1,
+          }),
+      },
+    });
+    model.setAiForLocation("us-east4", {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("east-4", {
+            promptTokenCount: 3,
+            candidatesTokenCount: 1,
+          }),
+      },
+    });
+
+    const requestOptions: PsModelRequestOptions = {
+      geminiRegions: [" europe-west1 ", "us-east4", "europe-west1"],
+    };
+
+    const first = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      requestOptions
+    );
+    const second = await model.generate(
+      [{ role: "user", message: "hello again" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      requestOptions
+    );
+
+    assert.deepEqual(model.requestedLocations, ["europe-west1", "us-east4"]);
+    assert.equal(first.content, "west-1");
+    assert.equal(second.content, "east-4");
+    assert.deepEqual(first.usageItemData?.request?.geminiRegions, [
+      "europe-west1",
+      "us-east4",
+    ]);
+    assert.equal(
+      first.usageItemData?.request?.selectedGeminiRegion,
+      "europe-west1"
+    );
+    assert.equal(
+      second.usageItemData?.providerMetadata?.selectedGeminiRegion,
+      "us-east4"
+    );
+    assert.equal(second.usageItemData?.providerMetadata?.location, "us-east4");
+  });
+
+  it("fails over to the next Gemini region on retryable vertex errors", async () => {
+    process.env.USE_GOOGLE_VERTEX_AI = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+
+    const model = new RegionAwareGoogleGeminiChat(createConfig());
+
+    model.setAiForLocation("europe-west1", {
+      models: {
+        generateContent: async () => {
+          throw Object.assign(new Error("429 rate limit"), { status: 429 });
+        },
+      },
+    });
+    model.setAiForLocation("us-east4", {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("recovered", {
+            promptTokenCount: 5,
+            candidatesTokenCount: 2,
+          }),
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      {
+        geminiRegions: ["europe-west1", "us-east4"],
+      }
+    );
+
+    assert.deepEqual(model.requestedLocations, ["europe-west1", "us-east4"]);
+    assert.equal(result.content, "recovered");
+    assert.equal(result.usageItemData?.providerMetadata?.location, "us-east4");
+    assert.deepEqual(result.usageItemData?.providerMetadata?.geminiRegions, [
+      "europe-west1",
+      "us-east4",
+    ]);
+  });
+
+  it("does not fail over Gemini regions for blocked or malformed requests", async () => {
+    process.env.USE_GOOGLE_VERTEX_AI = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+
+    const model = new RegionAwareGoogleGeminiChat(createConfig());
+
+    model.setAiForLocation("europe-west1", {
+      models: {
+        generateContent: async () => ({
+          candidates: [],
+          promptFeedback: {
+            blockReason: "SAFETY",
+          },
+        }),
+      },
+    });
+    model.setAiForLocation("us-east4", {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("should-not-run"),
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "hello" }],
+          false,
+          undefined,
+          undefined,
+          undefined,
+          "auto",
+          undefined,
+          {
+            geminiRegions: ["europe-west1", "us-east4"],
+          }
+        ),
+      /blocked via prompt: SAFETY/
+    );
+
+    assert.deepEqual(model.requestedLocations, ["europe-west1"]);
+  });
+
   it("uses auto tool mode and omits system instructions when none are provided", async () => {
     const model = new SpyGoogleGeminiChat(createConfig());
 
@@ -264,6 +462,39 @@ describe("GoogleGeminiChat", () => {
     assert.equal(result.usageItemData?.request?.systemInstructionPresent, false);
     assert.equal(result.usageItemData?.request?.toolChoice, "auto");
     assert.equal(result.usageItemData?.request?.toolCount, 1);
+  });
+
+  it("ignores Gemini region overrides when using the direct Gemini API", async () => {
+    const model = new SpyGoogleGeminiChat(createConfig());
+
+    setMockAi(model, {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("Direct Gemini", {
+            promptTokenCount: 4,
+            candidatesTokenCount: 2,
+          }),
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      {
+        geminiRegions: ["europe-west1", "us-east4"],
+      }
+    );
+
+    assert.equal(result.content, "Direct Gemini");
+    assert.equal(result.usageItemData?.providerMetadata?.transport, "google-genai");
+    assert.equal(result.usageItemData?.providerMetadata?.location, null);
+    assert.equal(result.usageItemData?.request?.geminiRegions, null);
+    assert.equal(result.usageItemData?.request?.selectedGeminiRegion, null);
   });
 
   it("builds Gemini contents for user text, tool calls, tool responses, and media", () => {

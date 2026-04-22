@@ -25,6 +25,32 @@ type GoogleGeminiThoughtInternals = {
   handleFinalResponse: (response: GenerateContentResponse) => void;
 };
 
+type GeminiAiMock = {
+  models: {
+    generateContent?: (params: unknown) => Promise<unknown>;
+    generateContentStream?: (params: unknown) => Promise<AsyncIterable<unknown>>;
+  };
+};
+
+class RegionAwareGoogleGeminiThought extends GoogleGeminiThought {
+  requestedLocations: Array<string | undefined> = [];
+  private readonly aiByLocation = new Map<string, GeminiAiMock>();
+
+  setAiForLocation(location: string | undefined, ai: GeminiAiMock) {
+    this.aiByLocation.set(location ?? "__default__", ai);
+  }
+
+  protected override getAiForLocation(location?: string) {
+    this.requestedLocations.push(location);
+    const ai = this.aiByLocation.get(location ?? "__default__");
+    if (ai) {
+      return ai as unknown as InstanceType<typeof GoogleGeminiChat>["ai"];
+    }
+
+    return super.getAiForLocation(location);
+  }
+}
+
 const asInternals = (model: GoogleGeminiThoughtInstance) =>
   model as unknown as GoogleGeminiThoughtInternals;
 
@@ -45,13 +71,89 @@ const createConfig = (
   ...overrides,
 });
 
+const createGeminiResponse = (
+  text: string,
+  usageMetadata: Record<string, number> = {}
+) => ({
+  text,
+  usageMetadata,
+  candidates: [
+    {
+      finishReason: "STOP",
+      content: {
+        parts: [{ text }],
+      },
+    },
+  ],
+});
+
 const originalGenerate = GoogleGeminiChat.prototype.generate;
+const originalVertexFlag = process.env.USE_GOOGLE_VERTEX_AI;
+const originalProject = process.env.GOOGLE_CLOUD_PROJECT;
+const originalLocation = process.env.GOOGLE_CLOUD_LOCATION;
 
 afterEach(() => {
   Reflect.set(GoogleGeminiChat.prototype, "generate", originalGenerate);
+
+  if (originalVertexFlag === undefined) {
+    delete process.env.USE_GOOGLE_VERTEX_AI;
+  } else {
+    process.env.USE_GOOGLE_VERTEX_AI = originalVertexFlag;
+  }
+
+  if (originalProject === undefined) {
+    delete process.env.GOOGLE_CLOUD_PROJECT;
+  } else {
+    process.env.GOOGLE_CLOUD_PROJECT = originalProject;
+  }
+
+  if (originalLocation === undefined) {
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+  } else {
+    process.env.GOOGLE_CLOUD_LOCATION = originalLocation;
+  }
 });
 
 describe("GoogleGeminiThought", () => {
+  it("ignores per-call Gemini region overrides and stays pinned to the configured region", async () => {
+    process.env.USE_GOOGLE_VERTEX_AI = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    process.env.GOOGLE_CLOUD_LOCATION = "us-central1";
+
+    const model = new RegionAwareGoogleGeminiThought(createConfig());
+    model.setAiForLocation("us-central1", {
+      models: {
+        generateContent: async () =>
+          createGeminiResponse("thought-result", {
+            promptTokenCount: 3,
+            candidatesTokenCount: 1,
+          }),
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      {
+        geminiRegions: ["europe-west1", "us-east4"],
+      }
+    );
+
+    assert.deepEqual(model.requestedLocations, ["us-central1"]);
+    assert.equal(result.content, "thought-result");
+    assert.equal(result.usageItemData?.providerMetadata?.location, "us-central1");
+    assert.equal(result.usageItemData?.request?.geminiRegions, null);
+    assert.equal(
+      result.usageItemData?.request?.selectedGeminiRegion,
+      "us-central1"
+    );
+  });
+
   it("retries empty responses until content becomes available", async () => {
     let callCount = 0;
 

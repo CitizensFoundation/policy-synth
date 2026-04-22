@@ -75,6 +75,7 @@ interface PsCallModelOptions {
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: PsReasoningEffort;
   safetyIdentifier?: string;
+  geminiRegions?: string[];
   /**
    * Optional local conversation/thread key used to isolate OpenAI Responses
    * continuation state. Pass a stable key per conversation if you want
@@ -151,6 +152,7 @@ interface PsCallModelOptions {
 
 interface PsModelRequestOptions {
   safetyIdentifier?: string;
+  geminiRegions?: string[];
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

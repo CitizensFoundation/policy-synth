@@ -12,6 +12,12 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
   private pendingParts: any[] = [];
   private pendingSignature?: string;
 
+  protected override shouldUseGeminiRegionOverrides(): boolean {
+    // Thought signatures are most useful when subsequent calls stay pinned
+    // to the model instance's configured region.
+    return false;
+  }
+
   async generate(
     messages: PsModelMessage[],
     streaming = false,

@@ -33,11 +33,19 @@ type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
 type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
+type GeminiExecutionContext = {
+  requestedRegions: string[];
+  selectedRegion: string | null;
+};
 
 export class GoogleGeminiChat extends BaseChatModel {
-  readonly ai: GoogleGenAI;
+  ai!: GoogleGenAI;
   readonly modelName: string;
   readonly useVertex: boolean;
+  private readonly vertexProject?: string;
+  private readonly defaultVertexLocation?: string;
+  private readonly vertexClients = new Map<string, GoogleGenAI>();
+  private nextGeminiRegionIndex = 0;
 
   constructor(config: PsAiModelConfig) {
     super(
@@ -57,22 +65,159 @@ export class GoogleGeminiChat extends BaseChatModel {
     const useVertex =
       process.env.USE_GOOGLE_VERTEX_AI === "true" || useVertexForModel;
     this.useVertex = useVertex;
+    this.vertexProject = process.env.GOOGLE_CLOUD_PROJECT ?? undefined;
+    this.defaultVertexLocation = process.env.GOOGLE_CLOUD_LOCATION ?? undefined;
 
-    this.ai = useVertex
-      ? new GoogleGenAI({
-          vertexai: true,
-          project: process.env.GOOGLE_CLOUD_PROJECT!,
-          location: process.env.GOOGLE_CLOUD_LOCATION!,
-        })
-      : new GoogleGenAI({
-          apiKey:
-            config.apiKey ||
-            process.env.PS_AGENT_GEMINI_API_KEY ||
-            process.env.GOOGLE_API_KEY,
-        });
+    if (useVertex) {
+      if (this.defaultVertexLocation) {
+        this.ai = this.createVertexAi(this.defaultVertexLocation);
+        this.vertexClients.set(this.defaultVertexLocation, this.ai);
+      }
+    } else {
+      this.ai = this.createDirectAi(config);
+    }
   }
 
   /* ---------- helper utilities ---------- */
+
+  private createDirectAi(config: PsAiModelConfig): GoogleGenAI {
+    return new GoogleGenAI({
+      apiKey:
+        config.apiKey ||
+        process.env.PS_AGENT_GEMINI_API_KEY ||
+        process.env.GOOGLE_API_KEY,
+    });
+  }
+
+  private createVertexAi(location: string): GoogleGenAI {
+    return new GoogleGenAI({
+      vertexai: true,
+      project: this.vertexProject!,
+      location,
+    });
+  }
+
+  private getDefaultAi(): GoogleGenAI {
+    if (this.ai) {
+      return this.ai;
+    }
+
+    if (!this.useVertex) {
+      throw new Error("Gemini client is not initialized");
+    }
+
+    if (!this.defaultVertexLocation) {
+      throw new Error(
+        "Vertex Gemini requires GOOGLE_CLOUD_LOCATION or requestOptions.geminiRegions"
+      );
+    }
+
+    this.ai = this.createVertexAi(this.defaultVertexLocation);
+    this.vertexClients.set(this.defaultVertexLocation, this.ai);
+    return this.ai;
+  }
+
+  protected getAiForLocation(location?: string): GoogleGenAI {
+    if (!this.useVertex) {
+      return this.getDefaultAi();
+    }
+
+    const effectiveLocation = location ?? this.defaultVertexLocation;
+    if (!effectiveLocation) {
+      throw new Error(
+        "Vertex Gemini requires GOOGLE_CLOUD_LOCATION or requestOptions.geminiRegions"
+      );
+    }
+
+    if (this.defaultVertexLocation && effectiveLocation === this.defaultVertexLocation) {
+      return this.getDefaultAi();
+    }
+
+    const cachedClient = this.vertexClients.get(effectiveLocation);
+    if (cachedClient) {
+      return cachedClient;
+    }
+
+    const client = this.createVertexAi(effectiveLocation);
+    this.vertexClients.set(effectiveLocation, client);
+    return client;
+  }
+
+  private normalizeGeminiRegions(regions?: string[]): string[] {
+    if (!regions?.length) {
+      return [];
+    }
+
+    const seen = new Set<string>();
+    const normalized: string[] = [];
+
+    for (const region of regions) {
+      const trimmed = region.trim();
+      if (!trimmed || seen.has(trimmed)) {
+        continue;
+      }
+
+      seen.add(trimmed);
+      normalized.push(trimmed);
+    }
+
+    return normalized;
+  }
+
+  private getNextGeminiRegionStartIndex(regionCount: number): number {
+    if (regionCount <= 1) {
+      return 0;
+    }
+
+    const startIndex = this.nextGeminiRegionIndex % regionCount;
+    this.nextGeminiRegionIndex = (startIndex + 1) % regionCount;
+    return startIndex;
+  }
+
+  protected shouldUseGeminiRegionOverrides(): boolean {
+    return true;
+  }
+
+  private buildGeminiExecutionPlan(requestOptions?: PsModelRequestOptions): {
+    requestedRegions: string[];
+    attemptRegions: Array<string | undefined>;
+  } {
+    if (!this.useVertex) {
+      return {
+        requestedRegions: [],
+        attemptRegions: [undefined],
+      };
+    }
+
+    const requestedRegions = this.shouldUseGeminiRegionOverrides()
+      ? this.normalizeGeminiRegions(requestOptions?.geminiRegions)
+      : [];
+
+    if (requestedRegions.length > 0) {
+      const startIndex = this.getNextGeminiRegionStartIndex(
+        requestedRegions.length
+      );
+
+      return {
+        requestedRegions,
+        attemptRegions: [
+          ...requestedRegions.slice(startIndex),
+          ...requestedRegions.slice(0, startIndex),
+        ],
+      };
+    }
+
+    if (this.defaultVertexLocation) {
+      return {
+        requestedRegions: [],
+        attemptRegions: [this.defaultVertexLocation],
+      };
+    }
+
+    throw new Error(
+      "Vertex Gemini requires GOOGLE_CLOUD_LOCATION or requestOptions.geminiRegions"
+    );
+  }
 
   protected buildContents(
     messages: PsModelMessage[],
@@ -174,6 +319,8 @@ export class GoogleGeminiChat extends BaseChatModel {
       toolCount: number;
       allowedFunctionNames?: string[];
       systemInstructionPresent: boolean;
+      geminiRegions: string[];
+      selectedGeminiRegion: string | null;
     },
     usage: {
       tokensIn: number;
@@ -196,6 +343,13 @@ export class GoogleGeminiChat extends BaseChatModel {
         allowedFunctionNames: request.allowedFunctionNames ?? null,
         systemInstructionPresent: request.systemInstructionPresent,
         maxTokensOut: this.maxTokensOut ?? null,
+        geminiRegions:
+          this.useVertex && request.geminiRegions.length > 0
+            ? request.geminiRegions
+            : null,
+        selectedGeminiRegion: this.useVertex
+          ? request.selectedGeminiRegion
+          : null,
       },
       usageRaw: usageRaw ?? undefined,
       usageNormalized: {
@@ -207,10 +361,19 @@ export class GoogleGeminiChat extends BaseChatModel {
       providerMetadata: {
         transport,
         project: this.useVertex
-          ? process.env.GOOGLE_CLOUD_PROJECT ?? null
+          ? this.vertexProject ?? null
           : null,
         location: this.useVertex
-          ? process.env.GOOGLE_CLOUD_LOCATION ?? null
+          ? request.selectedGeminiRegion ??
+            this.defaultVertexLocation ??
+            null
+          : null,
+        geminiRegions:
+          this.useVertex && request.geminiRegions.length > 0
+            ? request.geminiRegions
+            : null,
+        selectedGeminiRegion: this.useVertex
+          ? request.selectedGeminiRegion
           : null,
         promptTokenCount:
           (usageRaw?.promptTokenCount as number | undefined) ?? null,
@@ -225,6 +388,251 @@ export class GoogleGeminiChat extends BaseChatModel {
         cachedContentTokenCount:
           (usageRaw?.cachedContentTokenCount as number | undefined) ?? null,
       },
+    };
+  }
+
+  private getErrorStatus(error: unknown): number | undefined {
+    const candidate = error as
+      | {
+          response?: { status?: number | string };
+          status?: number | string;
+          statusCode?: number | string;
+          code?: number | string;
+        }
+      | undefined;
+
+    const status =
+      candidate?.response?.status ??
+      candidate?.status ??
+      candidate?.statusCode ??
+      candidate?.code;
+    if (typeof status === "number" && Number.isFinite(status)) {
+      return status;
+    }
+
+    if (typeof status === "string") {
+      const parsed = Number.parseInt(status, 10);
+      return Number.isFinite(parsed) ? parsed : undefined;
+    }
+
+    return undefined;
+  }
+
+  private getErrorMessage(error: unknown): string {
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    if (typeof error === "string") {
+      return error;
+    }
+
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+
+  private isGeminiRegionFailoverEligible(error: unknown): boolean {
+    const status = this.getErrorStatus(error);
+    const message = this.getErrorMessage(error).toLowerCase();
+    const causeCode =
+      typeof error === "object" && error !== null && "cause" in error
+        ? (error as { cause?: { code?: string } }).cause?.code
+        : undefined;
+
+    if (
+      message.includes("blocked via prompt") ||
+      message.includes("blocked via safety") ||
+      message.includes("prompt may be malformed")
+    ) {
+      return false;
+    }
+
+    if (
+      status !== undefined &&
+      [400, 401, 403, 404, 409, 422].includes(status)
+    ) {
+      return false;
+    }
+
+    const isSocketError =
+      causeCode === "UND_ERR_SOCKET" ||
+      causeCode === "ECONNRESET" ||
+      causeCode === "ECONNREFUSED" ||
+      causeCode === "ETIMEDOUT" ||
+      causeCode === "EPIPE" ||
+      message.includes("socket hang up") ||
+      message.includes("network error") ||
+      message.includes("fetch failed");
+
+    return (
+      status === 408 ||
+      status === 429 ||
+      (status !== undefined && status >= 500 && status < 600) ||
+      message.includes("429") ||
+      message.includes("rate limit") ||
+      message.includes("too many requests") ||
+      message.includes("resource exhausted") ||
+      message.includes("quota exceeded") ||
+      message.includes("temporarily unavailable") ||
+      message.includes("service unavailable") ||
+      message.includes("unavailable") ||
+      message.includes("overloaded") ||
+      message.includes("backend error") ||
+      message.includes("internal server error") ||
+      isSocketError
+    );
+  }
+
+  private annotateRegionError(
+    error: unknown,
+    region: string | undefined,
+    attempt: number,
+    totalAttempts: number
+  ): Error {
+    const prefix = region
+      ? `Gemini region ${region} attempt ${attempt}/${totalAttempts}`
+      : `Gemini attempt ${attempt}/${totalAttempts}`;
+    const message = `${prefix}: ${this.getErrorMessage(error)}`;
+
+    const annotated =
+      error instanceof Error ? new Error(message, { cause: error }) : new Error(message);
+    if (error instanceof Error && error.stack) {
+      annotated.stack = error.stack;
+    }
+
+    if (typeof error === "object" && error !== null) {
+      Object.assign(annotated, error);
+    }
+
+    return annotated;
+  }
+
+  private async generateWithClient(
+    ai: GoogleGenAI,
+    params: GenerateContentParameters,
+    streaming: boolean,
+    streamingCallback: ((chunk: string) => void) | undefined,
+    toolChoice: ChatCompletionToolChoiceOption | "auto",
+    functionDeclarations: FunctionDeclaration[] | undefined,
+    toolConfig: ToolConfig | undefined,
+    systemInstruction: string,
+    execution: GeminiExecutionContext,
+    streamState: { emittedOutput: boolean }
+  ): Promise<UsageItemResult> {
+    if (streaming) {
+      const stream = await ai.models.generateContentStream(params);
+      let text = "";
+      const toolCalls: FunctionCall[] = [];
+      let last: GenerateContentResponse | undefined;
+
+      for await (const chunk of stream) {
+        this.assertGeminiNotBlocked(chunk);
+        this.handleStreamChunk(chunk);
+        last = chunk;
+        if (chunk.text) {
+          text += chunk.text;
+          streamState.emittedOutput = true;
+          streamingCallback?.(chunk.text);
+        }
+        if (chunk.functionCalls?.length) {
+          toolCalls.push(...chunk.functionCalls);
+          streamState.emittedOutput = true;
+        }
+      }
+
+      if (last) {
+        this.handleFinalResponse(last);
+      }
+
+      const usage = last?.usageMetadata ?? {};
+      const tokensIn =
+        (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
+      const tokensOut = this.tokensOut(usage);
+      const cached = usage.cachedContentTokenCount ?? 0;
+      const reasoningTokens = usage.thoughtsTokenCount ?? 0;
+      await this.logTokens(tokensIn, tokensOut, cached);
+
+      return {
+        content: text,
+        tokensIn,
+        tokensOut,
+        cachedInTokens: cached,
+        reasoningTokens,
+        toolCalls: toolCalls.map((fc) => ({
+          id: fc.id ?? "",
+          name: fc.name ?? "unknown",
+          arguments: (fc.args as Record<string, unknown>) ?? {},
+        })),
+        usageItemData: this.buildUsageItemData(
+          (last?.usageMetadata as Record<string, unknown> | null | undefined) ??
+            null,
+          {
+            stream: true,
+            toolChoice,
+            toolCount: functionDeclarations?.length ?? 0,
+            allowedFunctionNames:
+              toolConfig?.functionCallingConfig?.allowedFunctionNames,
+            systemInstructionPresent: Boolean(systemInstruction),
+            geminiRegions: execution.requestedRegions,
+            selectedGeminiRegion: execution.selectedRegion,
+          },
+          {
+            tokensIn,
+            tokensOut,
+            cachedInTokens: cached,
+            reasoningTokens,
+          }
+        ),
+      };
+    }
+
+    const response = await ai.models.generateContent(params);
+    this.assertGeminiNotBlocked(response);
+    this.handleFinalResponse(response);
+
+    const usage = response.usageMetadata ?? {};
+    const tokensIn =
+      (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
+    const tokensOut = this.tokensOut(usage);
+    const cached = usage.cachedContentTokenCount ?? 0;
+    const reasoningTokens = usage.thoughtsTokenCount ?? 0;
+    this.logger.debug("Gemini usage: " + JSON.stringify(usage, null, 2));
+    await this.logTokens(tokensIn, tokensOut, cached);
+
+    return {
+      content: response.text || "",
+      tokensIn,
+      tokensOut,
+      cachedInTokens: cached,
+      reasoningTokens,
+      toolCalls: (response.functionCalls ?? []).map((fc) => ({
+        id: fc.id ?? "",
+        name: fc.name ?? "unknown",
+        arguments: (fc.args as Record<string, unknown>) ?? {},
+      })),
+      usageItemData: this.buildUsageItemData(
+        (response.usageMetadata as Record<string, unknown> | null | undefined) ??
+          null,
+        {
+          stream: false,
+          toolChoice,
+          toolCount: functionDeclarations?.length ?? 0,
+          allowedFunctionNames:
+            toolConfig?.functionCallingConfig?.allowedFunctionNames,
+          systemInstructionPresent: Boolean(systemInstruction),
+          geminiRegions: execution.requestedRegions,
+          selectedGeminiRegion: execution.selectedRegion,
+        },
+        {
+          tokensIn,
+          tokensOut,
+          cachedInTokens: cached,
+          reasoningTokens,
+        }
+      ),
     };
   }
 
@@ -290,7 +698,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[],
-    _requestOptions?: PsModelRequestOptions
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
@@ -349,117 +757,63 @@ export class GoogleGeminiChat extends BaseChatModel {
         safetySettings: GoogleGeminiChat.safetySettings,
       },
     };
+    const executionPlan = this.buildGeminiExecutionPlan(requestOptions);
+    let lastError: Error | undefined;
 
-    /* ========== streaming ========== */
-    if (streaming) {
-      const stream = await this.ai.models.generateContentStream(params);
-      let text = "";
-      const toolCalls: FunctionCall[] = [];
-      let last: GenerateContentResponse | undefined;
+    for (let attemptIndex = 0; attemptIndex < executionPlan.attemptRegions.length; attemptIndex++) {
+      const selectedRegion = executionPlan.attemptRegions[attemptIndex] ?? null;
+      const streamState = { emittedOutput: false };
 
-      for await (const chunk of stream) {
-        this.assertGeminiNotBlocked(chunk);
-        this.handleStreamChunk(chunk);
-        last = chunk;
-        if (chunk.text) {
-          text += chunk.text;
-          streamingCallback?.(chunk.text);
-        }
-        if (chunk.functionCalls?.length) toolCalls.push(...chunk.functionCalls);
-      }
-
-      if (last) {
-        this.handleFinalResponse(last);
-      }
-
-      const usage = last?.usageMetadata ?? {};
-      const tokensIn =
-        (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
-      const tokensOut = this.tokensOut(usage);
-      const cached = usage.cachedContentTokenCount ?? 0;
-      const reasoningTokens = usage.thoughtsTokenCount ?? 0;
-      await this.logTokens(tokensIn, tokensOut, cached);
-
-      const result: UsageItemResult = {
-        content: text,
-        tokensIn,
-        tokensOut,
-        cachedInTokens: cached,
-        reasoningTokens,
-        toolCalls: toolCalls.map((fc) => ({
-          id: fc.id ?? "",
-          name: fc.name ?? "unknown",
-          arguments: (fc.args as Record<string, unknown>) ?? {},
-        })),
-        usageItemData: this.buildUsageItemData(
-          (last?.usageMetadata as Record<string, unknown> | null | undefined) ??
-            null,
+      try {
+        const ai = this.getAiForLocation(selectedRegion ?? undefined);
+        return await this.generateWithClient(
+          ai,
+          params,
+          streaming,
+          streamingCallback,
+          toolChoice,
+          functionDeclarations,
+          toolConfig,
+          systemInstruction,
           {
-            stream: true,
-            toolChoice,
-            toolCount: functionDeclarations?.length ?? 0,
-            allowedFunctionNames:
-              toolConfig?.functionCallingConfig?.allowedFunctionNames,
-            systemInstructionPresent: Boolean(systemInstruction),
+            requestedRegions: executionPlan.requestedRegions,
+            selectedRegion,
           },
-          {
-            tokensIn,
-            tokensOut,
-            cachedInTokens: cached,
-            reasoningTokens,
-          }
-        ),
-      };
+          streamState
+        );
+      } catch (error) {
+        const annotatedError = this.annotateRegionError(
+          error,
+          selectedRegion ?? undefined,
+          attemptIndex + 1,
+          executionPlan.attemptRegions.length
+        );
+        lastError = annotatedError;
 
-      return result;
+        const hasRemainingRegions =
+          attemptIndex < executionPlan.attemptRegions.length - 1;
+        const canFailOver =
+          this.useVertex &&
+          executionPlan.attemptRegions.length > 1 &&
+          hasRemainingRegions &&
+          this.isGeminiRegionFailoverEligible(error) &&
+          (!streaming || !streamState.emittedOutput);
+
+        if (canFailOver) {
+          const nextRegion = executionPlan.attemptRegions[attemptIndex + 1];
+          this.logger.warn(
+            `Gemini call failed in region ${
+              selectedRegion ?? "default"
+            }; retrying in ${nextRegion ?? "default"}: ${this.getErrorMessage(error)}`
+          );
+          continue;
+        }
+
+        throw annotatedError;
+      }
     }
 
-    /* ========== non‑streaming ========== */
-    const response = await this.ai.models.generateContent(params);
-    this.assertGeminiNotBlocked(response);
-    this.handleFinalResponse(response);
-
-    const usage = response.usageMetadata ?? {};
-    const tokensIn =
-      (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
-    const tokensOut = this.tokensOut(usage);
-    const cached = usage.cachedContentTokenCount ?? 0;
-    const reasoningTokens = usage.thoughtsTokenCount ?? 0;
-    this.logger.debug("Gemini usage: " + JSON.stringify(usage, null, 2));
-    await this.logTokens(tokensIn, tokensOut, cached);
-
-    const result: UsageItemResult = {
-      content: response.text || "",
-      tokensIn,
-      tokensOut,
-      cachedInTokens: cached,
-      reasoningTokens,
-      toolCalls: (response.functionCalls ?? []).map((fc) => ({
-        id: fc.id ?? "",
-        name: fc.name ?? "unknown",
-        arguments: (fc.args as Record<string, unknown>) ?? {},
-      })),
-      usageItemData: this.buildUsageItemData(
-        (response.usageMetadata as Record<string, unknown> | null | undefined) ??
-          null,
-        {
-          stream: false,
-          toolChoice,
-          toolCount: functionDeclarations?.length ?? 0,
-          allowedFunctionNames:
-            toolConfig?.functionCallingConfig?.allowedFunctionNames,
-          systemInstructionPresent: Boolean(systemInstruction),
-        },
-        {
-          tokensIn,
-          tokensOut,
-          cachedInTokens: cached,
-          reasoningTokens,
-        }
-      ),
-    };
-
-    return result;
+    throw lastError ?? new Error("Gemini call failed before attempting any request");
   }
 
   protected handleStreamChunk(_chunk: GenerateContentResponse) {
