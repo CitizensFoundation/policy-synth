@@ -70,10 +70,14 @@ export class GoogleGeminiChat extends BaseChatModel {
 
     if (useVertex) {
       if (this.defaultVertexLocation) {
+        this.logger.debug(
+          `Using Vertex AI for Gemini with default location ${this.defaultVertexLocation}`
+        );
         this.ai = this.createVertexAi(this.defaultVertexLocation);
         this.vertexClients.set(this.defaultVertexLocation, this.ai);
       }
     } else {
+      this.logger.debug(`Using direct Google GenAI client for Gemini not Vertex`);
       this.ai = this.createDirectAi(config);
     }
   }
@@ -435,6 +439,7 @@ export class GoogleGeminiChat extends BaseChatModel {
   }
 
   private isGeminiRegionFailoverEligible(error: unknown): boolean {
+    this.logger.debug("Vertex Gemini error details: " + JSON.stringify(error, null, 2));
     const status = this.getErrorStatus(error);
     const message = this.getErrorMessage(error).toLowerCase();
     const causeCode =
