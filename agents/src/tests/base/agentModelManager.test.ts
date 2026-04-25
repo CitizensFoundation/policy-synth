@@ -1,11 +1,16 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
+import type {
+  ChatCompletionTool,
+  ChatCompletionToolChoiceOption,
+} from "openai/resources/chat/completions";
 
 import {
   PsAiModelProvider,
   PsAiModelSize,
   PsAiModelType,
 } from "../../aiModelTypes.js";
+import { BaseChatModel } from "../../aiModels/baseChatModel.js";
 import { OpenAiResponses } from "../../aiModels/openAiResponses.js";
 import { PsAiModelManager } from "../../base/agentModelManager.js";
 
@@ -161,6 +166,94 @@ const createResponsesOptions = (
   modelName: "gpt-5.3",
   responsesStateKey: "conversation-a",
   ...overrides,
+});
+
+class NoopUsageModelManager extends PsAiModelManager {
+  override async saveTokenUsage(
+    ..._args: Parameters<PsAiModelManager["saveTokenUsage"]>
+  ): Promise<void> {}
+
+  override async saveTokenUsageItem(
+    ..._args: Parameters<PsAiModelManager["saveTokenUsageItem"]>
+  ): Promise<void> {}
+}
+
+class DelayedFirstAttemptModel extends BaseChatModel {
+  generateCalls = 0;
+
+  constructor(config: PsAiModelConfig) {
+    super(config, config.modelName, config.maxTokensOut);
+  }
+
+  override async generate(
+    _messages: PsModelMessage[],
+    _streaming?: boolean,
+    _streamingCallback?: Function,
+    _media?: { mimeType: string; data: string }[],
+    _tools?: ChatCompletionTool[],
+    _toolChoice?: ChatCompletionToolChoiceOption | "auto",
+    _allowedTools?: string[],
+    _requestOptions?: PsModelRequestOptions
+  ): Promise<PsBaseModelReturnParameters> {
+    this.generateCalls++;
+
+    if (this.generateCalls === 1) {
+      await new Promise((resolve) => setTimeout(resolve, 75));
+      return {
+        content: "late first attempt",
+        tokensIn: 1,
+        tokensOut: 1,
+      };
+    }
+
+    return {
+      content: "second attempt",
+      tokensIn: 1,
+      tokensOut: 1,
+    };
+  }
+}
+
+describe("PsAiModelManager call options", () => {
+  it("uses forceTimeoutAndRetryMs as the per-call retry timeout", async () => {
+    useStandardResponsesEnv();
+
+    const manager = new NoopUsageModelManager(
+      [],
+      [],
+      256,
+      0.4,
+      "medium",
+      0,
+      42,
+      7
+    );
+    const model = new DelayedFirstAttemptModel({
+      apiKey: "timeout-test-key",
+      modelName: "timeout-test-model",
+      provider: PsAiModelProvider.OpenAI,
+      modelType: PsAiModelType.Text,
+      modelSize: PsAiModelSize.Small,
+      timeoutMs: 1000,
+      prices,
+    });
+
+    manager.models.set(`${PsAiModelType.Text}_${PsAiModelSize.Small}`, model);
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        parseJson: false,
+        forceTimeoutAndRetryMs: 10,
+        overrideMaxRetries: 2,
+      }
+    );
+
+    assert.equal(result, "second attempt");
+    assert.equal(model.generateCalls, 2);
+  });
 });
 
 describe("PsAiModelManager OpenAI Responses state reuse", () => {

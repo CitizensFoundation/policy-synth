@@ -61,6 +61,7 @@ interface PsCallModelOptions {
   parseJson?: boolean;
   limitedRetries?: boolean;
   overrideMaxRetries?: number;
+  forceTimeoutAndRetryMs?: number;
   tokenOutEstimate?: number;
   streamingCallbacks?: Function;
   modelProvider?: import("./aiModelTypes.js").PsAiModelProvider;

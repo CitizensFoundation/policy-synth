@@ -960,7 +960,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (options.simulateContentErrorForFallbackDebugging) {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
-        const timeoutMs = model.config.timeoutMs ?? this.modelCallTimeoutMs;
+        const timeoutMs =
+          options.forceTimeoutAndRetryMs ??
+          model.config.timeoutMs ??
+          this.modelCallTimeoutMs;
         const requestOptions = this.getModelRequestOptions(options);
         const results = (await this.callWithTimeout(
           model,
@@ -1241,7 +1244,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
                 );
                 const timeoutMs =
-                  fallbackEphemeral.config.timeoutMs ?? this.modelCallTimeoutMs;
+                  options.forceTimeoutAndRetryMs ??
+                  fallbackEphemeral.config.timeoutMs ??
+                  this.modelCallTimeoutMs;
                 const requestOptions = this.getModelRequestOptions(options);
                 const fallbackResults = (await this.callWithTimeout(
                   fallbackEphemeral,
