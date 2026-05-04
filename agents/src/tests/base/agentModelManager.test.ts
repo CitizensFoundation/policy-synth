@@ -41,6 +41,12 @@ type PsAiModelManagerInternals = {
     model: OpenAiResponses,
     options: PsCallModelOptions
   ) => OpenAiResponses;
+  getTimeoutMsForRetry: (
+    options: PsCallModelOptions,
+    modelTimeoutMs: number | undefined,
+    retryCount: number,
+    maxRetries: number
+  ) => number;
   statefulResponsesModelCache: Map<string, OpenAiResponses>;
   modelsByType: Map<PsAiModelType, OpenAiResponses>;
 };
@@ -215,6 +221,41 @@ class DelayedFirstAttemptModel extends BaseChatModel {
 }
 
 describe("PsAiModelManager call options", () => {
+  it("ramps forceTimeoutAndRetryMs after ten retries", () => {
+    useStandardResponsesEnv();
+
+    const manager = new NoopUsageModelManager(
+      [],
+      [],
+      256,
+      0.4,
+      "medium",
+      0,
+      42,
+      7
+    );
+    const internals = asInternals(manager);
+    const options: PsCallModelOptions = {
+      forceTimeoutAndRetryMs: 2500,
+    };
+
+    assert.equal(
+      internals.getTimeoutMsForRetry(options, undefined, 0, 50),
+      2500
+    );
+    assert.equal(
+      internals.getTimeoutMsForRetry(options, undefined, 9, 50),
+      2500
+    );
+    assert.ok(
+      internals.getTimeoutMsForRetry(options, undefined, 10, 50) > 2500
+    );
+    assert.equal(
+      internals.getTimeoutMsForRetry(options, undefined, 49, 50),
+      30000
+    );
+  });
+
   it("uses forceTimeoutAndRetryMs as the per-call retry timeout", async () => {
     useStandardResponsesEnv();
 

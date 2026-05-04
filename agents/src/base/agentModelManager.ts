@@ -86,6 +86,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   limitedLLMmaxRetryCount = 5;
   mainLLMmaxRetryCount = 50;
+  private readonly forcedTimeoutEscalationStartRetryCount = 10;
+  private readonly forcedTimeoutEscalationTargetMs = 30000;
   maxStatefulResponsesModelCacheEntries: number = Math.max(
     1,
     Number.parseInt(
@@ -960,10 +962,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (options.simulateContentErrorForFallbackDebugging) {
           throw new Error("Test error: Response was blocked due to OTHER");
         }
-        const timeoutMs =
-          options.forceTimeoutAndRetryMs ??
-          model.config.timeoutMs ??
-          this.modelCallTimeoutMs;
+        const timeoutMs = this.getTimeoutMsForRetry(
+          options,
+          model.config.timeoutMs,
+          retryCount,
+          maxRetries
+        );
         const requestOptions = this.getModelRequestOptions(options);
         const results = (await this.callWithTimeout(
           model,
@@ -1109,9 +1113,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
 
         if (error.message === "Model call timed out") {
+          const timedOutAtMs = this.getTimeoutMsForRetry(
+            options,
+            model.config.timeoutMs,
+            retryCount,
+            maxRetries
+          );
           retryCount++;
           this.logger.warn(
-            `Model call timed out, retrying immediately. Attempt #${retryCount}`
+            `Model call timed out after ${timedOutAtMs}ms, retrying immediately. Attempt #${retryCount}`
           );
           continue;
         }
@@ -1243,10 +1253,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 this.logger.info(
                   `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
                 );
-                const timeoutMs =
-                  options.forceTimeoutAndRetryMs ??
-                  fallbackEphemeral.config.timeoutMs ??
-                  this.modelCallTimeoutMs;
+                const timeoutMs = this.getTimeoutMsForRetry(
+                  options,
+                  fallbackEphemeral.config.timeoutMs,
+                  retryCount,
+                  maxRetries
+                );
                 const requestOptions = this.getModelRequestOptions(options);
                 const fallbackResults = (await this.callWithTimeout(
                   fallbackEphemeral,
@@ -1579,6 +1591,55 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       safetyIdentifier: options.safetyIdentifier,
       geminiRegions: options.geminiRegions,
     };
+  }
+
+  private getTimeoutMsForRetry(
+    options: PsCallModelOptions,
+    modelTimeoutMs: number | undefined,
+    retryCount: number,
+    maxRetries: number
+  ) {
+    const configuredTimeoutMs =
+      options.forceTimeoutAndRetryMs ?? modelTimeoutMs ?? this.modelCallTimeoutMs;
+
+    if (options.forceTimeoutAndRetryMs === undefined) {
+      return configuredTimeoutMs;
+    }
+
+    return this.getEscalatedForcedTimeoutMs(
+      options.forceTimeoutAndRetryMs,
+      retryCount,
+      maxRetries
+    );
+  }
+
+  private getEscalatedForcedTimeoutMs(
+    forcedTimeoutMs: number,
+    retryCount: number,
+    maxRetries: number
+  ) {
+    const targetTimeoutMs = Math.max(
+      forcedTimeoutMs,
+      this.forcedTimeoutEscalationTargetMs
+    );
+
+    if (
+      retryCount < this.forcedTimeoutEscalationStartRetryCount ||
+      maxRetries <= this.forcedTimeoutEscalationStartRetryCount ||
+      forcedTimeoutMs >= targetTimeoutMs
+    ) {
+      return forcedTimeoutMs;
+    }
+
+    const rampRetryCount =
+      maxRetries - this.forcedTimeoutEscalationStartRetryCount;
+    const retryProgress =
+      (retryCount - this.forcedTimeoutEscalationStartRetryCount + 1) /
+      rampRetryCount;
+    const timeoutMs =
+      forcedTimeoutMs + (targetTimeoutMs - forcedTimeoutMs) * retryProgress;
+
+    return Math.ceil(timeoutMs);
   }
 
   private callWithTimeout(
