@@ -390,9 +390,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       options.modelProvider == null && options.modelName == null;
 
     // Figure out the best API key for that provider:
+    const usesFallbackProvider =
+      provider.toLowerCase() === fallbackProvider.toLowerCase();
+    const fallbackApiKey = usesFallbackProvider
+      ? fallbackModel.config?.apiKey
+      : undefined;
+    const envApiKey = this.getApiKeyForProvider(provider);
     const apiKey =
-      (isContextOnlyOverride ? fallbackModel.config?.apiKey : undefined) ??
-      this.getApiKeyForProvider(provider);
+      (isContextOnlyOverride ? fallbackApiKey : undefined) ||
+      envApiKey ||
+      fallbackApiKey ||
+      "";
 
     // Try to load model configuration from database for cost reporting
     let dbModel: PsAiModelDb | null = null;
