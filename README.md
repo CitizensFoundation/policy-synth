@@ -1,6 +1,6 @@
 # Policy Synth
 
-**Empowering Better Decision Making for Governments and Companies**
+**Empowering Better Decision Making for Governments**
 
 Policy Synth is a TypeScript class library designed to streamline and enhance decision-making processes through multi-scale AI agent logic flows, robust APIs, and cutting-edge real-time AI-driven web applications. By integrating both collective and artificial intelligence, Policy Synth supports organizations—ranging from public institutions to private enterprises—in generating, refining, and implementing smarter, data-informed strategies.
 
