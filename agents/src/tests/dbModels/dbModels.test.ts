@@ -237,6 +237,32 @@ describe("dbModels model definitions", () => {
     }
   });
 
+  it("rethrows non-concurrent application-level index failures", async () => {
+    const originalGetQueryInterface = dbIndex.sequelize.getQueryInterface;
+    Reflect.set(dbIndex.sequelize, "getQueryInterface", () => ({
+      describeTable: async () => ({
+        id: {},
+      }),
+      showIndex: async () => [
+        {
+          name: "ps_model_usage_item_user_id",
+        },
+      ],
+      addIndex: async () => {
+        throw new Error("index permission denied");
+      },
+    }));
+
+    try {
+      await assert.rejects(
+        () => dbIndex.applicationLevelSync(),
+        /index permission denied/
+      );
+    } finally {
+      Reflect.set(dbIndex.sequelize, "getQueryInterface", originalGetQueryInterface);
+    }
+  });
+
   it("skips app-level sync unless explicitly enabled", async () => {
     process.env.SYNC_DB_FOR_APP = "false";
     const originalGetQueryInterface = dbIndex.sequelize.getQueryInterface;

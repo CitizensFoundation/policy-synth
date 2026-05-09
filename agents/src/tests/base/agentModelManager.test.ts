@@ -1989,7 +1989,10 @@ describe("PsAiModelManager text model calls", () => {
         modelName: "fallback-json-model",
         modelSize: PsAiModelSize.Medium,
       }),
-      [createModelResult("{foo: true false}"), createModelResult('"[]"')]
+      [
+        createModelResult("{foo: true false}"),
+        createModelResult(JSON.stringify("'[]'")),
+      ]
     );
     registerModel(manager, primary);
     Reflect.set(

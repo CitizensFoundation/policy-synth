@@ -120,6 +120,21 @@ describe("PsBaseValidationAgent", () => {
         results: { isValid: true, lastAgent: false },
       },
     });
+
+    const existingCallback = {
+      handleLLMNewToken(_token: string) {
+        return;
+      },
+    };
+    const appendAgent = new StubValidationAgent(
+      "Append",
+      createValidationOptions({
+        webSocket: new MockWebSocket(),
+        streamingCallbacks: [existingCallback],
+      })
+    );
+    assert.equal(appendAgent.options.streamingCallbacks?.[0], existingCallback);
+    assert.equal(appendAgent.options.streamingCallbacks?.length, 2);
   });
 
   it("does not add websocket callbacks when streaming is disabled", () => {

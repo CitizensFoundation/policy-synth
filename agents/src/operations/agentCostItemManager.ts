@@ -303,11 +303,7 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
     }
 
     if (data.accountingSnapshot || data.legacyAccountingSnapshot) {
-      const snapshot = data.accountingSnapshot ?? data.legacyAccountingSnapshot;
-      if (!snapshot) {
-        return undefined;
-      }
-
+      const snapshot = data.accountingSnapshot ?? data.legacyAccountingSnapshot!;
       return {
         token_in_count: snapshot.tokenInCount,
         token_out_count: snapshot.tokenOutCount,

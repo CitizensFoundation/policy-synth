@@ -347,6 +347,7 @@ export async function runGenerateDocumentationCli(
   runtime.logger.info("Documentation generation complete.");
 }
 
+/* c8 ignore next 3 */
 if (isCliEntrypoint(import.meta.url)) {
   await runGenerateDocumentationCli();
 }

@@ -1252,12 +1252,32 @@ describe("base infrastructure modules", () => {
     const providerAgent = new ExposedSimpleAgent({
       groupId: 50,
     } as PsSimpleAgentMemoryData);
+    delete process.env.AI_MODEL_API_KEY;
+    providerAgent.initializeModels();
+    assert.equal(providerAgent.models.size, 0);
+    process.env.AI_MODEL_API_KEY = "test-key";
+
     for (const provider of ["anthropic", "openai", "google", "azure"]) {
       process.env.AI_MODEL_PROVIDER = provider;
       providerAgent.models.clear();
       providerAgent.initializeModels();
       assert.equal(providerAgent.models.has(PsAiModelType.Text), true);
     }
+
+    process.env.AI_MODEL_PROVIDER = "openai";
+    Reflect.set(providerAgent, "maxModelTokensOut", undefined);
+    Reflect.set(providerAgent, "modelTemperature", undefined);
+    providerAgent.models.clear();
+    providerAgent.initializeModels();
+    assert.equal(providerAgent.models.has(PsAiModelType.Text), true);
+    delete process.env.AI_MODEL_MAX_TOKENS_OUT;
+    delete process.env.AI_MODEL_TEMPERATURE;
+    delete process.env.AI_MODEL_REASONING_EFFORT;
+    delete process.env.AI_MODEL_MAX_THINKING_TOKENS;
+    providerAgent.models.clear();
+    providerAgent.initializeModels();
+    assert.equal(providerAgent.models.has(PsAiModelType.Text), true);
+
     process.env.AI_MODEL_PROVIDER = "unsupported";
     assert.throws(
       () => providerAgent.initializeModels(),
@@ -1390,6 +1410,18 @@ describe("base infrastructure modules", () => {
 
     const noMemoryBaseAgent = new PolicySynthSimpleAgentBase();
     await noMemoryBaseAgent.saveMemory();
+
+    Reflect.set(simpleAgentRedis, "set", async () => {
+      throw new Error("simple redis write failed");
+    });
+    try {
+      const saveFailingBaseAgent = new PolicySynthSimpleAgentBase({
+        groupId: 59,
+      } as PsSimpleAgentMemoryData);
+      await saveFailingBaseAgent.saveMemory();
+    } finally {
+      Reflect.set(simpleAgentRedis, "set", originalSet);
+    }
   });
 
   it("ranks simple pairwise items and interprets LLM responses", async () => {
@@ -1440,6 +1472,12 @@ describe("base infrastructure modules", () => {
     assert.equal((await agent.getResultsFromLLM(1, "stage", [], 10, 20)).wonItemIndex, 10);
     assert.equal((await agent.getResultsFromLLM(1, "stage", [], 10, 20)).wonItemIndex, 20);
     assert.equal((await agent.getResultsFromLLM(1, "stage", [], 10, 20)).wonItemIndex, -1);
+    agent.llmResponses = [""];
+    process.env.PS_MAX_PAIRWISE_RANING_RETRY_COUNT = "1";
+    await assert.rejects(
+      () => agent.getResultsFromLLM(1, "stage", [], 10, 20),
+      /No winning item text/
+    );
 
     process.env.PS_MAX_PAIRWISE_RANING_RETRY_COUNT = "2";
     agent.llmResponses = ["THROW", "One"];
@@ -1547,6 +1585,10 @@ describe("base infrastructure modules", () => {
     assert.equal((await agent.getResultsFromLLM(1, [], 10, 20)).wonItemIndex, 20);
 
     agent.modelResponses = ["PROHIBITED"];
+    assert.equal((await agent.getResultsFromLLM(1, [], 10, 20)).wonItemIndex, -1);
+
+    process.env.PS_MAX_PAIRWISE_RANING_RETRY_COUNT = "1";
+    agent.modelResponses = [""];
     assert.equal((await agent.getResultsFromLLM(1, [], 10, 20)).wonItemIndex, -1);
 
     process.env.PS_MAX_PAIRWISE_RANING_RETRY_COUNT = "2";

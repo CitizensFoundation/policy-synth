@@ -136,6 +136,7 @@ export async function runAddUserToAgentClassesCli(
   }
 }
 
+/* c8 ignore next 3 */
 if (isCliEntrypoint(import.meta.url)) {
   await runAddUserToAgentClassesCli();
 }

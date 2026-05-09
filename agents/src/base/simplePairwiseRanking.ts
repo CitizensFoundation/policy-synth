@@ -164,7 +164,7 @@ export abstract class SimplePairwiseRankingsAgent extends PolicySynthSimpleAgent
       } catch (error) {
         this.logger.error("Error getting results from LLM");
         this.logger.error(error);
-        if (retryCount < maxRetryCount) {
+        if (retryCount + 1 < maxRetryCount) {
           await new Promise((resolve) =>
             setTimeout(resolve, 4500 + retryCount * 5000)
           );

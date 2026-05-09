@@ -148,6 +148,7 @@ describe("AgentRegistryManager", () => {
     const otherAgent = { class_base_id: "agent-b", version: 1 };
     const oldConnector = { class_base_id: "connector-a", version: 1 };
     const newConnector = { class_base_id: "connector-a", version: 3 };
+    const staleConnector = { class_base_id: "connector-a", version: 2 };
     const otherConnector = { class_base_id: "connector-b", version: 1 };
 
     await withPatched(PsAgentClass, "findAll", async () => [
@@ -164,6 +165,7 @@ describe("AgentRegistryManager", () => {
     await withPatched(PsAgentConnectorClass, "findAll", async () => [
       oldConnector,
       newConnector,
+      staleConnector,
       otherConnector,
     ], async () => {
       assert.deepEqual(await manager.getActiveConnectorClasses(7), [

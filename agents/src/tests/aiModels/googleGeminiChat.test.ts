@@ -41,6 +41,12 @@ class ExposedGoogleGeminiChat extends GoogleGeminiChat {
     }).getErrorMessage(error);
   }
 
+  isGeminiRegionFailoverEligibleForTest(error: unknown) {
+    return (this as unknown as {
+      isGeminiRegionFailoverEligible: (error: unknown) => boolean;
+    }).isGeminiRegionFailoverEligible(error);
+  }
+
   buildUsageItemDataForTest(
     usageRaw: Record<string, unknown> | null | undefined,
     request: {
@@ -285,6 +291,24 @@ describe("GoogleGeminiChat", () => {
     assert.equal(
       missingLocationModel.getErrorMessageForTest(circular),
       "[object Object]"
+    );
+    assert.equal(
+      missingLocationModel.isGeminiRegionFailoverEligibleForTest({
+        cause: { code: "EPIPE" },
+      }),
+      true
+    );
+    assert.equal(
+      missingLocationModel.isGeminiRegionFailoverEligibleForTest({
+        response: { status: "503" },
+      }),
+      true
+    );
+    assert.equal(
+      missingLocationModel.isGeminiRegionFailoverEligibleForTest(
+        new Error("prompt may be malformed")
+      ),
+      false
     );
 
     process.env.GOOGLE_CLOUD_LOCATION = "europe-west1";
