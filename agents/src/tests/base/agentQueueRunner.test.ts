@@ -4,6 +4,8 @@ import type { Job, QueueEvents, Worker } from "bullmq";
 
 import type { PsAgentStartJobData } from "../../base/agentQueue.js";
 import type { PsAgent } from "../../dbModels/agent.js";
+type PsBaseAgentRunnerRuntime =
+  import("../../base/agentRunner.js").PsBaseAgentRunnerRuntime;
 
 process.env.DISABLE_DB_INIT = "true";
 process.env.PSQL_DB_NAME ??= "policy_synth_test";
@@ -327,12 +329,37 @@ class TestRunner extends PsBaseAgentRunner {
     );
   }
 
+  public removeRegistrationsOnSigtermForTest() {
+    Reflect.set(this, "removeFromRegistryOnSigterm", true);
+  }
+
   public async createAgentClassesForTest() {
     await this.createAgentClassesIfNeeded();
   }
 
   public async createConnectorClassesForTest() {
     await this.createConnectorClassesIfNeeded();
+  }
+}
+
+class RuntimeHookRunner extends PsBaseAgentRunner {
+  protected agentClasses: PsAgentClassCreationAttributes[] = [];
+  protected connectorClasses: PsAgentConnectorClassCreationAttributes[] = [];
+
+  constructor(runtime: PsBaseAgentRunnerRuntime) {
+    super(runtime);
+  }
+
+  async setupAgents() {
+    return;
+  }
+
+  public async connectForTest() {
+    await this.connectToDatabase();
+  }
+
+  public async initializeForTest() {
+    await this.initializeModels();
   }
 }
 
@@ -501,6 +528,24 @@ describe("PsBaseAgentRunner", () => {
     assert.throws(() => new TestRunner(), /YP_USER_ID_FOR_AGENT_CREATION/);
   });
 
+  it("uses injected runtime hooks for base database setup", async () => {
+    process.env.YP_USER_ID_FOR_AGENT_CREATION = "42";
+    const calls: string[] = [];
+    const runner = new RuntimeHookRunner({
+      connectToDatabase: async () => {
+        calls.push("connect");
+      },
+      initializeModels: async () => {
+        calls.push("initialize");
+      },
+    });
+
+    await runner.connectForTest();
+    await runner.initializeForTest();
+
+    assert.deepEqual(calls, ["connect", "initialize"]);
+  });
+
   it("registers classes, agents, connectors, and setup flow", async () => {
     process.env.YP_USER_ID_FOR_AGENT_CREATION = "42";
     const runner = new TestRunner();
@@ -526,6 +571,11 @@ describe("PsBaseAgentRunner", () => {
         true,
       ]);
 
+      assert.equal(await runner.getOrCreateAgentRegistry(), registry);
+      Reflect.set(PsAgentRegistry, "findOrCreate", async () => [
+        registry,
+        false,
+      ]);
       assert.equal(await runner.getOrCreateAgentRegistry(), registry);
       runner.setRegistryForTest(registry);
       await runner.createAgentClassesForTest();
@@ -665,6 +715,44 @@ describe("PsBaseAgentRunner", () => {
 
     assert.deepEqual(exitCodes, [0, 0]);
     assert.equal(runner.runnerQueue.pauseCount, 1);
+    assert.equal(registry.removedAgents.length, 1);
+    assert.equal(registry.removedConnectors.length, 1);
+  });
+
+  it("can remove registered classes during SIGTERM shutdown", async () => {
+    process.env.YP_USER_ID_FOR_AGENT_CREATION = "42";
+    const runner = new TestRunner();
+    const registry = createRegistry();
+    runner.setRegistryForTest(registry);
+    runner.addRegisteredForTest(
+      { name: "SIGTERM Agent" },
+      { name: "SIGTERM Connector" }
+    );
+    runner.removeRegistrationsOnSigtermForTest();
+
+    const originalExit = process.exit;
+    const exitCodes: Array<string | number | null | undefined> = [];
+    Reflect.set(process, "exit", ((code?: string | number | null) => {
+      exitCodes.push(code);
+      throw new Error("process exit");
+    }) as typeof process.exit);
+
+    runner.setupGracefulShutdown();
+    const sigterm = process.listeners("SIGTERM").at(-1);
+
+    try {
+      await assert.rejects(
+        () => (sigterm as () => Promise<void>)(),
+        /process exit/
+      );
+    } finally {
+      if (typeof sigterm === "function") {
+        process.removeListener("SIGTERM", sigterm);
+      }
+      Reflect.set(process, "exit", originalExit);
+    }
+
+    assert.deepEqual(exitCodes, [0]);
     assert.equal(registry.removedAgents.length, 1);
     assert.equal(registry.removedConnectors.length, 1);
   });

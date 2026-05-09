@@ -9,24 +9,46 @@ export interface AgentQueueManagerRuntime {
   createQueueEvents(queueName: string, connection: Redis): QueueEvents;
 }
 
-const defaultRuntime: AgentQueueManagerRuntime = {
-  createRedis: (redisUrl, options) => new Redis(redisUrl, options),
+export interface AgentQueueManagerRuntimeConstructors {
+  Redis: new (redisUrl: string, options: RedisOptions) => Redis;
+  Queue: new (queueName: string, options: { connection: Redis }) => Queue;
+  QueueEvents: new (
+    queueName: string,
+    options: { connection: Redis }
+  ) => QueueEvents;
+}
+
+export const buildAgentQueueManagerRuntime = ({
+  Redis: RedisConstructor,
+  Queue: QueueConstructor,
+  QueueEvents: QueueEventsConstructor,
+}: AgentQueueManagerRuntimeConstructors): AgentQueueManagerRuntime => ({
+  createRedis: (redisUrl, options) => new RedisConstructor(redisUrl, options),
   createQueue: (queueName, connection) =>
-    new Queue(queueName, {
+    new QueueConstructor(queueName, {
       connection,
     }),
   createQueueEvents: (queueName, connection) =>
-    new QueueEvents(queueName, {
+    new QueueEventsConstructor(queueName, {
       connection,
     }),
-};
+});
+
+export const defaultAgentQueueManagerRuntime: AgentQueueManagerRuntime =
+  buildAgentQueueManagerRuntime({
+    Redis,
+    Queue,
+    QueueEvents,
+  });
 
 export class AgentQueueManager extends PolicySynthAgentBase {
   redisClient!: Redis;
   queues: Map<string, Queue>;
   runtime: AgentQueueManagerRuntime;
 
-  constructor(runtime: AgentQueueManagerRuntime = defaultRuntime) {
+  constructor(
+    runtime: AgentQueueManagerRuntime = defaultAgentQueueManagerRuntime
+  ) {
     super();
     this.runtime = runtime;
     this.logger.info("AgentQueueManager: Initializing");

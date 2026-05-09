@@ -6,6 +6,8 @@ import { PsYourPrioritiesConnector } from "../../connectors/collaboration/yourPr
 
 type AgentQueueManagerRuntime =
   import("../../operations/agentQueueManager.js").AgentQueueManagerRuntime;
+type AgentQueueManagerRuntimeConstructors =
+  import("../../operations/agentQueueManager.js").AgentQueueManagerRuntimeConstructors;
 
 process.env.NODE_ENV = "test";
 process.env.PSQL_DB_NAME ??= "policy_synth_test";
@@ -19,7 +21,7 @@ const [
   { AgentCostItemManager },
   { AgentCostManager },
   { AgentManager },
-  { AgentQueueManager },
+  { AgentQueueManager, buildAgentQueueManagerRuntime },
   { AgentRegistryManager },
 ] = await Promise.all([
   import("../../dbModels/index.js"),
@@ -868,6 +870,66 @@ describe("AgentCostManager", () => {
 });
 
 describe("AgentQueueManager", () => {
+  it("builds queue runtime adapters from supplied constructors", () => {
+    class RuntimeRedis {
+      constructor(
+        public readonly redisUrl: string,
+        public readonly options: unknown
+      ) {}
+
+      on() {
+        return this;
+      }
+    }
+
+    class RuntimeQueue {
+      constructor(
+        public readonly queueName: string,
+        public readonly options: { connection: unknown }
+      ) {}
+    }
+
+    class RuntimeQueueEvents {
+      constructor(
+        public readonly queueName: string,
+        public readonly options: { connection: unknown }
+      ) {}
+    }
+
+    const runtime = buildAgentQueueManagerRuntime({
+      Redis:
+        RuntimeRedis as unknown as AgentQueueManagerRuntimeConstructors["Redis"],
+      Queue:
+        RuntimeQueue as unknown as AgentQueueManagerRuntimeConstructors["Queue"],
+      QueueEvents:
+        RuntimeQueueEvents as unknown as AgentQueueManagerRuntimeConstructors["QueueEvents"],
+    });
+
+    const redis = runtime.createRedis("redis://runtime", {
+      maxRetriesPerRequest: null,
+    });
+    const queue = runtime.createQueue("runtime-queue", redis);
+    const queueEvents = runtime.createQueueEvents("runtime-events", redis);
+
+    assert.equal(
+      (redis as unknown as RuntimeRedis).redisUrl,
+      "redis://runtime"
+    );
+    assert.equal((queue as unknown as RuntimeQueue).queueName, "runtime-queue");
+    assert.equal(
+      (queue as unknown as RuntimeQueue).options.connection,
+      redis
+    );
+    assert.equal(
+      (queueEvents as unknown as RuntimeQueueEvents).queueName,
+      "runtime-events"
+    );
+    assert.equal(
+      (queueEvents as unknown as RuntimeQueueEvents).options.connection,
+      redis
+    );
+  });
+
   const createQueueRuntime = () => {
     const store = new Map<string, string>();
     const jobs: Array<{ queueName: string; name: string; data: unknown }> = [];

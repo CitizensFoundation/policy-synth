@@ -15,17 +15,30 @@ interface AgentQueueConstructor {
   getAgentClass(): PsAgentClassCreationAttributes;
 }
 
+export interface PsBaseAgentRunnerRuntime {
+  connectToDatabase: () => Promise<unknown>;
+  initializeModels: () => Promise<unknown>;
+}
+
+export const defaultPsBaseAgentRunnerRuntime: PsBaseAgentRunnerRuntime = {
+  connectToDatabase,
+  initializeModels,
+};
+
 export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
   protected agentsToRun: PolicySynthAgentQueue[] = [];
   protected agentRegistry: PsAgentRegistry | null = null;
   protected registeredAgentClasses: PsAgentClass[] = [];
   protected registeredConnectorClasses: PsAgentConnectorClass[] = [];
+  protected removeFromRegistryOnSigterm = false;
+  protected runtime: PsBaseAgentRunnerRuntime;
 
   protected abstract agentClasses: PsAgentClassCreationAttributes[];
   protected abstract connectorClasses: PsAgentConnectorClassCreationAttributes[];
 
-  constructor() {
+  constructor(runtime: PsBaseAgentRunnerRuntime = defaultPsBaseAgentRunnerRuntime) {
     super();
+    this.runtime = runtime;
 
     if (!process.env.YP_USER_ID_FOR_AGENT_CREATION) {
       throw new Error(
@@ -59,11 +72,11 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
   }
 
   protected async connectToDatabase() {
-    await connectToDatabase();
+    await this.runtime.connectToDatabase();
   }
 
   protected async initializeModels() {
-    await initializeModels();
+    await this.runtime.initializeModels();
   }
 
   inspectDynamicMethods(obj: any, className: string) {
@@ -231,9 +244,7 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
         "[AgentRunner] All queues paused and in-flight jobs finished."
       );
 
-      const removeFromRegistry = false;
-
-      if (removeFromRegistry) {
+      if (this.removeFromRegistryOnSigterm) {
         if (this.agentRegistry) {
           for (const agentClass of this.registeredAgentClasses) {
             await this.agentRegistry.removeAgent(agentClass);
