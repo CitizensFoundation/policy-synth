@@ -539,6 +539,51 @@ describe("base infrastructure modules", () => {
     await noMessagesTracker.updateRangedProgress(50, "not appended");
   });
 
+  it("reports progress tracker diagnostics when status storage is unavailable", async () => {
+    delete process.env.DISABLE_AGENT_STATUS;
+    const errors: string[] = [];
+    const debugMessages: string[] = [];
+    const logger = {
+      error: (message: unknown) => {
+        errors.push(String(message));
+      },
+      debug: (message: unknown) => {
+        debugMessages.push(String(message));
+      },
+    };
+
+    const noKeyTracker = new PsProgressTracker("", 0, 100);
+    Reflect.set(noKeyTracker, "logger", logger);
+    await noKeyTracker.loadStatusFromRedis();
+    await noKeyTracker.saveRedisStatus();
+
+    const missingStatusTracker = new PsProgressTracker("missing-status", 0, 100);
+    setRedis(missingStatusTracker, {
+      get: async () => null,
+      set: async () => "OK",
+    });
+    Reflect.set(missingStatusTracker, "logger", logger);
+    await missingStatusTracker.loadStatusFromRedis();
+    await missingStatusTracker.updateRangedProgress(10, "range");
+    await missingStatusTracker.updateProgress(20, "absolute");
+
+    assert.equal(
+      errors.filter((message) => message === "No Redis key set for agent status")
+        .length,
+      2
+    );
+    assert.equal(
+      errors.filter((message) => message === "Agent status not initialized")
+        .length,
+      2
+    );
+    assert.equal(
+      debugMessages.filter((message) => message === "No status data found")
+        .length,
+      3
+    );
+  });
+
   it("slides and waits on model rate limits", async () => {
     const manager = new PsRateLimitManager();
     const model = {
@@ -570,6 +615,30 @@ describe("base infrastructure modules", () => {
     manager.slideWindowForTokens(model);
     assert.equal(manager.rateLimits["rate-model"].requests.length, 1);
     assert.equal(manager.rateLimits["rate-model"].tokens.length, 1);
+  });
+
+  it("initializes rate-limit buckets during checks that do not require waiting", async () => {
+    const manager = new PsRateLimitManager();
+    const model = {
+      name: "fresh-rate-model",
+      limitRPM: 10,
+      limitTPM: 100,
+    };
+    const originalSetTimeout = globalThis.setTimeout;
+    Reflect.set(globalThis, "setTimeout", (() => {
+      throw new Error("rate limiter should not sleep");
+    }) as unknown as typeof setTimeout);
+
+    try {
+      await manager.checkRateLimits(model, 2);
+    } finally {
+      Reflect.set(globalThis, "setTimeout", originalSetTimeout);
+    }
+
+    assert.deepEqual(manager.rateLimits["fresh-rate-model"], {
+      requests: [],
+      tokens: [],
+    });
   });
 
   it("delegates core agent behavior to trackers, models, Redis, and config", async () => {
@@ -930,6 +999,10 @@ describe("base infrastructure modules", () => {
             message: { content: "thinking", phase: "commentary" },
           },
           {
+            type: "assistant_message",
+            message: { content: "internal final", phase: undefined },
+          },
+          {
             type: "tool_call",
             toolCall: {
               id: "tool-1",
@@ -956,6 +1029,14 @@ describe("base infrastructure modules", () => {
     }
 
     assert.equal(task.getPhaseForTest(), AgentPhase.FINISH);
+    assert.equal(
+      yielded.some((message) => message.message === "thinking"),
+      false
+    );
+    assert.equal(
+      yielded.some((message) => message.message === "internal final"),
+      false
+    );
     assert.equal(yielded.some((message) => message.role === "tool"), true);
     assert.equal(
       yielded.some(
@@ -1004,6 +1085,14 @@ describe("base infrastructure modules", () => {
     );
     assert.equal(task.isDoneForTest(), true);
 
+    const commentaryOnlyTask = new TestAgentTask([]);
+    commentaryOnlyTask.getMessagesForTest().push({
+      role: "assistant",
+      message: "still thinking",
+      phase: "commentary",
+    });
+    assert.equal(commentaryOnlyTask.isDoneForTest(), false);
+
     const directToolTask = new TestAgentTask([]);
     await directToolTask.callToolStepForTest([
       {
@@ -1037,6 +1126,10 @@ describe("base infrastructure modules", () => {
     for await (const message of fallbackPlanTask.run("hello", "system")) {
       fallbackMessages.push(message);
     }
+    assert.equal(
+      fallbackMessages.some((message) => message.message === "comment"),
+      false
+    );
     assert.equal(
       fallbackMessages.some((message) => message.role === "tool"),
       true

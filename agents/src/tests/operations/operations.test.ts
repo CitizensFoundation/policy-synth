@@ -1419,6 +1419,12 @@ describe("AgentManager", () => {
       () => manager.getSubAgentMemoryKey("group-1", 3),
       /Agent with id 3 not found/
     );
+    (manager as unknown as { getAgent: (groupId: string) => Promise<unknown> })
+      .getAgent = async () => null;
+    await assert.rejects(
+      () => manager.getSubAgentMemoryKey("group-1", 2),
+      /Top-level agent not found/
+    );
 
     await withPatched(
       PsAgent,
@@ -1457,6 +1463,49 @@ describe("AgentManager", () => {
         );
       })
     );
+  });
+
+  it("rolls back top-level agent creation failures", async () => {
+    const manager = new AgentManager();
+    const tx = createTransaction();
+    const group = {
+      id: 5,
+      user_id: 6,
+      name: "Group",
+      configuration: {},
+      set: () => undefined,
+      save: async () => undefined,
+    };
+
+    await withEnv("CLASS_ID_FOR_TOP_LEVEL_AGENT", "top-class", async () =>
+      withPatched(
+        sequelize,
+        "transaction",
+        async () => tx.transaction,
+        async () =>
+          withPatched(
+            PsAgentClass,
+            "findOne",
+            async () => ({ id: 9 }),
+            async () =>
+              withPatched(
+                PsAgent,
+                "create",
+                async () => {
+                  throw new Error("top-level create failed");
+                },
+                async () => {
+                  await assert.rejects(
+                    () => manager.createTopLevelAgent(group as never),
+                    /top-level create failed/
+                  );
+                }
+              )
+          )
+      )
+    );
+
+    assert.deepEqual(tx.calls, ["rollback"]);
   });
 });
 

@@ -272,6 +272,56 @@ describe("TokenLimitChunker", () => {
     assert.deepEqual(verifiedChunks, ["a", "bc", "d", "ef"]);
   });
 
+  it("splits oversized Gemini paragraphs and re-verifies optimistic chunks", async () => {
+    const caller = new RecordingCaller([]);
+    const paragraphChunker = new TokenLimitChunker(caller);
+    overrideChunker(paragraphChunker, {
+      countTokens: async (_model, text) => text.length,
+    });
+
+    const paragraphChunks = await asInternals(
+      paragraphChunker
+    ).chunkByTokensGemini(
+      new StubModel({ modelName: "gemini-test" }),
+      "abcdefghijkl",
+      5
+    );
+    assert.deepEqual(paragraphChunks, ["abcd", "efgh", "ijkl"]);
+
+    const verifyingChunker = new TokenLimitChunker(caller);
+    let measuredSample = false;
+    overrideChunker(verifyingChunker, {
+      countTokens: async (_model, text) => {
+        if (!measuredSample) {
+          measuredSample = true;
+          return 1;
+        }
+
+        return text === "abcdefghij" ? 10 : text.length;
+      },
+    });
+
+    const reverifiedChunks = await asInternals(
+      verifyingChunker
+    ).chunkByTokensGemini(
+      new StubModel({ modelName: "gemini-test" }),
+      "abcdefghij",
+      5
+    );
+    assert.deepEqual(reverifiedChunks, ["abcde", "fghij"]);
+
+    const dispatchingChunker = new TokenLimitChunker(caller);
+    overrideChunker(dispatchingChunker, {
+      countTokens: async (_model, text) => text.length,
+    });
+    const dispatchedChunks = await asInternals(dispatchingChunker).chunkByTokens(
+      new StubModel({ modelName: "gemini-dispatch-test" }),
+      "abcdefgh",
+      5
+    );
+    assert.deepEqual(dispatchedChunks, ["abcd", "efgh"]);
+  });
+
   it("splits oversized documents, preserves context, and summarizes analyses", async () => {
     const caller = new RecordingCaller(["first analysis", { second: true }, "final"]);
     const chunker = new TokenLimitChunker(caller);
@@ -310,6 +360,58 @@ describe("TokenLimitChunker", () => {
     assert.match(caller.calls[0].messages[1].message, /tail two/);
     assert.match(caller.calls[2].messages[1].message, /<Analysis index="1">first analysis<\/Analysis>/);
     assert.match(caller.calls[2].messages[1].message, /<Analysis index="2">\{"second":true\}<\/Analysis>/);
+  });
+
+  it("continues chunking when document size exceeds the computed budget", async () => {
+    const caller = new RecordingCaller(["analysis", "final"]);
+    const chunker = new TokenLimitChunker(caller);
+    overrideChunker(chunker, {
+      countTokens: async (_model, text) =>
+        text === "oversized document body" ? 40_000 : 1,
+      chunkByTokens: async () => ["budgeted chunk"],
+    });
+
+    const result = await chunker.handle(
+      new StubModel({ maxContextTokens: 50_000, maxTokensOut: 1_000 }),
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [
+        { role: "system", message: "prefix" },
+        { role: "user", message: "oversized document body" },
+      ],
+      { numberOfLastWordsToPreserveForTooManyTokenSplitting: 0 },
+      new Error("maximum context length is 50000 tokens")
+    );
+
+    assert.equal(result, "final");
+    assert.match(
+      caller.calls[0].messages[1].message,
+      /<PartialDocument index="1">budgeted chunk<\/PartialDocument>/
+    );
+  });
+
+  it("allows low but usable chunk budgets", async () => {
+    const caller = new RecordingCaller(["analysis", "final"]);
+    const chunker = new TokenLimitChunker(caller);
+    overrideChunker(chunker, {
+      countTokens: async () => 1,
+      chunkByTokens: async () => ["small budget chunk"],
+    });
+
+    const result = await chunker.handle(
+      new StubModel({ maxContextTokens: 16_000, maxTokensOut: 0 }),
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [
+        { role: "system", message: "prefix" },
+        { role: "user", message: "document" },
+      ],
+      { numberOfLastWordsToPreserveForTooManyTokenSplitting: 0 },
+      new Error("maximum context length is 16000 tokens")
+    );
+
+    assert.equal(result, "final");
+    assert.equal(caller.calls.length, 2);
   });
 
   it("rejects impossible chunk budgets before calling the model", async () => {

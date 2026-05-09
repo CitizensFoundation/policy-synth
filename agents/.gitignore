@@ -1,3 +1,4 @@
+.c8rc.json
 .codex
 .env
 ts-out/
@@ -6,4 +7,5 @@ memoryBackups/
 projectImages/
 node_modules/
 webPagesCache/
+coverage/
 .DS_Store
