@@ -40,7 +40,7 @@ type ResponsesClientMock = {
 type OpenAiResponsesInternals = {
   mapToolsForResponses: (tools: ChatCompletionTool[]) => unknown[];
   mapToolChoiceForResponses: (
-    toolChoice: ChatCompletionToolChoiceOption | "auto"
+    toolChoice: ChatCompletionToolChoiceOption | "auto" | undefined
   ) => unknown;
   preprocessForResponses: (
     msgs: PsModelMessage[],
@@ -56,6 +56,30 @@ type OpenAiResponsesInternals = {
     content: string,
     phase?: PsAssistantMessagePhase
   ) => Record<string, unknown>;
+  buildUsageItemData: (
+    response: {
+      id?: string | null;
+      previous_response_id?: string | null;
+      service_tier?: string | null;
+      usage?: Record<string, unknown> | null;
+    },
+    params: {
+      stream?: boolean;
+      tool_choice?: unknown;
+      tools?: unknown[];
+      store?: boolean;
+      service_tier?: string | null;
+      previous_response_id?: string | null;
+      model?: string;
+    },
+    usage: {
+      tokensIn: number;
+      tokensOut: number;
+      cachedInTokens: number;
+      reasoningTokens: number;
+      audioTokens: number;
+    }
+  ) => PsModelUsageItemProviderData & Record<string, unknown>;
   attachImagesToLastUserMessage: (
     inputItems: Array<Record<string, unknown>>,
     images?: Array<{ mimeType: string; data: string } | { url: string }>,
@@ -103,6 +127,7 @@ const originalAzureEndpoint = process.env.AZURE_ENDPOINT;
 const originalAzureDeployment = process.env.AZURE_DEPLOYMENT_NAME;
 const originalAzureApiVersion = process.env.AZURE_OPENAI_API_VERSION;
 const originalPsAiModelName = process.env.PS_AI_MODEL_NAME;
+const originalDebugPromptMessages = process.env.PS_DEBUG_PROMPT_MESSAGES;
 
 afterEach(() => {
   if (originalOpenAiOverride === undefined) {
@@ -146,6 +171,12 @@ afterEach(() => {
   } else {
     process.env.PS_AI_MODEL_NAME = originalPsAiModelName;
   }
+
+  if (originalDebugPromptMessages === undefined) {
+    delete process.env.PS_DEBUG_PROMPT_MESSAGES;
+  } else {
+    process.env.PS_DEBUG_PROMPT_MESSAGES = originalDebugPromptMessages;
+  }
 });
 
 describe("OpenAiResponses", () => {
@@ -159,6 +190,7 @@ describe("OpenAiResponses", () => {
 
     assert.equal(internals.isPhaseAwareResponsesModel(), true);
     assert.equal(model.getCloneConfig().modelName, "gpt-5.3");
+    assert.deepEqual(internals.mapToolsForResponses([]), []);
 
     const tools: ChatCompletionTool[] = [
       {
@@ -175,8 +207,32 @@ describe("OpenAiResponses", () => {
         },
       },
     ];
+    const passthroughTool = {
+      type: "web_search_preview",
+      user_location: {
+        type: "approximate",
+      },
+    } as unknown as ChatCompletionTool;
+    const strictTool = {
+      type: "function",
+      strict: true,
+      function: {
+        name: "strictLookup",
+        parameters: {
+          type: "object",
+        },
+      },
+    } as unknown as ChatCompletionTool;
+    const missingFunctionTool = {
+      type: "function",
+    } as unknown as ChatCompletionTool;
 
-    assert.deepEqual(internals.mapToolsForResponses(tools), [
+    assert.deepEqual(internals.mapToolsForResponses([
+      ...tools,
+      passthroughTool,
+      strictTool,
+      missingFunctionTool,
+    ]), [
       {
         type: "function",
         name: "lookup",
@@ -187,6 +243,22 @@ describe("OpenAiResponses", () => {
             id: { type: "number" },
           },
         },
+      },
+      passthroughTool,
+      {
+        type: "function",
+        name: "strictLookup",
+        description: undefined,
+        parameters: {
+          type: "object",
+        },
+        strict: true,
+      },
+      {
+        type: "function",
+        name: undefined,
+        description: undefined,
+        parameters: undefined,
       },
     ]);
     assert.deepEqual(
@@ -204,6 +276,31 @@ describe("OpenAiResponses", () => {
       "none"
     );
     assert.equal(internals.mapToolChoiceForResponses("auto"), "auto");
+    assert.equal(internals.mapToolChoiceForResponses(undefined), "auto");
+    assert.deepEqual(
+      internals.mapToolChoiceForResponses({
+        type: "custom",
+      } as unknown as ChatCompletionToolChoiceOption),
+      {
+        type: "custom",
+      }
+    );
+    assert.deepEqual(
+      internals.mapToolChoiceForResponses({
+        type: "function",
+        function: {},
+      } as unknown as ChatCompletionToolChoiceOption),
+      {
+        type: "function",
+        function: {},
+      }
+    );
+    assert.equal(
+      internals.mapToolChoiceForResponses(
+        "required" as unknown as ChatCompletionToolChoiceOption
+      ),
+      "auto"
+    );
 
     const items: Array<Record<string, unknown>> = [
       { role: "user", content: "hello" },
@@ -226,6 +323,13 @@ describe("OpenAiResponses", () => {
         ],
       },
     ]);
+
+    const unchangedItems: Array<Record<string, unknown>> = [
+      { role: "user", content: "plain" },
+    ];
+    internals.attachImagesToLastUserMessage(unchangedItems, []);
+    internals.attachImagesToLastUserMessage(unchangedItems);
+    assert.deepEqual(unchangedItems, [{ role: "user", content: "plain" }]);
 
     const itemsWithoutUser: Array<Record<string, unknown>> = [];
     internals.attachImagesToLastUserMessage(
@@ -392,6 +496,221 @@ describe("OpenAiResponses", () => {
     assert.equal(result.usageItemData?.request?.requestedServiceTier, "priority");
   });
 
+  it("uses PS_AI_MODEL_NAME for phase awareness when config model name is absent", () => {
+    process.env.PS_AI_MODEL_NAME = "gpt-5.3";
+
+    const configWithoutModelName: Partial<PsOpenAiModelConfig> = {
+      ...createConfig(),
+    };
+    delete configWithoutModelName.modelName;
+
+    const model = new OpenAiResponses(
+      configWithoutModelName as PsOpenAiModelConfig
+    );
+    const internals = asInternals(model);
+
+    assert.equal(internals.isPhaseAwareResponsesModel(), true);
+    const originalParseInt = Number.parseInt;
+    Number.parseInt = (() => Number.NaN) as typeof Number.parseInt;
+    try {
+      assert.equal(internals.isPhaseAwareResponsesModel(), false);
+    } finally {
+      Number.parseInt = originalParseInt;
+    }
+    assert.equal(model.getCloneConfig().modelName, "gpt-5.3");
+    assert.deepEqual(model.getResponsesContinuationIdentity(), {
+      modelName: "gpt-5.3",
+      regionalProcessing: undefined,
+      transportBaseUrl: undefined,
+      usingAzure: false,
+    });
+  });
+
+  it("applies runtime Responses overrides without remapping Azure requests", async () => {
+    const model = new OpenAiResponses(createConfig());
+
+    model.applyRuntimeResponsesOverrides({
+      inferenceType: "fast",
+      maxTokensOut: 512,
+      temperature: 0.2,
+      reasoningEffort: "high",
+      maxThinkingTokens: 1234,
+    });
+
+    assert.equal(model.getCloneConfig().inferenceType, "priority");
+    assert.equal(model.getCloneConfig().maxTokensOut, 512);
+    assert.equal(model.getCloneConfig().temperature, 0.2);
+    assert.equal(model.getCloneConfig().reasoningEffort, "high");
+    assert.equal(model.getCloneConfig().maxThinkingTokens, 1234);
+
+    process.env.AZURE_OPENAI_KEY = "azure-key";
+    process.env.AZURE_ENDPOINT = "https://azure.example.com/v1";
+    process.env.AZURE_DEPLOYMENT_NAME = "azure-responses-deployment";
+    process.env.PS_DEBUG_PROMPT_MESSAGES = "true";
+
+    const azureModel = new OpenAiResponses(
+      createConfig({
+        inferenceType: "priority",
+      })
+    );
+    azureModel.applyRuntimeResponsesOverrides({
+      inferenceType: "fast",
+    });
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(azureModel, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "azure-runtime-overrides",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "azure override" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await azureModel.generate([{ role: "user", message: "hello" }]);
+
+    assert.equal(azureModel.getCloneConfig().inferenceType, "fast");
+    assert.ok(captured);
+    assert.equal(captured.service_tier, undefined);
+    assert.equal(result.content, "azure override");
+    assert.equal(result.usageItemData?.provider, "azure");
+  });
+
+  it("covers additional Responses helper and default-config branches", () => {
+    delete process.env.PS_AI_MODEL_NAME;
+    delete process.env.AZURE_OPENAI_KEY;
+    delete process.env.AZURE_ENDPOINT;
+    delete process.env.AZURE_DEPLOYMENT_NAME;
+
+    const configWithoutOptionalDefaults: Partial<PsOpenAiModelConfig> = {
+      ...createConfig(),
+    };
+    delete configWithoutOptionalDefaults.modelName;
+    delete configWithoutOptionalDefaults.maxTokensOut;
+
+    const model = new OpenAiResponses(
+      configWithoutOptionalDefaults as PsOpenAiModelConfig
+    );
+    const internals = asInternals(model);
+
+    assert.equal(internals.isPhaseAwareResponsesModel(), false);
+    assert.equal(model.getCloneConfig().modelName, "gpt-4o");
+    assert.equal(model.getCloneConfig().maxTokensOut, 16_384);
+
+    model.applyRuntimeResponsesOverrides({});
+    assert.equal(model.getCloneConfig().modelName, "gpt-4o");
+
+    const previousWithNegativeStart = internals.preprocessForResponses(
+      [
+        { role: "system", message: "" },
+        { role: "developer", message: "" },
+        { role: "user", message: "delta" },
+      ],
+      true,
+      -3
+    );
+    assert.deepEqual(previousWithNegativeStart.inputItems, [
+      { role: "user", content: "delta" },
+    ]);
+    assert.equal(previousWithNegativeStart.instructions, undefined);
+
+    const assistantToolWithoutArgs = internals.preprocessForResponses(
+      [
+        {
+          role: "assistant",
+          message: "",
+          toolCall: {
+            id: "call-no-args",
+            name: "lookup",
+          } as ToolCall,
+        },
+      ],
+      false,
+      0
+    );
+    assert.deepEqual(assistantToolWithoutArgs.inputItems, [
+      {
+        type: "function_call",
+        call_id: "call-no-args",
+        name: "lookup",
+        arguments: undefined,
+      },
+    ]);
+
+    assert.deepEqual(
+      internals.extractOrderedOutputItems({
+        output: [
+          {
+            type: "function_call",
+            id: "fallback-id",
+          },
+        ],
+      }),
+      [
+        {
+          type: "tool_call",
+          toolCall: {
+            id: "fallback-id",
+            name: "",
+            arguments: {},
+          },
+        },
+      ]
+    );
+    assert.deepEqual(
+      internals.extractToolCallsFromResponse({
+        output: [
+          {
+            type: "function_call",
+            id: "fallback-id",
+          },
+        ],
+      }),
+      [
+        {
+          id: "fallback-id",
+          name: "",
+          arguments: {},
+        },
+      ]
+    );
+
+    const usageItemData = internals.buildUsageItemData(
+      {
+        id: null,
+        previous_response_id: null,
+        service_tier: null,
+        usage: null,
+      },
+      {
+        stream: undefined,
+        tool_choice: undefined,
+        tools: undefined,
+        store: undefined,
+        service_tier: null,
+        previous_response_id: null,
+        model: undefined,
+      },
+      {
+        tokensIn: 0,
+        tokensOut: 0,
+        cachedInTokens: 0,
+        reasoningTokens: 0,
+        audioTokens: 0,
+      }
+    );
+    assert.equal(usageItemData.modelName, "gpt-4o");
+    assert.deepEqual(usageItemData.request?.toolChoice, "auto");
+    assert.equal(usageItemData.usageRaw, undefined);
+  });
+
   it("uses override API keys and config-driven EU regional processing without env forcing", async () => {
     process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY = "override-key";
 
@@ -427,6 +746,50 @@ describe("OpenAiResponses", () => {
     assert.equal(result.content, "regional result");
     assert.equal(result.usageItemData?.request?.regionalProcessing, "eu");
     assert.equal(result.usageItemData?.providerMetadata?.regionalProcessing, "eu");
+  });
+
+  it("attaches short media inputs on non-reasoning requests", async () => {
+    const model = new OpenAiResponses(createConfig());
+    let captured: RecordedResponsesRequest | undefined;
+
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-short-media",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "short media" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      [{ mimeType: "image/png", data: "short" }]
+    );
+
+    assert.ok(captured);
+    assert.deepEqual(captured.input, [
+      {
+        role: "user",
+        content: [
+          { type: "input_text", text: "hello" },
+          {
+            type: "input_image",
+            image_url: "data:image/png;base64,short",
+            detail: "auto",
+          },
+        ],
+      },
+    ]);
+    assert.equal(result.content, "short media");
   });
 
   it("builds non-streaming requests and extracts final answers plus tool calls", async () => {
@@ -670,6 +1033,61 @@ describe("OpenAiResponses", () => {
       },
     ]);
     assert.equal(result.content, "Tool handled");
+  });
+
+  it("omits reasoning options when a reasoning Responses model has no effort", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+        modelType: PsAiModelType.TextReasoning,
+        reasoningEffort: undefined,
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-no-effort",
+          usage: {},
+          output: [
+            {
+              type: "function_call",
+              call_id: "empty-args",
+              name: "lookup",
+            },
+            {
+              type: "message",
+              phase: "final_answer",
+              content: [{ type: "output_text", text: "no effort" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.reasoning, undefined);
+    assert.equal(captured.temperature, undefined);
+    assert.equal(result.content, "no effort");
+    assert.deepEqual(result.toolCalls, [
+      {
+        id: "empty-args",
+        name: "lookup",
+        arguments: {},
+      },
+    ]);
+    assert.deepEqual(result.orderedOutputItems?.[0], {
+      type: "tool_call",
+      toolCall: {
+        id: "empty-args",
+        name: "lookup",
+        arguments: {},
+      },
+    });
   });
 
   it("continues a previous response without resending input when only instructions remain", async () => {
@@ -967,6 +1385,69 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(result.toolCalls, []);
   });
 
+  it("handles stream data deltas, non-message item metadata, and direct item emission", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-4o" }));
+    const chunks: string[] = [];
+
+    setMockClient(model, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.output_item.added",
+            item: {
+              type: "function_call",
+              id: "tool-item",
+            },
+          };
+          yield {
+            type: "response.output_text.delta",
+            item_id: "answer-item",
+            data: "from data ",
+          };
+          yield {
+            type: "response.output_item.done",
+            item: {
+              type: "message",
+              id: "answer-item",
+            },
+          };
+          yield {
+            type: "response.output_text.delta",
+            item_id: "answer-item",
+            delta: "direct",
+          };
+          yield {
+            type: "response.output_text.delta",
+            delta: "",
+          };
+          yield {
+            type: "response.completed",
+            response: {
+              id: "stream-data-delta",
+              usage: {},
+              output: [
+                {
+                  type: "message",
+                  id: "answer-item",
+                  content: [{ type: "output_text", text: "from data direct" }],
+                },
+              ],
+            },
+          };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true,
+      (chunk) => chunks.push(chunk)
+    );
+
+    assert.deepEqual(chunks, ["from data ", "direct"]);
+    assert.equal(result.content, "from data direct");
+  });
+
   it("falls back to buffered content when a streaming response never finalizes", async () => {
     const model = new OpenAiResponses(createConfig());
 
@@ -1031,6 +1512,52 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(result.toolCalls, []);
   });
 
+  it("ignores commentary deltas that arrive after stream item metadata", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+      })
+    );
+
+    const chunks: string[] = [];
+    setMockClient(model, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.output_item.added",
+            item: {
+              type: "message",
+              id: "commentary-item",
+              phase: "commentary",
+            },
+          };
+          yield {
+            type: "response.output_text.delta",
+            item_id: "commentary-item",
+            delta: "hidden",
+          };
+          yield {
+            type: "response.completed",
+            response: {
+              id: "commentary-after-metadata",
+              usage: {},
+              output: [],
+            },
+          };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true,
+      (chunk) => chunks.push(chunk)
+    );
+
+    assert.deepEqual(chunks, []);
+    assert.equal(result.content, "");
+  });
+
   it("resets stale response state when the same message set is retried with no delta", async () => {
     const model = new OpenAiResponses(createConfig());
     let captured: RecordedResponsesRequest | undefined;
@@ -1060,6 +1587,40 @@ describe("OpenAiResponses", () => {
     assert.equal(captured.previous_response_id, undefined);
     assert.deepEqual(captured.input, [{ role: "user", content: "hello" }]);
     assert.equal(result.content, "fresh retry");
+  });
+
+  it("resets previous response state when a no-input continuation repeats", async () => {
+    const model = new OpenAiResponses(createConfig());
+    let captured: RecordedResponsesRequest | undefined;
+
+    Reflect.set(model, "previousResponseId", "prev-repeat");
+    Reflect.set(model, "lastSubmittedMessageCount", 2);
+    Reflect.set(model, "lastNoInputContinuationSignature", "prev-repeat:1:2");
+
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-repeat-reset",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "repeat reset" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate([
+      { role: "system", message: "system only" },
+    ]);
+
+    assert.ok(captured);
+    assert.equal(captured.previous_response_id, undefined);
+    assert.deepEqual(captured.input, [{ role: "user", content: "" }]);
+    assert.equal(result.content, "repeat reset");
   });
 
   it("uses Azure-compatible responses transport when Azure environment variables are present", async () => {
@@ -1145,6 +1706,14 @@ describe("OpenAiResponses", () => {
       [
         { role: "user", message: "old" },
         { role: "user", message: "new" },
+        { role: "assistant", message: "stored already" },
+        {
+          role: "tool",
+          message: '{"ignored":true}',
+          toolCallId: "done-call",
+        },
+        { role: "system", message: "delta system" },
+        { role: "developer", message: "delta developer" },
         { role: "critic", message: "odd" },
       ],
       true,
@@ -1213,7 +1782,10 @@ describe("OpenAiResponses", () => {
     assert.equal(firstTurn.instructions, "system only");
 
     const invalidFirstTurn = internals.preprocessForResponses(
-      [{ role: "critic", message: "odd" }],
+      [
+        { role: "tool", message: "missing id" },
+        { role: "critic", message: "odd" },
+      ],
       false,
       0
     );
@@ -1260,6 +1832,19 @@ describe("OpenAiResponses", () => {
       }),
       ""
     );
+    Reflect.set(model, "extractAssistantMessages", () => []);
+    assert.equal(
+      internals.extractTextFromResponse({
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "fallback branch" }],
+          },
+        ],
+      }),
+      "fallback branch"
+    );
+    Reflect.deleteProperty(model, "extractAssistantMessages");
     assert.deepEqual(
       internals.selectAssistantReply({
         output_text: "fallback output text",

@@ -80,6 +80,7 @@ const asInternals = (model: OpenAiChatInstance) =>
 
 const originalOpenAiOverride = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
 const originalEnforceEuRegion = process.env.OPENAI_ENFORCE_EU_REGION;
+const originalDebugPromptMessages = process.env.PS_DEBUG_PROMPT_MESSAGES;
 
 afterEach(() => {
   if (originalOpenAiOverride === undefined) {
@@ -92,6 +93,12 @@ afterEach(() => {
     delete process.env.OPENAI_ENFORCE_EU_REGION;
   } else {
     process.env.OPENAI_ENFORCE_EU_REGION = originalEnforceEuRegion;
+  }
+
+  if (originalDebugPromptMessages === undefined) {
+    delete process.env.PS_DEBUG_PROMPT_MESSAGES;
+  } else {
+    process.env.PS_DEBUG_PROMPT_MESSAGES = originalDebugPromptMessages;
   }
 });
 
@@ -539,5 +546,164 @@ describe("OpenAiChat", () => {
     assert.equal(captured.logit_bias, undefined);
     assert.equal(captured.temperature, 0.4);
     assert.equal(result.usageItemData?.request?.requestedServiceTier, null);
+  });
+
+  it("maps undefined tool arguments and honors config-driven EU processing", async () => {
+    process.env.PS_DEBUG_PROMPT_MESSAGES = "true";
+
+    const model = new OpenAiChat(
+      createConfig({
+        regionalProcessing: "eu",
+      })
+    );
+
+    let captured: RecordedChatRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedChatRequest;
+        return {
+          id: "resp-eu-config",
+          choices: [
+            {
+              message: {
+                content: null,
+                tool_calls: [
+                  {
+                    type: "function",
+                    id: "tool-empty",
+                    function: {
+                      name: "lookup",
+                      arguments: "",
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 0,
+            completion_tokens: 0,
+          },
+        };
+      },
+      stream: () => {
+        throw new Error("stream should not be called in this test");
+      },
+    });
+
+    const result = await model.generate([
+      {
+        role: "assistant",
+        message: "",
+        toolCall: {
+          id: "assistant-tool-empty",
+          name: "lookup",
+        } as ToolCall,
+      },
+    ]);
+
+    assert.ok(captured);
+    assert.equal(captured.service_tier, undefined);
+    assert.equal(captured.messages?.[0]?.role, "assistant");
+    assert.deepEqual(captured.messages?.[0]?.tool_calls, [
+      {
+        type: "function",
+        id: "assistant-tool-empty",
+        function: {
+          name: "lookup",
+          arguments: "{}",
+        },
+      },
+    ]);
+    assert.equal(result.content, "");
+    assert.deepEqual(result.toolCalls, [
+      {
+        id: "tool-empty",
+        name: "lookup",
+        arguments: {},
+      },
+    ]);
+    assert.equal(result.usageItemData?.request?.regionalProcessing, "eu");
+    assert.equal(result.usageItemData?.providerMetadata?.regionalProcessing, "eu");
+  });
+
+  it("streams empty deltas without callback and defaults final usage", async () => {
+    const model = new OpenAiChat(createConfig());
+
+    setMockClient(model, {
+      create: async () => {
+        throw new Error("create should not be called in this test");
+      },
+      stream: () => ({
+        async *[Symbol.asyncIterator]() {
+          yield { choices: [] };
+          yield { choices: [{ delta: {} }] };
+          yield { choices: [{ delta: { content: "partial" } }] };
+        },
+        async finalChatCompletion() {
+          return {
+            id: null,
+            choices: [
+              {
+                message: {},
+              },
+            ],
+          };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true
+    );
+
+    assert.equal(result.content, "partial");
+    assert.deepEqual(result.toolCalls, []);
+    assert.equal(result.tokensIn, 0);
+    assert.equal(result.tokensOut, 0);
+    assert.equal(result.cachedInTokens, 0);
+    assert.equal(result.reasoningTokens, 0);
+    assert.equal(result.audioTokens, 0);
+    assert.equal(result.usageItemData?.providerMetadata?.responseId, null);
+  });
+
+  it("maps a runtime fast tier to priority when present on the active config", async () => {
+    const model = new OpenAiChat(createConfig());
+    const currentConfig = Reflect.get(model, "cfg") as PsOpenAiModelConfig;
+    Reflect.set(model, "cfg", {
+      ...currentConfig,
+      inferenceType: "fast",
+    });
+
+    let captured: RecordedChatRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedChatRequest;
+        return {
+          choices: [
+            {
+              message: {
+                content: "fast tier",
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 1,
+            completion_tokens: 1,
+          },
+        };
+      },
+      stream: () => {
+        throw new Error("stream should not be called in this test");
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.service_tier, "priority");
+    assert.equal(result.content, "fast tier");
+    assert.equal(result.usageItemData?.request?.requestedServiceTier, "priority");
   });
 });

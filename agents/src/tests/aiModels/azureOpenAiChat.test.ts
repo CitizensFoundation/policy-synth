@@ -211,6 +211,82 @@ describe("AzureOpenAiChat", () => {
     assert.equal(result.usageItemData?.request?.stream, true);
   });
 
+  it("uses constructor fallbacks and zeroes missing usage fields", async () => {
+    const model = new AzureOpenAiChat({
+      endpoint: "https://example.openai.azure.com/",
+      apiKey: "azure-test-key",
+      deploymentName: "fallback-deployment",
+      modelName: "",
+      modelType: PsAiModelType.Text,
+      modelSize: PsAiModelSize.Small,
+      maxTokensOut: 0,
+      temperature: 0,
+      prices: {
+        costInTokensPerMillion: 1,
+        costInCachedContextTokensPerMillion: 0.5,
+        costOutTokensPerMillion: 2,
+        currency: "USD",
+      },
+    });
+
+    let captured: RecordedAzureRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedAzureRequest;
+        return {
+          id: "azure-defaults",
+          choices: [
+            { message: { content: null } },
+            {},
+            { message: { content: "fallback text" } },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.max_tokens, 4096);
+    assert.equal(captured.reasoning_effort, "medium");
+    assert.equal(captured.temperature, 0.7);
+    assert.equal(model.modelName, "gpt-4");
+    assert.equal(result.content, "fallback text");
+    assert.equal(result.tokensIn, 0);
+    assert.equal(result.tokensOut, 0);
+    assert.equal(result.cachedInTokens, 0);
+    assert.equal(result.reasoningTokens, 0);
+    assert.equal(result.audioTokens, 0);
+    assert.equal(result.usageItemData?.providerMetadata?.responseId, "azure-defaults");
+  });
+
+  it("streams without callbacks or usage metadata", async () => {
+    const model = new AzureOpenAiChat(createConfig());
+
+    setMockClient(model, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield { choices: undefined };
+          yield { choices: [{ delta: {} }] };
+          yield { choices: [{ delta: { content: "done" } }] };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true
+    );
+
+    assert.equal(result.content, "done");
+    assert.equal(result.tokensIn, 0);
+    assert.equal(result.tokensOut, 0);
+    assert.equal(result.cachedInTokens, 0);
+    assert.equal(result.reasoningTokens, 0);
+    assert.equal(result.audioTokens, 0);
+    assert.equal(result.usageItemData?.usageRaw, undefined);
+  });
+
   it("estimates tokens by summing message encodings", async () => {
     const model = new AzureOpenAiChat(createConfig());
     const messages: AzureTokenEstimateMessage[] = [

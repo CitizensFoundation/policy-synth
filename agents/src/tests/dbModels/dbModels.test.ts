@@ -83,6 +83,17 @@ describe("dbModels model definitions", () => {
     assert.equal(dbIndex.PsAgentConnector.getTableName(), "ps_agent_connectors");
     assert.equal(dbIndex.PsModelUsage.getTableName(), "ps_model_usage");
     assert.equal(dbIndex.PsModelUsageItem.getTableName(), "ps_model_usage_item");
+
+    const agent = dbIndex.PsAgent.build({
+      id: 7,
+      uuid: "agent-uuid",
+      user_id: 1,
+      class_id: 2,
+      group_id: 3,
+      configuration: {},
+    });
+    assert.equal(agent.redisMemoryKey, "ps:agent:memory:7:agent-uuid");
+    assert.equal(agent.redisStatusKey, "ps:agent:status:7:agent-uuid");
   });
 
   it("runs application-level table and index sync idempotently", async () => {
@@ -153,6 +164,49 @@ describe("dbModels model definitions", () => {
     }
 
     assert.deepEqual(addedIndexes, [
+      "ps_model_usage_item_model_id",
+      "ps_model_usage_item_agent_id",
+      "ps_model_usage_item_connector_id",
+      "ps_model_usage_item_created_at",
+    ]);
+  });
+
+  it("treats string and parent-code already-exists errors as idempotent sync races", async () => {
+    const originalGetQueryInterface = dbIndex.sequelize.getQueryInterface;
+    const addIndexCalls: string[] = [];
+    Reflect.set(dbIndex.sequelize, "getQueryInterface", () => ({
+      describeTable: async () => {
+        throw new Error("missing table");
+      },
+      createTable: async () => {
+        throw "relation already exists";
+      },
+      showIndex: async () => [
+        {
+          name: "ps_model_usage_item_user_id",
+        },
+      ],
+      addIndex: async (
+        _tableName: string,
+        _fields: string[],
+        options: { name: string }
+      ) => {
+        addIndexCalls.push(options.name);
+        throw {
+          parent: {
+            code: "42P07",
+          },
+        };
+      },
+    }));
+
+    try {
+      await dbIndex.applicationLevelSync();
+    } finally {
+      Reflect.set(dbIndex.sequelize, "getQueryInterface", originalGetQueryInterface);
+    }
+
+    assert.deepEqual(addIndexCalls, [
       "ps_model_usage_item_model_id",
       "ps_model_usage_item_agent_id",
       "ps_model_usage_item_connector_id",
@@ -338,6 +392,20 @@ describe("sequelize connection helper", () => {
   });
 
   it("covers alternate sequelize environment configuration branches", async () => {
+    assert.deepEqual(sequelizeModule.buildPoolConfig({} as NodeJS.ProcessEnv), {
+      max: 5,
+      min: 5,
+      acquire: 30000,
+      idle: 10000,
+    });
+    assert.equal(sequelizeModule.logQuery("select $1", 4), 4);
+    sequelizeModule.validatePoolConfig({
+      max: 2,
+      min: 2,
+      acquire: 100,
+      idle: 100,
+    });
+
     assert.deepEqual(
       sequelizeModule.buildPoolConfig({
         DB_POOL_MAX: "7",
@@ -398,6 +466,25 @@ describe("sequelize connection helper", () => {
     assert.ok(productionNoSsl);
     assert.equal(productionNoSsl.getDialect(), "postgres");
     await productionNoSsl.close();
+
+    const devPrimary = sequelizeModule.createSequelizeFromEnv({
+      NODE_ENV: "test",
+      PSQL_DB_NAME: "primary_db",
+      PSQL_DB_USER: "primary_user",
+      PSQL_DB_PASS: "primary_pass",
+      DB_HOST: "db.example.test",
+      DB_PORT: "6543",
+      PS_LOG_SQL: "true",
+    } as NodeJS.ProcessEnv);
+    assert.ok(devPrimary);
+    assert.equal(devPrimary.config.database, "primary_db");
+    assert.equal(devPrimary.config.host, "db.example.test");
+    assert.equal(devPrimary.config.port, 6543);
+    assert.equal(
+      typeof (Reflect.get(devPrimary, "options") as { logging?: unknown }).logging,
+      "function"
+    );
+    await devPrimary.close();
 
     const devFallback = sequelizeModule.createSequelizeFromEnv({
       NODE_ENV: "test",
@@ -483,6 +570,22 @@ describe("PsPrivateAccessStore", () => {
         ),
       /Invalid encrypted key format/
     );
+    await assert.rejects(
+      () =>
+        store.addPreEncryptedKey(
+          1,
+          2,
+          undefined,
+          4,
+          "aa:bb:cc",
+          "***",
+          {
+            maxBudget: { perDay: 1, petMonth: 2, total: 3 },
+            emailNotificationBudgetThresholds: { daily: 0.8, monthly: 0.9 },
+          }
+        ),
+      /Invalid encrypted key format/
+    );
 
     const originalCreate = store.create;
     const createdPayloads: unknown[] = [];
@@ -526,6 +629,47 @@ describe("PsPrivateAccessStore", () => {
       },
       is_active: true,
     });
+  });
+
+  it("registers private access store associations", () => {
+    const store = privateAccessModule.PsPrivateAccessStore;
+    const calls: unknown[] = [];
+    const originalBelongsTo = Reflect.get(store, "belongsTo");
+
+    Reflect.set(
+      store,
+      "belongsTo",
+      (model: unknown, options: unknown) => calls.push({ model, options })
+    );
+
+    try {
+      const associate = Reflect.get(store, "associate") as (
+        models: Record<string, unknown>
+      ) => void;
+      associate({
+        User: "UserModel",
+        Group: "GroupModel",
+      });
+    } finally {
+      Reflect.set(store, "belongsTo", originalBelongsTo);
+    }
+
+    assert.deepEqual(calls, [
+      {
+        model: "UserModel",
+        options: {
+          foreignKey: "user_id",
+          as: "User",
+        },
+      },
+      {
+        model: "GroupModel",
+        options: {
+          foreignKey: "group_id",
+          as: "Group",
+        },
+      },
+    ]);
   });
 
   it("builds read filters and usage mutations when called with trusted receivers", async () => {
@@ -617,6 +761,23 @@ describe("PsPrivateAccessStore", () => {
       },
     });
     assert.ok((updates[0] as { payload: { last_used_at: Date } }).payload.last_used_at instanceof Date);
+
+    sequelizeModule.sequelize.transaction = (async (
+      callback: (transaction: typeof transactionContext) => Promise<unknown>
+    ) => callback(transactionContext)) as typeof sequelizeModule.sequelize.transaction;
+    try {
+      assert.equal(
+        await incrementUsageAndGetApiKey.call(
+          {
+            findAll: async () => [],
+          },
+          12
+        ),
+        null
+      );
+    } finally {
+      sequelizeModule.sequelize.transaction = originalTransaction;
+    }
 
     const setKeyStatus = store.setKeyStatus;
     assert.equal(

@@ -103,11 +103,14 @@ const originalUseGoogleVertexForClaude =
   process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
 const originalGoogleCloudProject = process.env.GOOGLE_CLOUD_PROJECT;
 const originalGoogleCloudLocation = process.env.GOOGLE_CLOUD_LOCATION;
+const originalGoogleVertexLocation = process.env.GOOGLE_VERTEX_LOCATION;
+const originalCloudMlRegion = process.env.CLOUD_ML_REGION;
 const originalAwsBearer = process.env.AWS_BEARER_TOKEN_BEDROCK;
 const originalAwsInferenceProfile = process.env.AWS_INFERENCE_PROFILE;
 const originalAwsRegion = process.env.AWS_REGION;
 const originalAwsDefaultRegion = process.env.AWS_DEFAULT_REGION;
 const originalUseClaude1m = process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG;
+const originalDebugPromptMessages = process.env.PS_DEBUG_PROMPT_MESSAGES;
 
 afterEach(() => {
   if (originalUseVertexForClaude === undefined) {
@@ -133,6 +136,18 @@ afterEach(() => {
     delete process.env.GOOGLE_CLOUD_LOCATION;
   } else {
     process.env.GOOGLE_CLOUD_LOCATION = originalGoogleCloudLocation;
+  }
+
+  if (originalGoogleVertexLocation === undefined) {
+    delete process.env.GOOGLE_VERTEX_LOCATION;
+  } else {
+    process.env.GOOGLE_VERTEX_LOCATION = originalGoogleVertexLocation;
+  }
+
+  if (originalCloudMlRegion === undefined) {
+    delete process.env.CLOUD_ML_REGION;
+  } else {
+    process.env.CLOUD_ML_REGION = originalCloudMlRegion;
   }
 
   if (originalAwsBearer === undefined) {
@@ -163,6 +178,12 @@ afterEach(() => {
     delete process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG;
   } else {
     process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG = originalUseClaude1m;
+  }
+
+  if (originalDebugPromptMessages === undefined) {
+    delete process.env.PS_DEBUG_PROMPT_MESSAGES;
+  } else {
+    process.env.PS_DEBUG_PROMPT_MESSAGES = originalDebugPromptMessages;
   }
 });
 
@@ -486,7 +507,32 @@ describe("ClaudeChat", () => {
       type: "auto",
       disable_parallel_tool_use: true,
     });
+    assert.deepEqual(
+      internals.mapToolChoice(
+        { type: "custom" } as unknown as ChatCompletionToolChoiceOption,
+        true
+      ),
+      {
+        type: "auto",
+        disable_parallel_tool_use: true,
+      }
+    );
     assert.deepEqual(internals.normalizeToolInput(null), {});
+    assert.deepEqual(internals.normalizeToolInput([1, 2]), { value: [1, 2] });
+    assert.deepEqual(internals.normalizeToolInput("[1,2]"), { value: "[1,2]" });
+
+    const userWithUndefinedText = internals.formatMessages([
+      {
+        role: "user",
+        message: undefined,
+      } as unknown as PsModelMessage,
+    ]);
+    assert.deepEqual(userWithUndefinedText.messages, [
+      {
+        role: "user",
+        content: [{ type: "text", text: "" }],
+      },
+    ]);
   });
 
   it("formats tool results as Claude user tool_result blocks", () => {
@@ -643,6 +689,22 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.request?.mode, "non_stream");
   });
 
+  it("throws clearly when the Anthropic client is missing and maps high thinking budget", async () => {
+    const highThinkingModel = new ClaudeChat(
+      createConfig({
+        reasoningEffort: "high",
+      })
+    );
+    assert.equal(Reflect.get(highThinkingModel, "maxThinkingTokens"), 64_000);
+
+    Reflect.set(highThinkingModel, "client", undefined);
+
+    await assert.rejects(
+      () => highThinkingModel.generate([{ role: "user", message: "hello" }]),
+      /Anthropic client not initialized/
+    );
+  });
+
   it("uses the non-beta Bedrock create path for legacy models and records Bedrock metadata", async () => {
     process.env.AWS_BEARER_TOKEN_BEDROCK = "token";
     process.env.AWS_DEFAULT_REGION = "us-west-2";
@@ -714,6 +776,63 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.providerMetadata?.appliedServiceTier, "standard");
   });
 
+  it("uses Bedrock fallback region metadata when no AWS region is configured", async () => {
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "token";
+    delete process.env.AWS_REGION;
+    delete process.env.AWS_DEFAULT_REGION;
+    delete process.env.AWS_INFERENCE_PROFILE;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+    process.env.PS_DEBUG_PROMPT_MESSAGES = "true";
+
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-3-haiku-20240307",
+        inferenceType: "fast",
+      })
+    );
+
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-bedrock-default-region",
+            usage: {
+              input_tokens: 1,
+              output_tokens: 1,
+            },
+            content: [{ type: "text", text: "Bedrock default region" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "eu.anthropic.claude-3-haiku-20240307-v1:0");
+    assert.equal(captured.tool_choice, undefined);
+    assert.equal(result?.content, "Bedrock default region");
+    assert.equal(result?.usageItemData?.request?.requestedInferenceType, "fast");
+    assert.equal(result?.usageItemData?.request?.requestedSpeed, null);
+    assert.equal(result?.usageItemData?.providerMetadata?.bedrockRegion, "eu-west-1");
+  });
+
   it("uses the non-beta Vertex create path and records Vertex transport metadata", async () => {
     process.env.USE_VERTEX_FOR_CLAUDE = "true";
     process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
@@ -764,6 +883,52 @@ describe("ClaudeChat", () => {
     assert.equal(result?.content, "Vertex Claude");
     assert.equal(result?.usageItemData?.providerMetadata?.transport, "vertex");
     assert.equal(result?.usageItemData?.providerMetadata?.vertexRegion, "us-central1");
+  });
+
+  it("records the default Claude Vertex region when no region env is set", async () => {
+    process.env.USE_VERTEX_FOR_CLAUDE = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    delete process.env.GOOGLE_CLOUD_LOCATION;
+    delete process.env.GOOGLE_VERTEX_LOCATION;
+    delete process.env.CLOUD_ML_REGION;
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-3-haiku-20240307",
+      })
+    );
+
+    setMockClient(model, {
+      messages: {
+        create: async () => ({
+          id: "claude-vertex-default-region",
+          usage: {
+            input_tokens: 1,
+            output_tokens: 1,
+          },
+          content: [{ type: "text", text: "Vertex default region" }],
+        }),
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.equal(result?.content, "Vertex default region");
+    assert.equal(result?.usageItemData?.providerMetadata?.vertexRegion, "europe-west1");
   });
 
   it("uses the beta create path for fast adaptive models and normalizes the result", async () => {
@@ -1023,7 +1188,7 @@ describe("ClaudeChat", () => {
                   input_tokens: 6,
                   output_tokens: 1,
                   cache_creation_input_tokens: 0,
-                  cache_read_input_tokens: 0,
+                  cache_read_input_tokens: 10,
                   service_tier: "standard",
                 },
                 content: [{ type: "text", text: "Legacy stream" }],
@@ -1054,6 +1219,7 @@ describe("ClaudeChat", () => {
     assert.equal(captured.betas, undefined);
     assert.equal(streamedEvents.length, 3);
     assert.equal(result?.content, "Legacy stream");
+    assert.equal(result?.tokensIn, 7);
     assert.deepEqual(result?.toolCalls, [
       {
         id: "call-legacy",
