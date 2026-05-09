@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { after, afterEach, describe, it } from "node:test";
+import { PDFParse } from "pdf-parse";
 
 import { BaseChatModel } from "../../aiModels/baseChatModel.js";
 import {
@@ -1480,10 +1481,19 @@ startxref
 415
 %%EOF`;
 
-    assert.equal(
-      await extractTextFromPdfBuffer(Buffer.from(onePagePdf)),
-      "Hello PDF"
-    );
+    const originalDestroy = PDFParse.prototype.destroy;
+    Reflect.set(PDFParse.prototype, "destroy", async () => {
+      throw new Error("destroy failed");
+    });
+    try {
+      assert.equal(
+        await extractTextFromPdfBuffer(Buffer.from(onePagePdf)),
+        "Hello PDF"
+      );
+    } finally {
+      Reflect.set(PDFParse.prototype, "destroy", originalDestroy);
+    }
+
     await assert.rejects(() => extractTextFromPdfBuffer(Buffer.from("not a pdf")));
   });
 });

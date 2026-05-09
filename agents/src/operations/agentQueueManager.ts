@@ -3,12 +3,32 @@ import { Redis, RedisOptions } from "ioredis";
 import { PsAgent, PsAgentClass } from "../dbModels/index.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 
+export interface AgentQueueManagerRuntime {
+  createRedis(redisUrl: string, options: RedisOptions): Redis;
+  createQueue(queueName: string, connection: Redis): Queue;
+  createQueueEvents(queueName: string, connection: Redis): QueueEvents;
+}
+
+const defaultRuntime: AgentQueueManagerRuntime = {
+  createRedis: (redisUrl, options) => new Redis(redisUrl, options),
+  createQueue: (queueName, connection) =>
+    new Queue(queueName, {
+      connection,
+    }),
+  createQueueEvents: (queueName, connection) =>
+    new QueueEvents(queueName, {
+      connection,
+    }),
+};
+
 export class AgentQueueManager extends PolicySynthAgentBase {
   redisClient!: Redis;
   queues: Map<string, Queue>;
+  runtime: AgentQueueManagerRuntime;
 
-  constructor() {
+  constructor(runtime: AgentQueueManagerRuntime = defaultRuntime) {
     super();
+    this.runtime = runtime;
     this.logger.info("AgentQueueManager: Initializing");
     this.initializeRedis();
     this.queues = new Map();
@@ -33,7 +53,7 @@ export class AgentQueueManager extends PolicySynthAgentBase {
       maxRetriesPerRequest: null
     };
 
-    this.redisClient = new Redis(redisUrl, options);
+    this.redisClient = this.runtime.createRedis(redisUrl, options);
 
     this.redisClient.on("error", (err) => {
       this.logger.error("Redis Client Error", err);
@@ -56,9 +76,7 @@ export class AgentQueueManager extends PolicySynthAgentBase {
     this.logger.info(`AgentQueueManager: Getting queue for ${queueName}`);
     if (!this.queues.has(queueName)) {
       this.logger.info(`AgentQueueManager: Creating new queue for ${queueName}`);
-      const newQueue = new Queue(queueName, {
-        connection: this.redisClient,
-      });
+      const newQueue = this.runtime.createQueue(queueName, this.redisClient);
 
       newQueue.on("error", (error) => {
         this.logger.info(`Error in queue ${queueName}:`, error);
@@ -69,9 +87,10 @@ export class AgentQueueManager extends PolicySynthAgentBase {
       });
 
       // Create QueueEvents instance for global events
-      const queueEvents = new QueueEvents(queueName, {
-        connection: this.redisClient,
-      });
+      const queueEvents = this.runtime.createQueueEvents(
+        queueName,
+        this.redisClient
+      );
 
       // Add event listeners for debugging
       queueEvents.on('waiting', ({ jobId }) => {

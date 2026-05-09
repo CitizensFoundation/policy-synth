@@ -20,20 +20,22 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
     type: "input" | "output"
   ): Promise<PsAgentConnector | null> {
     const transaction: Transaction = await sequelize.transaction();
+    let transactionFinished = false;
 
     try {
-      const agent = (await PsAgent.findByPk(agentId)) as PsAgent;
+      const agent = await PsAgent.findByPk(agentId);
       const connectorClass = await PsAgentConnectorClass.findByPk(
         connectorClassId,
         { attributes: ["id", "configuration", "class_base_id"] }
       );
 
-      const agentClass = (await PsAgentClass.findByPk(agent.class_id, {
-        attributes: ["id", "configuration", "class_base_id"],
-      })) as PsAgentClass;
+      const agentClass = agent
+        ? await PsAgentClass.findByPk(agent.class_id, {
+            attributes: ["id", "configuration", "class_base_id"],
+          })
+        : null;
 
       if (!agent || !connectorClass || !agentClass) {
-        await transaction.rollback();
         throw new Error("Agent or connector class not found");
       }
 
@@ -65,6 +67,7 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
       }
 
       await transaction.commit();
+      transactionFinished = true;
 
       //TODO: Make this more modular, a bit hardcoded
       if (
@@ -119,7 +122,10 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
         ],
       });
     } catch (error) {
-      await transaction.rollback();
+      if (!transactionFinished) {
+        await transaction.rollback();
+        transactionFinished = true;
+      }
       throw error;
     }
   }
@@ -207,7 +213,7 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
     userId: number,
     name: string,
     description: string,
-    structuredQuestions: any[]
+    structuredQuestions: YpStructuredQuestionData[]
   ) {
     const groupData = {
       name: name,
@@ -342,18 +348,17 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
     type: 'input' | 'output'
   ): Promise<void> {
     const transaction: Transaction = await sequelize.transaction();
+    let transactionFinished = false;
 
     try {
       const agent = await PsAgent.findByPk(agentId);
       const connector = await PsAgentConnector.findByPk(connectorId);
 
       if (!agent || !connector) {
-        await transaction.rollback();
         throw new Error("Agent or connector not found");
       }
 
       if (connector.group_id !== groupId) {
-        await transaction.rollback();
         throw new Error("Connector does not belong to the specified group");
       }
 
@@ -364,8 +369,12 @@ export class AgentConnectorManager extends PolicySynthAgentBase {
       }
 
       await transaction.commit();
+      transactionFinished = true;
     } catch (error) {
-      await transaction.rollback();
+      if (!transactionFinished) {
+        await transaction.rollback();
+        transactionFinished = true;
+      }
       throw error;
     }
   }

@@ -21,6 +21,7 @@ type GoogleGeminiThoughtInternals = {
     role: string;
     parts: unknown[];
   };
+  describeParts: (parts: unknown[]) => string;
   handleStreamChunk: (chunk: GenerateContentResponse) => void;
   handleFinalResponse: (response: GenerateContentResponse) => void;
 };
@@ -408,5 +409,19 @@ describe("GoogleGeminiThought", () => {
         },
       ],
     });
+  });
+
+  it("describes non-text Gemini thought parts for diagnostics", () => {
+    const model = new GoogleGeminiThought(createConfig());
+    const internals = asInternals(model);
+
+    assert.equal(
+      internals.describeParts([
+        { inlineData: { mimeType: "image/png" } },
+        { functionResponse: { name: "lookup" } },
+        {},
+      ]),
+      "inlineData:image/png | functionResponse:lookup | unknownPart"
+    );
   });
 });

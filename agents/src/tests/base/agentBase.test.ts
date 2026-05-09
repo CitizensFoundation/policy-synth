@@ -37,6 +37,7 @@ describe("PolicySynthAgentBase", () => {
       '{"count":1}'
     );
     assert.equal(agent.getJsonBlock("no fenced block here"), null);
+    assert.equal(agent.getJsonBlock("prefix\n```json\n{\"count\":1}"), null);
   });
 
   it("parses fenced JSON and repairs malformed JSON when needed", () => {

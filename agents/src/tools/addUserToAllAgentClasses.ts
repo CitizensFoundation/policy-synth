@@ -3,75 +3,125 @@ import { initializeModels } from "../dbModels/index.js";
 import { sequelize } from "../dbModels/sequelize.js";
 import { User } from "../dbModels/ypUser.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
+import { isCliEntrypoint } from "./cliUtils.js";
 
-// Function to add a user to all agent classes as both user and admin
-async function addUserToAllAgentClasses(userEmail: string) {
+type UserRecord = {
+  email: string;
+};
+
+type ToolLogger = {
+  info(...args: unknown[]): unknown;
+  error(...args: unknown[]): unknown;
+};
+
+type AgentClassFullAccessRecord = {
+  id: number;
+  hasUser(user: UserRecord): Promise<boolean>;
+  hasAdmin(user: UserRecord): Promise<boolean>;
+  addUser(user: UserRecord): Promise<unknown>;
+  addAdmin(user: UserRecord): Promise<unknown>;
+};
+
+export interface AddUserToAllAgentClassesDependencies {
+  initializeModels: () => Promise<unknown>;
+  findAllAgentClasses: () => Promise<AgentClassFullAccessRecord[]>;
+  findUserByEmail: (email: string) => Promise<UserRecord | null>;
+  closeDatabase: () => Promise<unknown>;
+  logger: ToolLogger;
+}
+
+export const defaultAddUserToAllAgentClassesDependencies: AddUserToAllAgentClassesDependencies = {
+  initializeModels,
+  findAllAgentClasses: () =>
+    PsAgentClass.findAll() as Promise<AgentClassFullAccessRecord[]>,
+  findUserByEmail: (email) =>
+    User.findOne({
+      where: {
+        email,
+      },
+    }) as Promise<UserRecord | null>,
+  closeDatabase: () => sequelize.close(),
+  logger: PolicySynthAgentBase.logger,
+};
+
+export async function addUserToAllAgentClasses(
+  userEmail: string,
+  dependencies: AddUserToAllAgentClassesDependencies =
+    defaultAddUserToAllAgentClassesDependencies
+) {
   try {
-    await initializeModels();
+    await dependencies.initializeModels();
 
-    // Find all agent classes
-    const agentClasses = await PsAgentClass.findAll();
+    const agentClasses = await dependencies.findAllAgentClasses();
 
     if (agentClasses.length === 0) {
-      PolicySynthAgentBase.logger.error("No agent classes found in the database");
+      dependencies.logger.error("No agent classes found in the database");
       return;
     }
 
-    // Find the user by email
-    const user = await User.findOne({
-      where: {
-        email: userEmail,
-      },
-    });
+    const user = await dependencies.findUserByEmail(userEmail);
     if (!user) {
-      PolicySynthAgentBase.logger.error("User not found");
+      dependencies.logger.error("User not found");
       return;
     }
 
     for (const agentClass of agentClasses) {
-      // Check if the user already has user access
       const hasUserAccess = await agentClass.hasUser(user);
       if (!hasUserAccess) {
-        // Add the user to the agent class as a user
         await agentClass.addUser(user);
-        PolicySynthAgentBase.logger.info(
+        dependencies.logger.info(
           `User ${user.email} added as user to agent class ${agentClass.id}`
         );
       } else {
-        PolicySynthAgentBase.logger.info(
+        dependencies.logger.info(
           `User ${user.email} already has user access to agent class ${agentClass.id}`
         );
       }
 
-      // Check if the user already has admin access
       const hasAdminAccess = await agentClass.hasAdmin(user);
       if (!hasAdminAccess) {
-        // Add the user to the agent class as an admin
         await agentClass.addAdmin(user);
-        PolicySynthAgentBase.logger.info(
+        dependencies.logger.info(
           `User ${user.email} added as admin to agent class ${agentClass.id}`
         );
       } else {
-        PolicySynthAgentBase.logger.info(
+        dependencies.logger.info(
           `User ${user.email} already has admin access to agent class ${agentClass.id}`
         );
       }
     }
   } catch (error) {
-    PolicySynthAgentBase.logger.error("Error adding user to agent classes:", error);
+    dependencies.logger.error("Error adding user to agent classes:", error);
   } finally {
-    await sequelize.close();
+    await dependencies.closeDatabase();
   }
 }
 
-// Parse command line arguments
-const args = process.argv.slice(2);
-if (args.length !== 1) {
-  PolicySynthAgentBase.logger.error("Usage: ts-node addUserToAllAgentClasses.ts <userEmail>");
-  process.exit(1);
+export const addUserToAllAgentClassesUsage =
+  "Usage: ts-node addUserToAllAgentClasses.ts <userEmail>";
+
+export function parseAddUserToAllAgentClassesArgs(args: string[]) {
+  if (args.length !== 1) {
+    throw new Error(addUserToAllAgentClassesUsage);
+  }
+
+  return { userEmail: args[0] };
 }
 
-const [userEmail] = args;
+export async function runAddUserToAllAgentClassesCli(
+  args: string[] = process.argv.slice(2),
+  dependencies: AddUserToAllAgentClassesDependencies =
+    defaultAddUserToAllAgentClassesDependencies
+) {
+  try {
+    const parsed = parseAddUserToAllAgentClassesArgs(args);
+    await addUserToAllAgentClasses(parsed.userEmail, dependencies);
+  } catch (error) {
+    dependencies.logger.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  }
+}
 
-// Run the function
-addUserToAllAgentClasses(userEmail);
+if (isCliEntrypoint(import.meta.url)) {
+  await runAddUserToAllAgentClassesCli();
+}

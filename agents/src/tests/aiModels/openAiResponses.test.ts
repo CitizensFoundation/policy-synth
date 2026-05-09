@@ -1385,6 +1385,44 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(result.toolCalls, []);
   });
 
+  it("flushes pending final-answer stream deltas when item metadata arrives late", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+      })
+    );
+
+    const chunks: string[] = [];
+    setMockClient(model, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.output_text.delta",
+            item_id: "final-late-metadata",
+            delta: "pending final",
+          };
+          yield {
+            type: "response.output_item.added",
+            item: {
+              type: "message",
+              id: "final-late-metadata",
+              phase: "final_answer",
+            },
+          };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true,
+      (chunk) => chunks.push(chunk)
+    );
+
+    assert.deepEqual(chunks, ["pending final"]);
+    assert.equal(result.content, "pending final");
+  });
+
   it("handles stream data deltas, non-message item metadata, and direct item emission", async () => {
     const model = new OpenAiResponses(createConfig({ modelName: "gpt-4o" }));
     const chunks: string[] = [];

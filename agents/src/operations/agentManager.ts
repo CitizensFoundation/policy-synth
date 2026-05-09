@@ -115,11 +115,11 @@ export class AgentManager extends PolicySynthAgentBase {
     }
 
     const transaction = await sequelize.transaction();
+    let transactionFinished = false;
 
     try {
       const agentClass = await PsAgentClass.findByPk(agentClassId);
       if (!agentClass) {
-        await transaction.rollback();
         throw new Error("Agent class not found");
       }
 
@@ -160,6 +160,7 @@ export class AgentManager extends PolicySynthAgentBase {
       );
 
       await transaction.commit();
+      transactionFinished = true;
 
       // Fetch the created agent with its associations
       return await PsAgent.findByPk(newAgent.id, {
@@ -169,7 +170,10 @@ export class AgentManager extends PolicySynthAgentBase {
         ],
       });
     } catch (error) {
-      await transaction.rollback();
+      if (!transactionFinished) {
+        await transaction.rollback();
+        transactionFinished = true;
+      }
       throw error;
     }
   }

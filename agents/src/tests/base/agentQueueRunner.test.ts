@@ -342,7 +342,21 @@ describe("PolicySynthAgentQueue", () => {
     const queue = new RealInitQueue();
     assert.equal(queue.redisClient.options.lazyConnect, true);
     assert.equal(queue.redisClient.options.tls?.rejectUnauthorized, false);
+    queue.redisClient.emit("error", new Error("redis test error"));
+    queue.redisClient.emit("connect");
+    queue.redisClient.emit("reconnecting");
+    queue.redisClient.emit("ready");
     queue.redisClient.disconnect();
+
+    process.env.REDIS_URL = "redis://h:secret@localhost:6379";
+    const hAliasQueue = new RealInitQueue();
+    assert.equal(hAliasQueue.redisClient.options.tls, undefined);
+    hAliasQueue.redisClient.disconnect();
+
+    delete process.env.REDIS_URL;
+    const fallbackQueue = new RealInitQueue();
+    assert.equal(fallbackQueue.redisClient.options.tls, undefined);
+    fallbackQueue.redisClient.disconnect();
   });
 
   it("loads agents, memory, statuses, and processor instances", async () => {
