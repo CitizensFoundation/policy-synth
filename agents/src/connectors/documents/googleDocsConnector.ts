@@ -177,18 +177,6 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
 
       let requests = [];
 
-      // Only include the deleteContentRange request if there's actual content to delete
-      if (false && endIndex > 1) {
-        requests.push({
-          deleteContentRange: {
-            range: {
-              startIndex: 1,
-              endIndex: endIndex, // Include the entire content
-            },
-          },
-        });
-      }
-
       // Add the insertText request
       requests.push({
         insertText: {

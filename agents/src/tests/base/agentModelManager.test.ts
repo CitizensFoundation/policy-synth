@@ -2667,6 +2667,7 @@ describe("PsAiModelManager price and usage accounting", () => {
     useStandardResponsesEnv();
     process.env.DISABLE_DB_INIT = "true";
     delete process.env.DISABLE_DB_USAGE_TRACKING;
+    process.env.PS_EMIT_TOKEN_USAGE_EVENTS = "true";
     const { sequelize } = await import("../../dbModels/index.js");
     const { PsModelUsage } = await import("../../dbModels/modelUsage.js");
     const originalTransaction = Reflect.get(sequelize, "transaction");
@@ -2681,18 +2682,29 @@ describe("PsAiModelManager price and usage accounting", () => {
       42,
       7
     );
-    Reflect.set(
-      sequelize,
-      "transaction",
-      async (callback: (transaction: unknown) => Promise<unknown>) =>
-        callback({ id: "disabled-db-tx" })
-    );
-    Reflect.set(PsModelUsage, "findOrCreate", async () => [
-      {
-        increment: async () => undefined,
-      },
-      true,
-    ]);
+    let transactionCalls = 0;
+    const receivedEvents: Array<{
+      tokensIn: number;
+      cachedInTokens: number;
+      modelId: number;
+    }> = [];
+    const listener = (event: unknown) => {
+      receivedEvents.push(
+        event as {
+          tokensIn: number;
+          cachedInTokens: number;
+          modelId: number;
+        }
+      );
+    };
+    policySynthEvents.on(TOKEN_USAGE_EVENT, listener);
+    Reflect.set(sequelize, "transaction", async () => {
+      transactionCalls += 1;
+      throw new Error("disabled DB should not transact");
+    });
+    Reflect.set(PsModelUsage, "findOrCreate", async () => {
+      throw new Error("disabled DB should not write usage rows");
+    });
     try {
       await disabledDbManager.saveTokenUsage(
         "disabled-db-model",
@@ -2701,14 +2713,19 @@ describe("PsAiModelManager price and usage accounting", () => {
         PsAiModelType.Text,
         PsAiModelSize.Small,
         4,
-        0,
+        1,
         2,
         123
       );
     } finally {
+      policySynthEvents.off(TOKEN_USAGE_EVENT, listener);
       Reflect.set(sequelize, "transaction", originalTransaction);
       Reflect.set(PsModelUsage, "findOrCreate", originalFindOrCreate);
     }
+    assert.equal(transactionCalls, 0);
+    assert.equal(receivedEvents[0].tokensIn, 3);
+    assert.equal(receivedEvents[0].cachedInTokens, 1);
+    assert.equal(receivedEvents[0].modelId, 123);
   });
 
   it("uses loaded, by-type, and environment price fallbacks", async () => {

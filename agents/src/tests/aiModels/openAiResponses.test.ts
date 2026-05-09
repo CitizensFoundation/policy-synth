@@ -1514,6 +1514,32 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(result.toolCalls, []);
   });
 
+  it("flushes orphaned item deltas for non-phase-aware streams without final responses", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-4o" }));
+    const chunks: string[] = [];
+
+    setMockClient(model, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.output_text.delta",
+            item_id: "orphaned-item",
+            delta: "orphaned content",
+          };
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      true,
+      (chunk) => chunks.push(chunk)
+    );
+
+    assert.deepEqual(chunks, ["orphaned content"]);
+    assert.equal(result.content, "orphaned content");
+  });
+
   it("drops buffered commentary deltas when a phase-aware stream never finalizes", async () => {
     const model = new OpenAiResponses(
       createConfig({

@@ -989,6 +989,20 @@ describe("PsGoogleDocsConnector", () => {
     );
   });
 
+  it("surfaces Google Docs API client construction failures", async () => {
+    const { google } = await import("googleapis");
+    const originalDocs = google.docs;
+    Reflect.set(google, "docs", () => {
+      throw new Error("docs client failed");
+    });
+
+    try {
+      assert.throws(() => createGoogleDocsConnector(), /docs client failed/);
+    } finally {
+      Reflect.set(google, "docs", originalDocs);
+    }
+  });
+
   it("extracts, updates, and converts documents through the mocked API", async () => {
     const connector = createGoogleDocsConnector();
     const content = [
@@ -1088,6 +1102,17 @@ describe("PsGoogleDocsConnector", () => {
       },
     });
     await assert.rejects(
+      () => connector.updateDocument("text"),
+      /Google Docs server error/
+    );
+
+    setMockDocs(connector, {
+      get: async () => ({ data: { body: { content: [] } } }),
+      batchUpdate: async () => {
+        throw { code: 503 };
+      },
+    });
+    await assert.rejects(
       () => connector.updateDocumentFromMarkdown("text"),
       /Google Docs server error/
     );
@@ -1129,6 +1154,13 @@ describe("PsGoogleDocsConnector", () => {
           String(asRecord(request.insertText).text).includes("prefix")
       )
     );
+
+    const emptyDocumentConnector = createGoogleDocsConnector();
+    setMockDocs(emptyDocumentConnector, {
+      get: async () => ({ data: {} }),
+      batchUpdate: async () => ({}),
+    });
+    assert.equal(await emptyDocumentConnector.getDocument(), "");
 
     const missingIdConnector = createGoogleDocsConnector({ googleDocsId: "" });
     await assert.rejects(
@@ -1236,6 +1268,16 @@ describe("PsGoogleSheetsConnector", () => {
     assert.throws(
       () =>
         new PsGoogleSheetsConnector(
+          createConnector({ credentialsJson: 12 }, connectorClass),
+          connectorClass,
+          createAgent(),
+          createMemory()
+        ),
+      /Invalid type/
+    );
+    assert.throws(
+      () =>
+        new PsGoogleSheetsConnector(
           createConnector(
             { credentialsJson: { client_email: "missing-key@example.com" } },
             connectorClass
@@ -1246,6 +1288,20 @@ describe("PsGoogleSheetsConnector", () => {
         ),
       /Missing client_email or private_key/
     );
+  });
+
+  it("surfaces Google Sheets API client construction failures", async () => {
+    const { google } = await import("googleapis");
+    const originalSheets = google.sheets;
+    Reflect.set(google, "sheets", () => {
+      throw new Error("sheets client failed");
+    });
+
+    try {
+      assert.throws(() => createGoogleSheetsConnector(), /sheets client failed/);
+    } finally {
+      Reflect.set(google, "sheets", originalSheets);
+    }
   });
 
   it("reads and writes spreadsheet data through the mocked API", async () => {
@@ -1289,6 +1345,7 @@ describe("PsGoogleSheetsConnector", () => {
     });
 
     assert.deepEqual(await connector.getSheet(), [["A", "B"]]);
+    assert.deepEqual(await connector.getSheet(), []);
     assert.deepEqual(await connector.getRange("A2:B3"), []);
     await connector.addSheetIfNotExists("Existing");
     await connector.addSheetIfNotExists("New");
@@ -1303,7 +1360,11 @@ describe("PsGoogleSheetsConnector", () => {
     await connector.updateRange("C1:D2", [["2"]]);
     await connector.clearRange("C1");
 
-    assert.deepEqual(valueGets.map((params) => params.range), ["A1:ZZ", "A2:B3"]);
+    assert.deepEqual(valueGets.map((params) => params.range), [
+      "A1:ZZ",
+      "A1:ZZ",
+      "A2:B3",
+    ]);
     assert.equal(metadataGets.length, 2);
     assert.equal(batchUpdates.length, 3);
     assert.deepEqual(valueUpdates.map((params) => params.range), ["A1", "C1:D2"]);
@@ -1359,6 +1420,25 @@ describe("PsGoogleSheetsConnector", () => {
       ),
       ["googleSheetsId", "credentialsJson"]
     );
+
+    const emptyMetadataConnector = createGoogleSheetsConnector();
+    let addSheetCalled = false;
+    setMockSheets(emptyMetadataConnector, {
+      spreadsheets: {
+        get: async () => ({ data: {} }),
+        batchUpdate: async () => {
+          addSheetCalled = true;
+          return {};
+        },
+        values: {
+          get: async () => ({ data: {} }),
+          update: async () => ({}),
+          clear: async () => ({}),
+        },
+      },
+    });
+    await emptyMetadataConnector.addSheetIfNotExists("CreatedFromEmptyMetadata");
+    assert.equal(addSheetCalled, true);
 
     const connector = createGoogleSheetsConnector();
     const sheetsError = new Error("sheets failed");
@@ -1603,6 +1683,13 @@ describe("PsYourPrioritiesConnector", () => {
           serverBaseUrl: "",
         }),
       /Required configuration values are not set/
+    );
+    assert.throws(
+      () =>
+        createYourPrioritiesConnector({
+          groupId: "",
+        }),
+      /Group ID and serverBaseUrl is required/
     );
     assert.deepEqual(
       PsYourPrioritiesConnector.getExtraConfigurationQuestions().map(
@@ -1901,7 +1988,13 @@ describe("PsYourPrioritiesConnector", () => {
     process.env.PS_TEMP_AGENTS_FABRIC_GROUP_SERVER_PATH = "https://fabric.example";
 
     try {
-      const fabricConnector = createYourPrioritiesConnector({}, createAgent({ user_id: 42 }));
+      const fabricConnector = createYourPrioritiesConnector(
+        {},
+        createAgent({ user_id: 42 })
+      );
+      (fabricConnector as unknown as {
+        generateImageWithAi: (groupId: number, prompt: string) => Promise<number>;
+      }).generateImageWithAi = async () => 5;
       const fabricUrls: string[] = [];
       await withAxiosStub(
         {
@@ -1919,6 +2012,12 @@ describe("PsYourPrioritiesConnector", () => {
           await fabricConnector.getGroupPosts(12);
           await fabricConnector.postPoint(12, 1, 2, 1, "content");
           await fabricConnector.vote(1, 1);
+          await fabricConnector.post(
+            12,
+            "Fabric post",
+            [] as YpStructuredAnswer[],
+            "image prompt"
+          );
         }
       );
       assert.ok(fabricUrls.every((url) => url.includes("agentFabricUserId=42")));
@@ -1971,6 +2070,67 @@ describe("PsYourPrioritiesConnector", () => {
       "https://yp.example/api/posts/12",
     ]);
 
+    const missingImageIdConnector = createYourPrioritiesConnector();
+    missingImageIdConnector.user = { id: 11 } as YpUserData;
+    missingImageIdConnector.sessionCookie = "yp-session=ghi";
+    (missingImageIdConnector as unknown as {
+      generateImageWithAi: (groupId: number, prompt: string) => Promise<number>;
+    }).generateImageWithAi = async () => 67;
+    await withAxiosStub(
+      {
+        post: async (url) => {
+          if (url.endsWith("/images")) {
+            return { data: {}, headers: {} };
+          }
+          if (url.endsWith("/posts/12")) {
+            return { data: { id: 92 }, headers: {} };
+          }
+          throw new Error(`Unexpected POST ${url}`);
+        },
+      },
+      async () => {
+        assert.deepEqual(
+          await missingImageIdConnector.post(
+            12,
+            "Missing image id",
+            [] as YpStructuredAnswer[],
+            "image prompt",
+            `${process.cwd()}/package.json`
+          ),
+          { id: 92 }
+        );
+      }
+    );
+
+    const pollingConnector = createYourPrioritiesConnector();
+    pollingConnector.user = { id: 12 } as YpUserData;
+    pollingConnector.sessionCookie = "yp-session=jkl";
+    let pollCount = 0;
+    await withImmediateTimers(async () =>
+      withAxiosStub(
+        {
+          post: async (url) => {
+            assert.ok(url.includes("/start_generating/ai_image"));
+            return { data: { jobId: "job-delayed" }, headers: {} };
+          },
+          get: async (url) => {
+            assert.ok(url.includes("/poll_for_generating_ai_image"));
+            pollCount += 1;
+            return pollCount === 1
+              ? { data: { data: {} }, headers: {} }
+              : { data: { data: { imageId: 68 } }, headers: {} };
+          },
+        },
+        async () => {
+          assert.equal(
+            await pollingConnector.generateImageWithAi(12, "image prompt"),
+            68
+          );
+        }
+      )
+    );
+    assert.equal(pollCount, 2);
+
     const timeoutConnector = createYourPrioritiesConnector();
     timeoutConnector.user = { id: 10 } as YpUserData;
     timeoutConnector.sessionCookie = "yp-session=def";
@@ -2019,6 +2179,18 @@ describe("PsYourPrioritiesConnector", () => {
       }
     );
 
+    await withAxiosStub(
+      {
+        post: async () => undefined as unknown as AxiosResponseLike,
+      },
+      async () => {
+        await assert.rejects(
+          () => createYourPrioritiesConnector().login(),
+          /Login failed/
+        );
+      }
+    );
+
     const connector = createYourPrioritiesConnector();
     connector.user = { id: 9 } as YpUserData;
     connector.sessionCookie = "yp-session=abc";
@@ -2050,6 +2222,47 @@ describe("PsYourPrioritiesConnector", () => {
               "image prompt"
             ),
           /Failed to generate AI image/
+        );
+      }
+    );
+
+    const noVoteResponseConnector = createYourPrioritiesConnector();
+    noVoteResponseConnector.user = { id: 10 } as YpUserData;
+    noVoteResponseConnector.sessionCookie = "yp-session=def";
+    await withAxiosStub(
+      {
+        post: async () => undefined as unknown as AxiosResponseLike,
+      },
+      async () => {
+        await assert.rejects(
+          () => noVoteResponseConnector.vote(1, 1),
+          /Voting failed/
+        );
+      }
+    );
+
+    const failingPostConnector = createYourPrioritiesConnector();
+    failingPostConnector.user = { id: 11 } as YpUserData;
+    failingPostConnector.sessionCookie = "yp-session=ghi";
+    (failingPostConnector as unknown as {
+      generateImageWithAi: (groupId: number, prompt: string) => Promise<number>;
+    }).generateImageWithAi = async () => 55;
+    await withAxiosStub(
+      {
+        post: async () => {
+          throw new Error("post failed");
+        },
+      },
+      async () => {
+        await assert.rejects(
+          () =>
+            failingPostConnector.post(
+              12,
+              "Name",
+              [] as YpStructuredAnswer[],
+              "image prompt"
+            ),
+          /Failed to post data after multiple attempts/
         );
       }
     );

@@ -18,6 +18,51 @@ export interface PsAgentStartJobData {
   structuredAnswersOverrides?: Array<any>;
 }
 
+export interface PolicySynthAgentQueueRuntime {
+  createRedis(redisUrl: string, options: RedisOptions): ioredis;
+  createWorker(
+    queueName: string,
+    processor: (job: Job) => Promise<void>,
+    options: ConstructorParameters<typeof Worker>[2]
+  ): Worker;
+  createQueueEvents(
+    queueName: string,
+    options: ConstructorParameters<typeof QueueEvents>[1]
+  ): QueueEvents;
+}
+
+export interface PolicySynthAgentQueueRuntimeConstructors {
+  Redis: new (redisUrl: string, options: RedisOptions) => ioredis;
+  Worker: new (
+    queueName: string,
+    processor: (job: Job) => Promise<void>,
+    options: ConstructorParameters<typeof Worker>[2]
+  ) => Worker;
+  QueueEvents: new (
+    queueName: string,
+    options: ConstructorParameters<typeof QueueEvents>[1]
+  ) => QueueEvents;
+}
+
+export const buildPolicySynthAgentQueueRuntime = ({
+  Redis: RedisConstructor,
+  Worker: WorkerConstructor,
+  QueueEvents: QueueEventsConstructor,
+}: PolicySynthAgentQueueRuntimeConstructors): PolicySynthAgentQueueRuntime => ({
+  createRedis: (redisUrl, options) => new RedisConstructor(redisUrl, options),
+  createWorker: (queueName, processor, options) =>
+    new WorkerConstructor(queueName, processor, options),
+  createQueueEvents: (queueName, options) =>
+    new QueueEventsConstructor(queueName, options),
+});
+
+export const defaultPolicySynthAgentQueueRuntime =
+  buildPolicySynthAgentQueueRuntime({
+    Redis: ioredis,
+    Worker,
+    QueueEvents,
+  });
+
 export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
   // Instead of single references, we keep them in maps keyed by agentId
   protected agentsMap: Map<number, PsAgent> = new Map();
@@ -31,9 +76,13 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
   structuredAnswersOverrides?: Array<any>;
   skipCheckForProgress = true;
   redisClient!: ioredis;
+  protected runtime: PolicySynthAgentQueueRuntime;
 
-  constructor() {
+  constructor(
+    runtime: PolicySynthAgentQueueRuntime = defaultPolicySynthAgentQueueRuntime
+  ) {
     super();
+    this.runtime = runtime;
     this.initializeRedis();
   }
 
@@ -70,7 +119,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       lazyConnect: true,
     };
 
-    this.redisClient = new ioredis(redisUrl, options);
+    this.redisClient = this.runtime.createRedis(redisUrl, options);
     this.redisClient.on("error", (err) => {
       this.logger.error("Redis Client Error", err);
     });
@@ -439,14 +488,14 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
     processor: (job: Job) => Promise<void>,
     options: ConstructorParameters<typeof Worker>[2]
   ): Worker {
-    return new Worker(queueName, processor, options);
+    return this.runtime.createWorker(queueName, processor, options);
   }
 
   protected createQueueEvents(
     queueName: string,
     options: ConstructorParameters<typeof QueueEvents>[1]
   ): QueueEvents {
-    return new QueueEvents(queueName, options);
+    return this.runtime.createQueueEvents(queueName, options);
   }
 
   // Methods that change the status

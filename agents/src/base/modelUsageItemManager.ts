@@ -11,6 +11,16 @@ let ensureApplicationLevelSync:
   | undefined;
 let loadDbModulesPromise: Promise<void> | undefined;
 
+type PsModelUsageItemModel = (typeof import("../dbModels/modelUsageItem.js"))["PsModelUsageItem"];
+
+export type PsModelUsageItemDbModules = {
+  sequelize?: Sequelize;
+  PsModelUsageItem?: PsModelUsageItemModel;
+};
+
+export type PsModelUsageItemDbModuleLoader =
+  () => Promise<PsModelUsageItemDbModules>;
+
 async function loadDbModules() {
   if (process.env.DISABLE_DB_INIT) {
     return;
@@ -37,7 +47,24 @@ async function loadDbModules() {
   }
 }
 
+export const loadPsModelUsageItemDbModules: PsModelUsageItemDbModuleLoader =
+  async () => {
+    await loadDbModules();
+
+    return {
+      sequelize,
+      PsModelUsageItem,
+    };
+  };
+
 export class PsModelUsageItemManager extends PolicySynthAgentBase {
+  constructor(
+    private readonly loadDbModulesForUsageItems:
+      PsModelUsageItemDbModuleLoader = loadPsModelUsageItemDbModules
+  ) {
+    super();
+  }
+
   private getUsageNormalized(
     ctx: PsModelUsageItemSaveContext
   ): PsModelUsageNormalizedCounts {
@@ -123,9 +150,12 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
       return;
     }
 
-    await loadDbModules();
+    const {
+      sequelize: loadedSequelize,
+      PsModelUsageItem: loadedPsModelUsageItem,
+    } = await this.loadDbModulesForUsageItems();
 
-    if (!sequelize || !PsModelUsageItem) {
+    if (!loadedSequelize || !loadedPsModelUsageItem) {
       this.logger.error(
         "Database modules not initialized; skipping ps_model_usage_item persistence"
       );
@@ -148,6 +178,6 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
         : {}),
     };
 
-    await PsModelUsageItem.create(createPayload);
+    await loadedPsModelUsageItem.create(createPayload);
   }
 }

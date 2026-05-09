@@ -12,6 +12,7 @@ const originalDisableDbUsageTracking = process.env.DISABLE_DB_USAGE_TRACKING;
 const originalSyncDbForApp = process.env.SYNC_DB_FOR_APP;
 
 let PsModelUsageItemManager: typeof import("../../base/modelUsageItemManager.js")["PsModelUsageItemManager"];
+let loadPsModelUsageItemDbModules: typeof import("../../base/modelUsageItemManager.js")["loadPsModelUsageItemDbModules"];
 let PsModelUsageItem: typeof import("../../dbModels/modelUsageItem.js")["PsModelUsageItem"];
 
 const restoreEnv = (key: string, value: string | undefined) => {
@@ -56,7 +57,7 @@ before(async () => {
   process.env.PSQL_DB_PASS = "policy_synth_test";
   process.env.SYNC_DB_FOR_APP = "false";
 
-  ({ PsModelUsageItemManager } = await import(
+  ({ PsModelUsageItemManager, loadPsModelUsageItemDbModules } = await import(
     "../../base/modelUsageItemManager.js"
   ));
   ({ PsModelUsageItem } = await import("../../dbModels/modelUsageItem.js"));
@@ -109,6 +110,42 @@ describe("PsModelUsageItemManager", () => {
     }
 
     assert.equal(createCalls, 0);
+  });
+
+  it("retries DB module loading after application-level sync failures", async () => {
+    delete process.env.DISABLE_DB_INIT;
+    process.env.SYNC_DB_FOR_APP = "true";
+
+    const { sequelize } = await import("../../dbModels/index.js");
+    const originalGetQueryInterface = sequelize.getQueryInterface;
+    let createTableCalls = 0;
+
+    Reflect.set(sequelize, "getQueryInterface", () => ({
+      describeTable: async () => {
+        throw new Error("usage item table missing");
+      },
+      createTable: async () => {
+        createTableCalls += 1;
+        throw new Error("usage item sync failed");
+      },
+      showIndex: async () => [],
+      addIndex: async () => undefined,
+    }));
+
+    try {
+      await assert.rejects(
+        () => loadPsModelUsageItemDbModules(),
+        /usage item sync failed/
+      );
+      await assert.rejects(
+        () => loadPsModelUsageItemDbModules(),
+        /usage item sync failed/
+      );
+    } finally {
+      Reflect.set(sequelize, "getQueryInterface", originalGetQueryInterface);
+    }
+
+    assert.equal(createTableCalls, 2);
   });
 
   it("builds and persists normalized usage item payloads", async () => {
@@ -249,6 +286,23 @@ describe("PsModelUsageItemManager", () => {
     }
 
     assert.equal(createCalls, 0);
+  });
+
+  it("handles disabled or unavailable DB modules without writing usage items", async () => {
+    process.env.DISABLE_DB_INIT = "true";
+    await loadPsModelUsageItemDbModules();
+
+    delete process.env.DISABLE_DB_INIT;
+    const missingModulesManager = new PsModelUsageItemManager(async () => ({}));
+    await missingModulesManager.saveUsageItem(baseContext());
+
+    const failingLoaderManager = new PsModelUsageItemManager(async () => {
+      throw new Error("usage item loader failed");
+    });
+    await assert.rejects(
+      () => failingLoaderManager.saveUsageItem(baseContext()),
+      /usage item loader failed/
+    );
   });
 
   it("persists raw-only usage items with default normalized counts", async () => {

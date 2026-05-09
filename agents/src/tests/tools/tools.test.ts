@@ -87,6 +87,7 @@ const {
   getAllTypeDefContents,
   main: generateDocumentationMain,
   renderSystemPrompt,
+  runGenerateDocumentationCli,
 } = generateDocumentationModule;
 const {
   buildSeedAiModelConfigurations,
@@ -1102,6 +1103,15 @@ describe("generateDocumentation tool", () => {
     assert.match(
       readFileSync(path.join(rootDir, "docs", "README.md"), "utf8"),
       /Policy Agents API Documentation/
+    );
+
+    await runGenerateDocumentationCli(runtime);
+    assert.ok(
+      logger.infos.some((entry) =>
+        String((entry as unknown[])[0]).includes(
+          "Documentation generation complete"
+        )
+      )
     );
   });
 

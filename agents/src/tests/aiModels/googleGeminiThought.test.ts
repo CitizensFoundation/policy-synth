@@ -24,6 +24,7 @@ type GoogleGeminiThoughtInternals = {
   describeParts: (parts: unknown[]) => string;
   handleStreamChunk: (chunk: GenerateContentResponse) => void;
   handleFinalResponse: (response: GenerateContentResponse) => void;
+  shouldUseGeminiRegionOverrides: () => boolean;
 };
 
 type GeminiAiMock = {
@@ -423,5 +424,58 @@ describe("GoogleGeminiThought", () => {
       ]),
       "inlineData:image/png | functionResponse:lookup | unknownPart"
     );
+  });
+
+  it("handles optional capture inputs and carries pending parts into later tool calls", () => {
+    const model = new GoogleGeminiThought(createConfig());
+    const internals = asInternals(model);
+
+    assert.equal(internals.shouldUseGeminiRegionOverrides(), false);
+    internals.handleFinalResponse(undefined as unknown as GenerateContentResponse);
+    internals.handleStreamChunk({
+      candidates: [
+        {
+          content: {
+            parts: [{ text: "pending", thoughtSignature: "sig-pending" }],
+          },
+        },
+      ],
+    } as unknown as GenerateContentResponse);
+    internals.handleStreamChunk({
+      candidates: [
+        {
+          content: {
+            parts: [
+              {
+                functionCall: {
+                  id: "call-pending",
+                  name: "lookup",
+                  args: { id: 5 },
+                },
+              },
+            ],
+          },
+        },
+      ],
+    } as unknown as GenerateContentResponse);
+
+    const injected = internals.buildAssistantToolCallMessage({
+      role: "assistant",
+      message: "",
+      toolCall: {
+        id: "call-pending",
+        name: "lookup",
+        arguments: { id: 5 },
+      },
+    });
+
+    const parts = injected.parts as Array<Record<string, unknown>>;
+    assert.equal(parts[0].text, "pending");
+    assert.equal(parts[1].thoughtSignature, "sig-pending");
+    assert.deepEqual(parts[1].functionCall, {
+      id: "call-pending",
+      name: "lookup",
+      args: { id: 5 },
+    });
   });
 });

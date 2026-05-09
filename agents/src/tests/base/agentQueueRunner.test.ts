@@ -4,6 +4,10 @@ import type { Job, QueueEvents, Worker } from "bullmq";
 
 import type { PsAgentStartJobData } from "../../base/agentQueue.js";
 import type { PsAgent } from "../../dbModels/agent.js";
+type PolicySynthAgentQueueRuntime =
+  import("../../base/agentQueue.js").PolicySynthAgentQueueRuntime;
+type PolicySynthAgentQueueRuntimeConstructors =
+  import("../../base/agentQueue.js").PolicySynthAgentQueueRuntimeConstructors;
 type PsBaseAgentRunnerRuntime =
   import("../../base/agentRunner.js").PsBaseAgentRunnerRuntime;
 
@@ -14,7 +18,8 @@ process.env.PSQL_DB_PASS ??= "policy_synth_test";
 process.env.DB_PORT ??= "5432";
 
 const { PolicySynthAgent } = await import("../../base/agent.js");
-const { PolicySynthAgentQueue } = await import("../../base/agentQueue.js");
+const { PolicySynthAgentQueue, buildPolicySynthAgentQueueRuntime } =
+  await import("../../base/agentQueue.js");
 const { PsBaseAgentRunner } = await import("../../base/agentRunner.js");
 const { PsAgent: PsAgentModel } = await import("../../dbModels/agent.js");
 const { PsAgentClass } = await import("../../dbModels/agentClass.js");
@@ -232,6 +237,41 @@ class TestAgentQueue extends PolicySynthAgentQueue {
   }
 }
 
+class RuntimeBackedQueue extends PolicySynthAgentQueue {
+  constructor(runtime: PolicySynthAgentQueueRuntime) {
+    super(runtime);
+  }
+
+  get processors() {
+    return [{ processor: QueueProcessor, weight: 100 }];
+  }
+
+  get agentQueueName() {
+    return "runtime-backed-queue";
+  }
+
+  async setupMemoryIfNeeded() {
+    return;
+  }
+
+  public createWorkerForTest(
+    processor: (job: Job) => Promise<void>
+  ): Worker {
+    return this.createWorker("runtime-backed-queue", processor, {
+      connection: this.redisClient,
+    });
+  }
+
+  public createQueueEventsForTest(): QueueEvents {
+    return this.createQueueEvents("runtime-backed-queue", {
+      connection: {
+        host: "127.0.0.1",
+        port: 6379,
+      },
+    });
+  }
+}
+
 class NamelessQueue extends TestAgentQueue {
   override get agentQueueName() {
     return "";
@@ -364,6 +404,59 @@ class RuntimeHookRunner extends PsBaseAgentRunner {
 }
 
 describe("PolicySynthAgentQueue", () => {
+  it("builds queue runtime adapters and uses base worker factories", async () => {
+    class RuntimeRedis {
+      public readonly handlers = new Map<string, (...args: unknown[]) => void>();
+
+      constructor(
+        public readonly redisUrl: string,
+        public readonly options: unknown
+      ) {}
+
+      on(event: string, handler: (...args: unknown[]) => void) {
+        this.handlers.set(event, handler);
+        return this;
+      }
+    }
+
+    class RuntimeWorker {
+      constructor(
+        public readonly queueName: string,
+        public readonly processor: (job: Job) => Promise<void>,
+        public readonly options: unknown
+      ) {}
+    }
+
+    class RuntimeQueueEvents {
+      constructor(
+        public readonly queueName: string,
+        public readonly options: unknown
+      ) {}
+    }
+
+    const runtime = buildPolicySynthAgentQueueRuntime({
+      Redis:
+        RuntimeRedis as unknown as PolicySynthAgentQueueRuntimeConstructors["Redis"],
+      Worker:
+        RuntimeWorker as unknown as PolicySynthAgentQueueRuntimeConstructors["Worker"],
+      QueueEvents:
+        RuntimeQueueEvents as unknown as PolicySynthAgentQueueRuntimeConstructors["QueueEvents"],
+    });
+    const queue = new RuntimeBackedQueue(runtime);
+    const worker = queue.createWorkerForTest(async () => undefined);
+    const queueEvents = queue.createQueueEventsForTest();
+
+    assert.equal(
+      (queue.redisClient as unknown as RuntimeRedis).redisUrl,
+      "redis://localhost:6379"
+    );
+    assert.equal((worker as unknown as RuntimeWorker).queueName, "runtime-backed-queue");
+    assert.equal(
+      (queueEvents as unknown as RuntimeQueueEvents).queueName,
+      "runtime-backed-queue"
+    );
+  });
+
   it("initializes Redis options without connecting eagerly", () => {
     process.env.REDIS_URL = "rediss://h:secret@localhost:6380";
     const queue = new RealInitQueue();
@@ -441,6 +534,10 @@ describe("PolicySynthAgentQueue", () => {
 
     const emptyStatusQueue = new TestAgentQueue();
     emptyStatusQueue.setAgentForTest(agent);
+    assert.deepEqual(await emptyStatusQueue.loadAgentMemoryIfNeeded(7), {
+      agentId: 7,
+    });
+    await emptyStatusQueue.saveAgentStatusToRedis(7);
     await emptyStatusQueue.setupStatusIfNeeded(7);
     assert.equal(emptyStatusQueue.getStatusForTest(7)?.state, "running");
     await emptyStatusQueue.updateAgentStatus(123, "running");
@@ -669,6 +766,25 @@ describe("PsBaseAgentRunner", () => {
       }
     }
     await new FailingRunner().run();
+  });
+
+  it("runs setup flow through the public run wrapper", async () => {
+    process.env.YP_USER_ID_FOR_AGENT_CREATION = "42";
+    const calls: string[] = [];
+
+    class SuccessfulRunner extends TestRunner {
+      override setupGracefulShutdown() {
+        calls.push("shutdown");
+      }
+
+      override async setupAndRunAgents() {
+        calls.push("setup");
+      }
+    }
+
+    await new SuccessfulRunner().run();
+
+    assert.deepEqual(calls, ["shutdown", "setup"]);
   });
 
   it("installs graceful shutdown handlers and runs them without exiting tests", async () => {

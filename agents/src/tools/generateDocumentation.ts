@@ -340,8 +340,13 @@ export async function main(runtime = createDocumentationRuntime()): Promise<void
   generateDocsReadme(runtime);
 }
 
+export async function runGenerateDocumentationCli(
+  runtime = createDocumentationRuntime()
+): Promise<void> {
+  await main(runtime);
+  runtime.logger.info("Documentation generation complete.");
+}
+
 if (isCliEntrypoint(import.meta.url)) {
-  await main().then(() =>
-    PolicySynthAgentBase.logger.info("Documentation generation complete.")
-  );
+  await runGenerateDocumentationCli();
 }

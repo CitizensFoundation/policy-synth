@@ -832,6 +832,13 @@ export class OpenAiResponses extends BaseChatModel {
     }
 
     if (!finalResponse) {
+      if (!phaseAwareStreaming) {
+        for (const state of streamItemState.values()) {
+          if (!state.hasItemMetadata && state.allowOutput === undefined) {
+            state.allowOutput = true;
+          }
+        }
+      }
       flushPendingStreamDeltas();
       this.logger.error("No final response from Responses API");
       return {

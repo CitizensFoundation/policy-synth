@@ -34,26 +34,17 @@ async function loadDbModules() {
   }
   if (!loadDbModulesPromise) {
     loadDbModulesPromise = (async () => {
-      try {
-        PolicySynthAgentBase.logger.debug("Loading Sequelize modules");
-        SequelizeModule = await import("sequelize");
-        ({ sequelize } = await import("../dbModels/index.js"));
-        ({ PsAiModel: PsAiModel } = await import("../dbModels/aiModel.js"));
-        ({ PsModelUsage: PsModelUsage } = await import(
-          "../dbModels/modelUsage.js"
-        ));
-        PolicySynthAgentBase.logger.debug("Sequelize modules loaded");
-        if (!PsAiModel) {
-          PolicySynthAgentBase.logger.error(
-            "PsAiModel not found after loading Sequelize modules"
-          );
-        }
-      } catch (error) {
-        PolicySynthAgentBase.logger.error(
-          `Failed to load Sequelize modules: ${error}`
-        );
-        throw error;
+      PolicySynthAgentBase.logger.debug("Loading Sequelize modules");
+      SequelizeModule = await import("sequelize");
+      ({ sequelize } = await import("../dbModels/index.js"));
+      ({ PsAiModel: PsAiModel } = await import("../dbModels/aiModel.js"));
+      ({ PsModelUsage: PsModelUsage } = await import(
+        "../dbModels/modelUsage.js"
+      ));
+      if (!SequelizeModule || !sequelize || !PsAiModel || !PsModelUsage) {
+        throw new Error("Failed to initialize Sequelize modules");
       }
+      PolicySynthAgentBase.logger.debug("Sequelize modules loaded");
     })();
   } else {
     PolicySynthAgentBase.logger.debug("Sequelize modules already loading/loaded");
@@ -62,6 +53,9 @@ async function loadDbModules() {
   try {
     await loadDbModulesPromise;
   } catch (error) {
+    PolicySynthAgentBase.logger.error(
+      `Failed to load Sequelize modules: ${error}`
+    );
     // Allow retries if loading failed previously
     loadDbModulesPromise = undefined;
     throw error;
@@ -127,20 +121,44 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelSize = process.env.PS_AI_MODEL_SIZE as PsAiModelSize;
     const modelProvider = process.env.PS_AI_MODEL_PROVIDER as PsAiModelProvider;
     const modelName = process.env.PS_AI_MODEL_NAME;
-    let apiKey;
-    switch (modelProvider?.toLowerCase()) {
+    let apiKey: string | undefined;
+    let createModel: (baseConfig: PsAiModelConfig) => BaseChatModel | undefined;
+    const providerKey = modelProvider?.toLowerCase();
+
+    switch (providerKey) {
       case PsAiModelProvider.OpenAI:
       case PsAiModelProvider.OpenAIResponses.toLowerCase():
         apiKey = process.env.OPENAI_API_KEY;
+        createModel =
+          providerKey === PsAiModelProvider.OpenAIResponses.toLowerCase()
+            ? (baseConfig) => new OpenAiResponses(baseConfig)
+            : (baseConfig) => new OpenAiChat(baseConfig);
         break;
       case PsAiModelProvider.Anthropic:
         apiKey = process.env.ANTHROPIC_API_KEY;
+        createModel = (baseConfig) => new ClaudeChat(baseConfig);
         break;
       case PsAiModelProvider.Google:
         apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
+        createModel = (baseConfig) => new GoogleGeminiChat(baseConfig);
         break;
       case PsAiModelProvider.Azure:
         apiKey = process.env.AZURE_API_KEY;
+        createModel = (baseConfig) => {
+          if (
+            !process.env.PS_AI_MODEL_ENDPOINT ||
+            !process.env.PS_AI_MODEL_DEPLOYMENT_NAME
+          ) {
+            this.logger.warn("Missing Azure-specific environment variables");
+            return undefined;
+          }
+
+          return new AzureOpenAiChat({
+            ...baseConfig,
+            endpoint: process.env.PS_AI_MODEL_ENDPOINT,
+            deploymentName: process.env.PS_AI_MODEL_DEPLOYMENT_NAME,
+          });
+        };
         break;
       default:
         throw new Error(`Unsupported model provider: ${modelProvider}`);
@@ -171,53 +189,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         prices: {} as any,
       };
 
-      switch (modelProvider.toLowerCase()) {
-        case PsAiModelProvider.Anthropic:
-          model = new ClaudeChat(baseConfig);
-          break;
-        case PsAiModelProvider.OpenAI:
-          model = new OpenAiChat(baseConfig);
-          break;
-        case PsAiModelProvider.OpenAIResponses.toLowerCase():
-          model = new OpenAiResponses(baseConfig);
-          break;
-        case PsAiModelProvider.Google:
-          model = new GoogleGeminiChat(baseConfig);
-          break;
-        case PsAiModelProvider.Azure:
-          if (
-            !process.env.PS_AI_MODEL_ENDPOINT ||
-            !process.env.PS_AI_MODEL_DEPLOYMENT_NAME
-          ) {
-            this.logger.warn("Missing Azure-specific environment variables");
-            return;
-          }
-          model = new AzureOpenAiChat({
-            ...baseConfig,
-            endpoint: process.env.PS_AI_MODEL_ENDPOINT,
-            deploymentName: process.env.PS_AI_MODEL_DEPLOYMENT_NAME,
-          });
-          break;
-        default:
-          this.logger.warn(`Unsupported model provider: ${modelProvider}`);
-          return;
+      model = createModel(baseConfig);
+      if (!model) {
+        return;
       }
 
-      if (model) {
-        model.provider = modelProvider;
-        this.models.set(modelKey, model);
-        this.modelsByType.set(modelType, model);
-        this.modelIds.set(modelKey, -1); // Use -1 to indicate ephemeral/no DB row
-        this.modelIdsByType.set(modelType, -1);
+      model.provider = modelProvider;
+      this.models.set(modelKey, model);
+      this.modelsByType.set(modelType, model);
+      this.modelIds.set(modelKey, -1); // Use -1 to indicate ephemeral/no DB row
+      this.modelIdsByType.set(modelType, -1);
 
-        this.logger.info(
-          `Initialized AI model from environment variables: ${modelKey}`
-        );
-      } else {
-        this.logger.warn(
-          `Failed to initialize AI model from environment variables: ${modelKey}`
-        );
-      }
+      this.logger.info(
+        `Initialized AI model from environment variables: ${modelKey}`
+      );
     }
 
     return model;
@@ -407,41 +392,35 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (!process.env.DISABLE_DB_INIT) {
       await loadDbModules();
       const sequelizeModule = SequelizeModule;
-      const sequelizeInstance = sequelize;
-      const PsAiModelModel = PsAiModel;
+      const sequelizeInstance = sequelize!;
+      const PsAiModelModel = PsAiModel!;
 
-      if (!sequelizeModule || !sequelizeInstance || !PsAiModelModel) {
-        this.logger.error(
-          "Database modules not initialized; skipping ephemeral model lookup"
-        );
-      } else {
-        try {
-          const escapedProvider = sequelizeInstance.escape(provider);
-          const escapedModelName = sequelizeInstance.escape(overrideModelName);
-          dbModel = await PsAiModelModel.findOne({
-            where: {
-              [sequelizeModule.Op.and]: [
-                sequelizeInstance.literal(
-                  `configuration->>'provider' = ${escapedProvider}`
-                ),
-                sequelizeInstance.literal(
-                  `configuration->>'model' = ${escapedModelName}`
-                ),
-              ],
-            },
-          });
-          if (dbModel) {
-            this.logger.info(
-              `Loaded ephemeral model from DB: ${provider} ${overrideModelName}`
-            );
-          } else {
-            this.logger.warn(
-              `Ephemeral model ${provider} ${overrideModelName} not found in DB`
-            );
-          }
-        } catch (err) {
-          this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
+      try {
+        const escapedProvider = sequelizeInstance.escape(provider);
+        const escapedModelName = sequelizeInstance.escape(overrideModelName);
+        dbModel = await PsAiModelModel.findOne({
+          where: {
+            [sequelizeModule.Op.and]: [
+              sequelizeInstance.literal(
+                `configuration->>'provider' = ${escapedProvider}`
+              ),
+              sequelizeInstance.literal(
+                `configuration->>'model' = ${escapedModelName}`
+              ),
+            ],
+          },
+        });
+        if (dbModel) {
+          this.logger.info(
+            `Loaded ephemeral model from DB: ${provider} ${overrideModelName}`
+          );
+        } else {
+          this.logger.warn(
+            `Ephemeral model ${provider} ${overrideModelName} not found in DB`
+          );
         }
+      } catch (err) {
+        this.logger.error(`Error looking up ephemeral model in DB: ${err}`);
       }
     }
 
@@ -1739,40 +1718,36 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     ) {
       await loadDbModules();
       const sequelizeModule = SequelizeModule;
-      const sequelizeInstance = sequelize;
-      const PsAiModelModel = PsAiModel;
+      const sequelizeInstance = sequelize!;
+      const PsAiModelModel = PsAiModel!;
 
-      if (!sequelizeModule || !sequelizeInstance || !PsAiModelModel) {
-        this.logger.error(
-          "Database modules not initialized; skipping price configuration lookup"
-        );
-      } else {
-        try {
-          const escapedProvider = sequelizeInstance.escape(
-            options.modelProvider
+      try {
+        const escapedProvider = sequelizeInstance.escape(options.modelProvider);
+        const escapedModelName = sequelizeInstance.escape(options.modelName);
+        const dbModel = await PsAiModelModel.findOne({
+          where: {
+            [sequelizeModule.Op.and]: [
+              sequelizeInstance.literal(
+                `configuration->>'provider' = ${escapedProvider}`
+              ),
+              sequelizeInstance.literal(
+                `configuration->>'model' = ${escapedModelName}`
+              ),
+            ],
+          },
+        });
+
+        if (dbModel) {
+          const cfg = dbModel.configuration as PsAiModelConfiguration;
+          this.logger.debug(
+            `Found price configuration for override: ${options.modelProvider} ${
+              options.modelName
+            }: ${JSON.stringify(cfg.prices, null, 2)}`
           );
-          const escapedModelName = sequelizeInstance.escape(options.modelName);
-          const dbModel = await PsAiModelModel.findOne({
-            where: {
-              [sequelizeModule.Op.and]: [
-                sequelizeInstance.literal(
-                  `configuration->>'provider' = ${escapedProvider}`
-                ),
-                sequelizeInstance.literal(
-                  `configuration->>'model' = ${escapedModelName}`
-                ),
-              ],
-            },
-          });
-
-          if (dbModel) {
-            const cfg = dbModel.configuration as PsAiModelConfiguration;
-            this.logger.debug(`Found price configuration for override: ${options.modelProvider} ${options.modelName}: ${JSON.stringify(cfg.prices, null, 2)}`);
-            return this.applyPriceOverride(cfg.prices, options.priceOverride);
-          }
-        } catch (err) {
-          this.logger.error(`Error looking up price configuration: ${err}`);
+          return this.applyPriceOverride(cfg.prices, options.priceOverride);
         }
+      } catch (err) {
+        this.logger.error(`Error looking up price configuration: ${err}`);
       }
     }
 
@@ -1784,47 +1759,46 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     ) {
       await loadDbModules();
       const sequelizeModule = SequelizeModule;
-      const sequelizeInstance = sequelize;
-      const PsAiModelModel = PsAiModel;
+      const sequelizeInstance = sequelize!;
+      const PsAiModelModel = PsAiModel!;
 
-      if (!sequelizeModule || !sequelizeInstance || !PsAiModelModel) {
-        this.logger.error(
-          "Database modules not initialized; skipping fallback price configuration lookup"
+      try {
+        const escapedProvider = sequelizeInstance.escape(
+          options.fallbackModelProvider
         );
-      } else {
-        try {
-          const escapedProvider = sequelizeInstance.escape(
-            options.fallbackModelProvider
-          );
-          const escapedModelName = sequelizeInstance.escape(
-            options.fallbackModelName
-          );
-          const dbFallback = await PsAiModelModel.findOne({
-            where: {
-              [sequelizeModule.Op.and]: [
-                sequelizeInstance.literal(
-                  `configuration->>'provider' = ${escapedProvider}`
-                ),
-                sequelizeInstance.literal(
-                  `configuration->>'model' = ${escapedModelName}`
-                ),
-              ],
-            },
-            });
+        const escapedModelName = sequelizeInstance.escape(
+          options.fallbackModelName
+        );
+        const dbFallback = await PsAiModelModel.findOne({
+          where: {
+            [sequelizeModule.Op.and]: [
+              sequelizeInstance.literal(
+                `configuration->>'provider' = ${escapedProvider}`
+              ),
+              sequelizeInstance.literal(
+                `configuration->>'model' = ${escapedModelName}`
+              ),
+            ],
+          },
+        });
 
-            if (dbFallback) {
-              const cfg = dbFallback.configuration as PsAiModelConfiguration;
-              this.logger.debug(`Found price configuration for fallback: ${options.fallbackModelProvider} ${options.fallbackModelName}: ${JSON.stringify(cfg.prices, null, 2)}`);
-              return this.applyPriceOverride(
-                cfg.prices,
-                options.priceOverride
-              );
-            }
-          } catch (err) {
-            this.logger.error(
-              `Error looking up fallback price configuration: ${err}`
-            );
+        if (dbFallback) {
+          const cfg = dbFallback.configuration as PsAiModelConfiguration;
+          this.logger.debug(
+            `Found price configuration for fallback: ${
+              options.fallbackModelProvider
+            } ${options.fallbackModelName}: ${JSON.stringify(
+              cfg.prices,
+              null,
+              2
+            )}`
+          );
+          return this.applyPriceOverride(cfg.prices, options.priceOverride);
         }
+      } catch (err) {
+        this.logger.error(
+          `Error looking up fallback price configuration: ${err}`
+        );
       }
     }
 
@@ -1895,15 +1869,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     await loadDbModules();
     const sequelizeModule = SequelizeModule;
-    const sequelizeInstance = sequelize;
-    const PsAiModelModel = PsAiModel;
-
-    if (!sequelizeModule || !sequelizeInstance || !PsAiModelModel) {
-      this.logger.error(
-        "Database modules not initialized; skipping model id lookup"
-      );
-      return undefined;
-    }
+    const sequelizeInstance = sequelize!;
+    const PsAiModelModel = PsAiModel!;
 
     try {
       const escapedProvider = sequelizeInstance.escape(provider);
@@ -2039,17 +2006,32 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       return;
     }
 
+    if (process.env.DISABLE_DB_INIT) {
+      this.logger.info(
+        `(Database Initialization Disabled) Token usage for ${modelName} (${modelType} ${modelSize}) was not persisted: in=${tokensIn} cached=${cachedInTokens} out=${tokensOut}`
+      );
+      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+          modelName,
+          modelProvider,
+          modelType,
+          modelSize,
+          tokensIn,
+          tokensOut,
+          cachedInTokens,
+          agentId: this.agentId,
+          userId: this.userId,
+          modelId: finalModelId,
+          timestamp: Date.now(),
+        });
+      }
+      return;
+    }
+
     try {
       await loadDbModules();
-      const sequelizeInstance = sequelize;
-      const PsModelUsageModel = PsModelUsage;
-
-      if (!sequelizeInstance || !PsModelUsageModel) {
-        this.logger.error(
-          "Database modules not initialized; skipping token usage persistence"
-        );
-        return;
-      }
+      const sequelizeInstance = sequelize!;
+      const PsModelUsageModel = PsModelUsage!;
 
       await sequelizeInstance.transaction(async (t: Transaction) => {
         const [usage, created] = await PsModelUsageModel.findOrCreate({

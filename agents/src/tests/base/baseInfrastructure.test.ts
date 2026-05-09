@@ -619,7 +619,10 @@ describe("base infrastructure modules", () => {
       "model-result"
     );
     assert.equal(await agent.getTokensFromMessages([]), 123);
+    agent.setModelManagerForTest(undefined);
+    assert.equal(await agent.getTokensFromMessages([]), 0);
     assert.equal(agent.getConfig("missing", "fallback"), "fallback");
+    assert.equal(agent.getConfigOld("missingOld", "fallback"), "fallback");
     assert.equal(agent.getMaxTokensOut(), 2048);
     assert.equal(agent.getTemperature(), 0.25);
     assert.equal(agent.getModelUsageEstimates()?.[0].modelId, 4);
@@ -686,6 +689,17 @@ describe("base infrastructure modules", () => {
     Reflect.set(noMemoryAgent, "agent", undefined);
     assert.deepEqual(await noMemoryAgent.loadAgentMemoryFromRedis(), {});
 
+    const constructedMemoryLoads: number[] = [];
+    class LoadMemoryOnConstructAgent extends TestPolicyAgent {
+      override async loadAgentMemoryFromRedis(): Promise<PsAgentMemoryData> {
+        constructedMemoryLoads.push(this.agent.id);
+        this.memory = { agentId: this.agent.id };
+        return this.memory;
+      }
+    }
+    new LoadMemoryOnConstructAgent(createAgentRecord(), undefined, 0, 100);
+    assert.deepEqual(constructedMemoryLoads, [7]);
+
     const emptyMemoryAgent = new TestPolicyAgent(createAgentRecord(), createMemory(), 0, 100);
     emptyMemoryAgent.setRedisForTest({
       get: async () => null,
@@ -694,6 +708,7 @@ describe("base infrastructure modules", () => {
     await emptyMemoryAgent.loadAgentMemoryFromRedis();
     assert.equal(emptyMemoryAgent.memory.agentId, 7);
     assert.equal(await emptyMemoryAgent.loadStatusFromRedis(), undefined);
+    await emptyMemoryAgent.checkProgressForPauseOrStop();
     emptyMemoryAgent.setRedisForTest({
       get: async () => {
         throw new Error("status failed");
@@ -761,6 +776,36 @@ describe("base infrastructure modules", () => {
       restoreStoppedTimer();
     }
 
+    const timedOutPausedAgent = new TestPolicyAgent(
+      createAgentRecord(),
+      createMemory(),
+      0,
+      100
+    );
+    const stillPaused: PsAgentStatus[] = [
+      { state: "paused", progress: 0, messages: [], lastUpdated: 1 },
+      { state: "paused", progress: 0, messages: [], lastUpdated: 2 },
+    ];
+    timedOutPausedAgent.pauseCheckInterval = 1;
+    timedOutPausedAgent.pauseTimeout = 10;
+    timedOutPausedAgent.setRedisForTest({
+      get: async () => JSON.stringify(stillPaused.shift()),
+      set: async () => "OK",
+    });
+    const originalNow = Date.now;
+    const nowValues = [0, 20];
+    Date.now = () => nowValues.shift() ?? 20;
+    const restoreTimeoutTimer = immediateTimer();
+    try {
+      await assert.rejects(
+        () => timedOutPausedAgent.checkProgressForPauseOrStop(),
+        /timed out while paused/
+      );
+    } finally {
+      restoreTimeoutTimer();
+      Date.now = originalNow;
+    }
+
     const missingMemoryKeyAgent = new TestPolicyAgent(
       createAgentRecord({ redisMemoryKey: "" }),
       createMemory(),
@@ -802,6 +847,27 @@ describe("base infrastructure modules", () => {
     });
     await assert.rejects(() => stopOnSaveAgent.saveMemory(), /stop during save/);
 
+    class SuccessfulSaveAgent extends TestPolicyAgent {
+      public saves = 0;
+
+      override async saveMemory() {
+        this.saves += 1;
+      }
+    }
+    const successfulSaveAgent = new SuccessfulSaveAgent(
+      createAgentRecord(),
+      createMemory(),
+      0,
+      100
+    );
+    const restoreSuccessfulSaveTimer = immediateTimer();
+    try {
+      await successfulSaveAgent.scheduleMemorySave();
+    } finally {
+      restoreSuccessfulSaveTimer();
+    }
+    assert.equal(successfulSaveAgent.saves, 1);
+
     const failingAgent = new SaveFailingAgent(createAgentRecord(), createMemory(), 0, 100);
     const restoreSaveTimer = immediateTimer();
     try {
@@ -813,6 +879,28 @@ describe("base infrastructure modules", () => {
     const internals = failingAgent as unknown as TestAgentInternals;
     assert.equal(internals.memorySaveError, null);
     assert.equal(internals.memorySaveTimer, null);
+
+    class StringFailingAgent extends TestPolicyAgent {
+      override async saveMemory() {
+        throw "string save failed";
+      }
+    }
+    const stringFailingAgent = new StringFailingAgent(
+      createAgentRecord(),
+      createMemory(),
+      0,
+      100
+    );
+    const restoreStringSaveTimer = immediateTimer();
+    try {
+      await stringFailingAgent.scheduleMemorySave();
+    } finally {
+      restoreStringSaveTimer();
+    }
+    assert.throws(
+      () => stringFailingAgent.checkLastMemorySaveError(),
+      /string save failed/
+    );
   });
 
   it("runs agent task assistant and tool-call loops", async () => {
