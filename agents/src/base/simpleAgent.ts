@@ -8,8 +8,9 @@ import ioredis from "ioredis";
 import tiktoken from "tiktoken";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 
-const redis = new ioredis(
-  process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379"
+export const simpleAgentRedis = new ioredis(
+  process.env.REDIS_AGENT_URL || process.env.REDIS_URL || "redis://localhost:6379",
+  { lazyConnect: true }
 );
 
 export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
@@ -301,7 +302,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
       this.logger.debug(`Saving memory to Redis: ${this.redisKey}`);
       try {
         this.memory.lastSavedAt = Date.now();
-        await redis.set(this.redisKey, JSON.stringify(this.memory));
+        await simpleAgentRedis.set(this.redisKey, JSON.stringify(this.memory));
       } catch (error) {
         this.logger.error("Can't save memory to redis", error);
       }

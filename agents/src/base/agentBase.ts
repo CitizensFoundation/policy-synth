@@ -66,8 +66,12 @@ export class PolicySynthAgentBase {
   }
 
   getJsonBlock(text: string) {
-    let startIndex = text.indexOf("```json");
-    let endIndex = text.indexOf("```", startIndex + 6);
+    const startIndex = text.indexOf("```json");
+    if (startIndex === -1) {
+      return null;
+    }
+
+    const endIndex = text.indexOf("```", startIndex + 7);
     if (endIndex !== -1) {
       return text.substring(startIndex + 7, endIndex).trim();
     } else {

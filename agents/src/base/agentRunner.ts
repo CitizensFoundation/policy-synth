@@ -37,8 +37,8 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
   abstract setupAgents(): Promise<void>;
 
   async setupAndRunAgents() {
-    await connectToDatabase();
-    await initializeModels();
+    await this.connectToDatabase();
+    await this.initializeModels();
 
     this.agentRegistry = await this.getOrCreateAgentRegistry();
     await this.createAgentClassesIfNeeded();
@@ -56,6 +56,14 @@ export abstract class PsBaseAgentRunner extends PolicySynthAgentBase {
 
     await this.registerConnectors();
     this.logger.info("All agents and connectors are set up and running");
+  }
+
+  protected async connectToDatabase() {
+    await connectToDatabase();
+  }
+
+  protected async initializeModels() {
+    await initializeModels();
   }
 
   inspectDynamicMethods(obj: any, className: string) {

@@ -67,6 +67,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       tls: redisUrl.startsWith("rediss://")
         ? { rejectUnauthorized: false }
         : undefined,
+      lazyConnect: true,
     };
 
     this.redisClient = new ioredis(redisUrl, options);
@@ -302,7 +303,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
         process.env.PS_AGENTS_CONCURRENCY || "20"
       );
 
-      const worker = new Worker(
+      const worker = this.createWorker(
         this.agentQueueName,
         async (job: Job) => {
           try {
@@ -402,7 +403,7 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
       });
 
       // Optional: queueEvents for global monitoring
-      const queueEvents = new QueueEvents(this.agentQueueName, {
+      const queueEvents = this.createQueueEvents(this.agentQueueName, {
         connection: {
           host: (this.redisClient.options as any).host,
           port: (this.redisClient.options as any).port,
@@ -431,6 +432,21 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
     } else {
       this.logger.error("Top level agent queue name not set");
     }
+  }
+
+  protected createWorker(
+    queueName: string,
+    processor: (job: Job) => Promise<void>,
+    options: ConstructorParameters<typeof Worker>[2]
+  ): Worker {
+    return new Worker(queueName, processor, options);
+  }
+
+  protected createQueueEvents(
+    queueName: string,
+    options: ConstructorParameters<typeof QueueEvents>[1]
+  ): QueueEvents {
+    return new QueueEvents(queueName, options);
   }
 
   // Methods that change the status
