@@ -1976,6 +1976,53 @@ describe("PsAiModelManager text model calls", () => {
     assert.equal(manager.usageCalls[0][0], "fallback-model");
   });
 
+  it("retries fallback model timeouts with the same retry settings", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    const internals = asInternals(manager);
+    const primary = new ScriptedChatModel(
+      createModelConfig({ modelName: "timeout-primary-model" }),
+      [],
+      [Object.assign(new Error("Invalid API key"), { status: 401 })]
+    );
+    const fallback = new DelayedFirstAttemptModel(
+      createModelConfig({
+        modelName: "timeout-fallback-model",
+        timeoutMs: 1000,
+      })
+    );
+    registerModel(manager, primary);
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelProvider === PsAiModelProvider.OpenAI &&
+        options.modelName === "timeout-fallback-model"
+          ? fallback
+          : undefined
+    );
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        forceTimeoutAndRetryMs: 10,
+        overrideMaxRetries: 2,
+        fallbackModelProvider: PsAiModelProvider.OpenAI,
+        fallbackModelName: "timeout-fallback-model",
+      }
+    );
+
+    assert.equal(result, "second attempt");
+    assert.equal(primary.calls.length, 1);
+    assert.equal(fallback.generateCalls, 2);
+  });
+
   it("uses fallback models for prohibited content and retries fallback JSON parsing", async () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
@@ -2193,8 +2240,9 @@ describe("PsAiModelManager text model calls", () => {
             fallbackModelName: "json-fallback-model",
           }
         ),
-      /Unable to parse JSON/
+      /JSON parse failure/
     );
+    assert.equal(jsonFallback.calls.length, 4);
 
     const tokenManager = createNoopManager();
     disableRetrySleep(tokenManager);
@@ -2285,7 +2333,7 @@ describe("PsAiModelManager text model calls", () => {
     );
     const emptyFallback = new ScriptedChatModel(
       createModelConfig({ modelName: "empty-fallback-model" }),
-      [undefined]
+      [undefined, undefined]
     );
     registerModel(emptyFallbackManager, primary);
     Reflect.set(
@@ -2309,10 +2357,12 @@ describe("PsAiModelManager text model calls", () => {
           {
             fallbackModelProvider: PsAiModelProvider.OpenAI,
             fallbackModelName: "empty-fallback-model",
+            overrideMaxRetries: 2,
           }
         ),
-      /Error: unknown primary failure/
+      /Model call failed after maximum retries/
     );
+    assert.equal(emptyFallback.calls.length, 2);
   });
 
   it("routes fallback token limit errors through chunking or rethrows them", async () => {
@@ -2417,6 +2467,63 @@ describe("PsAiModelManager text model calls", () => {
         ),
       /maximum context length/
     );
+  });
+
+  it("preserves fallback identity for token-limit chunking retries", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    disableRetrySleep(manager);
+    const internals = asInternals(manager);
+    const primary = new ScriptedChatModel(
+      createModelConfig({ modelName: "chunk-primary-model" }),
+      [],
+      [
+        Object.assign(new Error("Invalid API key"), { status: 401 }),
+        Object.assign(new Error("Invalid API key"), { status: 401 }),
+        Object.assign(new Error("Invalid API key"), { status: 401 }),
+      ]
+    );
+    const tokenError = Object.assign(
+      new Error("maximum context length exceeded in fallback"),
+      { code: "context_length_exceeded" }
+    );
+    const fallback = new ScriptedChatModel(
+      createModelConfig({
+        modelName: "chunk-fallback-model",
+        maxContextTokens: 200_000,
+      }),
+      [createModelResult("chunk analysis"), createModelResult("final chunked")],
+      [tokenError]
+    );
+    registerModel(manager, primary);
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelName === "chunk-fallback-model" ? fallback : undefined
+    );
+    const longDocument = Array.from(
+      { length: 60 },
+      (_, index) => `word${index}`
+    ).join(" ");
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: longDocument }],
+      {
+        fallbackModelProvider: PsAiModelProvider.OpenAI,
+        fallbackModelName: "chunk-fallback-model",
+      }
+    );
+
+    assert.equal(result, "final chunked");
+    assert.equal(primary.calls.length, 3);
+    assert.equal(fallback.calls.length, 3);
   });
 
   it("merges price overrides for loaded fallback models without mutating base prices", async () => {

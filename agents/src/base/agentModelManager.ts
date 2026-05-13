@@ -876,7 +876,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     modelSize: PsAiModelSize,
     messages: PsModelMessage[],
     options: PsCallModelOptions
-  ) {
+  ): Promise<any> {
     let retryCount = 0;
     let maxRetries = options.limitedRetries
       ? this.limitedLLMmaxRetryCount
@@ -1231,141 +1231,31 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
             usedFallback = true;
 
-            // Attempt the call with the fallback ephemeral model (no further fallback if this fails)
+            // Run the fallback through the same retry path as a normal model
+            // call, but prevent another fallback hop from this fallback.
             try {
-              let fallbackJsonParseRetryCount = 0;
-              const maxFallbackJsonParseRetries = 3;
-
-              while (true) {
-                this.logger.info(
-                  `Calling Fallback: ${options.fallbackModelProvider}, ${options.fallbackModelName}...`
+              const fallbackOptions: PsCallModelOptions = { ...options };
+              delete fallbackOptions.fallbackModelProvider;
+              delete fallbackOptions.fallbackModelName;
+              delete fallbackOptions.fallbackModelType;
+              delete fallbackOptions.simulateContentErrorForFallbackDebugging;
+              fallbackOptions.disableChunkingRetry = true;
+              if (fallbackOptions.parseJson) {
+                const maxFallbackJsonParseAttempts = 4;
+                fallbackOptions.overrideMaxRetries = Math.min(
+                  fallbackOptions.overrideMaxRetries ??
+                    maxFallbackJsonParseAttempts,
+                  maxFallbackJsonParseAttempts
                 );
-                const timeoutMs = this.getTimeoutMsForRetry(
-                  options,
-                  fallbackEphemeral.config.timeoutMs,
-                  retryCount,
-                  maxRetries
-                );
-                const requestOptions = this.getModelRequestOptions(options);
-                const fallbackResults = (await this.callWithTimeout(
-                  fallbackEphemeral,
-                  messages,
-                  options.streamingCallbacks,
-                  timeoutMs,
-                  options.promptImages,
-                  options.functions,
-                  options.toolChoice,
-                  options.allowedTools,
-                  requestOptions
-                )) as PsBaseModelReturnParameters | undefined;
-
-                if (fallbackResults) {
-                  const {
-                    tokensIn,
-                    tokensOut,
-                    cachedInTokens,
-                    reasoningTokens,
-                    audioTokens,
-                    usageItemData,
-                    content,
-                    toolCalls,
-                  } = fallbackResults;
-                  const configuredFallbackPrices =
-                    this.applyPriceOverride(
-                      fallbackEphemeral.config?.prices,
-                      options.priceOverride
-                    ) ?? fallbackEphemeral.config.prices;
-                  await this.saveTokenUsageItem({
-                    modelName: String(fallbackEphemeral.modelName),
-                    modelProvider: fallbackEphemeral.provider ?? "Unknown",
-                    prices: configuredFallbackPrices,
-                    modelType:
-                      fallbackEphemeral.config?.modelType ?? modelType,
-                    modelSize:
-                      fallbackEphemeral.config?.modelSize ?? modelSize,
-                    tokensIn,
-                    cachedInTokens: cachedInTokens ?? 0,
-                    tokensOut,
-                    reasoningTokens,
-                    audioTokens,
-                    streaming: Boolean(options.streamingCallbacks),
-                    modelId: fallbackEphemeral.dbModelId,
-                    regionalProcessing:
-                      fallbackEphemeral.config?.regionalProcessing,
-                    inferenceType: fallbackEphemeral.config?.inferenceType,
-                    usageItemData,
-                  });
-                  await this.saveTokenUsage(
-                    fallbackEphemeral.modelName,
-                    fallbackEphemeral.provider ?? "Unknown",
-                    configuredFallbackPrices,
-                    fallbackEphemeral.config?.modelType ?? modelType,
-                    fallbackEphemeral.config?.modelSize ?? modelSize,
-                    tokensIn,
-                    cachedInTokens ?? 0,
-                    tokensOut,
-                    fallbackEphemeral.dbModelId
-                  );
-                  const hasFallbackToolCalls = Boolean(
-                    toolCalls && toolCalls.length
-                  );
-                  const trimmedFallbackContent = content.trim();
-                  if (
-                    options.returnBaseModelResult &&
-                    (hasFallbackToolCalls ||
-                      trimmedFallbackContent ||
-                      fallbackResults.phase)
-                  ) {
-                    return {
-                      ...fallbackResults,
-                      content: trimmedFallbackContent,
-                    };
-                  }
-                  if (hasFallbackToolCalls) {
-                    return { toolCalls };
-                  }
-                  if (options.parseJson) {
-                    let parsedJson: unknown;
-                    try {
-                      parsedJson = this.parseJsonResponse(trimmedFallbackContent);
-                    } catch (parseError) {
-                      if (
-                        fallbackJsonParseRetryCount >=
-                        maxFallbackJsonParseRetries
-                      ) {
-                        throw parseError;
-                      }
-                      fallbackJsonParseRetryCount++;
-                      this.logger.warn(
-                        `Fallback JSON parse failure: retrying fallback model. Attempt #${fallbackJsonParseRetryCount}`
-                      );
-                      await this.sleepBeforeRetry(
-                        fallbackJsonParseRetryCount
-                      );
-                      continue;
-                    }
-
-                    if (
-                      parsedJson === '"[]"' ||
-                      parsedJson === "[]" ||
-                      parsedJson === "'[]'"
-                    ) {
-                      this.logger.warn(
-                        `JSON processing returned an empty array string: ${parsedJson}`
-                      );
-                      parsedJson = [];
-                    }
-
-                    return parsedJson;
-                  }
-
-                  return trimmedFallbackContent;
-                } else {
-                  // Fallback returned empty result; let's break out
-                  this.logger.warn("Fallback returned empty result; aborting");
-                  throw error;
-                }
               }
+
+              return await this.runTextModelCall(
+                fallbackEphemeral,
+                fallbackEphemeral.config?.modelType ?? modelType,
+                fallbackEphemeral.config?.modelSize ?? modelSize,
+                messages,
+                fallbackOptions
+              );
             } catch (fallbackError) {
               if (TokenLimitChunker.isTokenLimitError(fallbackError)) {
                 if (options.disableChunkingRetry) {

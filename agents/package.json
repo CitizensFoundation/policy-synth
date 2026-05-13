@@ -14,7 +14,7 @@
     "@tsconfig/node20": "^20.1.9",
     "@types/html-to-text": "^9.0.4",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^25.6.2",
+    "@types/node": "^25.7.0",
     "@types/pg": "^8.20.0",
     "@types/qs": "^6.15.1",
     "c8": "^11.0.0",
@@ -48,15 +48,15 @@
   "dependencies": {
     "@airbrake/node": "^2.1.9",
     "@anthropic-ai/bedrock-sdk": "^0.29.1",
-    "@anthropic-ai/sdk": "^0.95.1",
+    "@anthropic-ai/sdk": "^0.95.2",
     "@anthropic-ai/vertex-sdk": "^0.16.0",
     "@azure/identity": "^4.13.1",
     "@google-cloud/vertexai": "^1.12.0",
-    "@google/genai": "^2.0.1",
+    "@google/genai": "^2.2.0",
     "@google/generative-ai": "^0.24.1",
-    "@mendable/firecrawl-js": "^4.22.2",
+    "@mendable/firecrawl-js": "^4.23.0",
     "axios": "1.16.0",
-    "bullmq": "^5.76.6",
+    "bullmq": "^5.76.8",
     "chalk": "^5.5.2",
     "colors": "^1.4.0",
     "discord.js": "^14.26.4",
@@ -74,7 +74,7 @@
     "p-limit": "^7.3.0",
     "pdf-parse": "^2.4.5",
     "pg": "^8.20.0",
-    "puppeteer": "^24.43.0",
+    "puppeteer": "^24.43.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
     "qs": "^6.15.1",
@@ -84,9 +84,10 @@
     "tldts": "^7.0.30",
     "weaviate-ts-client": "^2.2.0",
     "winston": "^3.19.0",
-    "ws": "^8.18.2"
+    "ws": "^8.20.1"
   },
   "overrides": {
-    "fast-xml-parser": "5.7.2"
+    "@protobufjs/utf8": "1.1.1",
+    "protobufjs": "7.5.8"
   }
 }
