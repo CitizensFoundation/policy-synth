@@ -60,6 +60,12 @@ interface PsAiModelConfig {
 interface PsCallModelOptions {
   parseJson?: boolean;
   limitedRetries?: boolean;
+  /**
+   * Internal retry-loop option: when true, timeout errors may use the main
+   * retry budget even if limitedRetries is set. Non-timeout failures still use
+   * the original limited retry budget.
+   */
+  useMainRetryBudgetForTimeouts?: boolean;
   overrideMaxRetries?: number;
   forceTimeoutAndRetryMs?: number;
   tokenOutEstimate?: number;

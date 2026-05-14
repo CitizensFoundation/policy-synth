@@ -2023,6 +2023,156 @@ describe("PsAiModelManager text model calls", () => {
     assert.equal(fallback.generateCalls, 2);
   });
 
+  it("does not inherit the limited retry budget for fallback timeouts", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    disableRetrySleep(manager);
+    const internals = asInternals(manager);
+    const primary = new ScriptedChatModel(
+      createModelConfig({ modelName: "limited-timeout-primary" }),
+      [],
+      [Object.assign(new Error("Invalid API key"), { status: 401 })]
+    );
+    const timeoutError = new Error("Model call timed out");
+    const fallback = new ScriptedChatModel(
+      createModelConfig({ modelName: "limited-timeout-fallback" }),
+      [createModelResult("fallback recovered")],
+      [
+        timeoutError,
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+      ]
+    );
+    registerModel(manager, primary);
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelName === "limited-timeout-fallback"
+          ? fallback
+          : undefined
+    );
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        limitedRetries: true,
+        fallbackModelProvider: PsAiModelProvider.OpenAI,
+        fallbackModelName: "limited-timeout-fallback",
+      }
+    );
+
+    assert.equal(result, "fallback recovered");
+    assert.equal(primary.calls.length, 1);
+    assert.equal(fallback.calls.length, 6);
+  });
+
+  it("preserves limited retry budget for non-timeout fallback failures", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    disableRetrySleep(manager);
+    const internals = asInternals(manager);
+    const primary = new ScriptedChatModel(
+      createModelConfig({ modelName: "limited-empty-primary" }),
+      [],
+      [Object.assign(new Error("Invalid API key"), { status: 401 })]
+    );
+    const fallback = new ScriptedChatModel(
+      createModelConfig({ modelName: "limited-empty-fallback" }),
+      [undefined, undefined, undefined, undefined, undefined]
+    );
+    registerModel(manager, primary);
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelName === "limited-empty-fallback"
+          ? fallback
+          : undefined
+    );
+
+    await assert.rejects(
+      manager.callModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        [{ role: "user", message: "hello" }],
+        {
+          limitedRetries: true,
+          fallbackModelProvider: PsAiModelProvider.OpenAI,
+          fallbackModelName: "limited-empty-fallback",
+        }
+      ),
+      /Model call failed after maximum retries/
+    );
+
+    assert.equal(primary.calls.length, 1);
+    assert.equal(fallback.calls.length, 5);
+  });
+
+  it("keeps JSON fallback timeout retries on the main budget", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    disableRetrySleep(manager);
+    const internals = asInternals(manager);
+    const primary = new ScriptedChatModel(
+      createModelConfig({ modelName: "json-timeout-primary" }),
+      [],
+      [Object.assign(new Error("Invalid API key"), { status: 401 })]
+    );
+    const fallback = new ScriptedChatModel(
+      createModelConfig({ modelName: "json-timeout-fallback" }),
+      [createModelResult('{"ok":true}')],
+      [
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+        new Error("Model call timed out"),
+      ]
+    );
+    registerModel(manager, primary);
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelName === "json-timeout-fallback"
+          ? fallback
+          : undefined
+    );
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        limitedRetries: true,
+        parseJson: true,
+        fallbackModelProvider: PsAiModelProvider.OpenAI,
+        fallbackModelName: "json-timeout-fallback",
+      }
+    );
+
+    assert.deepEqual(result, { ok: true });
+    assert.equal(primary.calls.length, 1);
+    assert.equal(fallback.calls.length, 6);
+  });
+
   it("uses fallback models for prohibited content and retries fallback JSON parsing", async () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
@@ -2522,7 +2672,7 @@ describe("PsAiModelManager text model calls", () => {
     );
 
     assert.equal(result, "final chunked");
-    assert.equal(primary.calls.length, 3);
+    assert.equal(primary.calls.length, 1);
     assert.equal(fallback.calls.length, 3);
   });
 
@@ -3236,7 +3386,7 @@ describe("PsAiModelManager call options", () => {
     }
   });
 
-  it("ramps forceTimeoutAndRetryMs after ten retries", () => {
+  it("ramps forceTimeoutAndRetryMs across the retry budget", () => {
     useStandardResponsesEnv();
 
     const manager = new NoopUsageModelManager(
@@ -3258,12 +3408,21 @@ describe("PsAiModelManager call options", () => {
       internals.getTimeoutMsForRetry(options, undefined, 0, 50),
       2500
     );
-    assert.equal(
-      internals.getTimeoutMsForRetry(options, undefined, 9, 50),
-      2500
+    assert.ok(
+      internals.getTimeoutMsForRetry(options, undefined, 4, 10) > 2500
     );
     assert.ok(
-      internals.getTimeoutMsForRetry(options, undefined, 10, 50) > 2500
+      internals.getTimeoutMsForRetry(options, undefined, 4, 10) < 30000
+    );
+    assert.equal(
+      internals.getTimeoutMsForRetry(options, undefined, 9, 10),
+      30000
+    );
+    assert.ok(
+      internals.getTimeoutMsForRetry(options, undefined, 48, 50) > 29000
+    );
+    assert.ok(
+      internals.getTimeoutMsForRetry(options, undefined, 48, 50) < 30000
     );
     assert.equal(
       internals.getTimeoutMsForRetry(options, undefined, 49, 50),
@@ -3271,11 +3430,21 @@ describe("PsAiModelManager call options", () => {
     );
     assert.equal(internals.getTimeoutMsForRetry({}, 1234, 0, 5), 1234);
     assert.equal(
-      internals.getTimeoutMsForRetry({ forceTimeoutAndRetryMs: 4000 }, undefined, 20, 10),
-      4000
+      internals.getTimeoutMsForRetry(
+        { forceTimeoutAndRetryMs: 4000 },
+        undefined,
+        9,
+        10
+      ),
+      30000
     );
     assert.equal(
-      internals.getTimeoutMsForRetry({ forceTimeoutAndRetryMs: 35000 }, undefined, 20, 50),
+      internals.getTimeoutMsForRetry(
+        { forceTimeoutAndRetryMs: 35000 },
+        undefined,
+        20,
+        50
+      ),
       35000
     );
   });

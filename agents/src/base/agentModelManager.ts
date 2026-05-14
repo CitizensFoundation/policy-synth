@@ -80,7 +80,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
   limitedLLMmaxRetryCount = 5;
   mainLLMmaxRetryCount = 50;
-  private readonly forcedTimeoutEscalationStartRetryCount = 10;
   private readonly forcedTimeoutEscalationTargetMs = 30000;
   maxStatefulResponsesModelCacheEntries: number = Math.max(
     1,
@@ -885,6 +884,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (options.overrideMaxRetries) {
       maxRetries = options.overrideMaxRetries;
     }
+    const originalMaxRetries = maxRetries;
 
     // Track if we've tried the fallback model yet:
     let usedFallback = false;
@@ -1066,6 +1066,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           this.logger.warn(
             `callTextModel response was empty, retrying. Attempt #${retryCount}`
           );
+          const nonTimeoutMaxRetries = this.getMaxRetriesForNonTimeoutFailure(
+            options,
+            maxRetries,
+            originalMaxRetries
+          );
+          if (retryCount >= nonTimeoutMaxRetries) {
+            this.logger.error(
+              "Unrecoverable Error in runTextModelCall method - no valid response after retries"
+            );
+            throw new Error("Model call failed after maximum retries");
+          }
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
@@ -1100,6 +1111,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
 
         if (error.message === "Model call timed out") {
+          if (options.useMainRetryBudgetForTimeouts) {
+            maxRetries = Math.max(maxRetries, this.mainLLMmaxRetryCount);
+          }
           const timedOutAtMs = this.getTimeoutMsForRetry(
             options,
             model.config.timeoutMs,
@@ -1231,10 +1245,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
             usedFallback = true;
 
-            // Run the fallback through the same retry path as a normal model
-            // call, but prevent another fallback hop from this fallback.
-            try {
-              const fallbackOptions: PsCallModelOptions = { ...options };
+            const prepareFallbackOptions = (
+              sourceOptions: PsCallModelOptions
+            ): PsCallModelOptions => {
+              const fallbackOptions: PsCallModelOptions = { ...sourceOptions };
+              const hasCallerOverrideMaxRetries =
+                fallbackOptions.overrideMaxRetries !== undefined;
               delete fallbackOptions.fallbackModelProvider;
               delete fallbackOptions.fallbackModelName;
               delete fallbackOptions.fallbackModelType;
@@ -1248,13 +1264,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                   maxFallbackJsonParseAttempts
                 );
               }
+              fallbackOptions.useMainRetryBudgetForTimeouts =
+                fallbackOptions.limitedRetries === true &&
+                !hasCallerOverrideMaxRetries;
+              return fallbackOptions;
+            };
 
+            // Run the fallback through the same retry path as a normal model
+            // call, but prevent another fallback hop from this fallback.
+            try {
               return await this.runTextModelCall(
                 fallbackEphemeral,
                 fallbackEphemeral.config?.modelType ?? modelType,
                 fallbackEphemeral.config?.modelSize ?? modelSize,
                 messages,
-                fallbackOptions
+                prepareFallbackOptions(options)
               );
             } catch (fallbackError) {
               if (TokenLimitChunker.isTokenLimitError(fallbackError)) {
@@ -1278,7 +1302,24 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 this.logger.error(
                   "Token limit exceeded in fallback model, invoking chunking handler and retrying"
                 );
-                const handler: TokenLimitChunker = new TokenLimitChunker(this);
+                const fallbackChunkingCaller = {
+                  callModel: async (
+                    chunkModelType: PsAiModelType,
+                    chunkModelSize: PsAiModelSize,
+                    chunkMessages: PsModelMessage[],
+                    chunkOptions: PsCallModelOptions
+                  ) =>
+                    this.runTextModelCall(
+                      fallbackEphemeral,
+                      fallbackEphemeral.config?.modelType ?? chunkModelType,
+                      fallbackEphemeral.config?.modelSize ?? chunkModelSize,
+                      chunkMessages,
+                      prepareFallbackOptions(chunkOptions)
+                    ),
+                };
+                const handler: TokenLimitChunker = new TokenLimitChunker(
+                  fallbackChunkingCaller
+                );
                 return await handler.handle(
                   fallbackEphemeral,
                   fallbackEphemeral.config?.modelType ?? modelType,
@@ -1304,7 +1345,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           this.logger.error(`Error from model: ${error.message || error}`);
         }
 
-        if (retryCount >= maxRetries - 1) {
+        const nonTimeoutMaxRetries = this.getMaxRetriesForNonTimeoutFailure(
+          options,
+          maxRetries,
+          originalMaxRetries
+        );
+        if (retryCount >= nonTimeoutMaxRetries - 1) {
           this.logger.error("Reached max retries, rethrowing error.");
           throw error;
         }
@@ -1318,6 +1364,18 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       "Unrecoverable Error in runTextModelCall method - no valid response after retries"
     );
     throw new Error("Model call failed after maximum retries");
+  }
+
+  private getMaxRetriesForNonTimeoutFailure(
+    options: PsCallModelOptions,
+    currentMaxRetries: number,
+    originalMaxRetries: number
+  ) {
+    if (options.useMainRetryBudgetForTimeouts) {
+      return originalMaxRetries;
+    }
+
+    return currentMaxRetries;
   }
 
   private getResponsesRuntimeOverrides(
@@ -1500,19 +1558,21 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.forcedTimeoutEscalationTargetMs
     );
 
-    if (
-      retryCount < this.forcedTimeoutEscalationStartRetryCount ||
-      maxRetries <= this.forcedTimeoutEscalationStartRetryCount ||
-      forcedTimeoutMs >= targetTimeoutMs
-    ) {
+    if (forcedTimeoutMs >= targetTimeoutMs) {
       return forcedTimeoutMs;
     }
 
-    const rampRetryCount =
-      maxRetries - this.forcedTimeoutEscalationStartRetryCount;
-    const retryProgress =
-      (retryCount - this.forcedTimeoutEscalationStartRetryCount + 1) /
-      rampRetryCount;
+    const rampAttemptCount = Math.max(1, maxRetries);
+
+    if (rampAttemptCount === 1) {
+      return forcedTimeoutMs;
+    }
+
+    const boundedRetryCount = Math.min(
+      Math.max(retryCount, 0),
+      rampAttemptCount - 1
+    );
+    const retryProgress = boundedRetryCount / (rampAttemptCount - 1);
     const timeoutMs =
       forcedTimeoutMs + (targetTimeoutMs - forcedTimeoutMs) * retryProgress;
 
