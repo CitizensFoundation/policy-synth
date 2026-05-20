@@ -107,6 +107,114 @@ describe("PolicySynthAgentBase", () => {
     assert.equal(await agent.getTokensFromMessages(messages), expected);
   });
 
+  it("redacts API keys and authorization values from log payloads", () => {
+    const redactLogValue = Reflect.get(
+      PolicySynthAgentBase,
+      "redactLogValue"
+    ) as (value: unknown) => unknown;
+    const metadata = { visible: "ok" };
+    Object.defineProperty(metadata, "hiddenApiKey", {
+      value: "hidden-secret",
+      enumerable: false,
+    });
+    const levelSymbol = Symbol.for("level");
+    const hiddenSymbol = Symbol("hiddenApiKey");
+    Object.defineProperty(metadata, hiddenSymbol, {
+      value: "hidden-symbol-secret",
+      enumerable: false,
+    });
+
+    const redacted = redactLogValue({
+      level: "error",
+      [levelSymbol]: "error",
+      message:
+        "request failed OPENAI_API_KEY=sk-envsecret12345 " +
+        'headers={"Authorization":"Bearer sk-requestsecret12345"} ' +
+        "password='correct horse' client_secret='abc,def' " +
+        "AIRBRAKE_PROJECT_KEY='air brake project' " +
+        "AWS_BEARER_TOKEN_BEDROCK='bedrock token value'",
+      config: {
+        apiKey: "sk-configsecret12345",
+        bearerToken: "bearer-token-secret",
+        session_token: "session-token-secret",
+        jwtToken: "jwt-token-secret",
+        AWS_BEARER_TOKEN_BEDROCK: "aws-bedrock-token-secret",
+        AIRBRAKE_PROJECT_KEY: "airbrake-project-secret",
+        modelName: "gpt-test",
+        tokensIn: 42,
+      },
+      response: {
+        headers: {
+          "api-key": "azure-secret-key",
+          authorization: "Bearer sk-headersecret12345",
+        },
+        url: "https://example.test/v1?key=AIzaSyExampleSecretKey1234567890&model=ok",
+      },
+      metadata,
+    }) as {
+      message: string;
+      config: {
+        apiKey: string;
+        bearerToken: string;
+        session_token: string;
+        jwtToken: string;
+        AWS_BEARER_TOKEN_BEDROCK: string;
+        AIRBRAKE_PROJECT_KEY: string;
+        modelName: string;
+        tokensIn: number;
+      };
+      response: { headers: Record<string, string>; url: string };
+      metadata: Record<string, unknown>;
+      [levelSymbol]: string;
+    };
+
+    assert.equal(redacted.config.apiKey, "[REDACTED]");
+    assert.equal(redacted.config.bearerToken, "[REDACTED]");
+    assert.equal(redacted.config.session_token, "[REDACTED]");
+    assert.equal(redacted.config.jwtToken, "[REDACTED]");
+    assert.equal(redacted.config.AWS_BEARER_TOKEN_BEDROCK, "[REDACTED]");
+    assert.equal(redacted.config.AIRBRAKE_PROJECT_KEY, "[REDACTED]");
+    assert.equal(redacted.config.modelName, "gpt-test");
+    assert.equal(redacted.config.tokensIn, 42);
+    assert.equal(redacted.response.headers["api-key"], "[REDACTED]");
+    assert.equal(redacted.response.headers.authorization, "[REDACTED]");
+    assert.equal(
+      redacted.message.includes("sk-envsecret12345"),
+      false
+    );
+    assert.equal(
+      redacted.message.includes("sk-requestsecret12345"),
+      false
+    );
+    assert.equal(
+      redacted.response.url.includes("AIzaSyExampleSecretKey1234567890"),
+      false
+    );
+    assert.match(redacted.message, /\[REDACTED\]/);
+    assert.equal(redacted.message.includes("correct horse"), false);
+    assert.equal(redacted.message.includes("abc,def"), false);
+    assert.equal(redacted.message.includes("air brake project"), false);
+    assert.equal(redacted.message.includes("bedrock token value"), false);
+    assert.match(redacted.response.url, /key=\[REDACTED\]&model=ok/);
+    assert.equal(redacted.metadata.visible, "ok");
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(
+        redacted.metadata,
+        "hiddenApiKey"
+      ),
+      false
+    );
+    assert.equal(redacted[levelSymbol], "error");
+    assert.equal(
+      Object.prototype.propertyIsEnumerable.call(redacted, levelSymbol),
+      true
+    );
+    assert.equal(
+      Object.prototype.hasOwnProperty.call(redacted.metadata, hiddenSymbol),
+      false
+    );
+  });
+
   it("initializes an Airbrake transport when Airbrake env vars are present", () => {
     const originalProjectId = process.env.AIRBRAKE_PROJECT_ID;
     const originalProjectKey = process.env.AIRBRAKE_PROJECT_KEY;
