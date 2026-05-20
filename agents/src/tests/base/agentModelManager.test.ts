@@ -1102,22 +1102,30 @@ describe("PsAiModelManager error helpers", () => {
 });
 
 describe("PsAiModelManager utility routing", () => {
-  it("derives request options only when safety or Gemini region data is present", () => {
+  it("derives request options only when provider request data is present", () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
     const internals = asInternals(manager);
+    const builtInTools: PsBuiltInTool[] = [
+      { type: "code_interpreter", memoryLimit: "1g" },
+    ];
 
     assert.equal(internals.getModelRequestOptions({}), undefined);
     assert.deepEqual(
       internals.getModelRequestOptions({
         safetyIdentifier: "safety-user",
         geminiRegions: ["us-central1", "europe-west1"],
+        builtInTools,
       }),
       {
         safetyIdentifier: "safety-user",
         geminiRegions: ["us-central1", "europe-west1"],
+        builtInTools,
       }
     );
+    assert.deepEqual(internals.getModelRequestOptions({ builtInTools }), {
+      builtInTools,
+    });
     assert.equal(
       internals.getResponsesStateKey({
         responsesStateKey: "  conversation-1  ",
@@ -1138,6 +1146,12 @@ describe("PsAiModelManager utility routing", () => {
     const manager = createNoopManager();
     const internals = asInternals(manager);
     const callback = (_chunk: string) => undefined;
+    const builtInTools: PsBuiltInTool[] = [
+      {
+        type: "web_search",
+        searchContextSize: "low",
+      },
+    ];
     const tools: ChatCompletionTool[] = [
       {
         type: "function",
@@ -1161,7 +1175,11 @@ describe("PsAiModelManager utility routing", () => {
       tools,
       { type: "function", function: { name: "lookup" } },
       ["lookup"],
-      { safetyIdentifier: "safe", geminiRegions: ["us-central1"] }
+      {
+        safetyIdentifier: "safe",
+        geminiRegions: ["us-central1"],
+        builtInTools,
+      }
     );
 
     assert.equal(model.calls.length, 1);
@@ -1179,6 +1197,7 @@ describe("PsAiModelManager utility routing", () => {
     assert.deepEqual(model.calls[0].requestOptions, {
       safetyIdentifier: "safe",
       geminiRegions: ["us-central1"],
+      builtInTools,
     });
   });
 

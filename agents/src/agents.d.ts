@@ -14,6 +14,33 @@ type PsOpenAiInferenceType = Extract<PsInferenceType, "flex" | "priority">;
 type PsOpenAiRegionalProcessing = "eu";
 type PsAnthropicInferenceType = Extract<PsInferenceType, "fast">;
 type PsAssistantMessagePhase = "commentary" | "final_answer";
+type PsBuiltInToolSearchContextSize = "low" | "medium" | "high";
+type PsBuiltInToolMemoryLimit = "1g" | "4g" | "16g" | "64g";
+
+interface PsBuiltInToolUserLocation {
+  type?: "approximate";
+  city?: string | null;
+  country?: string | null;
+  region?: string | null;
+  timezone?: string | null;
+}
+
+type PsBuiltInTool =
+  | {
+      type: "web_search";
+      searchContextSize?: PsBuiltInToolSearchContextSize;
+      allowedDomains?: string[];
+      userLocation?: PsBuiltInToolUserLocation;
+      includeSources?: boolean;
+    }
+  | {
+      type: "code_interpreter";
+      container?: "auto" | string;
+      memoryLimit?: PsBuiltInToolMemoryLimit;
+      fileIds?: string[];
+      includeOutputs?: boolean;
+    };
+
 interface PsAssistantResponseMessage {
   content: string;
   phase?: PsAssistantMessagePhase;
@@ -116,6 +143,11 @@ interface PsCallModelOptions {
    */
   toolChoice?: "auto" | { type: "function"; function: { name: string } };
   /**
+   * Optional hosted/provider built-in tools. These are executed by the model
+   * provider and are separate from local function tools.
+   */
+  builtInTools?: PsBuiltInTool[];
+  /**
    * Names of function tools the model is allowed to call when using the model.
    */
   allowedTools?: string[];
@@ -160,6 +192,7 @@ interface PsCallModelOptions {
 interface PsModelRequestOptions {
   safetyIdentifier?: string;
   geminiRegions?: string[];
+  builtInTools?: PsBuiltInTool[];
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

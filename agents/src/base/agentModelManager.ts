@@ -1518,14 +1518,26 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   private getModelRequestOptions(
     options: PsCallModelOptions
   ): PsModelRequestOptions | undefined {
-    if (!options.safetyIdentifier && !options.geminiRegions?.length) {
+    if (
+      !options.safetyIdentifier &&
+      !options.geminiRegions?.length &&
+      !options.builtInTools?.length
+    ) {
       return undefined;
     }
 
-    return {
-      safetyIdentifier: options.safetyIdentifier,
-      geminiRegions: options.geminiRegions,
-    };
+    const requestOptions: PsModelRequestOptions = {};
+    if (options.safetyIdentifier) {
+      requestOptions.safetyIdentifier = options.safetyIdentifier;
+    }
+    if (options.geminiRegions?.length) {
+      requestOptions.geminiRegions = options.geminiRegions;
+    }
+    if (options.builtInTools?.length) {
+      requestOptions.builtInTools = options.builtInTools;
+    }
+
+    return requestOptions;
   }
 
   private getTimeoutMsForRetry(

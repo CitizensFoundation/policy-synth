@@ -18,6 +18,13 @@ type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
 type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
+type ResponsesTool = Record<string, unknown>;
+type ResponsesInclude =
+  | "web_search_call.action.sources"
+  | "code_interpreter_call.outputs";
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
 
 /**
  * Interface-compatible with OpenAiChat, but uses the Responses API.
@@ -280,9 +287,14 @@ export class OpenAiResponses extends BaseChatModel {
 
     const isReasoning = this.cfg.modelType === PsAiModelType.TextReasoning;
 
-    // Transform tool defs for Responses API
-    const responsesTools = this.mapToolsForResponses(tools);
+    // Transform local function tools and provider-hosted tools for Responses API.
+    const builtInTools = requestOptions?.builtInTools ?? [];
+    const responsesTools = [
+      ...this.mapToolsForResponses(tools),
+      ...this.mapBuiltInToolsForResponses(builtInTools),
+    ];
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
+    const responseIncludes = this.mapBuiltInToolIncludes(builtInTools);
 
     let hasPreviousResponse = !!this.previousResponseId;
     const hasTruncatedHistory =
@@ -372,6 +384,10 @@ export class OpenAiResponses extends BaseChatModel {
         : undefined,
     };
 
+    if (responseIncludes.length > 0) {
+      common.include = responseIncludes;
+    }
+
     if (inputItems.length) {
       common.input = inputItems;
     } else if (this.previousResponseId) {
@@ -436,6 +452,12 @@ export class OpenAiResponses extends BaseChatModel {
 
   /************************************  Helpers  ************************************/
 
+  private compactRecord(record: Record<string, unknown>): Record<string, unknown> {
+    return Object.fromEntries(
+      Object.entries(record).filter(([, value]) => value !== undefined)
+    );
+  }
+
   /**
    * Map Chat Completions tools -> Responses API tools
    * Chat: { type:"function", function:{ name, description, parameters } }
@@ -459,6 +481,62 @@ export class OpenAiResponses extends BaseChatModel {
       // Pass through non-function tools if present (rare with Chat Completions)
       return t;
     });
+  }
+
+  private mapBuiltInToolsForResponses(
+    builtInTools: PsBuiltInTool[] = []
+  ): ResponsesTool[] {
+    return builtInTools.map((tool) => {
+      if (tool.type === "web_search") {
+        const mapped: ResponsesTool = { type: "web_search" };
+        if (tool.searchContextSize) {
+          mapped.search_context_size = tool.searchContextSize;
+        }
+        if (tool.allowedDomains?.length) {
+          mapped.filters = { allowed_domains: tool.allowedDomains };
+        }
+        if (tool.userLocation) {
+          mapped.user_location = this.compactRecord({
+            type: tool.userLocation.type ?? "approximate",
+            city: tool.userLocation.city,
+            country: tool.userLocation.country,
+            region: tool.userLocation.region,
+            timezone: tool.userLocation.timezone,
+          });
+        }
+        return mapped;
+      }
+
+      if (typeof tool.container === "string" && tool.container !== "auto") {
+        return {
+          type: "code_interpreter",
+          container: tool.container,
+        };
+      }
+
+      return {
+        type: "code_interpreter",
+        container: this.compactRecord({
+          type: "auto",
+          file_ids: tool.fileIds?.length ? tool.fileIds : undefined,
+          memory_limit: tool.memoryLimit,
+        }),
+      };
+    });
+  }
+
+  private mapBuiltInToolIncludes(
+    builtInTools: PsBuiltInTool[] = []
+  ): ResponsesInclude[] {
+    const includes = new Set<ResponsesInclude>();
+    for (const tool of builtInTools) {
+      if (tool.type === "web_search" && tool.includeSources) {
+        includes.add("web_search_call.action.sources");
+      } else if (tool.type === "code_interpreter" && tool.includeOutputs) {
+        includes.add("code_interpreter_call.outputs");
+      }
+    }
+    return [...includes];
   }
 
   /**
@@ -621,17 +699,101 @@ export class OpenAiResponses extends BaseChatModel {
     return item;
   }
 
+  private getBuiltInToolTypesFromResponsesTools(
+    tools?: unknown[]
+  ): string[] {
+    if (!tools?.length) return [];
+
+    return tools
+      .map((tool) => (isRecord(tool) ? tool.type : undefined))
+      .filter((type): type is string =>
+        type === "web_search" ||
+        type === "web_search_2025_08_26" ||
+        type === "web_search_preview" ||
+        type === "web_search_preview_2025_03_11" ||
+        type === "code_interpreter"
+      );
+  }
+
+  private extractBuiltInToolMetadata(
+    response: { output?: unknown } | unknown
+  ): Record<string, unknown> | undefined {
+    const output = isRecord(response) ? response.output : undefined;
+    if (!Array.isArray(output)) return undefined;
+
+    const webSearchCalls: Record<string, unknown>[] = [];
+    const codeInterpreterCalls: Record<string, unknown>[] = [];
+    const outputTextAnnotations: Record<string, unknown>[] = [];
+
+    for (const item of output) {
+      if (!isRecord(item)) continue;
+
+      if (item.type === "web_search_call") {
+        webSearchCalls.push(
+          this.compactRecord({
+            id: item.id,
+            status: item.status,
+            action: item.action,
+          })
+        );
+        continue;
+      }
+
+      if (item.type === "code_interpreter_call") {
+        codeInterpreterCalls.push(
+          this.compactRecord({
+            id: item.id,
+            status: item.status,
+            containerId: item.container_id,
+            code: item.code,
+            outputs: item.outputs,
+          })
+        );
+        continue;
+      }
+
+      if (item.type === "message" && Array.isArray(item.content)) {
+        for (const part of item.content) {
+          if (!isRecord(part) || !Array.isArray(part.annotations)) continue;
+          outputTextAnnotations.push(
+            ...part.annotations.filter(isRecord)
+          );
+        }
+      }
+    }
+
+    if (
+      !webSearchCalls.length &&
+      !codeInterpreterCalls.length &&
+      !outputTextAnnotations.length
+    ) {
+      return undefined;
+    }
+
+    return this.compactRecord({
+      webSearchCalls: webSearchCalls.length ? webSearchCalls : undefined,
+      codeInterpreterCalls: codeInterpreterCalls.length
+        ? codeInterpreterCalls
+        : undefined,
+      outputTextAnnotations: outputTextAnnotations.length
+        ? outputTextAnnotations
+        : undefined,
+    });
+  }
+
   private buildUsageItemData(
     response: {
       id?: string | null;
       previous_response_id?: string | null;
       service_tier?: string | null;
       usage?: Record<string, unknown> | null;
+      output?: unknown;
     },
     params: {
       stream?: boolean;
       tool_choice?: unknown;
       tools?: unknown[];
+      include?: unknown[];
       store?: boolean;
       service_tier?: string | null;
       previous_response_id?: string | null;
@@ -645,6 +807,11 @@ export class OpenAiResponses extends BaseChatModel {
       audioTokens: number;
     }
   ): UsageItemPayload {
+    const requestedBuiltInTools = this.getBuiltInToolTypesFromResponsesTools(
+      params.tools
+    );
+    const builtInToolMetadata = this.extractBuiltInToolMetadata(response);
+
     return {
       provider: this.usingAzure ? "azure" : "openaiResponses",
       apiFamily: "responses",
@@ -663,6 +830,7 @@ export class OpenAiResponses extends BaseChatModel {
         reasoningEffort: this.cfg.reasoningEffort ?? null,
         maxTokensOut: this.cfg.maxTokensOut ?? null,
         store: params.store ?? null,
+        include: params.include ?? null,
         requestedPreviousResponseId: params.previous_response_id ?? null,
       },
       usageRaw: response.usage ?? undefined,
@@ -673,13 +841,17 @@ export class OpenAiResponses extends BaseChatModel {
         reasoningTokens: usage.reasoningTokens,
         audioTokens: usage.audioTokens,
       },
-      providerMetadata: {
+      providerMetadata: this.compactRecord({
         transport: this.usingAzure ? "azure-openai-compatible" : "openai",
         responseId: response.id ?? null,
         responsePreviousId: response.previous_response_id ?? null,
         appliedServiceTier: response.service_tier ?? null,
         regionalProcessing: this.cfg.regionalProcessing ?? null,
-      },
+        requestedBuiltInTools: requestedBuiltInTools.length
+          ? requestedBuiltInTools
+          : undefined,
+        builtInTools: builtInToolMetadata,
+      }),
     };
   }
 
@@ -879,6 +1051,7 @@ export class OpenAiResponses extends BaseChatModel {
         previous_response_id: finalResponse?.previous_response_id ?? null,
         service_tier: finalResponse?.service_tier ?? null,
         usage: (usage ?? null) as Record<string, unknown> | null,
+        output: finalResponse?.output,
       },
       params,
       {
@@ -957,6 +1130,7 @@ export class OpenAiResponses extends BaseChatModel {
         previous_response_id: resp?.previous_response_id ?? null,
         service_tier: resp?.service_tier ?? null,
         usage: (usage ?? null) as Record<string, unknown> | null,
+        output: resp?.output,
       },
       params,
       {

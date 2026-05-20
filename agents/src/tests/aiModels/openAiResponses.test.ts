@@ -20,6 +20,7 @@ type RecordedResponsesRequest = {
   instructions?: string;
   tools?: unknown[];
   tool_choice?: unknown;
+  include?: unknown[];
   temperature?: number;
   max_output_tokens?: number;
   safety_identifier?: string;
@@ -39,6 +40,8 @@ type ResponsesClientMock = {
 
 type OpenAiResponsesInternals = {
   mapToolsForResponses: (tools: ChatCompletionTool[]) => unknown[];
+  mapBuiltInToolsForResponses: (builtInTools?: PsBuiltInTool[]) => unknown[];
+  mapBuiltInToolIncludes: (builtInTools?: PsBuiltInTool[]) => unknown[];
   mapToolChoiceForResponses: (
     toolChoice: ChatCompletionToolChoiceOption | "auto" | undefined
   ) => unknown;
@@ -62,11 +65,13 @@ type OpenAiResponsesInternals = {
       previous_response_id?: string | null;
       service_tier?: string | null;
       usage?: Record<string, unknown> | null;
+      output?: unknown;
     },
     params: {
       stream?: boolean;
       tool_choice?: unknown;
       tools?: unknown[];
+      include?: unknown[];
       store?: boolean;
       service_tier?: string | null;
       previous_response_id?: string | null;
@@ -80,6 +85,9 @@ type OpenAiResponsesInternals = {
       audioTokens: number;
     }
   ) => PsModelUsageItemProviderData & Record<string, unknown>;
+  extractBuiltInToolMetadata: (
+    response: unknown
+  ) => Record<string, unknown> | undefined;
   attachImagesToLastUserMessage: (
     inputItems: Array<Record<string, unknown>>,
     images?: Array<{ mimeType: string; data: string } | { url: string }>,
@@ -404,6 +412,216 @@ describe("OpenAiResponses", () => {
         .modelName,
       "gpt-4o"
     );
+  });
+
+  it("maps built-in tools without turning hosted tool calls into local tool calls", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
+    const internals = asInternals(model);
+
+    const builtInTools: PsBuiltInTool[] = [
+      {
+        type: "web_search",
+        searchContextSize: "high",
+        allowedDomains: ["example.com"],
+        userLocation: {
+          city: "Reykjavik",
+          country: "IS",
+          timezone: "Atlantic/Reykjavik",
+        },
+        includeSources: true,
+      },
+      {
+        type: "code_interpreter",
+        container: "auto",
+        memoryLimit: "4g",
+        fileIds: ["file-1"],
+        includeOutputs: true,
+      },
+    ];
+
+    assert.deepEqual(internals.mapBuiltInToolsForResponses(builtInTools), [
+      {
+        type: "web_search",
+        search_context_size: "high",
+        filters: { allowed_domains: ["example.com"] },
+        user_location: {
+          type: "approximate",
+          city: "Reykjavik",
+          country: "IS",
+          timezone: "Atlantic/Reykjavik",
+        },
+      },
+      {
+        type: "code_interpreter",
+        container: {
+          type: "auto",
+          file_ids: ["file-1"],
+          memory_limit: "4g",
+        },
+      },
+    ]);
+    assert.deepEqual(
+      internals.mapBuiltInToolsForResponses([
+        { type: "code_interpreter", container: "container-123" },
+      ]),
+      [{ type: "code_interpreter", container: "container-123" }]
+    );
+    assert.deepEqual(internals.mapBuiltInToolIncludes(builtInTools), [
+      "web_search_call.action.sources",
+      "code_interpreter_call.outputs",
+    ]);
+    assert.deepEqual(
+      internals.mapBuiltInToolIncludes([
+        { type: "web_search" },
+        { type: "code_interpreter" },
+      ]),
+      []
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-built-in",
+          output: [
+            {
+              type: "web_search_call",
+              id: "ws-1",
+              status: "completed",
+              action: {
+                type: "search",
+                query: "policy",
+                sources: [{ type: "url", url: "https://example.com/a" }],
+              },
+            },
+            {
+              type: "code_interpreter_call",
+              id: "ci-1",
+              status: "completed",
+              container_id: "container-1",
+              code: "print('ok')",
+              outputs: [{ type: "logs", logs: "ok\n" }],
+            },
+            {
+              type: "function_call",
+              call_id: "call-1",
+              name: "lookup",
+              arguments: "{\"id\":1}",
+            },
+            {
+              type: "message",
+              content: [
+                {
+                  type: "output_text",
+                  text: "done",
+                  annotations: [
+                    {
+                      type: "url_citation",
+                      start_index: 0,
+                      end_index: 4,
+                      title: "Example",
+                      url: "https://example.com/a",
+                    },
+                    {
+                      type: "container_file_citation",
+                      start_index: 0,
+                      end_index: 4,
+                      container_id: "container-1",
+                      file_id: "file-generated",
+                      filename: "chart.png",
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "research and calculate" }],
+      false,
+      undefined,
+      undefined,
+      [
+        {
+          type: "function",
+          function: {
+            name: "lookup",
+            parameters: { type: "object" },
+          },
+        },
+      ],
+      "auto",
+      ["lookup"],
+      { builtInTools }
+    );
+
+    assert.ok(captured);
+    assert.deepEqual(captured.include, [
+      "web_search_call.action.sources",
+      "code_interpreter_call.outputs",
+    ]);
+    assert.deepEqual(captured.tools, [
+      {
+        type: "function",
+        name: "lookup",
+        description: undefined,
+        parameters: { type: "object" },
+      },
+      ...internals.mapBuiltInToolsForResponses(builtInTools),
+    ]);
+    assert.deepEqual(result.toolCalls, [
+      { id: "call-1", name: "lookup", arguments: { id: 1 } },
+    ]);
+    assert.deepEqual(
+      result.usageItemData?.providerMetadata?.requestedBuiltInTools,
+      ["web_search", "code_interpreter"]
+    );
+
+    const metadata = result.usageItemData?.providerMetadata?.builtInTools as
+      | Record<string, unknown>
+      | undefined;
+    assert.deepEqual(metadata?.webSearchCalls, [
+      {
+        id: "ws-1",
+        status: "completed",
+        action: {
+          type: "search",
+          query: "policy",
+          sources: [{ type: "url", url: "https://example.com/a" }],
+        },
+      },
+    ]);
+    assert.deepEqual(metadata?.codeInterpreterCalls, [
+      {
+        id: "ci-1",
+        status: "completed",
+        containerId: "container-1",
+        code: "print('ok')",
+        outputs: [{ type: "logs", logs: "ok\n" }],
+      },
+    ]);
+    assert.deepEqual(metadata?.outputTextAnnotations, [
+      {
+        type: "url_citation",
+        start_index: 0,
+        end_index: 4,
+        title: "Example",
+        url: "https://example.com/a",
+      },
+      {
+        type: "container_file_citation",
+        start_index: 0,
+        end_index: 4,
+        container_id: "container-1",
+        file_id: "file-generated",
+        filename: "chart.png",
+      },
+    ]);
   });
 
   it("resets truncated history and synthesizes blank input when only instructions remain", async () => {
