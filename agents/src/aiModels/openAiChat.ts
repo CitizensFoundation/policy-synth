@@ -124,7 +124,7 @@ export class OpenAiChat extends BaseChatModel {
       ChatCompletionCreateParamsBase,
       "stream" | "max_tokens" | "max_completion_tokens"
     > = {
-      model: this.cfg.modelName,
+      model: String(this.getApiModelName()),
       messages: formatted,
       tools,
       tool_choice: toolChoice,
@@ -216,7 +216,9 @@ export class OpenAiChat extends BaseChatModel {
     if (!allowed.length || !tools.length) return undefined;
 
     try {
-      const enc = encoding_for_model(this.cfg.modelName as TiktokenModel);
+      const enc = encoding_for_model(
+        String(this.getApiModelName()) as TiktokenModel
+      );
       const bias: Record<number, number> = {};
 
       for (const t of tools) {
@@ -259,6 +261,7 @@ export class OpenAiChat extends BaseChatModel {
       modelName: this.cfg.modelName,
       request: {
         stream: request.stream,
+        apiModelName: String(this.getApiModelName()),
         toolChoice: request.toolChoice,
         toolCount: request.toolCount,
         requestedInferenceType: this.requestedInferenceType ?? null,
@@ -280,6 +283,7 @@ export class OpenAiChat extends BaseChatModel {
         responseId: response.id ?? null,
         appliedServiceTier: response.service_tier ?? null,
         regionalProcessing: this.cfg.regionalProcessing ?? null,
+        apiModelName: String(this.getApiModelName()),
       },
     };
   }

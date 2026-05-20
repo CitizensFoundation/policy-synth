@@ -35,6 +35,7 @@ export class OpenAiResponses extends BaseChatModel {
   private client: OpenAI;
   private cfg: PsOpenAiModelConfig;
   private requestedInferenceType?: PsInferenceType;
+  private logicalModelName: string;
   private phaseAwareModelName: string;
   private transportBaseUrl?: string;
   private previousResponseId?: string;
@@ -79,13 +80,16 @@ export class OpenAiResponses extends BaseChatModel {
       process.env.PS_AI_MODEL_NAME ??
       envAzureDeployment ??
       modelName;
+    let apiModelName = config.apiModelName;
 
     if (useAzure) {
       apiKey = envAzureKey;
       modelName = envAzureDeployment;
+      apiModelName = envAzureDeployment;
     }
 
     super(config, modelName, maxTokensOut);
+    this.apiModelName = apiModelName;
 
     if (!useAzure && process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
@@ -138,7 +142,7 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    this.cfg = { ...config, apiKey, modelName, maxTokensOut };
+    this.cfg = { ...config, apiKey, modelName, apiModelName, maxTokensOut };
     this.config = this.cfg;
     this.requestedInferenceType = requestedInferenceType;
     if (!this.usingAzure && this.requestedInferenceType === "fast") {
@@ -146,7 +150,10 @@ export class OpenAiResponses extends BaseChatModel {
         "Mapping inferenceType=fast to OpenAI service_tier=priority"
       );
     }
-    this.phaseAwareModelName = configuredModelName;
+    this.logicalModelName = configuredModelName;
+    this.phaseAwareModelName = useAzure
+      ? configuredModelName
+      : apiModelName ?? configuredModelName;
   }
 
   private isPhaseAwareResponsesModel(): boolean {
@@ -169,7 +176,7 @@ export class OpenAiResponses extends BaseChatModel {
   override getCloneConfig(): PsOpenAiModelConfig {
     return {
       ...this.cfg,
-      modelName: this.phaseAwareModelName,
+      modelName: this.logicalModelName,
     };
   }
 
@@ -372,7 +379,7 @@ export class OpenAiResponses extends BaseChatModel {
     );
 
     const common: any = {
-      model: this.cfg.modelName,
+      model: String(this.getApiModelName()),
       tools: responsesTools,
       tool_choice: responsesToolChoice,
       temperature: isReasoning ? undefined : this.cfg.temperature,
@@ -816,9 +823,10 @@ export class OpenAiResponses extends BaseChatModel {
       provider: this.usingAzure ? "azure" : "openaiResponses",
       apiFamily: "responses",
       transport: this.usingAzure ? "azure-openai-compatible" : "openai",
-      modelName: params.model ?? this.cfg.modelName,
+      modelName: this.cfg.modelName,
       request: {
         stream: Boolean(params.stream),
+        apiModelName: params.model ?? String(this.getApiModelName()),
         toolChoice: params.tool_choice ?? "auto",
         toolCount: params.tools?.length ?? 0,
         requestedInferenceType: this.requestedInferenceType ?? null,
@@ -847,6 +855,7 @@ export class OpenAiResponses extends BaseChatModel {
         responsePreviousId: response.previous_response_id ?? null,
         appliedServiceTier: response.service_tier ?? null,
         regionalProcessing: this.cfg.regionalProcessing ?? null,
+        apiModelName: params.model ?? String(this.getApiModelName()),
         requestedBuiltInTools: requestedBuiltInTools.length
           ? requestedBuiltInTools
           : undefined,

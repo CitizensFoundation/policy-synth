@@ -1141,6 +1141,46 @@ describe("PsAiModelManager utility routing", () => {
     );
   });
 
+  it("keeps DB model aliases separate from provider API model names", () => {
+    const manager = createManager({
+      model: "gpt-5.5-flex",
+      apiModel: "gpt-5.5",
+      inferenceType: "flex",
+    });
+    const internals = asInternals(manager);
+    const model = internals.modelsByType.get(PsAiModelType.TextReasoning);
+
+    assert.ok(model instanceof OpenAiResponses);
+    assert.equal(model.modelName, "gpt-5.5-flex");
+    assert.equal(model.getCloneConfig().modelName, "gpt-5.5-flex");
+    assert.equal(model.getCloneConfig().apiModelName, "gpt-5.5");
+    assert.equal(model.config.inferenceType, "flex");
+  });
+
+  it("preserves configured API aliases when an override selects the same logical model", async () => {
+    useStandardResponsesEnv();
+    const manager = createManager({
+      model: "gpt-5.5-flex",
+      apiModel: "gpt-5.5",
+      inferenceType: "flex",
+    });
+    const internals = asInternals(manager);
+
+    const model = await internals.createEphemeralModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      {
+        modelProvider: PsAiModelProvider.OpenAIResponses,
+        modelName: "gpt-5.5-flex",
+      }
+    );
+
+    assert.ok(model instanceof OpenAiResponses);
+    assert.equal(model.config.modelName, "gpt-5.5-flex");
+    assert.equal(model.config.apiModelName, "gpt-5.5");
+    assert.equal(model.config.inferenceType, "flex");
+  });
+
   it("propagates streaming, media, tools, allowed tools, and request options to model calls", async () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
@@ -2793,6 +2833,7 @@ describe("PsAiModelManager price and usage accounting", () => {
         modelSize: PsAiModelSize.Large,
         provider: PsAiModelProvider.OpenAI,
         model: "db-override-model",
+        apiModel: "gpt-5.5",
         maxContextTokens: 12345,
         timeoutMs: 9876,
         prices: {
@@ -2855,6 +2896,8 @@ describe("PsAiModelManager price and usage accounting", () => {
       assert.equal(ephemeral.dbModelId, 801);
       assert.equal(ephemeral.config.modelType, PsAiModelType.TextReasoning);
       assert.equal(ephemeral.config.modelSize, PsAiModelSize.Large);
+      assert.equal(ephemeral.config.modelName, "db-override-model");
+      assert.equal(ephemeral.config.apiModelName, "gpt-5.5");
       assert.equal(ephemeral.config.maxContextTokens, 12345);
       assert.equal(ephemeral.config.timeoutMs, 9876);
 

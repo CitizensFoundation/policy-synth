@@ -240,6 +240,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.configuration.model,
+        apiModelName: model.configuration.apiModel,
         provider: model.configuration.provider,
         inferenceType: model.configuration.inferenceType,
         regionalProcessing: model.configuration.regionalProcessing,
@@ -426,12 +427,24 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const dbConfig = dbModel?.configuration as
       | PsAiModelConfiguration
       | undefined;
+    const explicitModelMatchesFallback =
+      options.modelName !== undefined &&
+      options.modelName === String(fallbackModel.modelName) &&
+      usesFallbackProvider;
+    const shouldReuseFallbackApiModel =
+      options.modelName === undefined || explicitModelMatchesFallback;
+    const apiModelName =
+      dbConfig?.apiModel ??
+      (shouldReuseFallbackApiModel
+        ? fallbackModel.config?.apiModelName
+        : undefined);
 
     // Merge ephemeral config
     const ephemeralConfig: PsAiModelConfig = {
       apiKey,
       modelName:
         overrideModelName ?? dbConfig?.model ?? fallbackModel.modelName,
+      apiModelName,
       provider: provider,
       inferenceType:
         options.inferenceType ??

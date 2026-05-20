@@ -9,6 +9,7 @@ import type {
 
 export abstract class BaseChatModel extends PolicySynthAgentBase {
   modelName: string | TiktokenModel;
+  apiModelName?: string | TiktokenModel;
   maxTokensOut: number;
   provider?: string;
   config: PsAiModelConfig;
@@ -21,8 +22,13 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
   ) {
     super();
     this.modelName = modelName;
+    this.apiModelName = config.apiModelName;
     this.maxTokensOut = maxTokensOut;
     this.config = config;
+  }
+
+  protected getApiModelName(): string | TiktokenModel {
+    return this.apiModelName ?? this.modelName;
   }
 
   abstract generate(

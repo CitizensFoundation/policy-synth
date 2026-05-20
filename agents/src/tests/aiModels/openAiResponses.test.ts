@@ -624,6 +624,56 @@ describe("OpenAiResponses", () => {
     ]);
   });
 
+  it("uses apiModelName for Responses calls while preserving the logical model name", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.5-flex",
+        apiModelName: "gpt-5.5",
+        inferenceType: "flex",
+      })
+    );
+    const internals = asInternals(model);
+
+    assert.equal(internals.isPhaseAwareResponsesModel(), true);
+    assert.equal(model.getCloneConfig().modelName, "gpt-5.5-flex");
+    assert.equal(model.getCloneConfig().apiModelName, "gpt-5.5");
+    assert.deepEqual(model.getResponsesContinuationIdentity(), {
+      modelName: "gpt-5.5",
+      regionalProcessing: undefined,
+      transportBaseUrl: undefined,
+      usingAzure: false,
+    });
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-api-model",
+          service_tier: "flex",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "alias ok" }],
+            },
+          ],
+          usage: {
+            input_tokens: 2,
+            output_tokens: 1,
+          },
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "gpt-5.5");
+    assert.equal(model.modelName, "gpt-5.5-flex");
+    assert.equal(result.usageItemData?.modelName, "gpt-5.5-flex");
+    assert.equal(result.usageItemData?.request?.apiModelName, "gpt-5.5");
+  });
+
   it("resets truncated history and synthesizes blank input when only instructions remain", async () => {
     const model = new OpenAiResponses(
       createConfig({
@@ -799,6 +849,46 @@ describe("OpenAiResponses", () => {
     assert.equal(captured.service_tier, undefined);
     assert.equal(result.content, "azure override");
     assert.equal(result.usageItemData?.provider, "azure");
+  });
+
+  it("uses the logical model name for Azure phase detection while calling the deployment", async () => {
+    process.env.AZURE_OPENAI_KEY = "azure-key";
+    process.env.AZURE_ENDPOINT = "https://azure.example.com/v1";
+    process.env.AZURE_DEPLOYMENT_NAME = "prod-responses";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+      })
+    );
+    const internals = asInternals(model);
+
+    assert.equal(internals.isPhaseAwareResponsesModel(), true);
+    assert.equal(model.getCloneConfig().modelName, "gpt-5.3");
+    assert.equal(model.getCloneConfig().apiModelName, "prod-responses");
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "azure-logical-phase",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "azure logical" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "prod-responses");
+    assert.equal(result.content, "azure logical");
   });
 
   it("covers additional Responses helper and default-config branches", () => {

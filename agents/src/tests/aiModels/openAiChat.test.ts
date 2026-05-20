@@ -163,6 +163,50 @@ describe("OpenAiChat", () => {
     assert.equal(result.usageItemData?.request?.requestedServiceTier, "flex");
   });
 
+  it("uses apiModelName for provider calls while preserving the logical model name", async () => {
+    const model = new OpenAiChat(
+      createConfig({
+        modelName: "gpt-5.5-flex",
+        apiModelName: "gpt-5.5",
+        inferenceType: "flex",
+      })
+    );
+
+    let captured: RecordedChatRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedChatRequest;
+        return {
+          id: "resp-api-model",
+          service_tier: "flex",
+          choices: [
+            {
+              message: {
+                content: "alias ok",
+                tool_calls: [],
+              },
+            },
+          ],
+          usage: {
+            prompt_tokens: 2,
+            completion_tokens: 1,
+          },
+        };
+      },
+      stream: () => {
+        throw new Error("stream should not be called in this test");
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "gpt-5.5");
+    assert.equal(model.modelName, "gpt-5.5-flex");
+    assert.equal(result.usageItemData?.modelName, "gpt-5.5-flex");
+    assert.equal(result.usageItemData?.request?.apiModelName, "gpt-5.5");
+  });
+
   it("builds non-streaming requests for standard chat models and records usage", async () => {
     const model = new OpenAiChat(
       createConfig({

@@ -67,7 +67,15 @@ interface PsAzureAiModelConfig {
 
 interface PsAiModelConfig {
   apiKey: string;
+  /**
+   * Logical model name used by PolicySynth for DB lookup, selection, and
+   * reporting. Use apiModelName when the provider model id differs.
+   */
   modelName: string;
+  /**
+   * Provider model id used on actual API calls. Defaults to modelName.
+   */
+  apiModelName?: string;
   provider?: string;
   inferenceType?: PsInferenceType;
   regionalProcessing?: PsOpenAiRegionalProcessing;
@@ -316,7 +324,14 @@ interface PsEloRateable {
 interface PsAiModelConfiguration {
   type: import("./aiModelTypes.js").PsAiModelType;
   modelSize:  import("./aiModelTypes.js").PsAiModelSize;
+  /**
+   * Logical model name used for DB lookup and model selection.
+   */
   model: string;
+  /**
+   * Provider model id used for actual API calls when it differs from model.
+   */
+  apiModel?: string;
   provider: string;
   inferenceType?: PsInferenceType;
   regionalProcessing?: PsOpenAiRegionalProcessing;
