@@ -465,6 +465,102 @@ export class OpenAiResponses extends BaseChatModel {
     );
   }
 
+  private getResponseStatusErrorMessage(
+    response: unknown,
+    fallback = "Responses API response did not complete"
+  ): string | undefined {
+    if (!isRecord(response)) {
+      return undefined;
+    }
+
+    const status =
+      typeof response.status === "string" ? response.status : undefined;
+    const error = isRecord(response.error) ? response.error : undefined;
+    const incompleteDetails = isRecord(response.incomplete_details)
+      ? response.incomplete_details
+      : undefined;
+    const errorMessage =
+      typeof error?.message === "string" ? error.message : undefined;
+    const errorCode = typeof error?.code === "string" ? error.code : undefined;
+    const incompleteReason =
+      typeof incompleteDetails?.reason === "string"
+        ? incompleteDetails.reason
+        : undefined;
+
+    if (status === "completed") {
+      if (errorMessage) {
+        return errorCode
+          ? `Responses API error (${errorCode}): ${errorMessage}`
+          : `Responses API error: ${errorMessage}`;
+      }
+      return undefined;
+    }
+
+    if (status === "incomplete" || incompleteReason) {
+      return incompleteReason
+        ? `Responses API response incomplete: ${incompleteReason}`
+        : "Responses API response incomplete";
+    }
+
+    if (
+      status === "failed" ||
+      status === "cancelled" ||
+      status === "queued" ||
+      status === "in_progress"
+    ) {
+      const detail = errorMessage
+        ? `: ${errorCode ? `${errorCode}: ` : ""}${errorMessage}`
+        : "";
+      return `Responses API response ${status}${detail}`;
+    }
+
+    if (errorMessage) {
+      return errorCode
+        ? `Responses API error (${errorCode}): ${errorMessage}`
+        : `Responses API error: ${errorMessage}`;
+    }
+
+    return undefined;
+  }
+
+  private assertResponseCompleted(response: unknown): void {
+    const message = this.getResponseStatusErrorMessage(response);
+    if (message) {
+      throw new Error(message);
+    }
+  }
+
+  private getStreamingErrorMessage(event: unknown): string | undefined {
+    if (!isRecord(event)) {
+      return undefined;
+    }
+
+    const type = typeof event.type === "string" ? event.type : undefined;
+    if (type === "response.failed" || type === "response.incomplete") {
+      return (
+        this.getResponseStatusErrorMessage(
+          event.response,
+          `Streaming ${type} event from Responses API`
+        ) ?? `Streaming ${type} event from Responses API`
+      );
+    }
+
+    if (type === "response.error") {
+      const error = isRecord(event.error) ? event.error : undefined;
+      const message =
+        typeof error?.message === "string" ? error.message : undefined;
+      return message ?? "Streaming error from Responses API";
+    }
+
+    if (type === "error") {
+      return typeof event.message === "string"
+        ? event.message
+        : "Streaming error from Responses API";
+    }
+
+    return undefined;
+  }
+
   /**
    * Map Chat Completions tools -> Responses API tools
    * Chat: { type:"function", function:{ name, description, parameters } }
@@ -475,14 +571,18 @@ export class OpenAiResponses extends BaseChatModel {
     return tools.map((t: any) => {
       if (t?.type === "function") {
         const fn = t.function ?? {};
-        const maybeStrict =
-          typeof t.strict === "boolean" ? { strict: t.strict } : {};
+        const strict =
+          typeof fn.strict === "boolean"
+            ? fn.strict
+            : typeof t.strict === "boolean"
+              ? t.strict
+              : false;
         return {
           type: "function",
           name: fn.name,
           description: fn.description,
           parameters: fn.parameters,
-          ...maybeStrict,
+          strict,
         };
       }
       // Pass through non-function tools if present (rare with Chat Completions)
@@ -987,13 +1087,13 @@ export class OpenAiResponses extends BaseChatModel {
 
       if (type === "response.completed") {
         finalResponse = event.response;
+        this.assertResponseCompleted(finalResponse);
         continue;
       }
 
-      if (type === "response.error") {
-        const msg =
-          event.error?.message ?? "Streaming error from Responses API";
-        throw new Error(msg);
+      const streamingErrorMessage = this.getStreamingErrorMessage(event);
+      if (streamingErrorMessage) {
+        throw new Error(streamingErrorMessage);
       }
     }
 
@@ -1004,6 +1104,10 @@ export class OpenAiResponses extends BaseChatModel {
       } catch {
         // ignore; we'll fall back to content-only stats
       }
+    }
+
+    if (finalResponse) {
+      this.assertResponseCompleted(finalResponse);
     }
 
     if (finalResponse?.output && Array.isArray(finalResponse.output)) {
@@ -1111,6 +1215,7 @@ export class OpenAiResponses extends BaseChatModel {
   ): Promise<PsBaseModelReturnParameters> {
     const resp: any = await this.client.responses.create(params);
     //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
+    this.assertResponseCompleted(resp);
 
     this.previousResponseId = resp?.id ?? this.previousResponseId;
 

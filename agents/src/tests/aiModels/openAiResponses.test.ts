@@ -231,6 +231,16 @@ describe("OpenAiResponses", () => {
         },
       },
     } as unknown as ChatCompletionTool;
+    const functionStrictFalseTool = {
+      type: "function",
+      function: {
+        name: "looseLookup",
+        parameters: {
+          type: "object",
+        },
+        strict: false,
+      },
+    } as unknown as ChatCompletionTool;
     const missingFunctionTool = {
       type: "function",
     } as unknown as ChatCompletionTool;
@@ -239,6 +249,7 @@ describe("OpenAiResponses", () => {
       ...tools,
       passthroughTool,
       strictTool,
+      functionStrictFalseTool,
       missingFunctionTool,
     ]), [
       {
@@ -251,6 +262,7 @@ describe("OpenAiResponses", () => {
             id: { type: "number" },
           },
         },
+        strict: false,
       },
       passthroughTool,
       {
@@ -264,9 +276,19 @@ describe("OpenAiResponses", () => {
       },
       {
         type: "function",
+        name: "looseLookup",
+        description: undefined,
+        parameters: {
+          type: "object",
+        },
+        strict: false,
+      },
+      {
+        type: "function",
         name: undefined,
         description: undefined,
         parameters: undefined,
+        strict: false,
       },
     ]);
     assert.deepEqual(
@@ -571,6 +593,7 @@ describe("OpenAiResponses", () => {
         name: "lookup",
         description: undefined,
         parameters: { type: "object" },
+        strict: false,
       },
       ...internals.mapBuiltInToolsForResponses(builtInTools),
     ]);
@@ -1207,6 +1230,7 @@ describe("OpenAiResponses", () => {
             id: { type: "number" },
           },
         },
+        strict: false,
       },
     ]);
     assert.deepEqual(captured.input, [
@@ -1267,6 +1291,47 @@ describe("OpenAiResponses", () => {
     assert.equal(usageRequest?.requestedInferenceType, "fast");
     assert.equal(usageRequest?.requestedServiceTier, "priority");
     assert.equal(usageRequest?.regionalProcessing, "eu");
+  });
+
+  it("rejects incomplete and failed non-streaming Responses", async () => {
+    const incompleteModel = new OpenAiResponses(createConfig());
+    setMockClient(incompleteModel, {
+      create: async () => ({
+        id: "resp-incomplete",
+        status: "incomplete",
+        incomplete_details: { reason: "max_output_tokens" },
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "partial" }],
+          },
+        ],
+        usage: {},
+      }),
+    });
+
+    await assert.rejects(
+      () => incompleteModel.generate([{ role: "user", message: "hello" }]),
+      /Responses API response incomplete: max_output_tokens/
+    );
+    assert.equal(Reflect.get(incompleteModel, "previousResponseId"), undefined);
+
+    const failedModel = new OpenAiResponses(createConfig());
+    setMockClient(failedModel, {
+      create: async () => ({
+        id: "resp-failed",
+        status: "failed",
+        error: { code: "server_error", message: "server down" },
+        output: [],
+        usage: {},
+      }),
+    });
+
+    await assert.rejects(
+      () => failedModel.generate([{ role: "user", message: "hello" }]),
+      /Responses API response failed: server_error: server down/
+    );
+    assert.equal(Reflect.get(failedModel, "previousResponseId"), undefined);
   });
 
   it("continues prior responses by sending only new tool outputs", async () => {
@@ -2362,6 +2427,73 @@ describe("OpenAiResponses", () => {
     await assert.rejects(
       () => model.generate([{ role: "user", message: "hello" }], true),
       /Streaming error from Responses API/
+    );
+
+    const directErrorModel = new OpenAiResponses(createConfig());
+    setMockClient(directErrorModel, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "error",
+            message: "direct stream failure",
+          };
+        },
+      }),
+    });
+
+    await assert.rejects(
+      () =>
+        directErrorModel.generate([{ role: "user", message: "hello" }], true),
+      /direct stream failure/
+    );
+
+    const failedEventModel = new OpenAiResponses(createConfig());
+    setMockClient(failedEventModel, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.failed",
+            response: {
+              id: "stream-failed",
+              status: "failed",
+              error: { code: "server_error", message: "server down" },
+              output: [],
+            },
+          };
+        },
+      }),
+    });
+
+    await assert.rejects(
+      () =>
+        failedEventModel.generate([{ role: "user", message: "hello" }], true),
+      /Responses API response failed: server_error: server down/
+    );
+
+    const incompleteEventModel = new OpenAiResponses(createConfig());
+    setMockClient(incompleteEventModel, {
+      create: async () => ({
+        async *[Symbol.asyncIterator]() {
+          yield {
+            type: "response.incomplete",
+            response: {
+              id: "stream-incomplete",
+              status: "incomplete",
+              incomplete_details: { reason: "content_filter" },
+              output: [],
+            },
+          };
+        },
+      }),
+    });
+
+    await assert.rejects(
+      () =>
+        incompleteEventModel.generate(
+          [{ role: "user", message: "hello" }],
+          true
+        ),
+      /Responses API response incomplete: content_filter/
     );
   });
 
