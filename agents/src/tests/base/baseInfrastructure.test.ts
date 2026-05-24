@@ -18,7 +18,12 @@ import {
 } from "../../base/simpleAgent.js";
 import { SimplePairwiseRankingsAgent } from "../../base/simplePairwiseRanking.js";
 import { PolicySynthStandaloneAgent } from "../../base/agentStandalone.js";
-import { AgentPhase, PolicySynthAgentTask } from "../../base/agentTask.js";
+import {
+  AgentPhase,
+  PolicySynthAgentTask,
+  type PolicySynthAgentTaskModelCall,
+  type PolicySynthAgentTaskToolExecutionBatch,
+} from "../../base/agentTask.js";
 import { extractTextFromPdfBuffer } from "../../base/pdfText.js";
 import sharedRedisClient from "../../base/redisClient.js";
 import {
@@ -217,11 +222,17 @@ class SaveFailingAgent extends TestPolicyAgent {
   }
 }
 
+let testAgentTaskCounter = 0;
+
 class TestAgentTask extends PolicySynthAgentTask {
   private readonly scriptedResults: unknown[];
 
   constructor(scriptedResults: unknown[]) {
-    super(createAgentRecord(), createMemory(), `test-task-${Date.now()}`);
+    super(
+      createAgentRecord(),
+      createMemory(),
+      `test-task-${Date.now()}-${++testAgentTaskCounter}`
+    );
     this.scriptedResults = scriptedResults;
   }
 
@@ -229,7 +240,12 @@ class TestAgentTask extends PolicySynthAgentTask {
     return ["allowedTool"];
   }
 
-  override async callModel(): Promise<unknown> {
+  override async callModel(
+    _modelType: PsAiModelType = PsAiModelType.TextReasoning,
+    _modelSize: PsAiModelSize = PsAiModelSize.Large,
+    _messages: PsModelMessage[] = [],
+    _options?: PsCallModelOptions
+  ): Promise<unknown> {
     return this.scriptedResults.shift();
   }
 
@@ -280,6 +296,339 @@ class TestAgentTask extends PolicySynthAgentTask {
   public async callToolStepForTest(toolCalls: ToolCall[]) {
     Reflect.set(this, "pendingOutputItems", []);
     Reflect.set(this, "pendingToolCalls", toolCalls);
+    await this.callToolStep();
+  }
+
+  public setLoopStateForTest(
+    phase: AgentPhase,
+    pendingToolCalls: ToolCall[],
+    pendingOutputItems: PsResponseOutputItem[]
+  ) {
+    Reflect.set(this, "phase", phase);
+    Reflect.set(this, "pendingToolCalls", pendingToolCalls);
+    Reflect.set(this, "pendingOutputItems", pendingOutputItems);
+  }
+
+  public getPendingStateForTest() {
+    return {
+      pendingToolCalls: Reflect.get(this, "pendingToolCalls") as ToolCall[],
+      pendingOutputItems: Reflect.get(
+        this,
+        "pendingOutputItems"
+      ) as PsResponseOutputItem[],
+    };
+  }
+
+  public pruneMismatchedToolMessagesForTest(
+    messages = this.getMessagesForTest()
+  ) {
+    this.pruneMismatchedToolMessages(messages);
+  }
+
+  public resetTaskConversationStateForTest() {
+    this.resetTaskConversationState();
+  }
+}
+
+class StopRequestedTask extends TestAgentTask {
+  protected override isTaskStopRequested(): boolean {
+    return true;
+  }
+}
+
+class HybridToolTask extends TestAgentTask {
+  public readonly executionOrder: string[] = [];
+  private readonly pendingParallelToolResolves: Array<() => void> = [];
+
+  protected override policy(): readonly string[] {
+    return ["setupTool", "parallelToolA", "parallelToolB"];
+  }
+
+  protected override async runTool(name: string): Promise<string> {
+    this.executionOrder.push(`start:${name}`);
+
+    if (name.startsWith("parallelTool")) {
+      await new Promise<void>((resolve) => {
+        this.pendingParallelToolResolves.push(resolve);
+        if (this.pendingParallelToolResolves.length === 2) {
+          for (const release of this.pendingParallelToolResolves) {
+            release();
+          }
+        }
+      });
+    }
+
+    this.executionOrder.push(`end:${name}`);
+    return `${name} result`;
+  }
+
+  protected override partitionToolOutputItemsForExecution(
+    outputItems: PsResponseOutputItem[]
+  ): PolicySynthAgentTaskToolExecutionBatch[] {
+    const [firstOutputItem, ...remainingOutputItems] = outputItems;
+    const batches: PolicySynthAgentTaskToolExecutionBatch[] = [];
+
+    if (firstOutputItem) {
+      batches.push({
+        outputItems: [firstOutputItem],
+        parallelTools: false,
+      });
+    }
+
+    if (remainingOutputItems.length > 0) {
+      batches.push({
+        outputItems: remainingOutputItems,
+        parallelTools: true,
+      });
+    }
+
+    return batches;
+  }
+
+  public async runHybridToolExecutionForTest(): Promise<void> {
+    const outputItems: PsResponseOutputItem[] = [
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "setup-call",
+          name: "setupTool",
+          arguments: {},
+        },
+      },
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "parallel-call-a",
+          name: "parallelToolA",
+          arguments: {},
+        },
+      },
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "parallel-call-b",
+          name: "parallelToolB",
+          arguments: {},
+        },
+      },
+    ];
+
+    Reflect.set(this, "pendingOutputItems", outputItems);
+    await this.callToolStep();
+  }
+}
+
+class LifecycleHookTask extends TestAgentTask {
+  public readonly events: string[] = [];
+
+  override async callModel(): Promise<unknown> {
+    this.events.push("model");
+    return super.callModel();
+  }
+
+  protected override async onBeforePlanningStep(): Promise<void> {
+    this.events.push("before-plan");
+  }
+
+  protected override async onAfterPlanningStep(): Promise<void> {
+    this.events.push("after-plan");
+  }
+
+  protected override async onBeforeToolCall(): Promise<void> {
+    this.events.push("before-tool");
+  }
+
+  protected override async onAfterToolCall(): Promise<void> {
+    this.events.push("after-tool");
+  }
+
+  protected override async runTool(name: string): Promise<string> {
+    this.events.push(`tool:${name}`);
+    return `${name} result`;
+  }
+}
+
+class WrappingToolHookTask extends LifecycleHookTask {
+  protected override async callToolStep(): Promise<void> {
+    await this.onBeforeToolCall();
+    try {
+      await super.callToolStep();
+    } finally {
+      await this.onAfterToolCall();
+    }
+  }
+}
+
+class ThrowingToolHookTask extends LifecycleHookTask {
+  protected override async runTool(name: string): Promise<string> {
+    this.events.push(`tool:${name}`);
+    throw new Error("tool failed");
+  }
+}
+
+class SequentialThrowingToolHookTask extends ThrowingToolHookTask {
+  protected override partitionToolOutputItemsForExecution(
+    outputItems: PsResponseOutputItem[]
+  ): PolicySynthAgentTaskToolExecutionBatch[] {
+    return [
+      {
+        outputItems,
+        parallelTools: false,
+      },
+    ];
+  }
+}
+
+class ModelHookTask extends TestAgentTask {
+  public readonly events: string[] = [];
+  public observedMessages: PsModelMessage[] = [];
+  public observedOptions: PsCallModelOptions | undefined;
+
+  protected override async prepareModelCall(
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize,
+    messages: PsModelMessage[],
+    options: PsCallModelOptions
+  ): Promise<PolicySynthAgentTaskModelCall> {
+    this.events.push("prepare");
+    return {
+      modelType,
+      modelSize,
+      messages: [...messages, { role: "user", message: "prepared" }],
+      options: {
+        ...options,
+        modelName: "prepared-model",
+      },
+    };
+  }
+
+  override async callModel(
+    _modelType: PsAiModelType = PsAiModelType.TextReasoning,
+    _modelSize: PsAiModelSize = PsAiModelSize.Large,
+    messages: PsModelMessage[] = [],
+    options?: PsCallModelOptions
+  ): Promise<unknown> {
+    this.events.push("call");
+    this.observedMessages = messages;
+    this.observedOptions = options;
+    const result = await super.callModel();
+    if (result instanceof Error) {
+      throw result;
+    }
+    return result;
+  }
+
+  protected override async afterModelCall(
+    _call: PolicySynthAgentTaskModelCall,
+    result: unknown
+  ): Promise<void> {
+    this.events.push(`after:${String(result)}`);
+  }
+
+  protected override async onModelCallError(
+    _call: PolicySynthAgentTaskModelCall,
+    error: unknown
+  ): Promise<never> {
+    this.events.push(error instanceof Error ? `error:${error.message}` : "error");
+    throw error;
+  }
+
+  public callTaskModelForTest() {
+    return this.callTaskModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Large,
+      [{ role: "user", message: "original" }],
+      { parseJson: false }
+    );
+  }
+}
+
+class PrepareFailingModelHookTask extends ModelHookTask {
+  protected override async prepareModelCall(): Promise<PolicySynthAgentTaskModelCall> {
+    this.events.push("prepare-failed");
+    throw new Error("prepare failed");
+  }
+}
+
+class StopPollingModelTask extends TestAgentTask {
+  public modelStarted = false;
+
+  protected override isTaskStopRequested(): boolean {
+    return this.modelStarted;
+  }
+
+  protected override getModelCallStopCheckIntervalMs(): number {
+    return 1;
+  }
+
+  override async callModel(): Promise<unknown> {
+    this.modelStarted = true;
+    return new Promise<unknown>(() => {});
+  }
+
+  public callTaskModelForTest() {
+    return this.callTaskModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Large,
+      [{ role: "user", message: "original" }],
+      { parseJson: false }
+    );
+  }
+}
+
+class MixedBatchToolTask extends TestAgentTask {
+  protected override policy(): readonly string[] {
+    return ["firstTool", "secondTool"];
+  }
+
+  protected override partitionToolOutputItemsForExecution(
+    outputItems: PsResponseOutputItem[]
+  ): PolicySynthAgentTaskToolExecutionBatch[] {
+    return [
+      {
+        outputItems: outputItems.slice(0, 2),
+        parallelTools: false,
+      },
+      {
+        outputItems: outputItems.slice(2),
+        parallelTools: true,
+      },
+    ];
+  }
+
+  protected override async runTool(name: string): Promise<string> {
+    return `${name} result`;
+  }
+
+  public async runMixedBatchForTest(): Promise<void> {
+    const outputItems: PsResponseOutputItem[] = [
+      {
+        type: "assistant_message",
+        message: { content: "batch one note", phase: "commentary" },
+      },
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "first-tool-call",
+          name: "firstTool",
+          arguments: {},
+        },
+      },
+      {
+        type: "assistant_message",
+        message: { content: "batch two note", phase: "commentary" },
+      },
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "second-tool-call",
+          name: "secondTool",
+          arguments: {},
+        },
+      },
+    ];
+
+    Reflect.set(this, "pendingOutputItems", outputItems);
     await this.callToolStep();
   }
 }
@@ -1062,6 +1411,227 @@ describe("base infrastructure modules", () => {
     assert.equal(textOnlyYielded.at(-1)?.message, "visible");
   });
 
+  it("supports reusable agent task message and run options", async () => {
+    const task = new TestAgentTask([
+      "first answer",
+      {
+        content: "",
+        phase: "commentary",
+        assistantMessages: [
+          { content: "thinking", phase: "commentary" },
+        ],
+      },
+      "second answer",
+    ]);
+
+    const firstYielded: PsModelMessage[] = [];
+    for await (const message of task.run("first", "system one")) {
+      firstYielded.push(message);
+    }
+
+    assert.equal(firstYielded.at(-1)?.message, "first answer");
+    assert.equal(
+      task.getMessagesForTest().filter((message) => message.role === "system")
+        .length,
+      1
+    );
+
+    const secondYielded: PsModelMessage[] = [];
+    for await (const message of task.runWithOptions("second", "system two", {
+      resetPhase: true,
+      yieldCommentary: true,
+    })) {
+      secondYielded.push(message);
+    }
+
+    assert.equal(
+      task.getMessagesForTest().filter((message) => message.role === "system")
+        .length,
+      1
+    );
+    assert.equal(task.getMessagesForTest()[0].message, "system two");
+    assert.equal(
+      task.getMessagesForTest().filter((message) => message.role === "user")
+        .length,
+      2
+    );
+    assert.equal(
+      secondYielded.some((message) => message.message === "thinking"),
+      true
+    );
+    assert.equal(secondYielded.at(-1)?.message, "second answer");
+
+    const noUserTask = new TestAgentTask(["no user answer"]);
+    const noUserYielded: PsModelMessage[] = [];
+    for await (const message of noUserTask.runWithOptions("", "system", {
+      appendUserMessage: false,
+    })) {
+      noUserYielded.push(message);
+    }
+    assert.equal(
+      noUserTask
+        .getMessagesForTest()
+        .filter((message) => message.role === "user").length,
+      0
+    );
+    assert.equal(noUserYielded.at(-1)?.message, "no user answer");
+
+    task.appendMessage({ role: "user", message: "manual one" });
+    task.appendMessages([
+      { role: "assistant", message: "manual two" },
+      { role: "user", message: "manual three" },
+    ]);
+    assert.equal(
+      task
+        .getMessagesForTest()
+        .some((message) => message.message === "manual three"),
+      true
+    );
+
+    task.clearMessages();
+    assert.equal(task.getMessagesForTest().length, 0);
+  });
+
+  it("supports agent task lifecycle and model call hooks", async () => {
+    const planningTask = new LifecycleHookTask(["hook answer"]);
+    const planningMessages: PsModelMessage[] = [];
+    for await (const message of planningTask.run("hello", "system")) {
+      planningMessages.push(message);
+    }
+
+    assert.equal(planningMessages.at(-1)?.message, "hook answer");
+    assert.deepEqual(planningTask.events, [
+      "before-plan",
+      "model",
+      "after-plan",
+    ]);
+
+    const toolTask = new LifecycleHookTask([]);
+    await toolTask.callToolStepForTest([
+      {
+        id: "hook-tool",
+        name: "allowedTool",
+        arguments: {},
+      },
+    ]);
+
+    assert.deepEqual(toolTask.events, [
+      "before-tool",
+      "tool:allowedTool",
+      "after-tool",
+    ]);
+
+    const wrappingToolTask = new WrappingToolHookTask([]);
+    await wrappingToolTask.callToolStepForTest([
+      {
+        id: "wrapped-hook-tool",
+        name: "allowedTool",
+        arguments: {},
+      },
+    ]);
+
+    assert.deepEqual(wrappingToolTask.events, [
+      "before-tool",
+      "tool:allowedTool",
+      "after-tool",
+    ]);
+
+    const throwingToolTask = new ThrowingToolHookTask([]);
+    await assert.rejects(
+      () =>
+        throwingToolTask.callToolStepForTest([
+          {
+            id: "throwing-tool",
+            name: "allowedTool",
+            arguments: {},
+          },
+        ]),
+      /tool failed/
+    );
+    assert.deepEqual(throwingToolTask.events, [
+      "before-tool",
+      "tool:allowedTool",
+      "after-tool",
+    ]);
+
+    const sequentialThrowingToolTask = new SequentialThrowingToolHookTask([]);
+    await assert.rejects(
+      () =>
+        sequentialThrowingToolTask.callToolStepForTest([
+          {
+            id: "sequential-throwing-tool",
+            name: "allowedTool",
+            arguments: {},
+          },
+        ]),
+      /tool failed/
+    );
+    assert.deepEqual(sequentialThrowingToolTask.events, [
+      "before-tool",
+      "tool:allowedTool",
+      "after-tool",
+    ]);
+    const sequentialMessages = sequentialThrowingToolTask.getMessagesForTest();
+    const toolResponseIds = new Set(
+      sequentialMessages
+        .filter((message) => message.role === "tool" && message.toolCallId)
+        .map((message) => message.toolCallId)
+    );
+    assert.deepEqual(
+      sequentialMessages
+        .filter(
+          (message) =>
+            message.role === "assistant" &&
+            message.toolCall &&
+            !toolResponseIds.has(message.toolCall.id)
+        )
+        .map((message) => message.toolCall?.id),
+      []
+    );
+
+    const modelHookTask = new ModelHookTask(["hook result"]);
+    assert.equal(await modelHookTask.callTaskModelForTest(), "hook result");
+    assert.deepEqual(modelHookTask.events, [
+      "prepare",
+      "call",
+      "after:hook result",
+    ]);
+    assert.equal(
+      modelHookTask.observedMessages.some(
+        (message) => message.message === "prepared"
+      ),
+      true
+    );
+    assert.equal(modelHookTask.observedOptions?.modelName, "prepared-model");
+
+    const modelErrorTask = new ModelHookTask([new Error("model failed")]);
+    await assert.rejects(
+      () => modelErrorTask.callTaskModelForTest(),
+      /model failed/
+    );
+    assert.deepEqual(modelErrorTask.events, [
+      "prepare",
+      "call",
+      "error:model failed",
+    ]);
+
+    const prepareErrorTask = new PrepareFailingModelHookTask([]);
+    await assert.rejects(
+      () => prepareErrorTask.callTaskModelForTest(),
+      /prepare failed/
+    );
+    assert.deepEqual(prepareErrorTask.events, [
+      "prepare-failed",
+      "error:prepare failed",
+    ]);
+
+    const stopPollingTask = new StopPollingModelTask([]);
+    await assert.rejects(
+      () => stopPollingTask.callTaskModelForTest(),
+      AgentExecutionStoppedError
+    );
+  });
+
   it("uses agent task filesystem helpers and direct tool-call fallback", async () => {
     const task = new TestAgentTask([]);
     const taskFs = task.getFsForTest();
@@ -1069,6 +1639,7 @@ describe("base infrastructure modules", () => {
     const tempPath = taskFs.mktemp("scratch", "prefix", ".json");
     assert.match(tempPath, /prefix-\d+-[a-f0-9]+\.json$/);
 
+    assert.deepEqual(await taskFs.list("logs"), []);
     await taskFs.writeText("scratch", "notes/a.txt", "hello");
     assert.equal(await taskFs.readText("scratch", "notes/a.txt"), "hello");
     await taskFs.writeJSON("memory", "state.json", { ok: true });
@@ -1133,6 +1704,192 @@ describe("base infrastructure modules", () => {
     assert.equal(
       fallbackMessages.some((message) => message.role === "tool"),
       true
+    );
+
+    const resetStateTask = new TestAgentTask(["reset answer"]);
+    resetStateTask.setLoopStateForTest(
+      AgentPhase.CALL_TOOL,
+      [
+        {
+          id: "stale-direct-tool",
+          name: "allowedTool",
+          arguments: {},
+        },
+      ],
+      [
+        {
+          type: "tool_call",
+          toolCall: {
+            id: "stale-output-tool",
+            name: "allowedTool",
+            arguments: {},
+          },
+        },
+      ]
+    );
+    const resetStateMessages: PsModelMessage[] = [];
+    for await (const message of resetStateTask.runWithOptions(
+      "hello",
+      "system",
+      { resetPhase: true }
+    )) {
+      resetStateMessages.push(message);
+    }
+    assert.equal(resetStateMessages.at(-1)?.message, "reset answer");
+    assert.equal(
+      resetStateMessages.some((message) => message.role === "tool"),
+      false
+    );
+    assert.equal(
+      resetStateTask.getPendingStateForTest().pendingToolCalls.length,
+      0
+    );
+    assert.equal(
+      resetStateTask.getPendingStateForTest().pendingOutputItems.length,
+      0
+    );
+  });
+
+  it("supports agent task conversation cleanup helpers", () => {
+    const task = new TestAgentTask([]);
+    task.getMessagesForTest().push(
+      {
+        role: "assistant",
+        message: "",
+        toolCall: {
+          id: "matched-tool",
+          name: "allowedTool",
+          arguments: {},
+        },
+      },
+      {
+        role: "tool",
+        name: "allowedTool",
+        message: "matched",
+        toolCallId: "matched-tool",
+      },
+      {
+        role: "tool",
+        name: "allowedTool",
+        message: "orphan",
+        toolCallId: "missing-tool",
+      },
+      {
+        role: "tool",
+        name: "allowedTool",
+        message: "missing id",
+      },
+      {
+        role: "assistant",
+        message: "",
+        toolCall: {
+          id: "missing-response",
+          name: "allowedTool",
+          arguments: {},
+        },
+      },
+      {
+        role: "assistant",
+        message: "final",
+      }
+    );
+
+    task.pruneMismatchedToolMessagesForTest();
+    task.resetTaskConversationStateForTest();
+
+    assert.equal(
+      task
+        .getMessagesForTest()
+        .some((message) => message.message === "orphan"),
+      false
+    );
+    assert.equal(
+      task
+        .getMessagesForTest()
+        .some((message) => message.message === "missing id"),
+      false
+    );
+    assert.equal(
+      task
+        .getMessagesForTest()
+        .some((message) => message.toolCall?.id === "missing-response"),
+      false
+    );
+    assert.equal(
+      task
+        .getMessagesForTest()
+        .some((message) => message.toolCall?.id === "matched-tool"),
+      true
+    );
+  });
+
+  it("supports agent task cancellation and custom tool execution ordering", async () => {
+    const stopTask = new StopRequestedTask(["never"]);
+    await assert.rejects(
+      async () => {
+        for await (const _message of stopTask.run("hello", "system")) {
+          // no-op: the task should stop before yielding
+        }
+      },
+      AgentExecutionStoppedError
+    );
+
+    const hybridToolTask = new HybridToolTask([]);
+    await hybridToolTask.runHybridToolExecutionForTest();
+
+    assert.deepEqual(hybridToolTask.executionOrder.slice(0, 4), [
+      "start:setupTool",
+      "end:setupTool",
+      "start:parallelToolA",
+      "start:parallelToolB",
+    ]);
+    assert.equal(
+      hybridToolTask
+        .getMessagesForTest()
+        .filter((message) => message.role === "tool").length,
+      3
+    );
+
+    const mixedBatchToolTask = new MixedBatchToolTask([]);
+    await mixedBatchToolTask.runMixedBatchForTest();
+    assert.deepEqual(
+      mixedBatchToolTask.getMessagesForTest().map((message) => ({
+        role: message.role,
+        message: message.message,
+        toolName: message.toolCall?.name ?? message.name,
+      })),
+      [
+        {
+          role: "assistant",
+          message: "batch one note",
+          toolName: undefined,
+        },
+        {
+          role: "assistant",
+          message: "",
+          toolName: "firstTool",
+        },
+        {
+          role: "tool",
+          message: "firstTool result",
+          toolName: "firstTool",
+        },
+        {
+          role: "assistant",
+          message: "batch two note",
+          toolName: undefined,
+        },
+        {
+          role: "assistant",
+          message: "",
+          toolName: "secondTool",
+        },
+        {
+          role: "tool",
+          message: "secondTool result",
+          toolName: "secondTool",
+        },
+      ]
     );
   });
 
