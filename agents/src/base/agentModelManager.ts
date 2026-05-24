@@ -2,9 +2,15 @@ import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { OpenAiResponses } from "../aiModels/openAiResponses.js";
+import { OpenAiRealtime } from "../aiModels/openAiRealtime.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { GoogleGeminiThought } from "../aiModels/googleGeminiThought.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
+import type {
+  BaseRealtimeModel,
+  PsRealtimeSession,
+  PsRealtimeSessionOptions,
+} from "../aiModels/baseRealtimeModel.js";
 import { PsAiModelType, PsAiModelSize } from "../aiModelTypes.js";
 import type { Transaction, Op } from "sequelize";
 import type { Sequelize } from "sequelize";
@@ -67,6 +73,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   private statefulResponsesModelCache: Map<string, OpenAiResponses> = new Map();
   models: Map<string, BaseChatModel> = new Map();
   modelsByType: Map<PsAiModelType, BaseChatModel> = new Map();
+  realtimeModels: Map<string, BaseRealtimeModel> = new Map();
+  realtimeModelsByType: Map<PsAiModelType, BaseRealtimeModel> = new Map();
   modelIds: Map<string, number> = new Map();
   modelIdsByType: Map<PsAiModelType, number> = new Map();
   rateLimits: PsModelRateLimitTracking = {};
@@ -121,17 +129,26 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelProvider = process.env.PS_AI_MODEL_PROVIDER as PsAiModelProvider;
     const modelName = process.env.PS_AI_MODEL_NAME;
     let apiKey: string | undefined;
-    let createModel: (baseConfig: PsAiModelConfig) => BaseChatModel | undefined;
+    let createModel:
+      | ((baseConfig: PsAiModelConfig) => BaseChatModel | undefined)
+      | undefined;
+    let createRealtimeModel:
+      | ((baseConfig: PsAiModelConfig) => BaseRealtimeModel | undefined)
+      | undefined;
     const providerKey = modelProvider?.toLowerCase();
 
     switch (providerKey) {
       case PsAiModelProvider.OpenAI:
       case PsAiModelProvider.OpenAIResponses.toLowerCase():
         apiKey = process.env.OPENAI_API_KEY;
-        createModel =
-          providerKey === PsAiModelProvider.OpenAIResponses.toLowerCase()
-            ? (baseConfig) => new OpenAiResponses(baseConfig)
-            : (baseConfig) => new OpenAiChat(baseConfig);
+        if (modelType === PsAiModelType.Realtime) {
+          createRealtimeModel = (baseConfig) => new OpenAiRealtime(baseConfig);
+        } else {
+          createModel =
+            providerKey === PsAiModelProvider.OpenAIResponses.toLowerCase()
+              ? (baseConfig) => new OpenAiResponses(baseConfig)
+              : (baseConfig) => new OpenAiChat(baseConfig);
+        }
         break;
       case PsAiModelProvider.Anthropic:
         apiKey = process.env.ANTHROPIC_API_KEY;
@@ -170,7 +187,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       return;
     }
 
+    if (modelType === PsAiModelType.Realtime && !createRealtimeModel) {
+      throw new Error(`Unsupported realtime model provider: ${modelProvider}`);
+    }
+
     const modelKey = `${modelType}_${modelSize}`;
+    const realtimeModel = this.realtimeModels.get(modelKey);
+    if (realtimeModel) {
+      return realtimeModel;
+    }
+
     let model = this.models.get(modelKey);
 
     if (!model) {
@@ -187,6 +213,28 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         modelSize: modelSize,
         prices: {} as any,
       };
+
+      if (createRealtimeModel) {
+        const newRealtimeModel = createRealtimeModel(baseConfig);
+        if (!newRealtimeModel) {
+          return;
+        }
+
+        newRealtimeModel.provider = modelProvider;
+        this.realtimeModels.set(modelKey, newRealtimeModel);
+        this.realtimeModelsByType.set(modelType, newRealtimeModel);
+        this.modelIds.set(modelKey, -1);
+        this.modelIdsByType.set(modelType, -1);
+
+        this.logger.info(
+          `Initialized realtime AI model from environment variables: ${modelKey}`
+        );
+        return newRealtimeModel;
+      }
+
+      if (!createModel) {
+        return;
+      }
 
       model = createModel(baseConfig);
       if (!model) {
@@ -260,6 +308,34 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         `Reasoning effort is set to ${this.reasoningEffort} here`
       );
 
+      if (modelType === PsAiModelType.Realtime) {
+        let newRealtimeModel: BaseRealtimeModel | undefined;
+
+        switch (model.configuration.provider) {
+          case PsAiModelProvider.OpenAI:
+          case PsAiModelProvider.OpenAIResponses:
+            newRealtimeModel = new OpenAiRealtime(baseConfig);
+            break;
+          default:
+            this.logger.warn(
+              `Unsupported realtime model provider: ${model.configuration.provider}`
+            );
+            continue;
+        }
+
+        newRealtimeModel.provider = model.configuration.provider;
+        newRealtimeModel.dbModelId = model.id;
+        this.realtimeModels.set(modelKey, newRealtimeModel);
+        this.realtimeModelsByType.set(modelType, newRealtimeModel);
+        this.modelIds.set(modelKey, model.id);
+        this.modelIdsByType.set(modelType, model.id);
+
+        this.logger.debug(
+          `Initialized realtime model ${newRealtimeModel.config.modelName}`
+        );
+        continue;
+      }
+
       let newModel: BaseChatModel;
 
       switch (model.configuration.provider) {
@@ -301,7 +377,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       );
     }
 
-    if (this.models.size === 0) {
+    if (this.models.size === 0 && this.realtimeModels.size === 0) {
       throw new Error("No supported AI models found");
     }
   }
@@ -355,7 +431,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       this.logger.warn(
         `No fallback model found for ephemeral override of ${modelType} ${modelSize}. Trying to initialize one from environment variables.`
       );
-      fallbackModel = this.initializeOneModelFromEnv();
+      const initializedModel = this.initializeOneModelFromEnv();
+      fallbackModel =
+        initializedModel instanceof BaseChatModel ? initializedModel : undefined;
       if (!fallbackModel) {
         this.logger.warn(
           `No fallback model found for ephemeral override of ${modelType} ${modelSize}.`
@@ -633,6 +711,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         return await this.callMultiModalModel(messages);
       case PsAiModelType.Audio:
         return await this.callAudioModel(messages);
+      case PsAiModelType.Realtime:
+        throw new Error(
+          "Realtime models require createRealtimeSession instead of callModel"
+        );
       case PsAiModelType.Video:
         return await this.callVideoModel(messages);
       case PsAiModelType.Image:
@@ -640,6 +722,22 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       default:
         throw new Error(`Unsupported model type: ${modelType}`);
     }
+  }
+
+  async createRealtimeSession(
+    modelSize: PsAiModelSize,
+    options: PsRealtimeSessionOptions = {}
+  ): Promise<PsRealtimeSession> {
+    const modelKey = `${PsAiModelType.Realtime}_${modelSize}`;
+    const model =
+      this.realtimeModels.get(modelKey) ??
+      this.realtimeModelsByType.get(PsAiModelType.Realtime);
+
+    if (!model) {
+      throw new Error(`No realtime model configured for size: ${modelSize}`);
+    }
+
+    return model.createSession(options);
   }
 
   async callTextModel(

@@ -16,6 +16,7 @@ import { ClaudeChat } from "../../aiModels/claudeChat.js";
 import { GoogleGeminiChat } from "../../aiModels/googleGeminiChat.js";
 import { GoogleGeminiThought } from "../../aiModels/googleGeminiThought.js";
 import { OpenAiChat } from "../../aiModels/openAiChat.js";
+import { OpenAiRealtime } from "../../aiModels/openAiRealtime.js";
 import { OpenAiResponses } from "../../aiModels/openAiResponses.js";
 import { PsAiModelManager } from "../../base/agentModelManager.js";
 import { policySynthEvents, TOKEN_USAGE_EVENT } from "../../base/events.js";
@@ -513,6 +514,15 @@ describe("PsAiModelManager initialization", () => {
         },
         15
       ),
+      createAiModel(
+        {
+          type: PsAiModelType.Realtime,
+          modelSize: PsAiModelSize.Small,
+          model: "gpt-realtime-2",
+          provider: PsAiModelProvider.OpenAI,
+        },
+        16
+      ),
     ];
 
     const manager = new PsAiModelManager(
@@ -550,9 +560,18 @@ describe("PsAiModelManager initialization", () => {
       manager.models.get(`${PsAiModelType.Audio}_${PsAiModelSize.Small}`) instanceof
         AzureOpenAiChat
     );
+    assert.ok(
+      manager.realtimeModels.get(
+        `${PsAiModelType.Realtime}_${PsAiModelSize.Small}`
+      ) instanceof OpenAiRealtime
+    );
     assert.equal(
       manager.modelIds.get(`${PsAiModelType.Text}_${PsAiModelSize.Small}`),
       11
+    );
+    assert.equal(
+      manager.modelIds.get(`${PsAiModelType.Realtime}_${PsAiModelSize.Small}`),
+      16
     );
     assert.equal(
       manager.models.get(`${PsAiModelType.Text}_${PsAiModelSize.Small}`)?.config
@@ -596,6 +615,27 @@ describe("PsAiModelManager initialization", () => {
           7
         ),
       /No supported AI models found/
+    );
+  });
+
+  it("creates realtime sessions through the dedicated realtime model path", async () => {
+    const manager = createManager({
+      type: PsAiModelType.Realtime,
+      modelSize: PsAiModelSize.Small,
+      model: "gpt-realtime-2",
+      provider: PsAiModelProvider.OpenAI,
+    });
+
+    const session = await manager.createRealtimeSession(PsAiModelSize.Small, {
+      instructions: "Realtime instructions",
+      outputModalities: ["audio"],
+    });
+
+    assert.equal(typeof session.connect, "function");
+    assert.equal(
+      manager.realtimeModelsByType.get(PsAiModelType.Realtime) instanceof
+        OpenAiRealtime,
+      true
     );
   });
 
@@ -657,6 +697,49 @@ describe("PsAiModelManager initialization", () => {
       assert.equal(
         manager.modelIds.get(`${PsAiModelType.Text}_${PsAiModelSize.Small}`),
         -1
+      );
+    }
+  });
+
+  it("rejects unsupported realtime environment model providers", () => {
+    const cases: Array<{
+      provider: PsAiModelProvider;
+      keyName: string;
+      extraEnv?: Record<string, string>;
+    }> = [
+      {
+        provider: PsAiModelProvider.Anthropic,
+        keyName: "ANTHROPIC_API_KEY",
+      },
+      {
+        provider: PsAiModelProvider.Google,
+        keyName: "GEMINI_API_KEY",
+      },
+      {
+        provider: PsAiModelProvider.Azure,
+        keyName: "AZURE_API_KEY",
+        extraEnv: {
+          AZURE_OPENAI_ENDPOINT: "https://example.openai.azure.com",
+          PS_AI_MODEL_ENDPOINT: "https://example.openai.azure.com",
+          PS_AI_MODEL_DEPLOYMENT_NAME: "env-deployment",
+        },
+      },
+    ];
+
+    for (const testCase of cases) {
+      useStandardResponsesEnv();
+      process.env.PS_AI_MODEL_TYPE = PsAiModelType.Realtime;
+      process.env.PS_AI_MODEL_SIZE = PsAiModelSize.Small;
+      process.env.PS_AI_MODEL_PROVIDER = testCase.provider;
+      process.env.PS_AI_MODEL_NAME = `${testCase.provider}-realtime-env-model`;
+      process.env[testCase.keyName] = `${testCase.provider}-env-key`;
+      for (const [key, value] of Object.entries(testCase.extraEnv ?? {})) {
+        process.env[key] = value;
+      }
+
+      assert.throws(
+        () => createNoopManager(),
+        new RegExp(`Unsupported realtime model provider: ${testCase.provider}`)
       );
     }
   });

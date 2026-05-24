@@ -3,6 +3,7 @@ export enum PsAiModelType {
   Text = "text",
   MultiModal = "multiModal",
   Audio = "audio",
+  Realtime = "realtime",
   Video = "video",
   Image = "image",
   TextReasoning = "reasoning",
