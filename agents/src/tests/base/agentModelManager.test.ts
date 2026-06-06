@@ -68,8 +68,9 @@ type PsAiModelManagerInternals = {
     options: PsCallModelOptions
   ) => Promise<BaseChatModel | undefined>;
   getModelRequestOptions: (
-    options: PsCallModelOptions
-  ) => PsModelRequestOptions | undefined;
+    options: PsCallModelOptions,
+    timeoutMs: number
+  ) => PsModelRequestOptions;
   getResponsesStateKey: (options: PsCallModelOptions) => string | undefined;
   getStateIsolatedResponsesModel: (
     model: BaseChatModel,
@@ -376,6 +377,7 @@ class ScriptedChatModel extends BaseChatModel {
 
 class DelayedFirstAttemptModel extends BaseChatModel {
   generateCalls = 0;
+  requestOptionsHistory: Array<PsModelRequestOptions | undefined> = [];
 
   constructor(config: PsAiModelConfig) {
     super(config, config.modelName, config.maxTokensOut);
@@ -389,9 +391,10 @@ class DelayedFirstAttemptModel extends BaseChatModel {
     _tools?: ChatCompletionTool[],
     _toolChoice?: ChatCompletionToolChoiceOption | "auto",
     _allowedTools?: string[],
-    _requestOptions?: PsModelRequestOptions
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     this.generateCalls++;
+    this.requestOptionsHistory.push(requestOptions);
 
     if (this.generateCalls === 1) {
       await new Promise((resolve) => setTimeout(resolve, 75));
@@ -1185,7 +1188,7 @@ describe("PsAiModelManager error helpers", () => {
 });
 
 describe("PsAiModelManager utility routing", () => {
-  it("derives request options only when provider request data is present", () => {
+  it("derives request options with the transport timeout", () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
     const internals = asInternals(manager);
@@ -1193,22 +1196,32 @@ describe("PsAiModelManager utility routing", () => {
       { type: "code_interpreter", memoryLimit: "1g" },
     ];
 
-    assert.equal(internals.getModelRequestOptions({}), undefined);
+    assert.deepEqual(internals.getModelRequestOptions({}, 12_345), {
+      timeoutMs: 12_345,
+    });
     assert.deepEqual(
-      internals.getModelRequestOptions({
-        safetyIdentifier: "safety-user",
-        geminiRegions: ["us-central1", "europe-west1"],
-        builtInTools,
-      }),
+      internals.getModelRequestOptions(
+        {
+          safetyIdentifier: "safety-user",
+          geminiRegions: ["us-central1", "europe-west1"],
+          builtInTools,
+        },
+        67_890
+      ),
       {
+        timeoutMs: 67_890,
         safetyIdentifier: "safety-user",
         geminiRegions: ["us-central1", "europe-west1"],
         builtInTools,
       }
     );
-    assert.deepEqual(internals.getModelRequestOptions({ builtInTools }), {
-      builtInTools,
-    });
+    assert.deepEqual(
+      internals.getModelRequestOptions({ builtInTools }, 22_000),
+      {
+        timeoutMs: 22_000,
+        builtInTools,
+      }
+    );
     assert.equal(
       internals.getResponsesStateKey({
         responsesStateKey: "  conversation-1  ",
@@ -3663,6 +3676,12 @@ describe("PsAiModelManager call options", () => {
 
     assert.equal(result, "second attempt");
     assert.equal(model.generateCalls, 2);
+    assert.deepEqual(
+      model.requestOptionsHistory.map(
+        (requestOptions) => requestOptions?.timeoutMs
+      ),
+      [10, 30000]
+    );
   });
 });
 

@@ -440,9 +440,13 @@ export class OpenAiResponses extends BaseChatModel {
     let result: PsBaseModelReturnParameters;
 
     if (streaming) {
-      result = await this.handleStreaming(params, streamingCallback);
+      result = await this.handleStreaming(
+        params,
+        streamingCallback,
+        requestOptions
+      );
     } else {
-      result = await this.handleNonStreaming(params);
+      result = await this.handleNonStreaming(params, requestOptions);
     }
 
     for (const id of pendingToolCallIds) {
@@ -964,12 +968,27 @@ export class OpenAiResponses extends BaseChatModel {
     };
   }
 
+  private getResponsesRequestOptions(
+    requestOptions?: PsModelRequestOptions
+  ): OpenAI.RequestOptions {
+    return {
+      ...(typeof requestOptions?.timeoutMs === "number"
+        ? { timeout: requestOptions.timeoutMs }
+        : {}),
+      maxRetries: 0,
+    };
+  }
+
   private async handleStreaming(
     params: any,
-    onChunk?: (c: string) => void
+    onChunk?: (c: string) => void,
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     // Responses SSE: create({ stream: true }) returns an async iterator of events
-    const stream = await this.client.responses.create(params);
+    const stream = await this.client.responses.create(
+      params,
+      this.getResponsesRequestOptions(requestOptions)
+    );
     const phaseAwareStreaming = this.isPhaseAwareResponsesModel();
 
     let content = "";
@@ -1211,9 +1230,13 @@ export class OpenAiResponses extends BaseChatModel {
   }
 
   private async handleNonStreaming(
-    params: any
+    params: any,
+    requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
-    const resp: any = await this.client.responses.create(params);
+    const resp: any = await this.client.responses.create(
+      params,
+      this.getResponsesRequestOptions(requestOptions)
+    );
     //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
     this.assertResponseCompleted(resp);
 

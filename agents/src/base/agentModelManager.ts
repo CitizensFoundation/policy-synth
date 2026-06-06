@@ -1066,7 +1066,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           retryCount,
           maxRetries
         );
-        const requestOptions = this.getModelRequestOptions(options);
+        const requestOptions = this.getModelRequestOptions(options, timeoutMs);
         const results = (await this.callWithTimeout(
           model,
           messages,
@@ -1627,17 +1627,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   private getModelRequestOptions(
-    options: PsCallModelOptions
-  ): PsModelRequestOptions | undefined {
-    if (
-      !options.safetyIdentifier &&
-      !options.geminiRegions?.length &&
-      !options.builtInTools?.length
-    ) {
-      return undefined;
-    }
-
-    const requestOptions: PsModelRequestOptions = {};
+    options: PsCallModelOptions,
+    timeoutMs: number
+  ): PsModelRequestOptions {
+    const requestOptions: PsModelRequestOptions = { timeoutMs };
     if (options.safetyIdentifier) {
       requestOptions.safetyIdentifier = options.safetyIdentifier;
     }

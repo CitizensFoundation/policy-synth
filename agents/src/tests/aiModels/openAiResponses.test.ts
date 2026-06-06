@@ -34,8 +34,16 @@ type RecordedResponsesRequest = {
   store?: boolean;
 };
 
+type RecordedResponsesRequestOptions = {
+  timeout?: number;
+  maxRetries?: number;
+};
+
 type ResponsesClientMock = {
-  create: (params: unknown) => Promise<unknown>;
+  create: (
+    params: unknown,
+    options?: RecordedResponsesRequestOptions
+  ) => Promise<unknown>;
 };
 
 type OpenAiResponsesInternals = {
@@ -668,9 +676,11 @@ describe("OpenAiResponses", () => {
     });
 
     let captured: RecordedResponsesRequest | undefined;
+    let capturedOptions: RecordedResponsesRequestOptions | undefined;
     setMockClient(model, {
-      create: async (params) => {
+      create: async (params, options) => {
         captured = params as RecordedResponsesRequest;
+        capturedOptions = options;
         return {
           id: "resp-api-model",
           service_tier: "flex",
@@ -691,6 +701,7 @@ describe("OpenAiResponses", () => {
     const result = await model.generate([{ role: "user", message: "hello" }]);
 
     assert.ok(captured);
+    assert.deepEqual(capturedOptions, { maxRetries: 0 });
     assert.equal(captured.model, "gpt-5.5");
     assert.equal(model.modelName, "gpt-5.5-flex");
     assert.equal(result.usageItemData?.modelName, "gpt-5.5-flex");
@@ -1137,9 +1148,11 @@ describe("OpenAiResponses", () => {
     );
 
     let captured: RecordedResponsesRequest | undefined;
+    let capturedOptions: RecordedResponsesRequestOptions | undefined;
     setMockClient(model, {
-      create: async (params) => {
+      create: async (params, options) => {
         captured = params as RecordedResponsesRequest;
+        capturedOptions = options;
         return {
           id: "resp-1",
           previous_response_id: null,
@@ -1204,10 +1217,11 @@ describe("OpenAiResponses", () => {
         function: { name: "lookup" },
       },
       ["lookup"],
-      { safetyIdentifier: "safe-1" }
+      { safetyIdentifier: "safe-1", timeoutMs: 45_000 }
     );
 
     assert.ok(captured);
+    assert.deepEqual(capturedOptions, { timeout: 45_000, maxRetries: 0 });
     assert.equal(captured.model, "gpt-5.3");
     assert.equal(captured.service_tier, "priority");
     assert.deepEqual(captured.reasoning, { effort: "xhigh" });
@@ -1564,10 +1578,12 @@ describe("OpenAiResponses", () => {
     );
 
     let captured: RecordedResponsesRequest | undefined;
+    let capturedOptions: RecordedResponsesRequestOptions | undefined;
     const chunks: string[] = [];
     setMockClient(model, {
-      create: async (params) => {
+      create: async (params, options) => {
         captured = params as RecordedResponsesRequest;
+        capturedOptions = options;
         return {
           async *[Symbol.asyncIterator]() {
             yield {
@@ -1646,10 +1662,16 @@ describe("OpenAiResponses", () => {
     const result = await model.generate(
       [{ role: "user", message: "hello" }],
       true,
-      (chunk) => chunks.push(chunk)
+      (chunk) => chunks.push(chunk),
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 60_000 }
     );
 
     assert.ok(captured);
+    assert.deepEqual(capturedOptions, { timeout: 60_000, maxRetries: 0 });
     assert.equal(captured.stream, true);
     assert.deepEqual(chunks, ["Hello ", "world"]);
     assert.equal(result.content, "Hello world");

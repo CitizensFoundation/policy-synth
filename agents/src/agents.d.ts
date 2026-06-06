@@ -201,6 +201,7 @@ interface PsModelRequestOptions {
   safetyIdentifier?: string;
   geminiRegions?: string[];
   builtInTools?: PsBuiltInTool[];
+  timeoutMs?: number;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
