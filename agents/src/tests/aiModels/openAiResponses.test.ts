@@ -1,9 +1,14 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { afterEach, describe, it } from "node:test";
 import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
 } from "openai/resources/chat/completions";
+import type {
+  StoredResponseCleanupRecord,
+  StoredResponseCleanupRedisClient,
+} from "../../aiModels/openAiResponses.js";
 
 import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 
@@ -13,6 +18,9 @@ process.env.PSQL_DB_PASS ??= "policy_synth_test";
 process.env.DB_PORT ??= "5432";
 
 const { OpenAiResponses } = await import("../../aiModels/openAiResponses.js");
+const { OpenAiResponsesCleanup } = await import(
+  "../../aiModels/openAiResponsesCleanup.js"
+);
 type OpenAiResponsesInstance = InstanceType<typeof OpenAiResponses>;
 
 type RecordedResponsesRequest = {
@@ -44,6 +52,12 @@ type ResponsesClientMock = {
     params: unknown,
     options?: RecordedResponsesRequestOptions
   ) => Promise<unknown>;
+};
+type AuditLogger = {
+  debug: (...args: unknown[]) => void;
+  error: (...args: unknown[]) => void;
+  info: (message: unknown) => void;
+  warn: (...args: unknown[]) => void;
 };
 
 type OpenAiResponsesInternals = {
@@ -136,16 +150,203 @@ const setMockClient = (model: object, responses: ResponsesClientMock) => {
   Reflect.set(model, "client", { responses });
 };
 
+const getApiKeyFingerprintCredentialRef = (apiKey: string): string =>
+  `apiKeySha256:${createHash("sha256")
+    .update(apiKey)
+    .digest("hex")
+    .slice(0, 16)}`;
+
+const createAuditLogger = (infoMessages: string[]): AuditLogger => ({
+  debug: () => undefined,
+  error: () => undefined,
+  info: (message) => {
+    infoMessages.push(String(message));
+  },
+  warn: () => undefined,
+});
+
+const getCleanupAuditMessages = (infoMessages: string[]): string[] =>
+  infoMessages.filter((message) =>
+    message.startsWith("OpenAI Responses cleanup ")
+  );
+
+const normalizeCleanupAuditTimes = (messages: string[]): string[] =>
+  messages.map((message) =>
+    message.replace(
+      / at \d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+      " at <time>"
+    )
+  );
+
+const cleanupDueSetKey = "ps:openai:responses:cleanup:due";
+const cleanupDeadLetterSetKey = "ps:openai:responses:cleanup:dead";
+const cleanupProcessingSetKey = "ps:openai:responses:cleanup:processing";
+
+const parseScoreBound = (value: number | string): number => {
+  if (value === "-inf") return Number.NEGATIVE_INFINITY;
+  if (value === "+inf" || value === "inf") return Number.POSITIVE_INFINITY;
+  return typeof value === "number" ? value : Number(value);
+};
+
+class InMemoryCleanupRedis implements StoredResponseCleanupRedisClient {
+  eval?: StoredResponseCleanupRedisClient["eval"];
+
+  private readonly values = new Map<string, string>();
+  private readonly ttlMs = new Map<string, number>();
+  private readonly sortedSets = new Map<string, Map<string, number>>();
+
+  async zadd(
+    key: string,
+    score: number | string,
+    member: string
+  ): Promise<number> {
+    let sortedSet = this.sortedSets.get(key);
+    if (!sortedSet) {
+      sortedSet = new Map();
+      this.sortedSets.set(key, sortedSet);
+    }
+    const existed = sortedSet.has(member);
+    sortedSet.set(member, typeof score === "number" ? score : Number(score));
+    return existed ? 0 : 1;
+  }
+
+  async zrangebyscore(
+    key: string,
+    min: number | string,
+    max: number | string,
+    ...args: Array<number | string>
+  ): Promise<string[]> {
+    const sortedSet = this.sortedSets.get(key);
+    if (!sortedSet) return [];
+
+    const minScore = parseScoreBound(min);
+    const maxScore = parseScoreBound(max);
+    let members = [...sortedSet.entries()]
+      .filter(([, score]) => score >= minScore && score <= maxScore)
+      .sort(([leftMember, leftScore], [rightMember, rightScore]) =>
+        leftScore === rightScore
+          ? leftMember.localeCompare(rightMember)
+          : leftScore - rightScore
+      )
+      .map(([member]) => member);
+
+    const limitIndex = args.findIndex((arg) => arg === "LIMIT");
+    if (limitIndex >= 0) {
+      const offset = Number(args[limitIndex + 1] ?? 0);
+      const count = Number(args[limitIndex + 2] ?? members.length);
+      members = members.slice(offset, count < 0 ? undefined : offset + count);
+    }
+
+    return members;
+  }
+
+  async get(key: string): Promise<string | null> {
+    return this.values.get(key) ?? null;
+  }
+
+  async set(
+    key: string,
+    value: string,
+    ...args: Array<number | string>
+  ): Promise<"OK"> {
+    this.values.set(key, value);
+    const pxIndex = args.findIndex((arg) => arg === "PX");
+    if (pxIndex >= 0) {
+      this.ttlMs.set(key, Number(args[pxIndex + 1]));
+    } else {
+      this.ttlMs.delete(key);
+    }
+    return "OK";
+  }
+
+  async del(...keys: string[]): Promise<number> {
+    let deletedCount = 0;
+    for (const key of keys) {
+      this.ttlMs.delete(key);
+      if (this.values.delete(key)) {
+        deletedCount++;
+      }
+    }
+    return deletedCount;
+  }
+
+  async zrem(key: string, ...members: string[]): Promise<number> {
+    const sortedSet = this.sortedSets.get(key);
+    if (!sortedSet) return 0;
+
+    let removedCount = 0;
+    for (const member of members) {
+      if (sortedSet.delete(member)) {
+        removedCount++;
+      }
+    }
+    return removedCount;
+  }
+
+  getDueMembers(): string[] {
+    return [...(this.sortedSets.get(cleanupDueSetKey)?.keys() ?? [])];
+  }
+
+  getSortedSetMembers(key: string): string[] {
+    return [...(this.sortedSets.get(key)?.keys() ?? [])];
+  }
+
+  getRecord(chainKey: string): StoredResponseCleanupRecord | undefined {
+    const rawRecord = this.values.get(chainKey);
+    if (!rawRecord) return undefined;
+    return JSON.parse(rawRecord) as StoredResponseCleanupRecord;
+  }
+
+  getRawRecord(chainKey: string): string | undefined {
+    return this.values.get(chainKey);
+  }
+
+  getTtlMs(key: string): number | undefined {
+    return this.ttlMs.get(key);
+  }
+
+  getOnlyRecord(): {
+    chainKey: string;
+    record: StoredResponseCleanupRecord;
+  } {
+    const [chainKey] = this.getDueMembers();
+    assert.ok(chainKey);
+    const record = this.getRecord(chainKey);
+    assert.ok(record);
+    return { chainKey, record };
+  }
+
+  async addRecord(
+    chainKey: string,
+    record: StoredResponseCleanupRecord
+  ): Promise<void> {
+    await this.set(chainKey, JSON.stringify(record));
+    await this.zadd(cleanupDueSetKey, record.dueAtMs, chainKey);
+  }
+
+  async addRawRecord(
+    chainKey: string,
+    rawRecord: string,
+    dueAtMs: number
+  ): Promise<void> {
+    await this.set(chainKey, rawRecord);
+    await this.zadd(cleanupDueSetKey, dueAtMs, chainKey);
+  }
+}
+
 const originalOpenAiOverride = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
 const originalEnforceEuRegion = process.env.OPENAI_ENFORCE_EU_REGION;
 const originalAzureKey = process.env.AZURE_OPENAI_KEY;
 const originalAzureEndpoint = process.env.AZURE_ENDPOINT;
 const originalAzureDeployment = process.env.AZURE_DEPLOYMENT_NAME;
 const originalAzureApiVersion = process.env.AZURE_OPENAI_API_VERSION;
+const originalOpenAiKey = process.env.OPENAI_API_KEY;
 const originalPsAiModelName = process.env.PS_AI_MODEL_NAME;
 const originalDebugPromptMessages = process.env.PS_DEBUG_PROMPT_MESSAGES;
 
 afterEach(() => {
+  OpenAiResponses.setStoredResponseCleanupRedisClientForTests(undefined);
+
   if (originalOpenAiOverride === undefined) {
     delete process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
   } else {
@@ -180,6 +381,12 @@ afterEach(() => {
     delete process.env.AZURE_OPENAI_API_VERSION;
   } else {
     process.env.AZURE_OPENAI_API_VERSION = originalAzureApiVersion;
+  }
+
+  if (originalOpenAiKey === undefined) {
+    delete process.env.OPENAI_API_KEY;
+  } else {
+    process.env.OPENAI_API_KEY = originalOpenAiKey;
   }
 
   if (originalPsAiModelName === undefined) {
@@ -1420,6 +1627,974 @@ describe("OpenAiResponses", () => {
       },
     ]);
     assert.equal(result.content, "Tool handled");
+  });
+
+  it("queues stored response ids for idle cleanup as a chain advances", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const auditMessages: string[] = [];
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+        credentialRef: "aiModel:42",
+      })
+    );
+    Reflect.set(model, "logger", createAuditLogger(auditMessages));
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "conversation-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+
+    setMockClient(model, {
+      create: async (params) => {
+        capturedRequests.push(params as RecordedResponsesRequest);
+        const responseId =
+          capturedRequests.length === 1 ? "resp-clean-1" : "resp-clean-2";
+        return {
+          id: responseId,
+          previous_response_id:
+            capturedRequests.length === 1 ? null : "resp-clean-1",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "cleanup ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const firstStartedAt = Date.now();
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const firstQueued = redis.getOnlyRecord();
+    assert.deepEqual(firstQueued.record.responseIds, ["resp-clean-1"]);
+    assert.equal(firstQueued.record.responsesStateKey, "conversation-cleanup");
+    assert.equal(firstQueued.record.modelName, "gpt-5.3");
+    assert.equal(firstQueued.record.credentialRef, "aiModel:42");
+    assert.ok(firstQueued.record.dueAtMs >= firstStartedAt + 30 * 60_000);
+
+    const firstCreatedAt = firstQueued.record.createdAtMs;
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "cleanup ok" },
+        { role: "user", message: "again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const secondQueued = redis.getOnlyRecord();
+    assert.equal(secondQueued.chainKey, firstQueued.chainKey);
+    assert.deepEqual(secondQueued.record.responseIds, [
+      "resp-clean-1",
+      "resp-clean-2",
+    ]);
+    assert.equal(secondQueued.record.createdAtMs, firstCreatedAt);
+    assert.equal(capturedRequests[1].previous_response_id, "resp-clean-1");
+    assert.deepEqual(
+      normalizeCleanupAuditTimes(getCleanupAuditMessages(auditMessages)),
+      [
+        "OpenAI Responses cleanup queued stored response resp-clean-1 at <time>",
+        "OpenAI Responses cleanup extended idle deletion for 1 stored responses at <time>",
+        "OpenAI Responses cleanup queued stored response resp-clean-2 at <time>",
+      ]
+    );
+  });
+
+  it("preserves cleanup failure metadata when scheduling a new response", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+        credentialRef: "aiModel:42",
+      })
+    );
+    let responseCount = 0;
+    setMockClient(model, {
+      create: async () => {
+        responseCount++;
+        return {
+          id: `resp-failure-preserve-${responseCount}`,
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "conversation-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const queued = redis.getOnlyRecord();
+    await redis.set(
+      queued.chainKey,
+      JSON.stringify({
+        ...queued.record,
+        failureCount: 95,
+        lastFailureAtMs: 1_234,
+        lastFailureMessage: "requires clientFactory",
+      } satisfies StoredResponseCleanupRecord)
+    );
+
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const updated = redis.getRecord(queued.chainKey);
+    assert.ok(updated);
+    assert.deepEqual(updated.responseIds, [
+      "resp-failure-preserve-1",
+      "resp-failure-preserve-2",
+    ]);
+    assert.equal(updated.failureCount, 95);
+    assert.equal(updated.lastFailureAtMs, 1_234);
+    assert.equal(updated.lastFailureMessage, "requires clientFactory");
+  });
+
+  it("uses the global OpenAI key identity for cleanup records when the configured key matches it", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+    process.env.OPENAI_API_KEY = "responses-test-key";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+        credentialRef: "aiModel:42",
+      })
+    );
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-global-key",
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "global key" }],
+          },
+        ],
+        usage: {},
+      }),
+    });
+
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        responsesStateKey: "conversation-cleanup",
+        deleteOpenAiResponsesAfterIdleMinutes: 30,
+      }
+    );
+
+    const queued = redis.getOnlyRecord();
+    assert.equal(queued.record.credentialRef, "env:OPENAI_API_KEY");
+  });
+
+  it("uses the default cleanup chain key inside the model without a request state key", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.3" }));
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-default-cleanup-key",
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "default key" }],
+          },
+        ],
+        usage: {},
+      }),
+    });
+
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { deleteOpenAiResponsesAfterIdleMinutes: 30 }
+    );
+
+    const queued = redis.getOnlyRecord();
+    assert.equal(queued.record.responsesStateKey, "default");
+  });
+
+  it("keeps local Responses state when cleanup record was never scheduled", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const auditMessages: string[] = [];
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.3" }));
+    Reflect.set(model, "logger", createAuditLogger(auditMessages));
+    Reflect.set(model, "previousResponseId", "resp-unscheduled");
+    Reflect.set(model, "lastSubmittedMessageCount", 0);
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-still-continuing",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "continued" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello again" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        responsesStateKey: "conversation-cleanup",
+        deleteOpenAiResponsesAfterIdleMinutes: 30,
+      }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.previous_response_id, "resp-unscheduled");
+    assert.deepEqual(captured.input, [
+      { role: "user", content: "hello again" },
+    ]);
+    assert.equal(result.content, "continued");
+    assert.deepEqual(
+      normalizeCleanupAuditTimes(getCleanupAuditMessages(auditMessages)),
+      [
+        "OpenAI Responses cleanup queued stored response resp-still-continuing at <time>",
+      ]
+    );
+  });
+
+  it("resets stale local Responses state after cleanup deleted the chain", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.3" }));
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    let responseCount = 0;
+    setMockClient(model, {
+      create: async (params) => {
+        capturedRequests.push(params as RecordedResponsesRequest);
+        responseCount++;
+        return {
+          id: responseCount === 1 ? "resp-deleted" : "resp-fresh-after-cleanup",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "fresh" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "conversation-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const deletedResponseIds: string[] = [];
+    await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: Date.now() + 31 * 60_000,
+      clientFactory: () => ({
+        responses: {
+          delete: async (responseId) => {
+            deletedResponseIds.push(responseId);
+          },
+        },
+      }),
+    });
+
+    const result = await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "fresh" },
+        { role: "user", message: "hello again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    assert.deepEqual(deletedResponseIds, ["resp-deleted"]);
+    assert.equal(capturedRequests[1].previous_response_id, undefined);
+    assert.deepEqual(capturedRequests[1].input, [
+      { role: "user", content: "hello" },
+      { role: "assistant", content: "fresh" },
+      { role: "user", content: "hello again" },
+    ]);
+    assert.equal(result.content, "fresh");
+  });
+
+  it("resets stale local Responses state after partial cleanup deletion", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.3" }));
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    let responseCount = 0;
+    setMockClient(model, {
+      create: async (params) => {
+        capturedRequests.push(params as RecordedResponsesRequest);
+        responseCount++;
+        return {
+          id:
+            responseCount === 1
+              ? "resp-partial-old"
+              : responseCount === 2
+                ? "resp-partial-new"
+                : "resp-after-partial-cleanup",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "conversation-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const queued = redis.getOnlyRecord();
+    const deletedResponseIds: string[] = [];
+    const cleanupNowMs = Date.now() + 31 * 60_000;
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: cleanupNowMs,
+      retryDelayMs: 5_000,
+      clientFactory: () => ({
+        responses: {
+          delete: async (responseId) => {
+            deletedResponseIds.push(responseId);
+            if (responseId === "resp-partial-old") {
+              throw new Error("rate limited");
+            }
+          },
+        },
+      }),
+    });
+    assert.equal(summary.responsesDeleted, 1);
+    assert.deepEqual(deletedResponseIds, [
+      "resp-partial-new",
+      "resp-partial-old",
+    ]);
+    assert.equal(await redis.get(`${queued.chainKey}:deleted`), String(cleanupNowMs));
+    assert.ok(redis.getTtlMs(`${queued.chainKey}:deleted`));
+
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "again" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "after partial cleanup" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    assert.equal(capturedRequests[2].previous_response_id, undefined);
+    assert.deepEqual(capturedRequests[2].input, [
+      { role: "user", content: "hello" },
+      { role: "assistant", content: "ok" },
+      { role: "user", content: "again" },
+      { role: "assistant", content: "ok" },
+      { role: "user", content: "after partial cleanup" },
+    ]);
+  });
+
+  it("does not overwrite an invalid cleanup record while scheduling a new response", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const auditMessages: string[] = [];
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.3" }));
+    Reflect.set(model, "logger", createAuditLogger(auditMessages));
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    let responseCount = 0;
+    setMockClient(model, {
+      create: async (params) => {
+        capturedRequests.push(params as RecordedResponsesRequest);
+        responseCount++;
+        return {
+          id: `resp-invalid-record-${responseCount}`,
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "conversation-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const queued = redis.getOnlyRecord();
+    const invalidRawRecord = '{"responseIds":"not-an-array"}';
+    await redis.addRawRecord(queued.chainKey, invalidRawRecord, 1_000);
+
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    assert.equal(capturedRequests[1].previous_response_id, undefined);
+    assert.equal(redis.getRawRecord(queued.chainKey), invalidRawRecord);
+    assert.deepEqual(
+      normalizeCleanupAuditTimes(getCleanupAuditMessages(auditMessages)),
+      [
+        "OpenAI Responses cleanup queued stored response resp-invalid-record-1 at <time>",
+        "OpenAI Responses cleanup reset stale local response state at <time>",
+      ]
+    );
+  });
+
+  it("does not overwrite an invalid cleanup record through the Redis eval merge path", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const identity = {
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      credentialRef: "aiModel:42",
+    };
+    const chainKey = OpenAiResponsesCleanup.getChainKey(identity);
+    const invalidRawRecord = JSON.stringify({
+      responseIds: "not-an-array",
+      dueAtMs: 1_000,
+    });
+    await redis.addRawRecord(chainKey, invalidRawRecord, 1_000);
+    redis.eval = async (script, numberOfKeys, ...args) => {
+      assert.equal(numberOfKeys, 3);
+      assert.match(script, /type\(record\["responseIds"\]\) ~= "table"/);
+      const existingRawRecord = await redis.get(String(args[0]));
+      assert.equal(existingRawRecord, invalidRawRecord);
+      return ["invalid", "0"];
+    };
+
+    const auditMessages: string[] = [];
+    await OpenAiResponsesCleanup.scheduleResponse({
+      settings: {
+        idleMinutes: 30,
+        responsesStateKey: "conversation-cleanup",
+      },
+      identity,
+      responseId: "resp-eval-invalid",
+      logger: {
+        error: (message) => auditMessages.push(message),
+        info: () => undefined,
+        warn: () => undefined,
+      },
+    });
+
+    assert.equal(await redis.get(chainKey), invalidRawRecord);
+    assert.deepEqual(auditMessages, [
+      `Failed to schedule stored OpenAI Responses cleanup: invalid existing cleanup record for ${chainKey}`,
+    ]);
+  });
+
+  it("deletes due stored response chains from newest to oldest", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const auditMessages: string[] = [];
+    await redis.addRecord("cleanup-chain:due", {
+      responseIds: ["resp-old", "resp-new"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      credentialRef: "aiModel:42",
+      createdAtMs: 500,
+    });
+
+    const deletedResponseIds: string[] = [];
+    const clientFactoryCredentialRefs: Array<string | undefined> = [];
+    let summary: Awaited<
+      ReturnType<typeof OpenAiResponses.deleteIdleStoredResponses>
+    >;
+
+    Object.defineProperty(OpenAiResponsesCleanup, "logger", {
+      value: createAuditLogger(auditMessages),
+      configurable: true,
+    });
+    try {
+      summary = await OpenAiResponses.deleteIdleStoredResponses({
+        redis,
+        nowMs: 2_000,
+        clientFactory: (record) => {
+          clientFactoryCredentialRefs.push(record.credentialRef);
+          return {
+            responses: {
+              delete: async (responseId) => {
+                deletedResponseIds.push(responseId);
+              },
+            },
+          };
+        },
+      });
+    } finally {
+      Reflect.deleteProperty(OpenAiResponsesCleanup, "logger");
+    }
+
+    assert.deepEqual(deletedResponseIds, ["resp-new", "resp-old"]);
+    assert.deepEqual(clientFactoryCredentialRefs, ["aiModel:42"]);
+    assert.deepEqual(summary, {
+      scanned: 1,
+      chainsDeleted: 1,
+      responsesDeleted: 2,
+      chainsRescheduled: 0,
+      chainsDeadLettered: 0,
+      skippedNotDue: 0,
+      failures: [],
+    });
+    assert.equal(await redis.get("cleanup-chain:due"), null);
+    assert.deepEqual(redis.getDueMembers(), []);
+    assert.deepEqual(getCleanupAuditMessages(auditMessages), [
+      "OpenAI Responses cleanup deleted stored response resp-new at 1970-01-01T00:00:02.000Z",
+      "OpenAI Responses cleanup deleted stored response resp-old at 1970-01-01T00:00:02.000Z",
+    ]);
+  });
+
+  it("recovers expired claimed cleanup records before scanning due chains", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const chainKey = "cleanup-chain:recover";
+    const processingKey = `${chainKey}:processing:1000:lease`;
+    const record: StoredResponseCleanupRecord = {
+      responseIds: ["resp-claimed"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      createdAtMs: 500,
+    };
+    await redis.set(processingKey, JSON.stringify(record));
+    await redis.zadd(cleanupProcessingSetKey, 1_500, processingKey);
+
+    const deletedResponseIds: string[] = [];
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      clientFactory: () => ({
+        responses: {
+          delete: async (responseId) => {
+            deletedResponseIds.push(responseId);
+          },
+        },
+      }),
+    });
+
+    assert.deepEqual(deletedResponseIds, ["resp-claimed"]);
+    assert.deepEqual(summary, {
+      scanned: 1,
+      chainsDeleted: 1,
+      responsesDeleted: 1,
+      chainsRescheduled: 0,
+      chainsDeadLettered: 0,
+      skippedNotDue: 0,
+      failures: [],
+    });
+    assert.equal(await redis.get(chainKey), null);
+    assert.equal(await redis.get(processingKey), null);
+    assert.deepEqual(redis.getDueMembers(), []);
+    assert.deepEqual(redis.getSortedSetMembers(cleanupProcessingSetKey), []);
+  });
+
+  it("dead-letters invalid cleanup records off the active chain key", async () => {
+    const redis = new InMemoryCleanupRedis();
+    const chainKey = "cleanup-chain:invalid-active";
+    const invalidRawRecord = '{"responseIds":"not-an-array"}';
+    await redis.addRawRecord(chainKey, invalidRawRecord, 1_000);
+
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+    });
+
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.responsesDeleted, 0);
+    assert.equal(summary.chainsRescheduled, 0);
+    assert.equal(summary.chainsDeadLettered, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.equal(await redis.get(chainKey), null);
+    assert.deepEqual(redis.getDueMembers(), []);
+
+    const [deadLetterKey] = redis.getSortedSetMembers(cleanupDeadLetterSetKey);
+    assert.ok(deadLetterKey);
+    assert.notEqual(deadLetterKey, chainKey);
+    assert.equal(await redis.get(deadLetterKey), invalidRawRecord);
+  });
+
+  it("reschedules non-env credential cleanup records without a client factory", async () => {
+    const redis = new InMemoryCleanupRedis();
+    await redis.addRecord("cleanup-chain:credential", {
+      responseIds: ["resp-db-key"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      credentialRef: "aiModel:42",
+      createdAtMs: 500,
+    });
+
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      retryDelayMs: 5_000,
+    });
+
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.responsesDeleted, 0);
+    assert.equal(summary.chainsRescheduled, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.match(summary.failures[0].message, /requires clientFactory/);
+
+    const rescheduled = redis.getRecord("cleanup-chain:credential");
+    assert.ok(rescheduled);
+    assert.equal(rescheduled.credentialRef, "aiModel:42");
+    assert.equal(rescheduled.dueAtMs, 7_000);
+  });
+
+  it("requires matching credentials when creating cleanup clients", () => {
+    const internals = OpenAiResponsesCleanup;
+    const baseRecord: StoredResponseCleanupRecord = {
+      responseIds: ["resp-credential"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      createdAtMs: 500,
+    };
+
+    assert.throws(
+      () =>
+        internals.createCleanupClient(
+          { ...baseRecord, credentialRef: "aiModel:42" },
+          { apiKey: "wrong-key" }
+        ),
+      /requires clientFactory/
+    );
+
+    process.env.OPENAI_API_KEY = "env-cleanup-key";
+    assert.throws(
+      () =>
+        internals.createCleanupClient(
+          { ...baseRecord, credentialRef: "env:OPENAI_API_KEY" },
+          { apiKey: "wrong-key" }
+        ),
+      /does not match/
+    );
+    const envClient = internals.createCleanupClient(
+      { ...baseRecord, credentialRef: "env:OPENAI_API_KEY" },
+      {}
+    );
+    assert.equal(typeof envClient.responses.delete, "function");
+
+    assert.throws(
+      () =>
+        internals.createCleanupClient(
+          {
+            ...baseRecord,
+            transportBaseUrl: "https://example.invalid/v1",
+          },
+          { apiKey: "matching-key" }
+        ),
+      /transportBaseUrl is not allowed/
+    );
+    assert.throws(
+      () =>
+        internals.createCleanupClient(
+          {
+            ...baseRecord,
+            transportBaseUrl: "http://api.openai.com/v1",
+          },
+          { apiKey: "matching-key" }
+        ),
+      /transportBaseUrl is not allowed/
+    );
+    const regionalClient = internals.createCleanupClient(
+      {
+        ...baseRecord,
+        transportBaseUrl: "https://eu.api.openai.com/v1/",
+      },
+      { apiKey: "matching-key" }
+    );
+    assert.equal(typeof regionalClient.responses.delete, "function");
+
+    const fingerprintRef = getApiKeyFingerprintCredentialRef("matching-key");
+    assert.throws(
+      () =>
+        internals.createCleanupClient(
+          { ...baseRecord, credentialRef: fingerprintRef },
+          { apiKey: "wrong-key" }
+        ),
+      /does not match/
+    );
+
+    const client = internals.createCleanupClient(
+      { ...baseRecord, credentialRef: fingerprintRef },
+      { apiKey: "matching-key" }
+    );
+    assert.equal(typeof client.responses.delete, "function");
+  });
+
+  it("dead-letters non-env credential cleanup records after the retry cap", async () => {
+    const redis = new InMemoryCleanupRedis();
+    await redis.addRecord("cleanup-chain:credential-dead", {
+      responseIds: ["resp-db-key"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      credentialRef: "aiModel:42",
+      createdAtMs: 500,
+    });
+
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      retryDelayMs: 5_000,
+      maxFailureCount: 1,
+    });
+
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.responsesDeleted, 0);
+    assert.equal(summary.chainsRescheduled, 0);
+    assert.equal(summary.chainsDeadLettered, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.deepEqual(redis.getDueMembers(), []);
+
+    const [deadLetterKey] = redis.getSortedSetMembers(cleanupDeadLetterSetKey);
+    assert.ok(deadLetterKey);
+    const deadLetterRecord = redis.getRecord(deadLetterKey);
+    assert.ok(deadLetterRecord);
+    assert.equal(deadLetterRecord.deadLetteredAtMs, 2_000);
+    assert.equal(deadLetterRecord.failureCount, 1);
+    assert.equal(deadLetterRecord.credentialRef, "aiModel:42");
+  });
+
+  it("reschedules cleanup failures whose message only contains 404 text", async () => {
+    const redis = new InMemoryCleanupRedis();
+    await redis.addRecord("cleanup-chain:message-404", {
+      responseIds: ["resp-message-404"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      createdAtMs: 500,
+    });
+
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      retryDelayMs: 5_000,
+      clientFactory: () => ({
+        responses: {
+          delete: async () => {
+            throw new Error("proxy mentioned 404 while timing out");
+          },
+        },
+      }),
+    });
+
+    assert.equal(summary.responsesDeleted, 0);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.chainsRescheduled, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.match(summary.failures[0].message, /mentioned 404/);
+
+    const rescheduled = redis.getRecord("cleanup-chain:message-404");
+    assert.ok(rescheduled);
+    assert.deepEqual(rescheduled.responseIds, ["resp-message-404"]);
+    assert.equal(rescheduled.failureCount, 1);
+  });
+
+  it("reschedules remaining stored response ids after transient cleanup failure", async () => {
+    const redis = new InMemoryCleanupRedis();
+    await redis.addRecord("cleanup-chain:retry", {
+      responseIds: ["resp-old", "resp-new"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+      createdAtMs: 500,
+    });
+
+    const deletedResponseIds: string[] = [];
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      retryDelayMs: 5_000,
+      deletedMarkerTtlMs: 12_345,
+      clientFactory: () => ({
+        responses: {
+          delete: async (responseId) => {
+            deletedResponseIds.push(responseId);
+            if (responseId === "resp-old") {
+              throw new Error("rate limited");
+            }
+          },
+        },
+      }),
+    });
+
+    assert.deepEqual(deletedResponseIds, ["resp-new", "resp-old"]);
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.responsesDeleted, 1);
+    assert.equal(summary.chainsRescheduled, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.equal(summary.failures[0].responseId, "resp-old");
+    assert.match(summary.failures[0].message, /rate limited/);
+
+    const rescheduled = redis.getRecord("cleanup-chain:retry");
+    assert.ok(rescheduled);
+    assert.deepEqual(rescheduled.responseIds, ["resp-old"]);
+    assert.equal(rescheduled.dueAtMs, 7_000);
+    assert.deepEqual(redis.getDueMembers(), ["cleanup-chain:retry"]);
+    assert.equal(await redis.get("cleanup-chain:retry:deleted"), "2000");
+    assert.equal(redis.getTtlMs("cleanup-chain:retry:deleted"), 12_345);
   });
 
   it("omits reasoning options when a reasoning Responses model has no effort", async () => {

@@ -77,6 +77,11 @@ interface PsAiModelConfig {
    */
   apiModelName?: string;
   provider?: string;
+  /**
+   * Non-secret credential identity for follow-up provider operations that need
+   * to select the same account/key without storing the key itself.
+   */
+  credentialRef?: string;
   inferenceType?: PsInferenceType;
   regionalProcessing?: PsOpenAiRegionalProcessing;
   maxTokensOut?: number;
@@ -126,6 +131,11 @@ interface PsCallModelOptions {
    * user-scoped continuation reuse.
    */
   responsesStateKey?: string;
+  /**
+   * When using OpenAI Responses stateful continuation, schedule stored
+   * Response objects for deletion after this many idle minutes.
+   */
+  deleteOpenAiResponsesAfterIdleMinutes?: number;
   retryLimitFor429sUntilFallback?: number;
   fallbackModelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   fallbackModelName?: string;
@@ -199,6 +209,8 @@ interface PsCallModelOptions {
 
 interface PsModelRequestOptions {
   safetyIdentifier?: string;
+  responsesStateKey?: string;
+  deleteOpenAiResponsesAfterIdleMinutes?: number;
   geminiRegions?: string[];
   builtInTools?: PsBuiltInTool[];
   timeoutMs?: number;

@@ -1222,6 +1222,40 @@ describe("PsAiModelManager utility routing", () => {
         builtInTools,
       }
     );
+    assert.deepEqual(
+      internals.getModelRequestOptions(
+        { deleteOpenAiResponsesAfterIdleMinutes: 45 },
+        15_000
+      ),
+      {
+        timeoutMs: 15_000,
+        deleteOpenAiResponsesAfterIdleMinutes: 45,
+      }
+    );
+    assert.deepEqual(
+      internals.getModelRequestOptions(
+        {
+          deleteOpenAiResponsesAfterIdleMinutes: 45,
+          safetyIdentifier: "cleanup-user",
+        },
+        15_000
+      ),
+      {
+        timeoutMs: 15_000,
+        safetyIdentifier: "cleanup-user",
+        deleteOpenAiResponsesAfterIdleMinutes: 45,
+        responsesStateKey: "cleanup-user",
+      }
+    );
+    assert.deepEqual(
+      internals.getModelRequestOptions(
+        { deleteOpenAiResponsesAfterIdleMinutes: Infinity },
+        15_000
+      ),
+      {
+        timeoutMs: 15_000,
+      }
+    );
     assert.equal(
       internals.getResponsesStateKey({
         responsesStateKey: "  conversation-1  ",
@@ -1234,6 +1268,18 @@ describe("PsAiModelManager utility routing", () => {
         safetyIdentifier: "  fallback-user  ",
       }),
       "fallback-user"
+    );
+    assert.equal(
+      internals.getResponsesStateKey({
+        deleteOpenAiResponsesAfterIdleMinutes: 45,
+      }),
+      undefined
+    );
+    assert.equal(
+      internals.getResponsesStateKey({
+        deleteOpenAiResponsesAfterIdleMinutes: 0,
+      }),
+      undefined
     );
   });
 

@@ -204,6 +204,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         apiKey: apiKey,
         modelName: modelName,
         provider: modelProvider,
+        credentialRef: this.getEnvCredentialRefForProvider(modelProvider),
         maxTokensOut: this.maxTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
@@ -290,6 +291,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         modelName: model.configuration.model,
         apiModelName: model.configuration.apiModel,
         provider: model.configuration.provider,
+        credentialRef: `aiModel:${apiKeyConfig.aiModelId}`,
         inferenceType: model.configuration.inferenceType,
         regionalProcessing: model.configuration.regionalProcessing,
         maxTokensOut: this.maxTokensOut,
@@ -459,11 +461,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       ? fallbackModel.config?.apiKey
       : undefined;
     const envApiKey = this.getApiKeyForProvider(provider);
+    const envCredentialRef = this.getEnvCredentialRefForProvider(provider);
     const apiKey =
       (isContextOnlyOverride ? fallbackApiKey : undefined) ||
       envApiKey ||
       fallbackApiKey ||
       "";
+    const credentialRef =
+      isContextOnlyOverride && fallbackApiKey
+        ? fallbackModel.config?.credentialRef
+        : envApiKey
+          ? envCredentialRef
+          : fallbackApiKey
+            ? fallbackModel.config?.credentialRef
+            : undefined;
 
     // Try to load model configuration from database for cost reporting
     let dbModel: PsAiModelDb | null = null;
@@ -524,6 +535,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         overrideModelName ?? dbConfig?.model ?? fallbackModel.modelName,
       apiModelName,
       provider: provider,
+      credentialRef,
       inferenceType:
         options.inferenceType ??
         dbConfig?.inferenceType ??
@@ -658,6 +670,23 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         return process.env.AZURE_API_KEY || "";
       default:
         return "";
+    }
+  }
+
+  private getEnvCredentialRefForProvider(provider: string): string | undefined {
+    switch (provider.toLowerCase()) {
+      case PsAiModelProvider.OpenAI:
+      case PsAiModelProvider.OpenAIResponses.toLowerCase():
+        return process.env.OPENAI_API_KEY ? "env:OPENAI_API_KEY" : undefined;
+      case PsAiModelProvider.Anthropic:
+        return process.env.ANTHROPIC_API_KEY ? "env:ANTHROPIC_API_KEY" : undefined;
+      case PsAiModelProvider.Google:
+        if (process.env.GOOGLE_API_KEY) return "env:GOOGLE_API_KEY";
+        return process.env.GEMINI_API_KEY ? "env:GEMINI_API_KEY" : undefined;
+      case PsAiModelProvider.Azure:
+        return process.env.AZURE_API_KEY ? "env:AZURE_API_KEY" : undefined;
+      default:
+        return undefined;
     }
   }
 
@@ -1327,6 +1356,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 modelTemperature: options.modelTemperature,
                 safetyIdentifier: options.safetyIdentifier,
                 responsesStateKey: options.responsesStateKey,
+                deleteOpenAiResponsesAfterIdleMinutes:
+                  options.deleteOpenAiResponsesAfterIdleMinutes,
                 maxTokensOut: options.maxTokensOut,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
@@ -1623,7 +1654,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
 
     const safetyIdentifier = options.safetyIdentifier?.trim();
-    return safetyIdentifier ? safetyIdentifier : undefined;
+    if (safetyIdentifier) {
+      return safetyIdentifier;
+    }
+
+    return undefined;
   }
 
   private getModelRequestOptions(
@@ -1633,6 +1668,20 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const requestOptions: PsModelRequestOptions = { timeoutMs };
     if (options.safetyIdentifier) {
       requestOptions.safetyIdentifier = options.safetyIdentifier;
+    }
+    const deleteOpenAiResponsesAfterIdleMinutes =
+      options.deleteOpenAiResponsesAfterIdleMinutes;
+    if (
+      typeof deleteOpenAiResponsesAfterIdleMinutes === "number" &&
+      Number.isFinite(deleteOpenAiResponsesAfterIdleMinutes) &&
+      deleteOpenAiResponsesAfterIdleMinutes > 0
+    ) {
+      requestOptions.deleteOpenAiResponsesAfterIdleMinutes =
+        deleteOpenAiResponsesAfterIdleMinutes;
+      const responsesStateKey = this.getResponsesStateKey(options);
+      if (responsesStateKey) {
+        requestOptions.responsesStateKey = responsesStateKey;
+      }
     }
     if (options.geminiRegions?.length) {
       requestOptions.geminiRegions = options.geminiRegions;

@@ -6,8 +6,26 @@ import type {
 } from "openai/resources/chat/completions";
 
 import { BaseChatModel } from "./baseChatModel.js";
+import {
+  OpenAiResponsesCleanup,
+  type OpenAiResponsesCleanupIdentity,
+  type OpenAiResponsesCleanupLogger,
+  type OpenAiResponsesCleanupSettings,
+  type StoredResponseCleanupOptions,
+  type StoredResponseCleanupRedisClient,
+  type StoredResponseCleanupSummary,
+} from "./openAiResponsesCleanup.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
+
+export type {
+  StoredResponseCleanupClient,
+  StoredResponseCleanupFailure,
+  StoredResponseCleanupOptions,
+  StoredResponseCleanupRecord,
+  StoredResponseCleanupRedisClient,
+  StoredResponseCleanupSummary,
+} from "./openAiResponsesCleanup.js";
 
 type ImageRef = { mimeType: string; data: string } | { url: string };
 type ResponseAssistantMessage = {
@@ -43,6 +61,72 @@ export class OpenAiResponses extends BaseChatModel {
   private lastSubmittedMessageCount = 0;
   private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
+  static setStoredResponseCleanupRedisClientForTests(
+    redis?: StoredResponseCleanupRedisClient
+  ): void {
+    OpenAiResponsesCleanup.setStoredResponseCleanupRedisClientForTests(redis);
+  }
+
+  static async deleteIdleStoredResponses(
+    options: StoredResponseCleanupOptions = {}
+  ): Promise<StoredResponseCleanupSummary> {
+    return OpenAiResponsesCleanup.deleteIdleStoredResponses(options);
+  }
+
+  private getStoredResponseCleanupSettings(
+    requestOptions?: PsModelRequestOptions
+  ): OpenAiResponsesCleanupSettings | undefined {
+    return OpenAiResponsesCleanup.getSettings(
+      requestOptions,
+      this.usingAzure,
+      this.logger as OpenAiResponsesCleanupLogger
+    );
+  }
+
+  private getStoredResponseCleanupIdentity(
+    responsesStateKey: string
+  ): OpenAiResponsesCleanupIdentity {
+    return {
+      responsesStateKey,
+      modelName: this.phaseAwareModelName,
+      credentialRef: this.cfg.credentialRef,
+      transportBaseUrl: this.transportBaseUrl,
+      regionalProcessing: this.cfg.regionalProcessing,
+    };
+  }
+
+  private async touchStoredResponseCleanupChain(
+    requestOptions?: PsModelRequestOptions
+  ): Promise<void> {
+    const settings = this.getStoredResponseCleanupSettings(requestOptions);
+    if (!settings) return;
+
+    await OpenAiResponsesCleanup.touchChain({
+      settings,
+      identity: this.getStoredResponseCleanupIdentity(settings.responsesStateKey),
+      hasPreviousResponse: Boolean(this.previousResponseId),
+      resetResponsesState: () => this.resetResponsesState(),
+      logger: this.logger as OpenAiResponsesCleanupLogger,
+    });
+  }
+
+  private async scheduleStoredResponseCleanup(
+    result: PsBaseModelReturnParameters,
+    requestOptions?: PsModelRequestOptions
+  ): Promise<void> {
+    const settings = this.getStoredResponseCleanupSettings(requestOptions);
+    if (!settings) return;
+
+    const responseId = OpenAiResponsesCleanup.getResponseIdFromResult(result);
+    if (!responseId) return;
+
+    await OpenAiResponsesCleanup.scheduleResponse({
+      settings,
+      identity: this.getStoredResponseCleanupIdentity(settings.responsesStateKey),
+      responseId,
+      logger: this.logger as OpenAiResponsesCleanupLogger,
+    });
+  }
 
   private getRequestedServiceTier():
     | PsOpenAiInferenceType
@@ -74,6 +158,7 @@ export class OpenAiResponses extends BaseChatModel {
       modelName = "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
+    let credentialRef = config.credentialRef;
     const requestedInferenceType = config.inferenceType;
     const configuredModelName =
       config.modelName ??
@@ -86,6 +171,7 @@ export class OpenAiResponses extends BaseChatModel {
       apiKey = envAzureKey;
       modelName = envAzureDeployment;
       apiModelName = envAzureDeployment;
+      credentialRef = "env:AZURE_OPENAI_KEY";
     }
 
     super(config, modelName, maxTokensOut);
@@ -93,6 +179,7 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (!useAzure && process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
+      credentialRef = "env:PS_AGENT_OVERRIDE_OPENAI_API_KEY";
       this.logger.warn(
         "Using PS_AGENT_OVERRIDE_OPENAI_API_KEY from environment variables"
       );
@@ -142,7 +229,20 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    this.cfg = { ...config, apiKey, modelName, apiModelName, maxTokensOut };
+    credentialRef = useAzure
+      ? credentialRef
+      : OpenAiResponsesCleanup.resolveOpenAiCredentialRef(
+          apiKey,
+          credentialRef
+        );
+    this.cfg = {
+      ...config,
+      apiKey,
+      modelName,
+      apiModelName,
+      credentialRef,
+      maxTokensOut,
+    };
     this.config = this.cfg;
     this.requestedInferenceType = requestedInferenceType;
     if (!this.usingAzure && this.requestedInferenceType === "fast") {
@@ -303,6 +403,8 @@ export class OpenAiResponses extends BaseChatModel {
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
     const responseIncludes = this.mapBuiltInToolIncludes(builtInTools);
 
+    await this.touchStoredResponseCleanupChain(requestOptions);
+
     let hasPreviousResponse = !!this.previousResponseId;
     const hasTruncatedHistory =
       hasPreviousResponse && messages.length < this.lastSubmittedMessageCount;
@@ -437,6 +539,7 @@ export class OpenAiResponses extends BaseChatModel {
     );*/
 
     const params = { ...common, stream: streaming };
+
     let result: PsBaseModelReturnParameters;
 
     if (streaming) {
@@ -457,6 +560,8 @@ export class OpenAiResponses extends BaseChatModel {
       this.lastSubmittedMessageCount = messages.length;
     }
     this.lastNoInputContinuationSignature = undefined;
+
+    await this.scheduleStoredResponseCleanup(result, requestOptions);
 
     return result;
   }
