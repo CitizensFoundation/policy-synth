@@ -2514,6 +2514,69 @@ describe("OpenAiResponses", () => {
     assert.equal(deadLetterRecord.credentialRef, "aiModel:42");
   });
 
+  it("preserves a concurrent due entry when a claimed chain is dead-lettered", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const identity = {
+      responsesStateKey: "conversation-cleanup",
+      modelName: "gpt-5.3",
+    };
+    const chainKey = OpenAiResponsesCleanup.getChainKey(identity);
+    await redis.addRecord(chainKey, {
+      responseIds: ["resp-old"],
+      dueAtMs: 1_000,
+      lastActivityAtMs: 500,
+      responsesStateKey: identity.responsesStateKey,
+      modelName: identity.modelName,
+      createdAtMs: 500,
+      failureCount: 1,
+    });
+
+    const infoMessages: string[] = [];
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: 2_000,
+      maxFailureCount: 2,
+      clientFactory: () => ({
+        responses: {
+          delete: async () => {
+            await OpenAiResponsesCleanup.scheduleResponse({
+              settings: {
+                idleMinutes: 30,
+                responsesStateKey: identity.responsesStateKey,
+              },
+              identity,
+              responseId: "resp-new",
+              logger: createAuditLogger(infoMessages),
+            });
+            throw new Error("rate limited");
+          },
+        },
+      }),
+    });
+
+    assert.equal(summary.scanned, 1);
+    assert.equal(summary.chainsDeleted, 0);
+    assert.equal(summary.responsesDeleted, 0);
+    assert.equal(summary.chainsRescheduled, 0);
+    assert.equal(summary.chainsDeadLettered, 1);
+    assert.equal(summary.failures.length, 1);
+    assert.deepEqual(redis.getDueMembers(), [chainKey]);
+
+    const activeRecord = redis.getRecord(chainKey);
+    assert.ok(activeRecord);
+    assert.deepEqual(activeRecord.responseIds, ["resp-new"]);
+
+    const [deadLetterKey] = redis.getSortedSetMembers(cleanupDeadLetterSetKey);
+    assert.ok(deadLetterKey);
+    assert.notEqual(deadLetterKey, chainKey);
+    const deadLetterRecord = redis.getRecord(deadLetterKey);
+    assert.ok(deadLetterRecord);
+    assert.deepEqual(deadLetterRecord.responseIds, ["resp-old"]);
+    assert.equal(deadLetterRecord.failureCount, 2);
+  });
+
   it("reschedules cleanup failures whose message only contains 404 text", async () => {
     const redis = new InMemoryCleanupRedis();
     await redis.addRecord("cleanup-chain:message-404", {

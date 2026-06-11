@@ -1512,8 +1512,8 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
         async () => {
           await redis.set(deadKey, JSON.stringify(deadRecord));
           await redis.zadd(deadLetterSetKey, nowMs, deadKey);
-          await redis.zrem(this.getCleanupDueSetKey(keyPrefix), chainKey);
           if (!processingKey) {
+            await redis.zrem(this.getCleanupDueSetKey(keyPrefix), chainKey);
             await redis.del(chainKey);
           }
           if (processingKey) {
