@@ -1689,6 +1689,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (options.builtInTools?.length) {
       requestOptions.builtInTools = options.builtInTools;
     }
+    if (options.useOpenAiResponsesBackground) {
+      requestOptions.useOpenAiResponsesBackground = true;
+    }
 
     return requestOptions;
   }

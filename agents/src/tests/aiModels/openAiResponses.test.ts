@@ -40,6 +40,7 @@ type RecordedResponsesRequest = {
   model?: string;
   stream?: boolean;
   store?: boolean;
+  background?: boolean;
 };
 
 type RecordedResponsesRequestOptions = {
@@ -50,6 +51,15 @@ type RecordedResponsesRequestOptions = {
 type ResponsesClientMock = {
   create: (
     params: unknown,
+    options?: RecordedResponsesRequestOptions
+  ) => Promise<unknown>;
+  retrieve?: (
+    responseId: string,
+    query?: unknown,
+    options?: RecordedResponsesRequestOptions
+  ) => Promise<unknown>;
+  cancel?: (
+    responseId: string,
     options?: RecordedResponsesRequestOptions
   ) => Promise<unknown>;
 };
@@ -1553,6 +1563,562 @@ describe("OpenAiResponses", () => {
       /Responses API response failed: server_error: server down/
     );
     assert.equal(Reflect.get(failedModel, "previousResponseId"), undefined);
+  });
+
+  it("polls background non-streaming Responses until completion", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.3",
+        modelType: PsAiModelType.TextReasoning,
+        inferenceType: "fast",
+      })
+    );
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    let capturedCreate: RecordedResponsesRequest | undefined;
+    let capturedCreateOptions: RecordedResponsesRequestOptions | undefined;
+    const retrieveCalls: Array<{
+      responseId: string;
+      query?: unknown;
+      options?: RecordedResponsesRequestOptions;
+    }> = [];
+    const statuses = ["in_progress", "completed"];
+
+    setMockClient(model, {
+      create: async (params, options) => {
+        capturedCreate = params as RecordedResponsesRequest;
+        capturedCreateOptions = options;
+        return {
+          id: "resp-background-1",
+          status: "queued",
+          output: [],
+          usage: {},
+        };
+      },
+      retrieve: async (responseId, query, options) => {
+        retrieveCalls.push({ responseId, query, options });
+        const status = statuses.shift();
+        if (status === "in_progress") {
+          return {
+            id: responseId,
+            status,
+            output: [],
+            usage: {},
+          };
+        }
+
+        return {
+          id: responseId,
+          status: "completed",
+          previous_response_id: null,
+          service_tier: "priority",
+          usage: {
+            input_tokens: 10,
+            output_tokens: 6,
+            input_tokens_details: { cached_tokens: 2 },
+            output_tokens_details: {
+              reasoning_tokens: 3,
+              audio_tokens: 1,
+            },
+          },
+          output: [
+            {
+              type: "message",
+              phase: "commentary",
+              content: [{ type: "output_text", text: "hidden" }],
+            },
+            {
+              type: "function_call",
+              call_id: "tool-1",
+              name: "lookup",
+              arguments: '{"id":1}',
+            },
+            {
+              type: "message",
+              phase: "final_answer",
+              content: [{ type: "output_text", text: "done" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        timeoutMs: 120_000,
+        useOpenAiResponsesBackground: true,
+      }
+    );
+
+    assert.ok(capturedCreate);
+    assert.equal(capturedCreate.background, true);
+    assert.equal(capturedCreate.stream, false);
+    assert.deepEqual(capturedCreateOptions, {
+      timeout: 60_000,
+      maxRetries: 0,
+    });
+    assert.equal(retrieveCalls.length, 2);
+    assert.deepEqual(
+      retrieveCalls.map((call) => call.responseId),
+      ["resp-background-1", "resp-background-1"]
+    );
+    assert.deepEqual(
+      retrieveCalls.map((call) => call.query),
+      [undefined, undefined]
+    );
+    for (const call of retrieveCalls) {
+      assert.equal(call.options?.maxRetries, 0);
+      assert.equal(call.options?.timeout, 60_000);
+    }
+
+    assert.equal(result.content, "done");
+    assert.equal(result.phase, "final_answer");
+    assert.equal(result.tokensIn, 10);
+    assert.equal(result.tokensOut, 6);
+    assert.equal(result.cachedInTokens, 2);
+    assert.equal(result.reasoningTokens, 3);
+    assert.equal(result.audioTokens, 1);
+    assert.deepEqual(result.toolCalls, [
+      {
+        id: "tool-1",
+        name: "lookup",
+        arguments: { id: 1 },
+      },
+    ]);
+    assert.equal(result.usageItemData?.request?.background, true);
+    assert.equal(Reflect.get(model, "previousResponseId"), "resp-background-1");
+  });
+
+  it("preserves include query fields when polling background Responses", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    const builtInTools: PsBuiltInTool[] = [
+      { type: "web_search", includeSources: true },
+      { type: "code_interpreter", includeOutputs: true },
+    ];
+    const expectedIncludes = [
+      "web_search_call.action.sources",
+      "code_interpreter_call.outputs",
+    ];
+    let capturedCreate: RecordedResponsesRequest | undefined;
+    const retrieveQueries: unknown[] = [];
+
+    setMockClient(model, {
+      create: async (params) => {
+        capturedCreate = params as RecordedResponsesRequest;
+        return {
+          id: "resp-background-includes",
+          status: "queued",
+          output: [],
+          usage: {},
+        };
+      },
+      retrieve: async (responseId, query) => {
+        retrieveQueries.push(query);
+        return {
+          id: responseId,
+          status: "completed",
+          usage: {
+            input_tokens: 1,
+            output_tokens: 1,
+          },
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "done" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        timeoutMs: 120_000,
+        useOpenAiResponsesBackground: true,
+        builtInTools,
+      }
+    );
+
+    assert.ok(capturedCreate);
+    assert.deepEqual(capturedCreate.include, expectedIncludes);
+    assert.deepEqual(retrieveQueries, [{ include: expectedIncludes }]);
+    assert.equal(result.content, "done");
+    assert.deepEqual(result.usageItemData?.request?.include, expectedIncludes);
+  });
+
+  it("preserves usable create timeout budget for short background calls", async () => {
+    const model = new OpenAiResponses(createConfig());
+    const originalDateNow = Date.now;
+    let capturedCreateOptions: RecordedResponsesRequestOptions | undefined;
+
+    Date.now = () => 1_000_000;
+    setMockClient(model, {
+      create: async (_params, options) => {
+        capturedCreateOptions = options;
+        return {
+          id: "resp-background-short-timeout",
+          status: "completed",
+          usage: {
+            input_tokens: 1,
+            output_tokens: 1,
+          },
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "done" }],
+            },
+          ],
+        };
+      },
+    });
+
+    try {
+      const result = await model.generate(
+        [{ role: "user", message: "hello" }],
+        false,
+        undefined,
+        undefined,
+        [],
+        "auto",
+        [],
+        {
+          timeoutMs: 10_000,
+          useOpenAiResponsesBackground: true,
+        }
+      );
+
+      assert.equal(result.content, "done");
+    } finally {
+      Date.now = originalDateNow;
+    }
+
+    assert.deepEqual(capturedCreateOptions, {
+      timeout: 9_000,
+      maxRetries: 0,
+    });
+  });
+
+  it("continues polling after a retryable background retrieve failure", async () => {
+    const model = new OpenAiResponses(createConfig());
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    let retrieveCallCount = 0;
+    let cancelCalled = false;
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-background-retry",
+        status: "queued",
+        output: [],
+        usage: {},
+      }),
+      retrieve: async (responseId) => {
+        retrieveCallCount += 1;
+        if (retrieveCallCount === 1) {
+          throw Object.assign(new Error("socket timeout"), { status: 500 });
+        }
+
+        return {
+          id: responseId,
+          status: "completed",
+          usage: {
+            input_tokens: 1,
+            output_tokens: 1,
+          },
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "recovered" }],
+            },
+          ],
+        };
+      },
+      cancel: async (responseId) => {
+        cancelCalled = true;
+        return {
+          id: responseId,
+          status: "cancelled",
+          output: [],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        timeoutMs: 120_000,
+        useOpenAiResponsesBackground: true,
+      }
+    );
+
+    assert.equal(result.content, "recovered");
+    assert.equal(retrieveCallCount, 2);
+    assert.equal(cancelCalled, false);
+    assert.equal(Reflect.get(model, "previousResponseId"), "resp-background-retry");
+  });
+
+  it("cancels background Responses before propagating repeated retrieve failures", async () => {
+    const model = new OpenAiResponses(createConfig());
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    let retrieveCallCount = 0;
+    let cancelledResponseId: string | undefined;
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-background-retrieve-fail",
+        status: "queued",
+        output: [],
+        usage: {},
+      }),
+      retrieve: async () => {
+        retrieveCallCount += 1;
+        throw Object.assign(new Error("server unavailable"), { status: 500 });
+      },
+      cancel: async (responseId) => {
+        cancelledResponseId = responseId;
+        return {
+          id: responseId,
+          status: "cancelled",
+          output: [],
+          usage: {},
+        };
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "hello" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          {
+            timeoutMs: 120_000,
+            useOpenAiResponsesBackground: true,
+          }
+        ),
+      /server unavailable/
+    );
+
+    assert.equal(retrieveCallCount, 3);
+    assert.equal(cancelledResponseId, "resp-background-retrieve-fail");
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+  });
+
+  it("rejects terminal failed background Responses", async () => {
+    const model = new OpenAiResponses(createConfig());
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-background-failed",
+        status: "queued",
+        output: [],
+        usage: {},
+      }),
+      retrieve: async (responseId) => ({
+        id: responseId,
+        status: "failed",
+        error: { code: "server_error", message: "server down" },
+        output: [],
+        usage: {},
+      }),
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "hello" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          {
+            timeoutMs: 120_000,
+            useOpenAiResponsesBackground: true,
+          }
+        ),
+      /Responses API response failed: server_error: server down/
+    );
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+  });
+
+  it("cancels background Responses on local timeout", async () => {
+    const model = new OpenAiResponses(createConfig());
+    Reflect.set(model, "backgroundPollDelayMs", 5);
+
+    let cancelledResponseId: string | undefined;
+    let cancelOptions: RecordedResponsesRequestOptions | undefined;
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-background-timeout",
+        status: "queued",
+        output: [],
+        usage: {},
+      }),
+      cancel: async (responseId, options) => {
+        cancelledResponseId = responseId;
+        cancelOptions = options;
+        return {
+          id: responseId,
+          status: "cancelled",
+          output: [],
+          usage: {},
+        };
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "hello" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          {
+            timeoutMs: 1,
+            useOpenAiResponsesBackground: true,
+          }
+        ),
+      (error) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.message, "Model call timed out");
+        assert.equal(error.name, "OpenAiResponsesBackgroundTimeoutError");
+        assert.equal(Reflect.get(error, "timeoutMs"), 1);
+        assert.equal(
+          Reflect.get(error, "providerTimeoutMessage"),
+          "OpenAI Responses background response timed out after 1ms"
+        );
+        return true;
+      }
+    );
+
+    assert.equal(cancelledResponseId, "resp-background-timeout");
+    assert.deepEqual(cancelOptions, { timeout: 10_000, maxRetries: 0 });
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+  });
+
+  it("cancels background Responses before the overall manager timeout can retry", async () => {
+    const model = new OpenAiResponses(createConfig());
+    const originalDateNow = Date.now;
+    const timeoutMs = 120_000;
+    const startMs = 1_000_000;
+    const managerDeadlineMs = startMs + timeoutMs;
+    let nowMs = startMs;
+    let sleptForMs: number | undefined;
+    let cancelledAtMs: number | undefined;
+    let cancelOptions: RecordedResponsesRequestOptions | undefined;
+    let retrieveCalled = false;
+
+    Date.now = () => nowMs;
+    Reflect.set(model, "backgroundPollDelayMs", timeoutMs);
+    Reflect.set(model, "sleepForBackgroundPoll", async (ms: number) => {
+      sleptForMs = ms;
+      nowMs += ms;
+    });
+
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-background-before-manager-timeout",
+        status: "queued",
+        output: [],
+        usage: {},
+      }),
+      retrieve: async () => {
+        retrieveCalled = true;
+        return {
+          id: "resp-background-before-manager-timeout",
+          status: "completed",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "too late" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+      cancel: async (_responseId, options) => {
+        cancelledAtMs = nowMs;
+        cancelOptions = options;
+        return {
+          id: "resp-background-before-manager-timeout",
+          status: "cancelled",
+          output: [],
+          usage: {},
+        };
+      },
+    });
+
+    try {
+      await assert.rejects(
+        () =>
+          model.generate(
+            [{ role: "user", message: "hello" }],
+            false,
+            undefined,
+            undefined,
+            [],
+            "auto",
+            [],
+            {
+              timeoutMs,
+              useOpenAiResponsesBackground: true,
+            }
+          ),
+        (error) => {
+          assert.ok(error instanceof Error);
+          assert.equal(error.message, "Model call timed out");
+          assert.equal(error.name, "OpenAiResponsesBackgroundTimeoutError");
+          assert.equal(Reflect.get(error, "timeoutMs"), timeoutMs);
+          assert.equal(
+            Reflect.get(error, "providerTimeoutMessage"),
+            "OpenAI Responses background response timed out after 120000ms"
+          );
+          return true;
+        }
+      );
+    } finally {
+      Date.now = originalDateNow;
+    }
+
+    assert.equal(retrieveCalled, false);
+    assert.equal(typeof sleptForMs, "number");
+    assert.equal(cancelledAtMs, nowMs);
+    assert.ok(cancelledAtMs < managerDeadlineMs);
+    assert.ok(cancelOptions?.timeout);
+    assert.ok(cancelOptions.timeout < managerDeadlineMs - cancelledAtMs);
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
   });
 
   it("continues prior responses by sending only new tool outputs", async () => {

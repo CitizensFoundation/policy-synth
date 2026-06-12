@@ -4,6 +4,10 @@ import type {
   ChatCompletionToolChoiceOption,
   ChatCompletionMessageToolCall,
 } from "openai/resources/chat/completions";
+import type {
+  Response as OpenAiResponseObject,
+  ResponseRetrieveParamsNonStreaming,
+} from "openai/resources/responses/responses";
 
 import { BaseChatModel } from "./baseChatModel.js";
 import {
@@ -41,6 +45,16 @@ type ResponsesInclude =
   | "web_search_call.action.sources"
   | "code_interpreter_call.outputs";
 
+const OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS = 2_000;
+const OPENAI_RESPONSES_BACKGROUND_REQUEST_TIMEOUT_MS = 60_000;
+const OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS = 10_000;
+const OPENAI_RESPONSES_BACKGROUND_CANCEL_BUFFER_MS = 1_000;
+const OPENAI_RESPONSES_BACKGROUND_MIN_POLLING_TIMEOUT_MS = 1;
+const OPENAI_RESPONSES_BACKGROUND_MAX_CLEANUP_RESERVE_RATIO = 0.1;
+const OPENAI_RESPONSES_BACKGROUND_MAX_RETRIEVE_ERRORS = 3;
+const OPENAI_RESPONSES_BACKGROUND_TIMEOUT_ERROR =
+  "OpenAiResponsesBackgroundTimeoutError";
+
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
@@ -61,6 +75,7 @@ export class OpenAiResponses extends BaseChatModel {
   private lastSubmittedMessageCount = 0;
   private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
+  private backgroundPollDelayMs = OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS;
   static setStoredResponseCleanupRedisClientForTests(
     redis?: StoredResponseCleanupRedisClient
   ): void {
@@ -1011,6 +1026,7 @@ export class OpenAiResponses extends BaseChatModel {
       tools?: unknown[];
       include?: unknown[];
       store?: boolean;
+      background?: boolean;
       service_tier?: string | null;
       previous_response_id?: string | null;
       model?: string;
@@ -1047,6 +1063,7 @@ export class OpenAiResponses extends BaseChatModel {
         reasoningEffort: this.cfg.reasoningEffort ?? null,
         maxTokensOut: this.cfg.maxTokensOut ?? null,
         store: params.store ?? null,
+        background: params.background ?? false,
         include: params.include ?? null,
         requestedPreviousResponseId: params.previous_response_id ?? null,
       },
@@ -1074,14 +1091,171 @@ export class OpenAiResponses extends BaseChatModel {
   }
 
   private getResponsesRequestOptions(
-    requestOptions?: PsModelRequestOptions
+    requestOptions?: PsModelRequestOptions,
+    overrideTimeoutMs?: number
   ): OpenAI.RequestOptions {
+    const timeoutMs =
+      typeof overrideTimeoutMs === "number"
+        ? overrideTimeoutMs
+        : requestOptions?.timeoutMs;
+
     return {
-      ...(typeof requestOptions?.timeoutMs === "number"
-        ? { timeout: requestOptions.timeoutMs }
+      ...(typeof timeoutMs === "number" && Number.isFinite(timeoutMs)
+        ? { timeout: Math.max(1, Math.ceil(timeoutMs)) }
         : {}),
       maxRetries: 0,
     };
+  }
+
+  private getEffectiveResponsesSdkTimeoutMs(
+    requestOptions?: PsModelRequestOptions,
+    overrideTimeoutMs?: number
+  ): number | undefined {
+    const timeoutMs =
+      typeof overrideTimeoutMs === "number"
+        ? overrideTimeoutMs
+        : requestOptions?.timeoutMs;
+
+    return typeof timeoutMs === "number" && Number.isFinite(timeoutMs)
+      ? Math.max(1, Math.ceil(timeoutMs))
+      : undefined;
+  }
+
+  private getBackgroundRemainingTimeoutMs(
+    deadlineMs?: number
+  ): number | undefined {
+    if (typeof deadlineMs !== "number") return undefined;
+    return Math.max(0, deadlineMs - Date.now());
+  }
+
+  private getBackgroundRequestTimeoutMs(deadlineMs?: number): number {
+    const remainingMs = this.getBackgroundRemainingTimeoutMs(deadlineMs);
+    return Math.max(
+      1,
+      Math.ceil(
+        typeof remainingMs === "number"
+          ? Math.min(
+              OPENAI_RESPONSES_BACKGROUND_REQUEST_TIMEOUT_MS,
+              remainingMs
+            )
+          : OPENAI_RESPONSES_BACKGROUND_REQUEST_TIMEOUT_MS
+      )
+    );
+  }
+
+  private getBackgroundCleanupReserveMs(timeoutMs?: number): number {
+    if (
+      typeof timeoutMs !== "number" ||
+      !Number.isFinite(timeoutMs) ||
+      timeoutMs <= OPENAI_RESPONSES_BACKGROUND_MIN_POLLING_TIMEOUT_MS
+    ) {
+      return 0;
+    }
+
+    const maxReserveMs = Math.floor(
+      timeoutMs * OPENAI_RESPONSES_BACKGROUND_MAX_CLEANUP_RESERVE_RATIO
+    );
+    if (maxReserveMs <= 0) {
+      return 0;
+    }
+
+    const desiredReserveMs =
+      OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS +
+      OPENAI_RESPONSES_BACKGROUND_CANCEL_BUFFER_MS;
+
+    return Math.min(maxReserveMs, desiredReserveMs);
+  }
+
+  private getBackgroundCancelTimeoutMs(cleanupReserveMs: number): number {
+    if (cleanupReserveMs <= 0) {
+      return OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS;
+    }
+
+    const bufferMs = Math.min(
+      OPENAI_RESPONSES_BACKGROUND_CANCEL_BUFFER_MS,
+      Math.floor(cleanupReserveMs * 0.1)
+    );
+
+    return Math.max(
+      1,
+      Math.min(
+        OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS,
+        cleanupReserveMs - bufferMs
+      )
+    );
+  }
+
+  private getBackgroundResponseId(response: unknown): string | undefined {
+    if (!isRecord(response)) return undefined;
+    return typeof response.id === "string" ? response.id : undefined;
+  }
+
+  private getBackgroundResponseStatus(response: unknown): string | undefined {
+    if (!isRecord(response)) return undefined;
+    return typeof response.status === "string" ? response.status : undefined;
+  }
+
+  private isBackgroundResponsePending(response: unknown): boolean {
+    const status = this.getBackgroundResponseStatus(response);
+    return status === "queued" || status === "in_progress";
+  }
+
+  private createBackgroundTimeoutError(timeoutMs: number): Error {
+    const error = new Error("Model call timed out");
+    error.name = OPENAI_RESPONSES_BACKGROUND_TIMEOUT_ERROR;
+    Object.assign(error, {
+      providerTimeoutMessage: `OpenAI Responses background response timed out after ${timeoutMs}ms`,
+      timeoutMs,
+    });
+    return error;
+  }
+
+  private isBackgroundTimeoutError(error: unknown): boolean {
+    return (
+      error instanceof Error &&
+      error.name === OPENAI_RESPONSES_BACKGROUND_TIMEOUT_ERROR
+    );
+  }
+
+  private getErrorStatus(error: unknown): number | undefined {
+    if (!isRecord(error)) return undefined;
+    return typeof error.status === "number" ? error.status : undefined;
+  }
+
+  private getErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  private shouldRetryBackgroundRetrieveError(error: unknown): boolean {
+    if (error instanceof Error && error.name === "APIUserAbortError") {
+      return false;
+    }
+
+    const status = this.getErrorStatus(error);
+    if (status === undefined) return true;
+
+    return status === 408 || status === 409 || status === 429 || status >= 500;
+  }
+
+  private async sleepForBackgroundPoll(ms: number): Promise<void> {
+    if (ms <= 0) return;
+    await new Promise<void>((resolve) => setTimeout(resolve, ms));
+  }
+
+  private getBackgroundRetrieveQuery(
+    params: unknown
+  ): ResponseRetrieveParamsNonStreaming | undefined {
+    if (!isRecord(params) || !Array.isArray(params.include)) {
+      return undefined;
+    }
+
+    const include = params.include.filter(
+      (value): value is ResponsesInclude =>
+        value === "web_search_call.action.sources" ||
+        value === "code_interpreter_call.outputs"
+    );
+
+    return include.length > 0 ? { include } : undefined;
   }
 
   private async handleStreaming(
@@ -1090,6 +1264,14 @@ export class OpenAiResponses extends BaseChatModel {
     requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
     // Responses SSE: create({ stream: true }) returns an async iterator of events
+    this.logger.debug(
+      `OpenAI Responses SDK options: ${JSON.stringify({
+        timeoutMs: requestOptions?.timeoutMs ?? null,
+        sdkTimeoutMs:
+          this.getEffectiveResponsesSdkTimeoutMs(requestOptions) ?? null,
+        background: false,
+      })}`
+    );
     const stream = await this.client.responses.create(
       params,
       this.getResponsesRequestOptions(requestOptions)
@@ -1334,14 +1516,202 @@ export class OpenAiResponses extends BaseChatModel {
     return result;
   }
 
+  private async cancelBackgroundResponse(
+    responseId: string,
+    timeoutMs = OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS
+  ): Promise<void> {
+    try {
+      await this.client.responses.cancel(
+        responseId,
+        this.getResponsesRequestOptions(undefined, timeoutMs)
+      );
+      this.logger.debug(
+        `Cancelled OpenAI Responses background response ${responseId}`
+      );
+    } catch (error) {
+      this.logger.warn(
+        `Failed to cancel OpenAI Responses background response ${responseId}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
+  }
+
+  private assertBackgroundTimeoutBudget(
+    timeoutMs: number | undefined,
+    deadlineMs: number | undefined
+  ): void {
+    if (
+      typeof timeoutMs !== "number" ||
+      typeof deadlineMs !== "number"
+    ) {
+      return;
+    }
+
+    const remainingMs = this.getBackgroundRemainingTimeoutMs(deadlineMs);
+    if (typeof remainingMs === "number" && remainingMs <= 0) {
+      throw this.createBackgroundTimeoutError(timeoutMs);
+    }
+  }
+
+  private async createAndPollBackgroundResponse(
+    params: any,
+    requestOptions?: PsModelRequestOptions
+  ): Promise<OpenAiResponseObject> {
+    const timeoutMs =
+      typeof requestOptions?.timeoutMs === "number" &&
+      Number.isFinite(requestOptions.timeoutMs) &&
+      requestOptions.timeoutMs > 0
+        ? requestOptions.timeoutMs
+        : undefined;
+    const overallDeadlineMs =
+      typeof timeoutMs === "number" ? Date.now() + timeoutMs : undefined;
+    const cleanupReserveMs = this.getBackgroundCleanupReserveMs(timeoutMs);
+    const pollingDeadlineMs =
+      typeof overallDeadlineMs === "number"
+        ? overallDeadlineMs - cleanupReserveMs
+        : undefined;
+    const cancelTimeoutMs =
+      this.getBackgroundCancelTimeoutMs(cleanupReserveMs);
+    const backgroundParams = { ...params, background: true };
+    const retrieveQuery = this.getBackgroundRetrieveQuery(params);
+    let responseId: string | undefined;
+    let cancelRequested = false;
+    let consecutiveRetrieveErrors = 0;
+    const cancelKnownResponse = async () => {
+      if (!responseId || cancelRequested) return;
+      cancelRequested = true;
+      await this.cancelBackgroundResponse(responseId, cancelTimeoutMs);
+    };
+
+    try {
+      this.assertBackgroundTimeoutBudget(timeoutMs, pollingDeadlineMs);
+      const createTimeoutMs =
+        this.getBackgroundRequestTimeoutMs(pollingDeadlineMs);
+      this.logger.debug(
+        `OpenAI Responses SDK options: ${JSON.stringify({
+          timeoutMs: timeoutMs ?? null,
+          sdkTimeoutMs: createTimeoutMs,
+          background: true,
+          cleanupReserveMs,
+          cancelTimeoutMs,
+        })}`
+      );
+
+      let response = (await this.client.responses.create(
+        backgroundParams,
+        this.getResponsesRequestOptions(requestOptions, createTimeoutMs)
+      )) as OpenAiResponseObject;
+
+      responseId = this.getBackgroundResponseId(response);
+      this.logger.debug(
+        `OpenAI Responses background response ${
+          responseId ?? "unknown"
+        } status: ${this.getBackgroundResponseStatus(response) ?? "unknown"}`
+      );
+
+      while (this.isBackgroundResponsePending(response)) {
+        if (!responseId) {
+          throw new Error("OpenAI Responses background response missing id");
+        }
+
+        this.assertBackgroundTimeoutBudget(timeoutMs, pollingDeadlineMs);
+        const remainingMs =
+          this.getBackgroundRemainingTimeoutMs(pollingDeadlineMs);
+        const delayMs =
+          typeof remainingMs === "number"
+            ? Math.min(this.backgroundPollDelayMs, remainingMs)
+            : this.backgroundPollDelayMs;
+        await this.sleepForBackgroundPoll(delayMs);
+        this.assertBackgroundTimeoutBudget(timeoutMs, pollingDeadlineMs);
+
+        const retrieveTimeoutMs =
+          this.getBackgroundRequestTimeoutMs(pollingDeadlineMs);
+        this.logger.debug(
+          `Polling OpenAI Responses background response ${responseId}: ${JSON.stringify(
+            {
+              currentStatus:
+                this.getBackgroundResponseStatus(response) ?? "unknown",
+              sdkTimeoutMs: retrieveTimeoutMs,
+              remainingPollingTimeoutMs:
+                this.getBackgroundRemainingTimeoutMs(pollingDeadlineMs) ??
+                null,
+              remainingOverallTimeoutMs:
+                this.getBackgroundRemainingTimeoutMs(overallDeadlineMs) ??
+                null,
+              cleanupReserveMs,
+            }
+          )}`
+        );
+
+        try {
+          response = (await this.client.responses.retrieve(
+            responseId,
+            retrieveQuery,
+            this.getResponsesRequestOptions(requestOptions, retrieveTimeoutMs)
+          )) as OpenAiResponseObject;
+          consecutiveRetrieveErrors = 0;
+        } catch (retrieveError) {
+          this.assertBackgroundTimeoutBudget(timeoutMs, pollingDeadlineMs);
+          consecutiveRetrieveErrors += 1;
+
+          if (
+            this.shouldRetryBackgroundRetrieveError(retrieveError) &&
+            consecutiveRetrieveErrors <
+              OPENAI_RESPONSES_BACKGROUND_MAX_RETRIEVE_ERRORS
+          ) {
+            this.logger.warn(
+              `OpenAI Responses background retrieve failed for ${responseId}; continuing poll attempt ${consecutiveRetrieveErrors}/${OPENAI_RESPONSES_BACKGROUND_MAX_RETRIEVE_ERRORS}: ${this.getErrorMessage(
+                retrieveError
+              )}`
+            );
+            continue;
+          }
+
+          await cancelKnownResponse();
+          throw retrieveError;
+        }
+
+        this.logger.debug(
+          `OpenAI Responses background response ${responseId} status: ${
+            this.getBackgroundResponseStatus(response) ?? "unknown"
+          }`
+        );
+      }
+
+      return response;
+    } catch (error) {
+      if (this.isBackgroundTimeoutError(error)) {
+        await cancelKnownResponse();
+      }
+      throw error;
+    }
+  }
+
   private async handleNonStreaming(
     params: any,
     requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
-    const resp: any = await this.client.responses.create(
-      params,
-      this.getResponsesRequestOptions(requestOptions)
-    );
+    const useBackground = Boolean(requestOptions?.useOpenAiResponsesBackground);
+    const requestParams = useBackground
+      ? { ...params, background: true }
+      : params;
+    if (!useBackground) {
+      this.logger.debug(
+        `OpenAI Responses SDK options: ${JSON.stringify({
+          timeoutMs: requestOptions?.timeoutMs ?? null,
+          sdkTimeoutMs:
+            this.getEffectiveResponsesSdkTimeoutMs(requestOptions) ?? null,
+          background: false,
+        })}`
+      );
+    }
+    const resp: any = useBackground
+      ? await this.createAndPollBackgroundResponse(params, requestOptions)
+      : await this.client.responses.create(
+          params,
+          this.getResponsesRequestOptions(requestOptions)
+        );
     //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
     this.assertResponseCompleted(resp);
 
@@ -1374,7 +1744,7 @@ export class OpenAiResponses extends BaseChatModel {
         usage: (usage ?? null) as Record<string, unknown> | null,
         output: resp?.output,
       },
-      params,
+      requestParams,
       {
         tokensIn,
         tokensOut,

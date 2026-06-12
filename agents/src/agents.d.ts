@@ -112,6 +112,12 @@ interface PsCallModelOptions {
   streamingCallbacks?: Function;
   modelProvider?: import("./aiModelTypes.js").PsAiModelProvider;
   useOpenAiResponsesIfOpenAi?: boolean;
+  /**
+   * When true, non-streaming OpenAI Responses calls are submitted with
+   * background mode and polled until terminal status. Useful for long-running
+   * reasoning calls that can outlive SDK/HTTP request timeouts.
+   */
+  useOpenAiResponsesBackground?: boolean;
   useThoughtSignatures?: boolean;
   modelName?: string;
   modelType?: import("./aiModelTypes.js").PsAiModelType;
@@ -214,6 +220,7 @@ interface PsModelRequestOptions {
   geminiRegions?: string[];
   builtInTools?: PsBuiltInTool[];
   timeoutMs?: number;
+  useOpenAiResponsesBackground?: boolean;
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {

@@ -1224,6 +1224,16 @@ describe("PsAiModelManager utility routing", () => {
     );
     assert.deepEqual(
       internals.getModelRequestOptions(
+        { useOpenAiResponsesBackground: true },
+        33_000
+      ),
+      {
+        timeoutMs: 33_000,
+        useOpenAiResponsesBackground: true,
+      }
+    );
+    assert.deepEqual(
+      internals.getModelRequestOptions(
         { deleteOpenAiResponsesAfterIdleMinutes: 45 },
         15_000
       ),
