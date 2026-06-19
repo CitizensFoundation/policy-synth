@@ -339,7 +339,7 @@ export class ClaudeChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming = false,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools: string[] = [],
@@ -566,7 +566,7 @@ export class ClaudeChat extends BaseChatModel {
 
   private formatMessages(
     messages: PsModelMessage[],
-    media?: { mimeType: string; data: string }[]
+    media?: PsPromptImage[]
   ): { system?: string | TextBlockParam[]; messages: MessageParam[] } {
     const systemParts: string[] = [];
     const formatted: MessageParam[] = [];
@@ -689,7 +689,7 @@ export class ClaudeChat extends BaseChatModel {
 
   private attachMediaBlocks(
     formattedMessages: MessageParam[],
-    media?: { mimeType: string; data: string }[]
+    media?: PsPromptImage[]
   ) {
     if (!media || media.length === 0) {
       return;

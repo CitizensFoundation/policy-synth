@@ -19,7 +19,7 @@ class TestChatModel extends BaseChatModel {
     _messages: PsModelMessage[],
     _streaming?: boolean,
     _streamingCallback?: Function,
-    _media?: { mimeType: string; data: string }[],
+    _media?: PsPromptImage[],
     _tools?: ChatCompletionTool[],
     _toolChoice?: ChatCompletionToolChoiceOption | "auto",
     _allowedTools?: string[],

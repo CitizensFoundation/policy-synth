@@ -122,8 +122,9 @@ type OpenAiResponsesInternals = {
   ) => Record<string, unknown> | undefined;
   attachImagesToLastUserMessage: (
     inputItems: Array<Record<string, unknown>>,
-    images?: Array<{ mimeType: string; data: string } | { url: string }>,
-    detail?: "low" | "medium" | "high" | "auto"
+    images?: Array<
+      PsPromptImage | { url: string; detail?: PsPromptImageDetail }
+    >
   ) => void;
   extractTextFromResponse: (resp: unknown) => string;
   selectAssistantReply: (
@@ -562,8 +563,7 @@ describe("OpenAiResponses", () => {
     ];
     internals.attachImagesToLastUserMessage(
       items,
-      [{ mimeType: "image/png", data: "abc123" }],
-      "high"
+      [{ mimeType: "image/png", data: "abc123", detail: "high" }]
     );
     assert.deepEqual(items, [
       {
@@ -589,8 +589,7 @@ describe("OpenAiResponses", () => {
     const itemsWithoutUser: Array<Record<string, unknown>> = [];
     internals.attachImagesToLastUserMessage(
       itemsWithoutUser,
-      [{ url: "https://example.com/image.png" }],
-      "low"
+      [{ url: "https://example.com/image.png", detail: "low" }]
     );
     assert.deepEqual(itemsWithoutUser, [
       {
@@ -637,8 +636,7 @@ describe("OpenAiResponses", () => {
     ];
     internals.attachImagesToLastUserMessage(
       itemsWithObjectContent,
-      [{ mimeType: "image/jpeg", data: "jpeg123" }],
-      "medium"
+      [{ mimeType: "image/jpeg", data: "jpeg123", detail: "original" }]
     );
     assert.deepEqual(itemsWithObjectContent, [
       {
@@ -647,7 +645,7 @@ describe("OpenAiResponses", () => {
           {
             type: "input_image",
             image_url: "data:image/jpeg;base64,jpeg123",
-            detail: "medium",
+            detail: "original",
           },
         ],
       },
@@ -1331,7 +1329,7 @@ describe("OpenAiResponses", () => {
       [{ role: "user", message: "hello" }],
       false,
       undefined,
-      [{ mimeType: "image/png", data: "short" }]
+      [{ mimeType: "image/png", data: "short", detail: "high" }]
     );
 
     assert.ok(captured);
@@ -1343,7 +1341,7 @@ describe("OpenAiResponses", () => {
           {
             type: "input_image",
             image_url: "data:image/png;base64,short",
-            detail: "auto",
+            detail: "high",
           },
         ],
       },

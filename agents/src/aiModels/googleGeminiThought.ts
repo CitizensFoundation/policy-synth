@@ -22,7 +22,7 @@ export class GoogleGeminiThought extends GoogleGeminiChat {
     messages: PsModelMessage[],
     streaming = false,
     streamingCallback?: (chunk: string) => void,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[],

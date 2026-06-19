@@ -98,7 +98,7 @@ export class OpenAiChat extends BaseChatModel {
     streaming = false,
     streamingCallback?: (chunk: string) => void,
     /** Future vision/audio media input */
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools: string[] = [],
