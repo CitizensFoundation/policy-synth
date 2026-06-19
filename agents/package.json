@@ -14,7 +14,7 @@
     "@tsconfig/node20": "^20.1.9",
     "@types/html-to-text": "^9.0.4",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^25.9.3",
+    "@types/node": "^25.9.4",
     "@types/pg": "^8.20.0",
     "@types/qs": "^6.15.1",
     "c8": "^11.0.0",
@@ -47,33 +47,33 @@
   "type": "module",
   "dependencies": {
     "@airbrake/node": "^2.1.9",
-    "@anthropic-ai/bedrock-sdk": "^0.30.2",
-    "@anthropic-ai/sdk": "^0.104.1",
-    "@anthropic-ai/vertex-sdk": "^0.17.1",
+    "@anthropic-ai/bedrock-sdk": "^0.31.0",
+    "@anthropic-ai/sdk": "^0.105.0",
+    "@anthropic-ai/vertex-sdk": "^0.18.0",
     "@azure/identity": "^4.13.1",
     "@google-cloud/vertexai": "^1.12.0",
-    "@google/genai": "^2.8.0",
+    "@google/genai": "^2.9.0",
     "@google/generative-ai": "^0.24.1",
-    "@mendable/firecrawl-js": "^4.25.3",
-    "axios": "1.17.0",
-    "bullmq": "^5.78.0",
+    "@mendable/firecrawl-js": "^4.28.2",
+    "axios": "1.18.0",
+    "bullmq": "^5.79.0",
     "chalk": "^5.5.2",
     "colors": "^1.4.0",
     "discord.js": "^14.26.4",
-    "form-data": "^4.0.5",
+    "form-data": "^4.0.6",
     "glob": "^13.0.6",
     "google-auth-library": "^10.7.0",
     "googleapis": "^173.0.0",
     "html-to-text": "^10.0.0",
-    "ioredis": "^5.10.1",
+    "ioredis": "5.10.1",
     "jsonrepair": "^3.14.0",
     "lodash": "^4.18.1",
     "mammoth": "^1.12.0",
     "node-fetch": "^3.3.2",
-    "openai": "^6.42.0",
+    "openai": "^6.44.0",
     "p-limit": "^7.3.0",
     "pdf-parse": "^2.4.5",
-    "pg": "^8.21.0",
+    "pg": "^8.22.0",
     "puppeteer": "^24.43.1",
     "puppeteer-extra": "^3.3.6",
     "puppeteer-extra-plugin-stealth": "^2.11.2",
@@ -81,16 +81,17 @@
     "sequelize": "^6.37.8",
     "tar": "^7.5.16",
     "tiktoken": "^1.0.22",
-    "tldts": "^7.4.2",
+    "tldts": "^7.4.3",
     "weaviate-ts-client": "^2.2.0",
     "winston": "^3.19.0",
     "ws": "^8.21.0"
   },
   "overrides": {
-    "@protobufjs/utf8": "1.1.1",
-    "protobufjs": "7.6.3",
-    "minimatch@10.2.5": {
-      "brace-expansion": "5.0.6"
+    "@discordjs/rest": {
+      "undici": "6.27.0"
+    },
+    "@types/request": {
+      "form-data": "2.5.6"
     },
     "@azure/msal-node": {
       "uuid": "11.1.1"
@@ -103,6 +104,12 @@
     },
     "weaviate-ts-client": {
       "uuid": "11.1.1"
+    },
+    "discord.js": {
+      "undici": "6.27.0"
+    },
+    "graphql-request": {
+      "form-data": "3.0.5"
     }
   }
 }
