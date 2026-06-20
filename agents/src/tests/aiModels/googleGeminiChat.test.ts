@@ -16,7 +16,7 @@ const { GoogleGeminiChat } = await import("../../aiModels/googleGeminiChat.js");
 class ExposedGoogleGeminiChat extends GoogleGeminiChat {
   buildContentsForTest(
     messages: PsModelMessage[],
-    media?: { mimeType: string; data: string }[]
+    media?: PsPromptImage[]
   ) {
     return this.buildContents(messages, media);
   }

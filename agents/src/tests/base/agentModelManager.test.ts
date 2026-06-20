@@ -56,7 +56,7 @@ type PsAiModelManagerInternals = {
     messages: PsModelMessage[],
     streamingCallbacks: ((chunk: string) => void) | undefined,
     timeoutMs: number,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
     allowedTools?: string[],
@@ -314,7 +314,7 @@ type GenerateCall = {
   messages: PsModelMessage[];
   streaming?: boolean;
   streamingCallback?: Function;
-  media?: { mimeType: string; data: string }[];
+  media?: PsPromptImage[];
   tools?: ChatCompletionTool[];
   toolChoice?: ChatCompletionToolChoiceOption | "auto";
   allowedTools?: string[];
@@ -341,7 +341,7 @@ class ScriptedChatModel extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
     allowedTools?: string[],
@@ -387,7 +387,7 @@ class DelayedFirstAttemptModel extends BaseChatModel {
     _messages: PsModelMessage[],
     _streaming?: boolean,
     _streamingCallback?: Function,
-    _media?: { mimeType: string; data: string }[],
+    _media?: PsPromptImage[],
     _tools?: ChatCompletionTool[],
     _toolChoice?: ChatCompletionToolChoiceOption | "auto",
     _allowedTools?: string[],

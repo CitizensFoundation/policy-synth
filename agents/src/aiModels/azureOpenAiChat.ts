@@ -98,7 +98,7 @@ export class AzureOpenAiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: (chunk: string) => void,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     _tools?: ChatCompletionTool[],
     _toolChoice?: ChatCompletionToolChoiceOption | "auto",
     _allowedTools?: string[],

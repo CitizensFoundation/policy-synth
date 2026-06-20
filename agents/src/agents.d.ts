@@ -16,6 +16,13 @@ type PsAnthropicInferenceType = Extract<PsInferenceType, "fast">;
 type PsAssistantMessagePhase = "commentary" | "final_answer";
 type PsBuiltInToolSearchContextSize = "low" | "medium" | "high";
 type PsBuiltInToolMemoryLimit = "1g" | "4g" | "16g" | "64g";
+type PsPromptImageDetail = "low" | "high" | "original" | "auto";
+
+interface PsPromptImage {
+  mimeType: string;
+  data: string;
+  detail?: PsPromptImageDetail;
+}
 
 interface PsBuiltInToolUserLocation {
   type?: "approximate";
@@ -147,10 +154,7 @@ interface PsCallModelOptions {
   fallbackModelName?: string;
   fallbackModelType?: import("./aiModelTypes.js").PsAiModelType;
   simulateContentErrorForFallbackDebugging?: boolean;
-  promptImages?: {
-    mimeType: string;
-    data: string;
-  }[];
+  promptImages?: PsPromptImage[];
   /**
    * Optional Model function tools that the model may call during generation.
    */

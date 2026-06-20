@@ -1752,7 +1752,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     messages: PsModelMessage[],
     streamingCallbacks: any,
     timeoutMs: number,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
     allowedTools?: string[],

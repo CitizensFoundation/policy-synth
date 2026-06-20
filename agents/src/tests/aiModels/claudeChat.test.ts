@@ -16,7 +16,7 @@ type ClaudeChatInstance = InstanceType<typeof ClaudeChat>;
 type ClaudeChatInternals = {
   formatMessages: (
     messages: PsModelMessage[],
-    media?: { mimeType: string; data: string }[]
+    media?: PsPromptImage[]
   ) => { system?: unknown; messages: Array<Record<string, unknown>> };
   sanitizeToolId: (id: string | undefined) => string;
   buildTools: (

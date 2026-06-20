@@ -225,7 +225,7 @@ export class GoogleGeminiChat extends BaseChatModel {
 
   protected buildContents(
     messages: PsModelMessage[],
-    media?: { mimeType: string; data: string }[]
+    media?: PsPromptImage[]
   ): GenerateContentParameters["contents"] {
     const out: any[] = [];
     for (const m of messages) {
@@ -699,7 +699,7 @@ export class GoogleGeminiChat extends BaseChatModel {
     messages: PsModelMessage[],
     streaming = false,
     streamingCallback?: (chunk: string) => void,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools?: string[],

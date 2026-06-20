@@ -35,7 +35,7 @@ export abstract class BaseChatModel extends PolicySynthAgentBase {
     messages: PsModelMessage[],
     streaming?: boolean,
     streamingCallback?: Function,
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools?: ChatCompletionTool[],
     toolChoice?: ChatCompletionToolChoiceOption | "auto",
     allowedTools?: string[],

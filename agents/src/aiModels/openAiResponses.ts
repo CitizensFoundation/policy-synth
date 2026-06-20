@@ -31,7 +31,7 @@ export type {
   StoredResponseCleanupSummary,
 } from "./openAiResponsesCleanup.js";
 
-type ImageRef = { mimeType: string; data: string } | { url: string };
+type ImageRef = PsPromptImage | { url: string; detail?: PsPromptImageDetail };
 type ResponseAssistantMessage = {
   content: string;
   phase?: PsAssistantMessagePhase;
@@ -356,8 +356,7 @@ export class OpenAiResponses extends BaseChatModel {
 
   private attachImagesToLastUserMessage(
     inputItems: any[],
-    images?: ImageRef[],
-    detail: "low" | "medium" | "high" | "auto" = "auto"
+    images?: ImageRef[]
   ) {
     if (!images?.length) return;
 
@@ -367,7 +366,7 @@ export class OpenAiResponses extends BaseChatModel {
     const parts = images.map((img) => ({
       type: "input_image",
       image_url: toImageUrl(img),
-      detail, // Responses API accepts "auto" | "low" | "high"
+      detail: img.detail ?? "auto",
     }));
 
     // Find the last user message; if none, create one
@@ -393,7 +392,7 @@ export class OpenAiResponses extends BaseChatModel {
     streaming = false,
     streamingCallback?: (chunk: string) => void,
     /** Future vision/audio media input */
-    media?: { mimeType: string; data: string }[],
+    media?: PsPromptImage[],
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools: string[] = [],
@@ -484,11 +483,7 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (media && media.length > 0 && !onlyToolOutputs) {
       this.logger.debug("Attaching images to last user message", media.length);
-      this.attachImagesToLastUserMessage(
-        inputItems,
-        media,
-        this.cfg.reasoningEffort ? "auto" : "auto"
-      );
+      this.attachImagesToLastUserMessage(inputItems, media);
     }
 
     this.logger.debug(
