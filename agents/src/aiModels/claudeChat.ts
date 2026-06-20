@@ -35,6 +35,20 @@ type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
 type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
+const BEDROCK_INFERENCE_PROFILE_PREFIX_PATTERN =
+  "(?:global|us|eu|ap|apac|ca|sa|af|jp)";
+const BEDROCK_INFERENCE_PROFILE_PREFIX_REGEXP = new RegExp(
+  `^${BEDROCK_INFERENCE_PROFILE_PREFIX_PATTERN}\\.`
+);
+
+const requiresGlobalBedrockInferenceProfile = (modelName: string): boolean => {
+  const match = modelName.match(/claude-opus-4-(\d{1,2})(?=$|[-@:])/);
+  if (!match) {
+    return false;
+  }
+
+  return Number.parseInt(match[1], 10) >= 5;
+};
 
 const mapToBedrockModelId = (modelName: string): string => {
   // If caller already supplied a full inference profile or Bedrock model id, keep it.
@@ -59,19 +73,27 @@ const mapToVertexModelId = (modelName: string): string => {
     return modelName;
   }
 
-  // Convert Bedrock/inference style ids for Opus 4.5 into Vertex snapshot
-  if (modelName.includes("claude-opus-4-5-20251101")) {
-    return "claude-opus-4-5@20251101";
+  const normalizedModelName = modelName
+    .replace(BEDROCK_INFERENCE_PROFILE_PREFIX_REGEXP, "")
+    .replace(/^anthropic\./, "");
+
+  const bedrockVersionMatch = normalizedModelName.match(
+    /^(.*)-(\d{8})-v(\d+):\d+$/
+  );
+  if (bedrockVersionMatch) {
+    const [, baseName, snapshot, bedrockVersion] = bedrockVersionMatch;
+    const versionSuffix = bedrockVersion === "1" ? "" : `-v${bedrockVersion}`;
+    return `${baseName}${versionSuffix}@${snapshot}`;
   }
 
   // If user provided a trailing datestamp separated by dash, convert to @
-  const snapshotMatch = modelName.match(/^(.*)-(\d{8})$/);
+  const snapshotMatch = normalizedModelName.match(/^(.*)-(\d{8})$/);
   if (snapshotMatch) {
     return `${snapshotMatch[1]}@${snapshotMatch[2]}`;
   }
 
   // Fallback: leave as-is
-  return modelName;
+  return normalizedModelName;
 };
 
 const buildInferenceProfileId = (
@@ -86,10 +108,16 @@ const buildInferenceProfileId = (
 
   // 1) Explicit override via env var
   if (explicit) {
-    const isOpus45 = baseId.includes("claude-opus-4-5-20251101");
+    const requiresGlobalProfile =
+      requiresGlobalBedrockInferenceProfile(baseId);
 
-    // If caller forces Opus 4.5 to a geography that doesn't exist, keep it working by falling back to GLOBAL.
-    if (!explicit.startsWith("global") && isOpus45 && !explicit.includes(":")) {
+    // If caller forces a global-only Opus profile to a geography shorthand,
+    // keep it working by falling back to GLOBAL.
+    if (
+      !explicit.startsWith("global") &&
+      requiresGlobalProfile &&
+      !explicit.includes(":")
+    ) {
       return prefixWith("global");
     }
 
@@ -102,12 +130,15 @@ const buildInferenceProfileId = (
   }
 
   // 2) If caller already passed a full profile id
-  if (/^(global|us|eu|ap|ca|sa|af|jp)\./.test(modelName) && modelName.includes(":")) {
+  if (
+    BEDROCK_INFERENCE_PROFILE_PREFIX_REGEXP.test(modelName) &&
+    modelName.includes(":")
+  ) {
     return modelName;
   }
 
-  // 3) Opus 4.5 is only exposed via the GLOBAL inference profile today.
-  if (baseId.includes("claude-opus-4-5-20251101")) {
+  // 3) Recent Opus 4.x models are exposed via the GLOBAL inference profile.
+  if (requiresGlobalBedrockInferenceProfile(baseId)) {
     return prefixWith("global");
   }
 
@@ -195,8 +226,7 @@ export class ClaudeChat extends BaseChatModel {
         process.env.AWS_REGION ??
         process.env.AWS_DEFAULT_REGION ??
         "eu-west-1";
-      // Claude Opus 4.5 global profile only works from specific source regions; fall back if unsupported.
-      // Source regions allowed for GLOBAL Anthropic profiles (AWS Bedrock doc, Nov 2025)
+      // Recent Claude Opus global profiles only work from specific source regions; fall back if unsupported.
       const supportedGlobalRegions = new Set([
         "us-west-2",
         "us-east-1",
@@ -233,7 +263,7 @@ export class ClaudeChat extends BaseChatModel {
         !supportedGlobalRegions.has(region)
       ) {
         this.logger.warn?.(
-          `AWS region ${region} is not in the supported list for global inference profiles (us-west-2, us-east-1, us-east-2, eu-west-1, ap-northeast-1); requests may fail`
+          `AWS region ${region} is not in the supported list for global inference profiles (us-west-2, us-east-1, us-east-2, eu-west-1, eu-north-1, eu-west-2, ap-northeast-1); requests may fail`
         );
       }
     } else {
@@ -706,9 +736,25 @@ export class ClaudeChat extends BaseChatModel {
     for (let i = formattedMessages.length - 1; i >= 0; i -= 1) {
       const msg = formattedMessages[i];
       if (msg.role === "user") {
-        const contentArray: ContentBlockParam[] = Array.isArray(msg.content)
-          ? [...msg.content, ...imageBlocks]
-          : [{ type: "text", text: String(msg.content) }, ...imageBlocks];
+        let contentArray: ContentBlockParam[];
+        if (Array.isArray(msg.content)) {
+          const firstTextIndex = msg.content.findIndex(
+            (block) => block.type === "text"
+          );
+          contentArray =
+            firstTextIndex === -1
+              ? [...msg.content, ...imageBlocks]
+              : [
+                  ...msg.content.slice(0, firstTextIndex),
+                  ...imageBlocks,
+                  ...msg.content.slice(firstTextIndex),
+                ];
+        } else {
+          contentArray = [
+            ...imageBlocks,
+            { type: "text", text: String(msg.content) },
+          ];
+        }
         formattedMessages[i] = { ...msg, content: contentArray };
         return;
       }
@@ -920,22 +966,25 @@ export class ClaudeChat extends BaseChatModel {
     return merged;
   }
 
-  // Detect Claude 4.6+ models that support adaptive thinking.
-  // Matches new-style names: claude-opus-4-6, claude-sonnet-4-6, claude-opus-5-0, etc.
+  // Detect models that support adaptive thinking.
+  // Matches new-style names: claude-opus-4-6, claude-sonnet-4-6, claude-fable-5, etc.
   // Also works inside Bedrock/Vertex ids (e.g. eu.anthropic.claude-opus-4-6-v1:0).
   private static isAdaptiveThinkingModel(modelName: string): boolean {
-    // (\d{1,2})(?!\d) ensures the minor version is 1-2 digits, not a datestamp.
+    // (\d{1,2})(?!\d) ensures the optional minor version is 1-2 digits, not a datestamp.
     // e.g. claude-sonnet-4-20250514 won't match (date is 8 digits),
-    // but claude-opus-4-6 and claude-opus-4-6-20260301 will.
-    const match = modelName.match(/claude-[a-z]+-(\d+)-(\d{1,2})(?!\d)/);
+    // but claude-opus-4-6, claude-opus-4-6-20260301, and claude-fable-5 will.
+    const match = modelName.match(
+      /claude-[a-z]+-(\d+)(?:-(\d{1,2})(?!\d))?(?=$|[-@:])/
+    );
     if (!match) return false;
     const major = parseInt(match[1], 10);
-    const minor = parseInt(match[2], 10);
-    return major > 4 || (major === 4 && minor >= 6);
+    const minor = match[2] ? parseInt(match[2], 10) : undefined;
+    if (!Number.isFinite(major)) return false;
+    return major > 4 || (major === 4 && minor !== undefined && minor >= 6);
   }
 
   private static supportsFastMode(modelName: string): boolean {
-    return /claude-opus-4-6/.test(modelName);
+    return /claude-opus-4-[678](?=$|[-@:])/.test(modelName);
   }
 
   private static normalizeRequestedInferenceType(

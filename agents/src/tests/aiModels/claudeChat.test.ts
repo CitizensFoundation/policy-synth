@@ -235,6 +235,36 @@ describe("ClaudeChat", () => {
 
     assert.equal(preservedVertex.modelName, "claude-sonnet-4-6@20260301");
 
+    const bedrockStyleVertex = new ClaudeChat(
+      createConfig({
+        modelName: "global.anthropic.claude-opus-4-5-20251101-v1:0",
+      })
+    );
+
+    assert.equal(bedrockStyleVertex.modelName, "claude-opus-4-5@20251101");
+
+    const bedrockV2StyleVertex = new ClaudeChat(
+      createConfig({
+        modelName: "global.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      })
+    );
+
+    assert.equal(
+      bedrockV2StyleVertex.modelName,
+      "claude-3-5-sonnet-v2@20241022"
+    );
+
+    const apacBedrockStyleVertex = new ClaudeChat(
+      createConfig({
+        modelName: "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      })
+    );
+
+    assert.equal(
+      apacBedrockStyleVertex.modelName,
+      "claude-3-5-sonnet-v2@20241022"
+    );
+
     delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
     process.env.AWS_BEARER_TOKEN_BEDROCK = "token";
     process.env.AWS_INFERENCE_PROFILE =
@@ -295,6 +325,16 @@ describe("ClaudeChat", () => {
       "us.anthropic.claude-3-haiku-20240307-v1:0"
     );
 
+    const apacPassthroughBedrock = new ClaudeChat(
+      createConfig({
+        modelName: "apac.anthropic.claude-3-5-sonnet-20241022-v2:0",
+      })
+    );
+    assert.equal(
+      apacPassthroughBedrock.modelName,
+      "apac.anthropic.claude-3-5-sonnet-20241022-v2:0"
+    );
+
     process.env.AWS_INFERENCE_PROFILE = "us";
 
     const shorthandBedrock = new ClaudeChat(
@@ -307,7 +347,27 @@ describe("ClaudeChat", () => {
       "us.anthropic.claude-3-haiku-20240307-v1:0"
     );
 
+    const globalOpusBedrock = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-4-8",
+      })
+    );
+    assert.equal(
+      globalOpusBedrock.modelName,
+      "global.anthropic.claude-opus-4-8-v1:0"
+    );
+
     delete process.env.AWS_INFERENCE_PROFILE;
+
+    const datedOpusBedrock = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-4-20250514",
+      })
+    );
+    assert.equal(
+      datedOpusBedrock.modelName,
+      "eu.anthropic.claude-opus-4-20250514-v1:0"
+    );
 
     const defaultGlobalBedrock = new ClaudeChat(
       createConfig({
@@ -318,6 +378,115 @@ describe("ClaudeChat", () => {
       defaultGlobalBedrock.modelName,
       "global.anthropic.claude-opus-4-5-20251101-v1:0"
     );
+  });
+
+  it("detects current adaptive-thinking and fast-mode Claude model families", () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const fable = new ClaudeChat(
+      createConfig({
+        modelName: "claude-fable-5",
+        reasoningEffort: "medium",
+      })
+    );
+    assert.equal(Reflect.get(fable, "useAdaptiveThinking"), true);
+    assert.equal(Reflect.get(fable, "useFastMode"), false);
+
+    const mythos = new ClaudeChat(
+      createConfig({
+        modelName: "claude-mythos-5",
+        reasoningEffort: "medium",
+      })
+    );
+    assert.equal(Reflect.get(mythos, "useAdaptiveThinking"), true);
+
+    const sonnet46 = new ClaudeChat(
+      createConfig({
+        modelName: "claude-sonnet-4-6-20260301",
+        inferenceType: "fast",
+        reasoningEffort: "medium",
+      })
+    );
+    assert.equal(Reflect.get(sonnet46, "useAdaptiveThinking"), true);
+    assert.equal(Reflect.get(sonnet46, "useFastMode"), false);
+
+    const haiku45 = new ClaudeChat(
+      createConfig({
+        modelName: "claude-haiku-4-5",
+        reasoningEffort: "medium",
+      })
+    );
+    assert.equal(Reflect.get(haiku45, "useAdaptiveThinking"), false);
+
+    for (const modelName of [
+      "claude-opus-4-6",
+      "claude-opus-4-7",
+      "claude-opus-4-8",
+    ]) {
+      const fastModel = new ClaudeChat(
+        createConfig({
+          modelName,
+          inferenceType: "fast",
+        })
+      );
+      assert.equal(Reflect.get(fastModel, "useFastMode"), true);
+    }
+  });
+
+  it("uses adaptive thinking request shape for Claude 5-family models", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-fable-5",
+        reasoningEffort: "medium",
+        temperature: 0.2,
+      })
+    );
+
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-fable-5-response",
+            usage: {
+              input_tokens: 5,
+              output_tokens: 2,
+            },
+            content: [{ type: "text", text: "Fable response" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "claude-fable-5");
+    assert.equal(captured.temperature, 1);
+    assert.deepEqual(captured.thinking, { type: "adaptive" });
+    assert.deepEqual(captured.output_config, { effort: "medium" });
+    assert.equal(captured.stream, false);
+    assert.equal(result?.content, "Fable response");
   });
 
   it("formats messages, sanitizes tool ids, filters tools, and maps tool choices", () => {
@@ -365,7 +534,6 @@ describe("ClaudeChat", () => {
       {
         role: "user",
         content: [
-          { type: "text", text: "hello" },
           {
             type: "image",
             source: {
@@ -374,6 +542,7 @@ describe("ClaudeChat", () => {
               data: "abc123",
             },
           },
+          { type: "text", text: "hello" },
         ],
       },
       {
