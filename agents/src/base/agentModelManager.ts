@@ -1692,6 +1692,39 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (options.useOpenAiResponsesBackground) {
       requestOptions.useOpenAiResponsesBackground = true;
     }
+    if (options.store !== undefined) {
+      requestOptions.store = options.store;
+    }
+    if (options.textFormat) {
+      requestOptions.textFormat = options.textFormat;
+    }
+    if (options.promptCacheKey) {
+      requestOptions.promptCacheKey = options.promptCacheKey;
+    }
+    if (options.promptCacheRetention) {
+      requestOptions.promptCacheRetention = options.promptCacheRetention;
+    }
+    if (options.metadata) {
+      requestOptions.metadata = options.metadata;
+    }
+    if (options.moderation) {
+      requestOptions.moderation = options.moderation;
+    }
+    if (options.topP !== undefined) {
+      requestOptions.topP = options.topP;
+    }
+    if (options.truncation) {
+      requestOptions.truncation = options.truncation;
+    }
+    if (options.parallelToolCalls !== undefined) {
+      requestOptions.parallelToolCalls = options.parallelToolCalls;
+    }
+    if (options.maxToolCalls !== undefined) {
+      requestOptions.maxToolCalls = options.maxToolCalls;
+    }
+    if (options.include?.length) {
+      requestOptions.include = options.include;
+    }
 
     return requestOptions;
   }

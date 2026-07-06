@@ -1205,6 +1205,17 @@ describe("PsAiModelManager utility routing", () => {
           safetyIdentifier: "safety-user",
           geminiRegions: ["us-central1", "europe-west1"],
           builtInTools,
+          store: false,
+          textFormat: { type: "json_object" },
+          promptCacheKey: "cache-key",
+          promptCacheRetention: "24h",
+          metadata: { workflow: "manager" },
+          moderation: { mode: "auto" },
+          topP: 0.8,
+          truncation: "auto",
+          parallelToolCalls: false,
+          maxToolCalls: 3,
+          include: ["reasoning.encrypted_content"],
         },
         67_890
       ),
@@ -1213,6 +1224,17 @@ describe("PsAiModelManager utility routing", () => {
         safetyIdentifier: "safety-user",
         geminiRegions: ["us-central1", "europe-west1"],
         builtInTools,
+        store: false,
+        textFormat: { type: "json_object" },
+        promptCacheKey: "cache-key",
+        promptCacheRetention: "24h",
+        metadata: { workflow: "manager" },
+        moderation: { mode: "auto" },
+        topP: 0.8,
+        truncation: "auto",
+        parallelToolCalls: false,
+        maxToolCalls: 3,
+        include: ["reasoning.encrypted_content"],
       }
     );
     assert.deepEqual(
@@ -1371,6 +1393,8 @@ describe("PsAiModelManager utility routing", () => {
         safetyIdentifier: "safe",
         geminiRegions: ["us-central1"],
         builtInTools,
+        store: false,
+        include: ["reasoning.encrypted_content"],
       }
     );
 
@@ -1390,6 +1414,8 @@ describe("PsAiModelManager utility routing", () => {
       safetyIdentifier: "safe",
       geminiRegions: ["us-central1"],
       builtInTools,
+      store: false,
+      include: ["reasoning.encrypted_content"],
     });
   });
 
@@ -3587,7 +3613,8 @@ describe("PsAiModelManager call options", () => {
       ...args: unknown[]
     ) => {
       if (typeof handler === "function") {
-        handler(...args);
+        const callback = handler as (...callbackArgs: unknown[]) => void;
+        callback(...args);
       }
       return 0 as unknown as NodeJS.Timeout;
     }) as typeof setTimeout;

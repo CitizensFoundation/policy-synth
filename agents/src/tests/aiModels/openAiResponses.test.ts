@@ -33,6 +33,17 @@ type RecordedResponsesRequest = {
   max_output_tokens?: number;
   safety_identifier?: string;
   service_tier?: string;
+  text?: {
+    format?: Record<string, unknown>;
+  };
+  prompt_cache_key?: string;
+  prompt_cache_retention?: string;
+  metadata?: Record<string, string>;
+  moderation?: Record<string, unknown>;
+  top_p?: number;
+  truncation?: string;
+  parallel_tool_calls?: boolean;
+  max_tool_calls?: number;
   previous_response_id?: string;
   reasoning?: {
     effort?: string;
@@ -105,6 +116,7 @@ type OpenAiResponsesInternals = {
       tools?: unknown[];
       include?: unknown[];
       store?: boolean;
+      background?: boolean;
       service_tier?: string | null;
       previous_response_id?: string | null;
       model?: string;
@@ -674,6 +686,7 @@ describe("OpenAiResponses", () => {
           timezone: "Atlantic/Reykjavik",
         },
         includeSources: true,
+        includeResults: true,
       },
       {
         type: "code_interpreter",
@@ -688,7 +701,9 @@ describe("OpenAiResponses", () => {
       {
         type: "web_search",
         search_context_size: "high",
-        filters: { allowed_domains: ["example.com"] },
+        filters: {
+          allowed_domains: ["example.com"],
+        },
         user_location: {
           type: "approximate",
           city: "Reykjavik",
@@ -713,6 +728,7 @@ describe("OpenAiResponses", () => {
     );
     assert.deepEqual(internals.mapBuiltInToolIncludes(builtInTools), [
       "web_search_call.action.sources",
+      "web_search_call.results",
       "code_interpreter_call.outputs",
     ]);
     assert.deepEqual(
@@ -734,6 +750,12 @@ describe("OpenAiResponses", () => {
               type: "web_search_call",
               id: "ws-1",
               status: "completed",
+              results: [
+                {
+                  type: "image_result",
+                  image_url: "https://example.com/image.jpg",
+                },
+              ],
               action: {
                 type: "search",
                 query: "policy",
@@ -808,6 +830,7 @@ describe("OpenAiResponses", () => {
     assert.ok(captured);
     assert.deepEqual(captured.include, [
       "web_search_call.action.sources",
+      "web_search_call.results",
       "code_interpreter_call.outputs",
     ]);
     assert.deepEqual(captured.tools, [
@@ -835,6 +858,12 @@ describe("OpenAiResponses", () => {
       {
         id: "ws-1",
         status: "completed",
+        results: [
+          {
+            type: "image_result",
+            image_url: "https://example.com/image.jpg",
+          },
+        ],
         action: {
           type: "search",
           query: "policy",
@@ -1432,7 +1461,33 @@ describe("OpenAiResponses", () => {
         function: { name: "lookup" },
       },
       ["lookup"],
-      { safetyIdentifier: "safe-1", timeoutMs: 45_000 }
+      {
+        safetyIdentifier: "safe-1",
+        timeoutMs: 45_000,
+        store: false,
+        textFormat: {
+          type: "json_schema",
+          name: "answer",
+          strict: true,
+          schema: {
+            type: "object",
+            properties: {
+              answer: { type: "string" },
+            },
+            required: ["answer"],
+            additionalProperties: false,
+          },
+        },
+        promptCacheKey: "cache-key-1",
+        promptCacheRetention: "24h",
+        metadata: { workflow: "responses-parity" },
+        moderation: { mode: "auto" },
+        topP: 0.7,
+        truncation: "auto",
+        parallelToolCalls: false,
+        maxToolCalls: 4,
+        include: ["reasoning.encrypted_content"],
+      }
     );
 
     assert.ok(captured);
@@ -1443,6 +1498,31 @@ describe("OpenAiResponses", () => {
     assert.equal(captured.temperature, undefined);
     assert.equal(captured.max_output_tokens, 256);
     assert.equal(captured.safety_identifier, "safe-1");
+    assert.equal(captured.store, false);
+    assert.deepEqual(captured.text, {
+      format: {
+        type: "json_schema",
+        name: "answer",
+        strict: true,
+        schema: {
+          type: "object",
+          properties: {
+            answer: { type: "string" },
+          },
+          required: ["answer"],
+          additionalProperties: false,
+        },
+      },
+    });
+    assert.equal(captured.prompt_cache_key, "cache-key-1");
+    assert.equal(captured.prompt_cache_retention, "24h");
+    assert.deepEqual(captured.metadata, { workflow: "responses-parity" });
+    assert.deepEqual(captured.moderation, { mode: "auto" });
+    assert.equal(captured.top_p, 0.7);
+    assert.equal(captured.truncation, "auto");
+    assert.equal(captured.parallel_tool_calls, false);
+    assert.equal(captured.max_tool_calls, 4);
+    assert.deepEqual(captured.include, ["reasoning.encrypted_content"]);
     assert.equal(captured.instructions, "system prompt\n\ndeveloper prompt");
     assert.deepEqual(captured.tool_choice, {
       type: "function",
@@ -1517,6 +1597,8 @@ describe("OpenAiResponses", () => {
     const usageRequest = result.usageItemData?.request as
       | Record<string, unknown>
       | undefined;
+    assert.equal(usageRequest?.store, false);
+    assert.deepEqual(usageRequest?.include, ["reasoning.encrypted_content"]);
     assert.equal(usageRequest?.requestedInferenceType, "fast");
     assert.equal(usageRequest?.requestedServiceTier, "priority");
     assert.equal(usageRequest?.regionalProcessing, "eu");
@@ -1758,6 +1840,126 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(retrieveQueries, [{ include: expectedIncludes }]);
     assert.equal(result.content, "done");
     assert.deepEqual(result.usageItemData?.request?.include, expectedIncludes);
+  });
+
+  it("builds deep research web search requests on background Responses", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.5",
+        modelType: PsAiModelType.TextReasoning,
+        reasoningEffort: "xhigh",
+      })
+    );
+    Reflect.set(model, "backgroundPollDelayMs", 0);
+
+    const builtInTools: PsBuiltInTool[] = [
+      {
+        type: "web_search",
+        searchContextSize: "high",
+        includeSources: true,
+        includeResults: true,
+      },
+    ];
+    const expectedIncludes = [
+      "web_search_call.action.sources",
+      "web_search_call.results",
+    ];
+    let capturedCreate: RecordedResponsesRequest | undefined;
+    const retrieveQueries: unknown[] = [];
+
+    setMockClient(model, {
+      create: async (params) => {
+        capturedCreate = params as RecordedResponsesRequest;
+        return {
+          id: "resp-deep-research",
+          status: "queued",
+          output: [],
+          usage: {},
+        };
+      },
+      retrieve: async (responseId, query) => {
+        retrieveQueries.push(query);
+        return {
+          id: responseId,
+          status: "completed",
+          usage: {
+            input_tokens: 10,
+            output_tokens: 20,
+            output_tokens_details: { reasoning_tokens: 5 },
+          },
+          output: [
+            {
+              type: "web_search_call",
+              id: "ws-deep",
+              status: "completed",
+              action: {
+                type: "search",
+                sources: [{ type: "url", url: "https://example.com/source" }],
+              },
+              results: [
+                {
+                  type: "search_result",
+                  url: "https://example.com/source",
+                },
+              ],
+            },
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "deep result" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "research semaglutide impacts" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        timeoutMs: 120_000,
+        useOpenAiResponsesBackground: true,
+        builtInTools,
+      }
+    );
+
+    assert.ok(capturedCreate);
+    assert.equal(capturedCreate.background, true);
+    assert.deepEqual(capturedCreate.reasoning, { effort: "xhigh" });
+    assert.deepEqual(capturedCreate.tools, [
+      {
+        type: "web_search",
+        search_context_size: "high",
+      },
+    ]);
+    assert.deepEqual(capturedCreate.include, expectedIncludes);
+    assert.deepEqual(retrieveQueries, [{ include: expectedIncludes }]);
+    assert.equal(result.content, "deep result");
+    assert.equal(result.reasoningTokens, 5);
+
+    const metadata = result.usageItemData?.providerMetadata?.builtInTools as
+      | Record<string, unknown>
+      | undefined;
+    assert.deepEqual(metadata?.webSearchCalls, [
+      {
+        id: "ws-deep",
+        status: "completed",
+        action: {
+          type: "search",
+          sources: [{ type: "url", url: "https://example.com/source" }],
+        },
+        results: [
+          {
+            type: "search_result",
+            url: "https://example.com/source",
+          },
+        ],
+      },
+    ]);
   });
 
   it("preserves usable create timeout budget for short background calls", async () => {
@@ -2191,6 +2393,45 @@ describe("OpenAiResponses", () => {
       },
     ]);
     assert.equal(result.content, "Tool handled");
+  });
+
+  it("does not schedule stored response cleanup for stateless Responses", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-stateless-cleanup",
+        output: [
+          {
+            type: "message",
+            content: [{ type: "output_text", text: "stateless" }],
+          },
+        ],
+        usage: {},
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        store: false,
+        include: ["reasoning.encrypted_content"],
+        responsesStateKey: "stateless-cleanup",
+        deleteOpenAiResponsesAfterIdleMinutes: 30,
+      }
+    );
+
+    assert.equal(result.content, "stateless");
+    assert.deepEqual(redis.getDueMembers(), []);
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
   });
 
   it("queues stored response ids for idle cleanup as a chain advances", async () => {

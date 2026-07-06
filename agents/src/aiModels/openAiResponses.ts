@@ -41,9 +41,26 @@ type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
 type ResponsesTool = Record<string, unknown>;
-type ResponsesInclude =
-  | "web_search_call.action.sources"
-  | "code_interpreter_call.outputs";
+type ResponsesInclude = PsOpenAiResponsesInclude;
+type ResponsesCreateParams = Record<string, unknown> & {
+  background?: boolean;
+  include?: ResponsesInclude[];
+  model?: string;
+  previous_response_id?: string;
+  store?: boolean;
+  stream?: boolean;
+};
+type ResponsesCreateUsageParams = {
+  background?: boolean;
+  include?: unknown[];
+  model?: string;
+  previous_response_id?: string | null;
+  service_tier?: string | null;
+  store?: boolean;
+  stream?: boolean;
+  tool_choice?: unknown;
+  tools?: unknown[];
+};
 
 const OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS = 2_000;
 const OPENAI_RESPONSES_BACKGROUND_REQUEST_TIMEOUT_MS = 60_000;
@@ -113,6 +130,8 @@ export class OpenAiResponses extends BaseChatModel {
   private async touchStoredResponseCleanupChain(
     requestOptions?: PsModelRequestOptions
   ): Promise<void> {
+    if (requestOptions?.store === false) return;
+
     const settings = this.getStoredResponseCleanupSettings(requestOptions);
     if (!settings) return;
 
@@ -129,6 +148,8 @@ export class OpenAiResponses extends BaseChatModel {
     result: PsBaseModelReturnParameters,
     requestOptions?: PsModelRequestOptions
   ): Promise<void> {
+    if (requestOptions?.store === false) return;
+
     const settings = this.getStoredResponseCleanupSettings(requestOptions);
     if (!settings) return;
 
@@ -415,11 +436,15 @@ export class OpenAiResponses extends BaseChatModel {
       ...this.mapBuiltInToolsForResponses(builtInTools),
     ];
     const responsesToolChoice = this.mapToolChoiceForResponses(toolChoice);
-    const responseIncludes = this.mapBuiltInToolIncludes(builtInTools);
+    const responseIncludes = this.mergeResponsesIncludes(
+      this.mapBuiltInToolIncludes(builtInTools),
+      requestOptions?.include
+    );
 
     await this.touchStoredResponseCleanupChain(requestOptions);
 
-    let hasPreviousResponse = !!this.previousResponseId;
+    const storeResponses = requestOptions?.store ?? true;
+    let hasPreviousResponse = storeResponses && !!this.previousResponseId;
     const hasTruncatedHistory =
       hasPreviousResponse && messages.length < this.lastSubmittedMessageCount;
 
@@ -490,7 +515,7 @@ export class OpenAiResponses extends BaseChatModel {
       `maxTokenOut debug: ${this.cfg.maxTokensOut} ${this.maxTokensOut}`
     );
 
-    const common: any = {
+    const common: ResponsesCreateParams = {
       model: String(this.getApiModelName()),
       tools: responsesTools,
       tool_choice: responsesToolChoice,
@@ -501,15 +526,43 @@ export class OpenAiResponses extends BaseChatModel {
       service_tier: !this.usingAzure
         ? this.getRequestedServiceTier()
         : undefined,
+      store: requestOptions?.store ?? true,
     };
 
     if (responseIncludes.length > 0) {
       common.include = responseIncludes;
     }
+    if (requestOptions?.textFormat) {
+      common.text = { format: requestOptions.textFormat };
+    }
+    if (requestOptions?.promptCacheKey) {
+      common.prompt_cache_key = requestOptions.promptCacheKey;
+    }
+    if (requestOptions?.promptCacheRetention) {
+      common.prompt_cache_retention = requestOptions.promptCacheRetention;
+    }
+    if (requestOptions?.metadata) {
+      common.metadata = requestOptions.metadata;
+    }
+    if (requestOptions?.moderation) {
+      common.moderation = requestOptions.moderation;
+    }
+    if (requestOptions?.topP !== undefined) {
+      common.top_p = requestOptions.topP;
+    }
+    if (requestOptions?.truncation) {
+      common.truncation = requestOptions.truncation;
+    }
+    if (requestOptions?.parallelToolCalls !== undefined) {
+      common.parallel_tool_calls = requestOptions.parallelToolCalls;
+    }
+    if (requestOptions?.maxToolCalls !== undefined) {
+      common.max_tool_calls = requestOptions.maxToolCalls;
+    }
 
     if (inputItems.length) {
       common.input = inputItems;
-    } else if (this.previousResponseId) {
+    } else if (storeResponses && this.previousResponseId) {
       this.logger.debug(
         "Continuing previous response without new input items."
       );
@@ -521,15 +574,15 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (isReasoning) {
       if (this.cfg.reasoningEffort) {
-        const effort = this.cfg.reasoningEffort === 'max'
-          ? 'xhigh'
-          : this.cfg.reasoningEffort;
+        const effort =
+          this.cfg.reasoningEffort === "max"
+            ? "xhigh"
+            : this.cfg.reasoningEffort;
         common.reasoning = { effort };
       }
     }
 
-    common.store = true;
-    if (this.previousResponseId) {
+    if (storeResponses && this.previousResponseId) {
       common.previous_response_id = this.previousResponseId;
     }
     const logParams = JSON.parse(JSON.stringify(common));
@@ -548,7 +601,7 @@ export class OpenAiResponses extends BaseChatModel {
       `Common model params: ${JSON.stringify(logParams, null, 2)}`
     );*/
 
-    const params = { ...common, stream: streaming };
+    const params: ResponsesCreateParams = { ...common, stream: streaming };
 
     let result: PsBaseModelReturnParameters;
 
@@ -719,7 +772,9 @@ export class OpenAiResponses extends BaseChatModel {
           mapped.search_context_size = tool.searchContextSize;
         }
         if (tool.allowedDomains?.length) {
-          mapped.filters = { allowed_domains: tool.allowedDomains };
+          mapped.filters = this.compactRecord({
+            allowed_domains: tool.allowedDomains,
+          });
         }
         if (tool.userLocation) {
           mapped.user_location = this.compactRecord({
@@ -756,10 +811,31 @@ export class OpenAiResponses extends BaseChatModel {
   ): ResponsesInclude[] {
     const includes = new Set<ResponsesInclude>();
     for (const tool of builtInTools) {
-      if (tool.type === "web_search" && tool.includeSources) {
-        includes.add("web_search_call.action.sources");
-      } else if (tool.type === "code_interpreter" && tool.includeOutputs) {
+      if (tool.type === "web_search") {
+        if (tool.includeSources) {
+          includes.add("web_search_call.action.sources");
+        }
+        if (tool.includeResults) {
+          includes.add("web_search_call.results");
+        }
+        continue;
+      }
+
+      if (tool.type === "code_interpreter" && tool.includeOutputs) {
         includes.add("code_interpreter_call.outputs");
+      }
+    }
+    return [...includes];
+  }
+
+  private mergeResponsesIncludes(
+    ...includeGroups: Array<readonly ResponsesInclude[] | undefined>
+  ): ResponsesInclude[] {
+    const includes = new Set<ResponsesInclude>();
+    for (const group of includeGroups) {
+      if (!group) continue;
+      for (const include of group) {
+        includes.add(include);
       }
     }
     return [...includes];
@@ -960,6 +1036,7 @@ export class OpenAiResponses extends BaseChatModel {
             id: item.id,
             status: item.status,
             action: item.action,
+            results: item.results,
           })
         );
         continue;
@@ -1025,7 +1102,7 @@ export class OpenAiResponses extends BaseChatModel {
       service_tier?: string | null;
       previous_response_id?: string | null;
       model?: string;
-    },
+    } | ResponsesCreateUsageParams,
     usage: {
       tokensIn: number;
       tokensOut: number;
@@ -1247,7 +1324,13 @@ export class OpenAiResponses extends BaseChatModel {
     const include = params.include.filter(
       (value): value is ResponsesInclude =>
         value === "web_search_call.action.sources" ||
-        value === "code_interpreter_call.outputs"
+        value === "web_search_call.results" ||
+        value === "code_interpreter_call.outputs" ||
+        value === "file_search_call.results" ||
+        value === "computer_call_output.output.image_url" ||
+        value === "message.input_image.image_url" ||
+        value === "message.output_text.logprobs" ||
+        value === "reasoning.encrypted_content"
     );
 
     return include.length > 0 ? { include } : undefined;
@@ -1438,7 +1521,10 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
+    this.previousResponseId =
+      params.store === false
+        ? undefined
+        : finalResponse?.id ?? this.previousResponseId;
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
@@ -1710,7 +1796,10 @@ export class OpenAiResponses extends BaseChatModel {
     //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
     this.assertResponseCompleted(resp);
 
-    this.previousResponseId = resp?.id ?? this.previousResponseId;
+    this.previousResponseId =
+      requestParams.store === false
+        ? undefined
+        : resp?.id ?? this.previousResponseId;
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 

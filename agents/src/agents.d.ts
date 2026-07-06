@@ -17,6 +17,17 @@ type PsAssistantMessagePhase = "commentary" | "final_answer";
 type PsBuiltInToolSearchContextSize = "low" | "medium" | "high";
 type PsBuiltInToolMemoryLimit = "1g" | "4g" | "16g" | "64g";
 type PsPromptImageDetail = "low" | "high" | "original" | "auto";
+type PsOpenAiResponsesInclude =
+  | "web_search_call.action.sources"
+  | "web_search_call.results"
+  | "code_interpreter_call.outputs"
+  | "file_search_call.results"
+  | "computer_call_output.output.image_url"
+  | "message.input_image.image_url"
+  | "message.output_text.logprobs"
+  | "reasoning.encrypted_content";
+type PsOpenAiResponsesPromptCacheRetention = "in_memory" | "24h";
+type PsOpenAiResponsesTruncation = "auto" | "disabled";
 
 interface PsPromptImage {
   mimeType: string;
@@ -39,6 +50,7 @@ type PsBuiltInTool =
       allowedDomains?: string[];
       userLocation?: PsBuiltInToolUserLocation;
       includeSources?: boolean;
+      includeResults?: boolean;
     }
   | {
       type: "code_interpreter";
@@ -179,6 +191,17 @@ interface PsCallModelOptions {
    * Names of function tools the model is allowed to call when using the model.
    */
   allowedTools?: string[];
+  store?: boolean;
+  textFormat?: Record<string, unknown>;
+  promptCacheKey?: string;
+  promptCacheRetention?: PsOpenAiResponsesPromptCacheRetention;
+  metadata?: Record<string, string>;
+  moderation?: Record<string, unknown>;
+  topP?: number;
+  truncation?: PsOpenAiResponsesTruncation;
+  parallelToolCalls?: boolean;
+  maxToolCalls?: number;
+  include?: PsOpenAiResponsesInclude[];
   /**
    * When true, token limit errors will be rethrown instead of triggering
    * the TokenLimitChunker retry logic. Useful for preventing infinite
@@ -225,6 +248,17 @@ interface PsModelRequestOptions {
   builtInTools?: PsBuiltInTool[];
   timeoutMs?: number;
   useOpenAiResponsesBackground?: boolean;
+  store?: boolean;
+  textFormat?: Record<string, unknown>;
+  promptCacheKey?: string;
+  promptCacheRetention?: PsOpenAiResponsesPromptCacheRetention;
+  metadata?: Record<string, string>;
+  moderation?: Record<string, unknown>;
+  topP?: number;
+  truncation?: PsOpenAiResponsesTruncation;
+  parallelToolCalls?: boolean;
+  maxToolCalls?: number;
+  include?: PsOpenAiResponsesInclude[];
 }
 
 interface PsAzureAiModelConfig extends PsAiModelConfig {
