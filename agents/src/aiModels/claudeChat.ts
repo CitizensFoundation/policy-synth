@@ -3,6 +3,7 @@ import AnthropicBedrock from "@anthropic-ai/bedrock-sdk";
 import AnthropicVertex from "@anthropic-ai/vertex-sdk";
 import type { AnthropicBeta } from "@anthropic-ai/sdk/resources/beta/beta.js";
 import type {
+  BetaFallbackParam,
   BetaMessageStreamParams as AnthropicBetaMessageStreamParams,
   BetaContentBlock,
   MessageCreateParamsBase as AnthropicBetaMessageCreateParamsBase,
@@ -12,6 +13,7 @@ import type {
   ContentBlock,
   ContentBlockParam,
   ImageBlockParam,
+  MessageCountTokensParams,
   MessageCreateParamsBase as AnthropicMessageCreateParamsBase,
   MessageCreateParamsNonStreaming as AnthropicMessageCreateParamsNonStreaming,
   MessageParam,
@@ -31,10 +33,30 @@ import { encoding_for_model, TiktokenModel } from "tiktoken";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
+const CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG: AnthropicBeta =
+  "server-side-fallback-2026-06-01";
+const CLAUDE_FABLE_FALLBACK_MODEL = "claude-opus-4-8";
 type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
 type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
+type ClaudeUsageResponseMetadata = {
+  id?: string | null;
+  usage?: Record<string, unknown> | null;
+  service_tier?: string | null;
+  speed?: string | null;
+  model?: string | null;
+  stop_reason?: string | null;
+  stop_details?: unknown;
+  content?: unknown[] | null;
+};
+type ClaudeTokenCountingClient = {
+  messages: {
+    countTokens: (
+      params: MessageCountTokensParams
+    ) => Promise<{ input_tokens: number }>;
+  };
+};
 const BEDROCK_INFERENCE_PROFILE_PREFIX_PATTERN =
   "(?:global|us|eu|ap|apac|ca|sa|af|jp)";
 const BEDROCK_INFERENCE_PROFILE_PREFIX_REGEXP = new RegExp(
@@ -152,6 +174,7 @@ export class ClaudeChat extends BaseChatModel {
   private useClaude1mContextBetaFlag: boolean;
   private useFastMode: boolean;
   private useAdaptiveThinking: boolean;
+  private useServerSideRefusalFallback: boolean;
   private maxThinkingTokens?: number;
   private requestedInferenceType?: PsInferenceType;
   config: PsAiModelConfig;
@@ -159,7 +182,7 @@ export class ClaudeChat extends BaseChatModel {
   constructor(config: PsAiModelConfig) {
     const {
       apiKey,
-      modelName = "claude-3-opus-20240229",
+      modelName = CLAUDE_FABLE_FALLBACK_MODEL,
       maxTokensOut = 4096,
     } = config;
 
@@ -182,15 +205,22 @@ export class ClaudeChat extends BaseChatModel {
       this.mapReasoningEffortToThinkingBudget(config.reasoningEffort);
     this.usingBedrock = useBedrock;
     this.usingVertex = useVertex;
+    this.useAdaptiveThinking =
+      ClaudeChat.isAdaptiveThinkingModel(resolvedModelName);
     this.useClaude1mContextBetaFlag =
-      process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG === "true";
+      process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG === "true" &&
+      !ClaudeChat.hasDefaultOneMillionContext(resolvedModelName);
     const normalizedInferenceType =
       ClaudeChat.normalizeRequestedInferenceType(config.inferenceType);
     this.useFastMode =
       normalizedInferenceType === "fast" &&
+      !useBedrock &&
+      !useVertex &&
       ClaudeChat.supportsFastMode(resolvedModelName);
-    this.useAdaptiveThinking =
-      ClaudeChat.isAdaptiveThinkingModel(resolvedModelName);
+    this.useServerSideRefusalFallback =
+      !useBedrock &&
+      !useVertex &&
+      ClaudeChat.supportsServerSideRefusalFallback(resolvedModelName);
     if (
       normalizedInferenceType === "fast" &&
       !this.useFastMode
@@ -298,12 +328,7 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private buildUsageItemData(
-    response: {
-      id?: string | null;
-      usage?: Record<string, unknown> | null;
-      service_tier?: string | null;
-      speed?: string | null;
-    },
+    response: ClaudeUsageResponseMetadata,
     requestOptions: AnthropicMessageCreateParamsBase,
     usage: {
       tokensIn: number;
@@ -330,6 +355,13 @@ export class ClaudeChat extends BaseChatModel {
         maxThinkingTokens: this.maxThinkingTokens ?? null,
         usesAdaptiveThinking: this.useAdaptiveThinking,
         uses1mContextBetaFlag: this.useClaude1mContextBetaFlag,
+        usesServerSideRefusalFallback: this.useServerSideRefusalFallback,
+        serverSideFallbackBeta: this.useServerSideRefusalFallback
+          ? CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG
+          : null,
+        fallbackModel: this.useServerSideRefusalFallback
+          ? CLAUDE_FABLE_FALLBACK_MODEL
+          : null,
         thinking: requestOptions.thinking ?? null,
         outputConfig: requestOptions.output_config ?? null,
       },
@@ -342,6 +374,9 @@ export class ClaudeChat extends BaseChatModel {
       },
       providerMetadata: {
         responseId: response.id ?? null,
+        servedModel: response.model ?? null,
+        stopReason: response.stop_reason ?? null,
+        stopDetails: response.stop_details ?? null,
         appliedSpeed: response.speed ?? null,
         appliedServiceTier: response.service_tier ?? null,
         usesAdaptiveThinking: this.useAdaptiveThinking,
@@ -350,6 +385,14 @@ export class ClaudeChat extends BaseChatModel {
           ? CLAUDE_1M_CONTEXT_BETA_FLAG
           : null,
         fastModeBeta: this.useFastMode ? CLAUDE_FAST_MODE_BETA_FLAG : null,
+        serverSideFallbackBeta: this.useServerSideRefusalFallback
+          ? CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG
+          : null,
+        fallbackModel: this.useServerSideRefusalFallback
+          ? CLAUDE_FABLE_FALLBACK_MODEL
+          : null,
+        fallbackBlocks: this.extractFallbackBlocks(response.content),
+        fallbackIterations: response.usage?.iterations ?? null,
         bedrockRegion: this.usingBedrock
           ? process.env.AWS_REGION ??
             process.env.AWS_DEFAULT_REGION ??
@@ -415,28 +458,30 @@ export class ClaudeChat extends BaseChatModel {
     // For adaptive models (4.6+), reasoningEffort alone is enough to enable thinking.
     // For legacy models, require explicit maxThinkingTokens to avoid breaking older
     // models that don't support thinking or where budget_tokens > max_tokens.
+    const legacyThinkingBudget = this.getLegacyThinkingBudget();
     const wantsThinking = this.useAdaptiveThinking
       ? Boolean(this.maxThinkingTokens) || Boolean(this.config.reasoningEffort)
-      : Boolean(this.maxThinkingTokens);
+      : Boolean(legacyThinkingBudget);
 
     const thinkingConfig: AnthropicMessageCreateParamsBase["thinking"] = this.useAdaptiveThinking
       ? wantsThinking
         ? { type: "adaptive" }
         : undefined
-      : this.maxThinkingTokens
-        ? { type: "enabled", budget_tokens: this.maxThinkingTokens! }
+      : legacyThinkingBudget
+        ? { type: "enabled", budget_tokens: legacyThinkingBudget }
         : undefined;
 
-    const adaptiveEffort: "low" | "medium" | "high" | "max" =
-      this.config.reasoningEffort === "xhigh" || this.config.reasoningEffort === "max"
-        ? "max"
-        : this.config.reasoningEffort ?? "high";
+    const adaptiveEffort: "low" | "medium" | "high" | "xhigh" | "max" =
+      this.config.reasoningEffort ?? "high";
+    const requestTemperature = this.getRequestTemperature(thinkingConfig);
 
     const requestOptions: AnthropicMessageCreateParamsBase = {
       max_tokens: this.maxTokensOut,
       messages: anthropicMessages,
       model: this.modelName,
-      temperature: thinkingConfig ? 1 : this.config.temperature,
+      ...(requestTemperature !== undefined
+        ? { temperature: requestTemperature }
+        : {}),
       thinking: thinkingConfig,
       tools: filteredTools.length ? filteredTools : undefined,
       tool_choice: filteredTools.length ? choice : undefined,
@@ -503,23 +548,41 @@ export class ClaudeChat extends BaseChatModel {
         toolCalls,
         this.extractToolCalls(finalMessage.content)
       );
+      const finalMessageMetadata = finalMessage as {
+        model?: string | null;
+        stop_reason?: string | null;
+        stop_details?: unknown;
+        content?: unknown[] | null;
+        speed?: string | null;
+        service_tier?: string | null;
+      };
 
       const result: UsageItemResult = {
         tokensIn,
         tokensOut,
         cachedInTokens,
-        content: aggregated || this.getTextTypeFromContent(finalMessage.content),
+        content:
+          aggregated ||
+          this.getTextFromResponseContent(
+            finalMessage.content,
+            finalMessageMetadata.stop_reason,
+            finalMessageMetadata.stop_details
+          ),
         toolCalls: mergedToolCalls,
         usageItemData: this.buildUsageItemData(
           {
             id: finalMessage.id ?? null,
+            model: finalMessageMetadata.model ?? null,
+            stop_reason: finalMessageMetadata.stop_reason ?? null,
+            stop_details: finalMessageMetadata.stop_details,
+            content: finalMessageMetadata.content ?? null,
             usage:
               (finalMessage.usage ?? null) as unknown as
                 | Record<string, unknown>
                 | null,
-            speed: (finalMessage as { speed?: string | null }).speed ?? null,
+            speed: finalMessageMetadata.speed ?? null,
             service_tier:
-              (finalMessage as { service_tier?: string | null }).service_tier ??
+              finalMessageMetadata.service_tier ??
               finalMessage.usage.service_tier ??
               null,
           },
@@ -560,22 +623,38 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn += cacheReadInputTokens * 0.1;
       }
       const toolCalls = this.extractToolCalls(response.content);
+      const responseMetadata = response as {
+        model?: string | null;
+        stop_reason?: string | null;
+        stop_details?: unknown;
+        content?: unknown[] | null;
+        speed?: string | null;
+        service_tier?: string | null;
+      };
       const result: UsageItemResult = {
         tokensIn: tokensIn,
         tokensOut: tokensOut,
         cachedInTokens,
-        content: this.getTextTypeFromContent(response.content),
+        content: this.getTextFromResponseContent(
+          response.content,
+          responseMetadata.stop_reason,
+          responseMetadata.stop_details
+        ),
         toolCalls,
         usageItemData: this.buildUsageItemData(
           {
             id: response.id ?? null,
+            model: responseMetadata.model ?? null,
+            stop_reason: responseMetadata.stop_reason ?? null,
+            stop_details: responseMetadata.stop_details,
+            content: responseMetadata.content ?? null,
             usage:
               (response.usage ?? null) as unknown as
                 | Record<string, unknown>
                 | null,
-            speed: (response as { speed?: string | null }).speed ?? null,
+            speed: responseMetadata.speed ?? null,
             service_tier:
-              (response as { service_tier?: string | null }).service_tier ??
+              responseMetadata.service_tier ??
               response.usage.service_tier ??
               null,
           },
@@ -890,7 +969,11 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private usesBetaMessages(): boolean {
-    return this.useClaude1mContextBetaFlag || this.useFastMode;
+    return (
+      this.useClaude1mContextBetaFlag ||
+      this.useFastMode ||
+      this.useServerSideRefusalFallback
+    );
   }
 
   private buildBetaFlags(): AnthropicBeta[] {
@@ -904,27 +987,43 @@ export class ClaudeChat extends BaseChatModel {
       betas.push(CLAUDE_FAST_MODE_BETA_FLAG);
     }
 
+    if (this.useServerSideRefusalFallback) {
+      betas.push(CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG);
+    }
+
     return betas;
+  }
+
+  private buildServerSideFallbacks(): BetaFallbackParam[] | undefined {
+    if (!this.useServerSideRefusalFallback) {
+      return undefined;
+    }
+
+    return [{ model: CLAUDE_FABLE_FALLBACK_MODEL }];
   }
 
   private buildBetaCreateRequestOptions(
     requestOptions: AnthropicMessageCreateParamsBase
   ): AnthropicBetaMessageCreateParamsNonStreaming {
+    const fallbacks = this.buildServerSideFallbacks();
     return {
       ...requestOptions,
       stream: false,
       betas: this.buildBetaFlags(),
       speed: this.useFastMode ? "fast" : undefined,
+      ...(fallbacks ? { fallbacks } : {}),
     };
   }
 
   private buildBetaStreamRequestOptions(
     requestOptions: AnthropicMessageCreateParamsBase
   ): AnthropicBetaMessageStreamParams {
+    const fallbacks = this.buildServerSideFallbacks();
     return {
       ...requestOptions,
       betas: this.buildBetaFlags(),
       speed: this.useFastMode ? "fast" : undefined,
+      ...(fallbacks ? { fallbacks } : {}),
     };
   }
 
@@ -966,6 +1065,50 @@ export class ClaudeChat extends BaseChatModel {
     return merged;
   }
 
+  private getLegacyThinkingBudget(): number | undefined {
+    if (!this.maxThinkingTokens) {
+      return undefined;
+    }
+
+    const maxBudget = this.maxTokensOut - 1;
+    if (maxBudget < 1_024) {
+      return undefined;
+    }
+
+    return Math.min(this.maxThinkingTokens, maxBudget);
+  }
+
+  private getRequestTemperature(
+    thinkingConfig: AnthropicMessageCreateParamsBase["thinking"]
+  ): number | undefined {
+    if (
+      thinkingConfig?.type === "adaptive" ||
+      ClaudeChat.rejectsSamplingParams(this.modelName)
+    ) {
+      return undefined;
+    }
+
+    if (thinkingConfig?.type === "enabled") {
+      return 1;
+    }
+
+    return this.config.temperature;
+  }
+
+  private static modelMajorMinor(
+    modelName: string,
+    family: string
+  ): { major: number; minor?: number } | undefined {
+    const match = modelName.match(
+      new RegExp(`claude-${family}-(\\d+)(?:-(\\d{1,2})(?!\\d))?(?=$|[-@:])`)
+    );
+    if (!match) return undefined;
+    const major = Number.parseInt(match[1], 10);
+    const minor = match[2] ? Number.parseInt(match[2], 10) : undefined;
+    if (!Number.isFinite(major)) return undefined;
+    return { major, minor };
+  }
+
   // Detect models that support adaptive thinking.
   // Matches new-style names: claude-opus-4-6, claude-sonnet-4-6, claude-fable-5, etc.
   // Also works inside Bedrock/Vertex ids (e.g. eu.anthropic.claude-opus-4-6-v1:0).
@@ -984,7 +1127,29 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private static supportsFastMode(modelName: string): boolean {
-    return /claude-opus-4-[678](?=$|[-@:])/.test(modelName);
+    return /claude-opus-4-[78](?=$|[-@:])/.test(modelName);
+  }
+
+  private static supportsServerSideRefusalFallback(
+    modelName: string
+  ): boolean {
+    return /claude-fable-5(?=$|[-@:])/.test(modelName);
+  }
+
+  private static hasDefaultOneMillionContext(modelName: string): boolean {
+    return ClaudeChat.isAdaptiveThinkingModel(modelName);
+  }
+
+  private static rejectsSamplingParams(modelName: string): boolean {
+    if (
+      /claude-(fable|sonnet|mythos)-5(?=$|[-@:])/.test(modelName) ||
+      /claude-mythos-preview(?=$|[-@:])/.test(modelName)
+    ) {
+      return true;
+    }
+
+    const opus = ClaudeChat.modelMajorMinor(modelName, "opus");
+    return opus?.major === 4 && (opus.minor ?? 0) >= 7;
   }
 
   private static normalizeRequestedInferenceType(
@@ -1025,16 +1190,102 @@ export class ClaudeChat extends BaseChatModel {
     return texts.join("");
   }
 
-  async getEstimatedNumTokensFromMessages(
-    messages: PsModelMessage[]
-  ): Promise<number> {
-    //TODO: Get the right encoding
+  private getTextFromResponseContent(
+    content: Array<ContentBlock | BetaContentBlock>,
+    stopReason?: string | null,
+    stopDetails?: unknown
+  ): string {
+    const text = this.getTextTypeFromContent(content);
+    if (text || stopReason !== "refusal") {
+      return text;
+    }
+
+    const explanation = this.getRefusalExplanation(stopDetails);
+    return explanation
+      ? `Claude refused to answer this request: ${explanation}`
+      : "Claude refused to answer this request.";
+  }
+
+  private getRefusalExplanation(stopDetails: unknown): string | undefined {
+    if (!ClaudeChat.isRecord(stopDetails)) {
+      return undefined;
+    }
+
+    const explanation = stopDetails.explanation;
+    return typeof explanation === "string" && explanation.trim()
+      ? explanation
+      : undefined;
+  }
+
+  private extractFallbackBlocks(content?: unknown[] | null): unknown[] | null {
+    if (!content?.length) {
+      return null;
+    }
+
+    const fallbackBlocks = content.filter(
+      (block) => ClaudeChat.isRecord(block) && block.type === "fallback"
+    );
+    return fallbackBlocks.length ? fallbackBlocks : null;
+  }
+
+  private static isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
+  }
+
+  private static hasTokenCountingClient(
+    client: unknown
+  ): client is ClaudeTokenCountingClient {
+    if (!ClaudeChat.isRecord(client)) {
+      return false;
+    }
+
+    const messages = client.messages;
+    return (
+      ClaudeChat.isRecord(messages) &&
+      typeof messages.countTokens === "function"
+    );
+  }
+
+  private getTiktokenEstimateFromMessages(messages: PsModelMessage[]): number {
     const encoding = encoding_for_model(
       /*this.modelName*/ "gpt-4o" as TiktokenModel
     );
     const formattedMessages = messages.map((msg) => msg.message).join(" ");
-    const tokenCount = encoding.encode(formattedMessages).length;
-    return Promise.resolve(tokenCount);
+    return encoding.encode(formattedMessages).length;
+  }
+
+  async getEstimatedNumTokensFromMessages(
+    messages: PsModelMessage[]
+  ): Promise<number> {
+    const { system, messages: anthropicMessages } = this.formatMessages(
+      messages
+    );
+    if (!anthropicMessages.length) {
+      anthropicMessages.push({
+        role: "user",
+        content: [{ type: "text", text: "" }],
+      });
+    }
+
+    if (ClaudeChat.hasTokenCountingClient(this.client)) {
+      try {
+        const params: MessageCountTokensParams = {
+          model: this.modelName,
+          messages: anthropicMessages,
+          system,
+        };
+        const count = await this.client.messages.countTokens(params);
+        return count.input_tokens;
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        this.logger.warn?.(
+          `Claude token counting failed; falling back to local estimate: ${message}`
+        );
+      }
+    }
+
+    return this.getTiktokenEstimateFromMessages(messages);
   }
 }
 

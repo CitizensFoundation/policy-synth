@@ -58,12 +58,14 @@ type RecordedClaudeRequest = {
   stream?: boolean;
   betas?: string[];
   speed?: string;
+  fallbacks?: unknown[];
 };
 
 type ClaudeClientMock = {
   messages: {
     create: (params: unknown) => Promise<unknown>;
     stream: (params: unknown) => Promise<unknown>;
+    countTokens?: (params: unknown) => Promise<{ input_tokens: number }>;
   };
   beta: {
     messages: {
@@ -420,11 +422,15 @@ describe("ClaudeChat", () => {
     );
     assert.equal(Reflect.get(haiku45, "useAdaptiveThinking"), false);
 
-    for (const modelName of [
-      "claude-opus-4-6",
-      "claude-opus-4-7",
-      "claude-opus-4-8",
-    ]) {
+    const opus46 = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-4-6",
+        inferenceType: "fast",
+      })
+    );
+    assert.equal(Reflect.get(opus46, "useFastMode"), false);
+
+    for (const modelName of ["claude-opus-4-7", "claude-opus-4-8"]) {
       const fastModel = new ClaudeChat(
         createConfig({
           modelName,
@@ -451,16 +457,8 @@ describe("ClaudeChat", () => {
     let captured: RecordedClaudeRequest | undefined;
     setMockClient(model, {
       messages: {
-        create: async (params) => {
-          captured = params as RecordedClaudeRequest;
-          return {
-            id: "claude-fable-5-response",
-            usage: {
-              input_tokens: 5,
-              output_tokens: 2,
-            },
-            content: [{ type: "text", text: "Fable response" }],
-          };
+        create: async () => {
+          throw new Error("messages.create should not be used in this test");
         },
         stream: async () => {
           throw new Error("messages.stream should not be used in this test");
@@ -468,8 +466,18 @@ describe("ClaudeChat", () => {
       },
       beta: {
         messages: {
-          create: async () => {
-            throw new Error("beta.messages.create should not be used in this test");
+          create: async (params) => {
+            captured = params as RecordedClaudeRequest;
+            return {
+              id: "claude-fable-5-response",
+              model: "claude-fable-5",
+              stop_reason: "end_turn",
+              usage: {
+                input_tokens: 5,
+                output_tokens: 2,
+              },
+              content: [{ type: "text", text: "Fable response" }],
+            };
           },
           stream: async () => {
             throw new Error("beta.messages.stream should not be used in this test");
@@ -482,11 +490,17 @@ describe("ClaudeChat", () => {
 
     assert.ok(captured);
     assert.equal(captured.model, "claude-fable-5");
-    assert.equal(captured.temperature, 1);
+    assert.equal(captured.temperature, undefined);
     assert.deepEqual(captured.thinking, { type: "adaptive" });
     assert.deepEqual(captured.output_config, { effort: "medium" });
+    assert.deepEqual(captured.betas, ["server-side-fallback-2026-06-01"]);
+    assert.deepEqual(captured.fallbacks, [{ model: "claude-opus-4-8" }]);
     assert.equal(captured.stream, false);
     assert.equal(result?.content, "Fable response");
+    assert.equal(
+      result?.usageItemData?.request?.serverSideFallbackBeta,
+      "server-side-fallback-2026-06-01"
+    );
   });
 
   it("formats messages, sanitizes tool ids, filters tools, and maps tool choices", () => {
@@ -794,6 +808,7 @@ describe("ClaudeChat", () => {
       createConfig({
         modelName: "claude-3-opus-20240229",
         reasoningEffort: "medium",
+        maxTokensOut: 4096,
       })
     );
 
@@ -835,10 +850,11 @@ describe("ClaudeChat", () => {
     assert.ok(captured);
     assert.equal(captured.stream, false);
     assert.equal(captured.model, "claude-3-opus-20240229");
+    assert.equal(captured.max_tokens, 4096);
     assert.equal(captured.temperature, 1);
     assert.deepEqual(captured.thinking, {
       type: "enabled",
-      budget_tokens: 32000,
+      budget_tokens: 4095,
     });
     assert.equal(captured.output_config, undefined);
     assert.equal(captured.tools, undefined);
@@ -886,6 +902,7 @@ describe("ClaudeChat", () => {
         modelName: "claude-3-5-sonnet-20241022",
         inferenceType: "fast",
         reasoningEffort: "low",
+        maxTokensOut: 8192,
       })
     );
 
@@ -1103,7 +1120,7 @@ describe("ClaudeChat", () => {
   it("uses the beta create path for fast adaptive models and normalizes the result", async () => {
     const model = new ClaudeChat(
       createConfig({
-        modelName: "claude-opus-4-6",
+        modelName: "claude-opus-4-8",
         inferenceType: "priority",
         reasoningEffort: "xhigh",
         parallelToolCalls: false,
@@ -1189,11 +1206,11 @@ describe("ClaudeChat", () => {
     );
 
     assert.ok(captured);
-    assert.equal(captured.model, "claude-opus-4-6");
+    assert.equal(captured.model, "claude-opus-4-8");
     assert.equal(captured.max_tokens, 512);
-    assert.equal(captured.temperature, 1);
+    assert.equal(captured.temperature, undefined);
     assert.deepEqual(captured.thinking, { type: "adaptive" });
-    assert.deepEqual(captured.output_config, { effort: "max" });
+    assert.deepEqual(captured.output_config, { effort: "xhigh" });
     assert.deepEqual(captured.tool_choice, {
       type: "any",
       disable_parallel_tool_use: true,
@@ -1310,6 +1327,54 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.providerMetadata?.fastModeBeta, null);
   });
 
+  it("omits the context beta path for adaptive models with default 1M context", async () => {
+    process.env.USE_CLAUDE_1M_CONTEXT_BETA_FLAG = "true";
+
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-sonnet-4-6",
+      })
+    );
+
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-default-context",
+            usage: {
+              input_tokens: 2,
+              output_tokens: 1,
+            },
+            content: [{ type: "text", text: "Default context" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.betas, undefined);
+    assert.equal(result?.content, "Default context");
+    assert.equal(result?.usageItemData?.request?.uses1mContextBetaFlag, false);
+    assert.equal(result?.usageItemData?.providerMetadata?.contextBeta, null);
+  });
+
   it("uses the non-beta stream path for legacy models and preserves streamed tool calls", async () => {
     delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     delete process.env.USE_VERTEX_FOR_CLAUDE;
@@ -1403,7 +1468,7 @@ describe("ClaudeChat", () => {
   it("streams Claude content blocks and merges streamed and final tool calls", async () => {
     const model = new ClaudeChat(
       createConfig({
-        modelName: "claude-opus-4-6",
+        modelName: "claude-opus-4-8",
         inferenceType: "priority",
       })
     );
@@ -1513,16 +1578,164 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.request?.mode, "stream");
   });
 
-  it("estimates token counts from joined message text", async () => {
+  it("surfaces refusal responses with explicit content and metadata", async () => {
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-sonnet-5",
+        temperature: 0.2,
+      })
+    );
+
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-refusal",
+            model: "claude-sonnet-5",
+            stop_reason: "refusal",
+            stop_details: {
+              type: "refusal",
+              category: "policy",
+              explanation: "Request declined by safety policy.",
+            },
+            usage: {
+              input_tokens: 4,
+              output_tokens: 0,
+              iterations: [
+                {
+                  type: "fallback_message",
+                  model: "claude-sonnet-5",
+                  input_tokens: 4,
+                  output_tokens: 0,
+                },
+              ],
+            },
+            content: [],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.temperature, undefined);
+    assert.equal(
+      result?.content,
+      "Claude refused to answer this request: Request declined by safety policy."
+    );
+    assert.equal(result?.usageItemData?.providerMetadata?.stopReason, "refusal");
+    assert.deepEqual(result?.usageItemData?.providerMetadata?.stopDetails, {
+      type: "refusal",
+      category: "policy",
+      explanation: "Request declined by safety policy.",
+    });
+    assert.equal(result?.usageItemData?.providerMetadata?.servedModel, "claude-sonnet-5");
+    assert.deepEqual(result?.usageItemData?.providerMetadata?.fallbackIterations, [
+      {
+        type: "fallback_message",
+        model: "claude-sonnet-5",
+        input_tokens: 4,
+        output_tokens: 0,
+      },
+    ]);
+  });
+
+  it("counts tokens through the Claude API and falls back to local estimates", async () => {
     const model = new ClaudeChat(createConfig());
     const internals = asInternals(model);
+    let capturedCountParams: unknown;
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used in this test");
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+        countTokens: async (params) => {
+          capturedCountParams = params;
+          return { input_tokens: 42 };
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
 
     const estimatedTokens = await internals.getEstimatedNumTokensFromMessages([
+      { role: "system", message: "system" },
       { role: "user", message: "hello" },
       { role: "assistant", message: "world" },
     ]);
 
-    assert.equal(Number.isInteger(estimatedTokens), true);
-    assert.equal(estimatedTokens > 0, true);
+    assert.equal(estimatedTokens, 42);
+    assert.deepEqual(capturedCountParams, {
+      model: "claude-3-opus-20240229",
+      messages: [
+        { role: "user", content: [{ type: "text", text: "hello" }] },
+        { role: "assistant", content: [{ type: "text", text: "world" }] },
+      ],
+      system: [
+        {
+          type: "text",
+          text: "system",
+          cache_control: { type: "ephemeral" },
+        },
+      ],
+    });
+
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used in this test");
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+        countTokens: async () => {
+          throw new Error("token count unavailable");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const fallbackEstimate = await internals.getEstimatedNumTokensFromMessages([
+      { role: "user", message: "hello" },
+      { role: "assistant", message: "world" },
+    ]);
+    assert.equal(Number.isInteger(fallbackEstimate), true);
+    assert.equal(fallbackEstimate > 0, true);
   });
 });

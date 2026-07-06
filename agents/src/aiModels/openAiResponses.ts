@@ -93,6 +93,43 @@ export class OpenAiResponses extends BaseChatModel {
   private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
   private backgroundPollDelayMs = OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS;
+
+  private static parseGptModelVersion(
+    modelName: string
+  ): { major: number; minor: number } | undefined {
+    const match = modelName.toLowerCase().match(/\bgpt-(\d+)(?:\.(\d+))?/);
+    if (!match) return undefined;
+
+    const major = Number.parseInt(match[1], 10);
+    const minor = match[2] ? Number.parseInt(match[2], 10) : 0;
+
+    if (!Number.isFinite(major) || !Number.isFinite(minor)) {
+      return undefined;
+    }
+
+    return { major, minor };
+  }
+
+  private supportsNativeMaxReasoningEffort(): boolean {
+    const version = OpenAiResponses.parseGptModelVersion(
+      this.phaseAwareModelName
+    );
+    if (!version) return false;
+
+    if (version.major > 5) return true;
+    if (version.major < 5) return false;
+    return version.minor >= 6;
+  }
+
+  private mapReasoningEffortForResponses(): PsReasoningEffort | undefined {
+    const effort = this.cfg.reasoningEffort;
+    if (!effort) return undefined;
+    if (effort === "max" && !this.supportsNativeMaxReasoningEffort()) {
+      return "xhigh";
+    }
+    return effort;
+  }
+
   static setStoredResponseCleanupRedisClientForTests(
     redis?: StoredResponseCleanupRedisClient
   ): void {
@@ -293,20 +330,14 @@ export class OpenAiResponses extends BaseChatModel {
   }
 
   private isPhaseAwareResponsesModel(): boolean {
-    const modelName = this.phaseAwareModelName.toLowerCase();
-    const match = modelName.match(/\bgpt-(\d+)(?:\.(\d+))?/);
-    if (!match) return false;
+    const version = OpenAiResponses.parseGptModelVersion(
+      this.phaseAwareModelName
+    );
+    if (!version) return false;
 
-    const major = Number.parseInt(match[1], 10);
-    const minor = match[2] ? Number.parseInt(match[2], 10) : 0;
-
-    if (!Number.isFinite(major) || !Number.isFinite(minor)) {
-      return false;
-    }
-
-    if (major > 5) return true;
-    if (major < 5) return false;
-    return minor >= 3;
+    if (version.major > 5) return true;
+    if (version.major < 5) return false;
+    return version.minor >= 3;
   }
 
   override getCloneConfig(): PsOpenAiModelConfig {
@@ -444,6 +475,11 @@ export class OpenAiResponses extends BaseChatModel {
     await this.touchStoredResponseCleanupChain(requestOptions);
 
     const storeResponses = requestOptions?.store ?? true;
+    if (requestOptions?.useOpenAiResponsesBackground && !storeResponses) {
+      throw new Error(
+        "OpenAI Responses background mode requires stored responses; do not combine useOpenAiResponsesBackground with store:false."
+      );
+    }
     let hasPreviousResponse = storeResponses && !!this.previousResponseId;
     const hasTruncatedHistory =
       hasPreviousResponse && messages.length < this.lastSubmittedMessageCount;
@@ -456,7 +492,11 @@ export class OpenAiResponses extends BaseChatModel {
       hasPreviousResponse = false;
     }
 
-    if (!hasPreviousResponse && this.lastSubmittedMessageCount > 0) {
+    if (
+      storeResponses &&
+      !hasPreviousResponse &&
+      this.lastSubmittedMessageCount > 0
+    ) {
       this.sentToolOutputIds.clear();
       this.lastSubmittedMessageCount = 0;
       this.lastNoInputContinuationSignature = undefined;
@@ -497,7 +537,9 @@ export class OpenAiResponses extends BaseChatModel {
       );
     }
 
-    this.lastNoInputContinuationSignature = noInputContinuationSignature;
+    if (storeResponses) {
+      this.lastNoInputContinuationSignature = noInputContinuationSignature;
+    }
 
     const onlyToolOutputs =
       inputItems.length > 0 &&
@@ -573,11 +615,8 @@ export class OpenAiResponses extends BaseChatModel {
     if (instructions) common.instructions = instructions;
 
     if (isReasoning) {
-      if (this.cfg.reasoningEffort) {
-        const effort =
-          this.cfg.reasoningEffort === "max"
-            ? "xhigh"
-            : this.cfg.reasoningEffort;
+      const effort = this.mapReasoningEffortForResponses();
+      if (effort) {
         common.reasoning = { effort };
       }
     }
@@ -615,14 +654,16 @@ export class OpenAiResponses extends BaseChatModel {
       result = await this.handleNonStreaming(params, requestOptions);
     }
 
-    for (const id of pendingToolCallIds) {
-      this.sentToolOutputIds.add(id);
-    }
+    if (storeResponses) {
+      for (const id of pendingToolCallIds) {
+        this.sentToolOutputIds.add(id);
+      }
 
-    if (!onlyToolOutputs) {
-      this.lastSubmittedMessageCount = messages.length;
+      if (!onlyToolOutputs) {
+        this.lastSubmittedMessageCount = messages.length;
+      }
+      this.lastNoInputContinuationSignature = undefined;
     }
-    this.lastNoInputContinuationSignature = undefined;
 
     await this.scheduleStoredResponseCleanup(result, requestOptions);
 
@@ -1521,10 +1562,9 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    this.previousResponseId =
-      params.store === false
-        ? undefined
-        : finalResponse?.id ?? this.previousResponseId;
+    if (params.store !== false) {
+      this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
+    }
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 
@@ -1796,10 +1836,9 @@ export class OpenAiResponses extends BaseChatModel {
     //this.logger.debug(`Response: ${JSON.stringify(resp, null, 2)}`);
     this.assertResponseCompleted(resp);
 
-    this.previousResponseId =
-      requestParams.store === false
-        ? undefined
-        : resp?.id ?? this.previousResponseId;
+    if (requestParams.store !== false) {
+      this.previousResponseId = resp?.id ?? this.previousResponseId;
+    }
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
 

@@ -1604,6 +1604,39 @@ describe("OpenAiResponses", () => {
     assert.equal(usageRequest?.regionalProcessing, "eu");
   });
 
+  it("passes native max reasoning effort only for GPT 5.6+ Responses models", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+        reasoningEffort: "max",
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-max-native",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "max ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "gpt-5.6-sol");
+    assert.deepEqual(captured.reasoning, { effort: "max" });
+  });
+
   it("rejects incomplete and failed non-streaming Responses", async () => {
     const incompleteModel = new OpenAiResponses(createConfig());
     setMockClient(incompleteModel, {
@@ -2432,6 +2465,109 @@ describe("OpenAiResponses", () => {
     assert.equal(result.content, "stateless");
     assert.deepEqual(redis.getDueMembers(), []);
     assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+  });
+
+  it("does not mutate cached Responses state during stateless calls", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
+    Reflect.set(model, "previousResponseId", "resp-stateful");
+    Reflect.set(model, "lastSubmittedMessageCount", 2);
+    Reflect.set(model, "lastNoInputContinuationSignature", "keep-signature");
+    const sentToolOutputIds = Reflect.get(
+      model,
+      "sentToolOutputIds"
+    ) as Set<string>;
+    sentToolOutputIds.add("tool-old");
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-stateless",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "stateless" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [
+        { role: "user", message: "hello" },
+        {
+          role: "tool",
+          message: '{"ok":true}',
+          toolCallId: "tool-new",
+        },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { store: false }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.store, false);
+    assert.equal(captured.previous_response_id, undefined);
+    assert.deepEqual(captured.input, [
+      { role: "user", content: "hello" },
+      {
+        type: "function_call_output",
+        call_id: "tool-new",
+        output: '{"ok":true}',
+      },
+    ]);
+    assert.equal(result.content, "stateless");
+    assert.equal(Reflect.get(model, "previousResponseId"), "resp-stateful");
+    assert.equal(Reflect.get(model, "lastSubmittedMessageCount"), 2);
+    assert.equal(
+      Reflect.get(model, "lastNoInputContinuationSignature"),
+      "keep-signature"
+    );
+    assert.deepEqual([...sentToolOutputIds], ["tool-old"]);
+  });
+
+  it("rejects stateless background Responses because polling requires storage", async () => {
+    const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
+    let createCalled = false;
+    setMockClient(model, {
+      create: async () => {
+        createCalled = true;
+        return {
+          id: "resp-background-stateless",
+          status: "queued",
+          output: [],
+          usage: {},
+        };
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "hello" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          {
+            store: false,
+            useOpenAiResponsesBackground: true,
+          }
+        ),
+      /background mode requires stored responses/
+    );
+
+    assert.equal(createCalled, false);
   });
 
   it("queues stored response ids for idle cleanup as a chain advances", async () => {
