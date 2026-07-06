@@ -4,6 +4,7 @@ import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { OpenAiResponses } from "../aiModels/openAiResponses.js";
 import { OpenAiRealtime } from "../aiModels/openAiRealtime.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
+import { GoogleGeminiDeepResearch } from "../aiModels/googleGeminiDeepResearch.js";
 import { GoogleGeminiThought } from "../aiModels/googleGeminiThought.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import type {
@@ -26,6 +27,12 @@ import type {
 import { PsAiModelProvider } from "../aiModelTypes.js";
 import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
 import { PsModelUsageItemManager } from "./modelUsageItemManager.js";
+
+const isGeminiDeepResearchModelName = (name?: string): boolean =>
+  name?.toLowerCase().startsWith("deep-research") ?? false;
+
+const getGeminiApiModelName = (config: PsAiModelConfig): string | undefined =>
+  config.apiModelName ?? config.modelName;
 
 // Lazy loaded database modules
 let SequelizeModule: any;
@@ -156,7 +163,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         break;
       case PsAiModelProvider.Google:
         apiKey = process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY;
-        createModel = (baseConfig) => new GoogleGeminiChat(baseConfig);
+        createModel = (baseConfig) =>
+          isGeminiDeepResearchModelName(getGeminiApiModelName(baseConfig))
+            ? new GoogleGeminiDeepResearch(baseConfig)
+            : new GoogleGeminiChat(baseConfig);
         break;
       case PsAiModelProvider.Azure:
         apiKey = process.env.AZURE_API_KEY;
@@ -351,7 +361,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           newModel = new OpenAiResponses(baseConfig);
           break;
         case PsAiModelProvider.Google:
-          newModel = new GoogleGeminiChat(baseConfig);
+          newModel = isGeminiDeepResearchModelName(
+            getGeminiApiModelName(baseConfig)
+          )
+            ? new GoogleGeminiDeepResearch(baseConfig)
+            : new GoogleGeminiChat(baseConfig);
           break;
         case PsAiModelProvider.Azure:
           newModel = new AzureOpenAiChat({
@@ -607,7 +621,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         ephemeralModel = new ClaudeChat(ephemeralConfig);
         break;
       case PsAiModelProvider.Google:
-        if (options.useThoughtSignatures) {
+        if (
+          isGeminiDeepResearchModelName(getGeminiApiModelName(ephemeralConfig))
+        ) {
+          ephemeralModel = new GoogleGeminiDeepResearch(ephemeralConfig);
+        } else if (options.useThoughtSignatures) {
           ephemeralModel = new GoogleGeminiThought(ephemeralConfig);
         } else {
           ephemeralModel = new GoogleGeminiChat(ephemeralConfig);
@@ -967,6 +985,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  static isNonRetryableModelError = (err: unknown) => {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "isPsNonRetryableModelError" in err &&
+      (err as { isPsNonRetryableModelError?: unknown })
+        .isPsNonRetryableModelError === true
+    );
+  };
+
   private logDetailedServerError(
     model: BaseChatModel,
     error: any,
@@ -1220,6 +1248,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
+        if (PsAiModelManager.isNonRetryableModelError(error)) {
+          this.logger.error(
+            `Non-retryable model error: ${error.message || error}`
+          );
+          throw error;
+        }
+
         const isProviderAuthenticationError =
           PsAiModelManager.isProviderAuthenticationError(error);
 
@@ -1685,6 +1720,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
     if (options.geminiRegions?.length) {
       requestOptions.geminiRegions = options.geminiRegions;
+    }
+    if (options.geminiDeepResearchConfig) {
+      requestOptions.geminiDeepResearchConfig = options.geminiDeepResearchConfig;
+    }
+    const explicitResponsesStateKey = options.responsesStateKey?.trim();
+    const explicitGeminiDeepResearchStateKey =
+      options.geminiDeepResearchStateKey?.trim() || explicitResponsesStateKey;
+    if (explicitResponsesStateKey) {
+      requestOptions.responsesStateKey = explicitResponsesStateKey;
+    }
+    if (explicitGeminiDeepResearchStateKey) {
+      requestOptions.geminiDeepResearchStateKey =
+        explicitGeminiDeepResearchStateKey;
     }
     if (options.builtInTools?.length) {
       requestOptions.builtInTools = options.builtInTools;

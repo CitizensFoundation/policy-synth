@@ -1,5 +1,6 @@
 import {
   GoogleGenAI,
+  type GenerateContentConfig,
   GenerateContentParameters,
   GenerateContentResponse,
   FunctionCallingConfigMode,
@@ -7,6 +8,8 @@ import {
   FunctionCall,
   HarmBlockThreshold,
   HarmCategory,
+  ThinkingLevel,
+  type ThinkingConfig,
   ToolConfig,
 } from "@google/genai";
 
@@ -18,6 +21,8 @@ import type {
 import { BaseChatModel } from "./baseChatModel.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { appendFile } from "fs/promises";
+
+const DEFAULT_GEMINI_MODEL_NAME = "gemini-2.5-flash-lite";
 
 const parseModelAllowlist = (value?: string): Set<string> => {
   if (!value) return new Set<string>();
@@ -50,11 +55,11 @@ export class GoogleGeminiChat extends BaseChatModel {
   constructor(config: PsAiModelConfig) {
     super(
       config,
-      config.modelName || "gemini-2.0-flash",
+      config.modelName || DEFAULT_GEMINI_MODEL_NAME,
       config.maxTokensOut || 16_000
     );
 
-    this.modelName = config.modelName || "gemini-2.0-flash";
+    this.modelName = config.modelName || DEFAULT_GEMINI_MODEL_NAME;
 
     const vertexModelAllowlist = parseModelAllowlist(
       process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS
@@ -180,6 +185,43 @@ export class GoogleGeminiChat extends BaseChatModel {
 
   protected shouldUseGeminiRegionOverrides(): boolean {
     return true;
+  }
+
+  private isGemini3Model(): boolean {
+    return /gemini-3/i.test(String(this.getApiModelName()));
+  }
+
+  private mapReasoningEffortToThinkingLevel(
+    effort: PsReasoningEffort
+  ): ThinkingLevel {
+    switch (effort) {
+      case "low":
+        return ThinkingLevel.LOW;
+      case "medium":
+        return ThinkingLevel.MEDIUM;
+      case "high":
+      case "xhigh":
+      case "max":
+        return ThinkingLevel.HIGH;
+    }
+  }
+
+  private buildThinkingConfig(): ThinkingConfig | undefined {
+    if (this.isGemini3Model()) {
+      return this.config.reasoningEffort
+        ? {
+            thinkingLevel: this.mapReasoningEffortToThinkingLevel(
+              this.config.reasoningEffort
+            ),
+          }
+        : undefined;
+    }
+
+    return typeof this.config.maxThinkingTokens === "number" &&
+      Number.isFinite(this.config.maxThinkingTokens) &&
+      this.config.maxThinkingTokens > 0
+      ? { thinkingBudget: this.config.maxThinkingTokens }
+      : undefined;
   }
 
   private buildGeminiExecutionPlan(requestOptions?: PsModelRequestOptions): {
@@ -323,6 +365,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       toolCount: number;
       allowedFunctionNames?: string[];
       systemInstructionPresent: boolean;
+      thinkingConfig?: ThinkingConfig;
       geminiRegions: string[];
       selectedGeminiRegion: string | null;
     },
@@ -347,6 +390,8 @@ export class GoogleGeminiChat extends BaseChatModel {
         allowedFunctionNames: request.allowedFunctionNames ?? null,
         systemInstructionPresent: request.systemInstructionPresent,
         maxTokensOut: this.maxTokensOut ?? null,
+        thinkingLevel: request.thinkingConfig?.thinkingLevel ?? null,
+        thinkingBudget: request.thinkingConfig?.thinkingBudget ?? null,
         geminiRegions:
           this.useVertex && request.geminiRegions.length > 0
             ? request.geminiRegions
@@ -581,6 +626,7 @@ export class GoogleGeminiChat extends BaseChatModel {
             allowedFunctionNames:
               toolConfig?.functionCallingConfig?.allowedFunctionNames,
             systemInstructionPresent: Boolean(systemInstruction),
+            thinkingConfig: params.config?.thinkingConfig,
             geminiRegions: execution.requestedRegions,
             selectedGeminiRegion: execution.selectedRegion,
           },
@@ -628,6 +674,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           allowedFunctionNames:
             toolConfig?.functionCallingConfig?.allowedFunctionNames,
           systemInstructionPresent: Boolean(systemInstruction),
+          thinkingConfig: params.config?.thinkingConfig,
           geminiRegions: execution.requestedRegions,
           selectedGeminiRegion: execution.selectedRegion,
         },
@@ -751,16 +798,23 @@ export class GoogleGeminiChat extends BaseChatModel {
       };
     }
 
+    const thinkingConfig = this.buildThinkingConfig();
+    const config: GenerateContentConfig = {
+      systemInstruction: systemInstruction,
+      tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
+      toolConfig,
+      safetySettings: GoogleGeminiChat.safetySettings,
+      maxOutputTokens: this.maxTokensOut,
+    };
+
+    if (thinkingConfig) {
+      config.thinkingConfig = thinkingConfig;
+    }
+
     const params: GenerateContentParameters = {
       model: this.modelName,
       contents: this.buildContents(messages, media),
-
-      config: {
-        systemInstruction: systemInstruction,
-        tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
-        toolConfig,
-        safetySettings: GoogleGeminiChat.safetySettings,
-      },
+      config,
     };
     const executionPlan = this.buildGeminiExecutionPlan(requestOptions);
     let lastError: Error | undefined;

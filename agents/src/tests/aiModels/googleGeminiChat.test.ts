@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import { readFile, rm } from "node:fs/promises";
 import type { GenerateContentResponse } from "@google/genai";
-import { FunctionCallingConfigMode } from "@google/genai";
+import { FunctionCallingConfigMode, ThinkingLevel } from "@google/genai";
 
 import { PsAiModelSize, PsAiModelType } from "../../aiModelTypes.js";
 
@@ -54,6 +54,7 @@ class ExposedGoogleGeminiChat extends GoogleGeminiChat {
       toolChoice: "auto";
       toolCount: number;
       systemInstructionPresent: boolean;
+      thinkingConfig?: Record<string, unknown>;
       geminiRegions: string[];
       selectedGeminiRegion: string | null;
     },
@@ -72,6 +73,7 @@ class ExposedGoogleGeminiChat extends GoogleGeminiChat {
           toolChoice: "auto";
           toolCount: number;
           systemInstructionPresent: boolean;
+          thinkingConfig?: Record<string, unknown>;
           geminiRegions: string[];
           selectedGeminiRegion: string | null;
         },
@@ -129,7 +131,7 @@ const createConfig = (
   overrides: Partial<PsAiModelConfig> = {}
 ): PsAiModelConfig => ({
   apiKey: "gemini-test-key",
-  modelName: "gemini-2.0-flash",
+  modelName: "gemini-2.5-flash-lite",
   modelType: PsAiModelType.MultiModal,
   modelSize: PsAiModelSize.Small,
   maxTokensOut: 4096,
@@ -155,6 +157,8 @@ type RecordedGeminiRequest = {
       };
     };
     safetySettings?: unknown[];
+    maxOutputTokens?: number;
+    thinkingConfig?: Record<string, unknown>;
   };
 };
 
@@ -231,13 +235,22 @@ afterEach(() => {
 describe("GoogleGeminiChat", () => {
   it("enables Vertex transport when the model is allowlisted", () => {
     process.env.USE_GOOGLE_VERTEX_AI_FOR_MODELS =
-      " gemini-2.0-flash , gemini-2.5-pro ";
+      " gemini-2.5-flash-lite , gemini-2.5-pro ";
     process.env.GOOGLE_CLOUD_PROJECT = "test-project";
     process.env.GOOGLE_CLOUD_LOCATION = "europe-west1";
 
     const model = new GoogleGeminiChat(createConfig());
 
     assert.equal(model.useVertex, true);
+  });
+
+  it("uses the live Gemini fallback model when config omits modelName", () => {
+    const config = createConfig();
+    delete (config as Partial<PsAiModelConfig>).modelName;
+
+    const model = new GoogleGeminiChat(config);
+
+    assert.equal(model.modelName, "gemini-2.5-flash-lite");
   });
 
   it("covers Gemini client initialization fallbacks and Vertex client caching", () => {
@@ -940,7 +953,7 @@ describe("GoogleGeminiChat", () => {
     await model.logTokens(3, 4, 1);
 
     const csv = await readFile("/tmp/geminiTokenDebug.csv", "utf8");
-    assert.equal(csv.includes("gemini-2.0-flash,3,4,1"), true);
+    assert.equal(csv.includes("gemini-2.5-flash-lite,3,4,1"), true);
   });
 
   it("parses tool responses and normalizes output token counts", () => {
@@ -1079,7 +1092,7 @@ describe("GoogleGeminiChat", () => {
     );
 
     assert.ok(captured);
-    assert.equal(captured.model, "gemini-2.0-flash");
+    assert.equal(captured.model, "gemini-2.5-flash-lite");
     assert.equal(captured.config?.systemInstruction, "system prompt\n\ndeveloper prompt");
     assert.deepEqual(captured.config?.tools, [
       {
@@ -1104,6 +1117,8 @@ describe("GoogleGeminiChat", () => {
       },
     });
     assert.equal(captured.config?.safetySettings?.length, 5);
+    assert.equal(captured.config?.maxOutputTokens, 4096);
+    assert.equal("thinkingConfig" in (captured.config ?? {}), false);
 
     assert.equal(result.content, "Gemini result");
     assert.equal(result.tokensIn, 12);
@@ -1122,6 +1137,105 @@ describe("GoogleGeminiChat", () => {
     assert.deepEqual(result.usageItemData?.request?.allowedFunctionNames, [
       "lookup",
     ]);
+    assert.equal(result.usageItemData?.request?.maxTokensOut, 4096);
+    assert.equal(result.usageItemData?.request?.thinkingLevel, null);
+    assert.equal(result.usageItemData?.request?.thinkingBudget, null);
+  });
+
+  it("maps Gemini 3 reasoning effort to thinkingLevel", async () => {
+    const lowModel = new SpyGoogleGeminiChat(
+      createConfig({
+        modelName: "gemini-3-flash-preview",
+        reasoningEffort: "low",
+      })
+    );
+    const maxModel = new SpyGoogleGeminiChat(
+      createConfig({
+        modelName: "gemini-3-pro-preview",
+        reasoningEffort: "max",
+      })
+    );
+    const capturedRequests: RecordedGeminiRequest[] = [];
+    const ai = {
+      models: {
+        generateContent: async (params: unknown) => {
+          capturedRequests.push(params as RecordedGeminiRequest);
+          return createGeminiResponse("ok");
+        },
+      },
+    };
+    setMockAi(lowModel, ai);
+    setMockAi(maxModel, ai);
+
+    const lowResult = await lowModel.generate([
+      { role: "user", message: "hello" },
+    ]);
+    await maxModel.generate([{ role: "user", message: "hello" }]);
+
+    assert.deepEqual(capturedRequests[0].config?.thinkingConfig, {
+      thinkingLevel: ThinkingLevel.LOW,
+    });
+    assert.deepEqual(capturedRequests[1].config?.thinkingConfig, {
+      thinkingLevel: ThinkingLevel.HIGH,
+    });
+    assert.equal(
+      lowResult.usageItemData?.request?.thinkingLevel,
+      ThinkingLevel.LOW
+    );
+    assert.equal(lowResult.usageItemData?.request?.thinkingBudget, null);
+  });
+
+  it("maps Gemini 2.5 maxThinkingTokens to thinkingBudget only", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({
+        modelName: "gemini-2.5-pro",
+        maxThinkingTokens: 8192,
+      })
+    );
+    let captured: RecordedGeminiRequest | undefined;
+    setMockAi(model, {
+      models: {
+        generateContent: async (params) => {
+          captured = params as RecordedGeminiRequest;
+          return createGeminiResponse("ok");
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.deepEqual(captured?.config?.thinkingConfig, {
+      thinkingBudget: 8192,
+    });
+    assert.equal(result.usageItemData?.request?.thinkingLevel, null);
+    assert.equal(result.usageItemData?.request?.thinkingBudget, 8192);
+  });
+
+  it("omits thinkingConfig for Gemini 3 without reasoning effort and for default dynamic thinking", async () => {
+    const gemini3Model = new SpyGoogleGeminiChat(
+      createConfig({
+        modelName: "gemini-3-flash-preview",
+        maxThinkingTokens: 8192,
+      })
+    );
+    const defaultModel = new SpyGoogleGeminiChat(createConfig());
+    const capturedRequests: RecordedGeminiRequest[] = [];
+    const ai = {
+      models: {
+        generateContent: async (params: unknown) => {
+          capturedRequests.push(params as RecordedGeminiRequest);
+          return createGeminiResponse("ok");
+        },
+      },
+    };
+    setMockAi(gemini3Model, ai);
+    setMockAi(defaultModel, ai);
+
+    await gemini3Model.generate([{ role: "user", message: "hello" }]);
+    await defaultModel.generate([{ role: "user", message: "hello" }]);
+
+    assert.equal("thinkingConfig" in (capturedRequests[0].config ?? {}), false);
+    assert.equal("thinkingConfig" in (capturedRequests[1].config ?? {}), false);
   });
 
   it("streams generate requests, forwards chunk callbacks, and records function calls", async () => {

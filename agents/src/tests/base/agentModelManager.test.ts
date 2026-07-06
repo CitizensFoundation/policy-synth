@@ -14,6 +14,10 @@ import { AzureOpenAiChat } from "../../aiModels/azureOpenAiChat.js";
 import { BaseChatModel } from "../../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../../aiModels/claudeChat.js";
 import { GoogleGeminiChat } from "../../aiModels/googleGeminiChat.js";
+import {
+  GeminiDeepResearchRequiresActionError,
+  GoogleGeminiDeepResearch,
+} from "../../aiModels/googleGeminiDeepResearch.js";
 import { GoogleGeminiThought } from "../../aiModels/googleGeminiThought.js";
 import { OpenAiChat } from "../../aiModels/openAiChat.js";
 import { OpenAiRealtime } from "../../aiModels/openAiRealtime.js";
@@ -702,6 +706,19 @@ describe("PsAiModelManager initialization", () => {
         -1
       );
     }
+
+    useStandardResponsesEnv();
+    const deepResearchManager = createNoopManager();
+    process.env.PS_AI_MODEL_TYPE = PsAiModelType.TextReasoning;
+    process.env.PS_AI_MODEL_SIZE = PsAiModelSize.Large;
+    process.env.PS_AI_MODEL_PROVIDER = PsAiModelProvider.Google;
+    process.env.PS_AI_MODEL_NAME = "deep-research-preview-04-2026";
+    process.env.GEMINI_API_KEY = "google-env-key";
+
+    assert.ok(
+      deepResearchManager.initializeOneModelFromEnv() instanceof
+        GoogleGeminiDeepResearch
+    );
   });
 
   it("rejects unsupported realtime environment model providers", () => {
@@ -894,6 +911,15 @@ describe("PsAiModelManager ephemeral model overrides", () => {
         useThoughtSignatures: true,
       }
     );
+    const geminiDeepResearch = await internals.createEphemeralModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      {
+        modelProvider: PsAiModelProvider.Google,
+        modelName: "deep-research-max-preview-04-2026",
+        useThoughtSignatures: true,
+      }
+    );
     const azure = await internals.createEphemeralModel(
       PsAiModelType.Text,
       PsAiModelSize.Small,
@@ -910,6 +936,7 @@ describe("PsAiModelManager ephemeral model overrides", () => {
     assert.ok(claude instanceof ClaudeChat);
     assert.ok(gemini instanceof GoogleGeminiChat);
     assert.ok(geminiThought instanceof GoogleGeminiThought);
+    assert.ok(geminiDeepResearch instanceof GoogleGeminiDeepResearch);
     assert.ok(azure instanceof AzureOpenAiChat);
     assert.equal(openAi?.config.apiKey, "openai-env-key");
     assert.equal(claude?.config.apiKey, "anthropic-env-key");
@@ -1195,6 +1222,12 @@ describe("PsAiModelManager utility routing", () => {
     const builtInTools: PsBuiltInTool[] = [
       { type: "code_interpreter", memoryLimit: "1g" },
     ];
+    const geminiDeepResearchConfig: PsGeminiDeepResearchConfig = {
+      type: "deep-research",
+      thinking_summaries: "auto",
+      visualization: "auto",
+      enable_bigquery_tool: true,
+    };
 
     assert.deepEqual(internals.getModelRequestOptions({}, 12_345), {
       timeoutMs: 12_345,
@@ -1203,7 +1236,10 @@ describe("PsAiModelManager utility routing", () => {
       internals.getModelRequestOptions(
         {
           safetyIdentifier: "safety-user",
+          responsesStateKey: "research-thread",
           geminiRegions: ["us-central1", "europe-west1"],
+          geminiDeepResearchConfig,
+          geminiDeepResearchStateKey: "gemini-thread",
           builtInTools,
           store: false,
           textFormat: { type: "json_object" },
@@ -1222,7 +1258,10 @@ describe("PsAiModelManager utility routing", () => {
       {
         timeoutMs: 67_890,
         safetyIdentifier: "safety-user",
+        responsesStateKey: "research-thread",
         geminiRegions: ["us-central1", "europe-west1"],
+        geminiDeepResearchConfig,
+        geminiDeepResearchStateKey: "gemini-thread",
         builtInTools,
         store: false,
         textFormat: { type: "json_object" },
@@ -1796,6 +1835,41 @@ describe("PsAiModelManager text model calls", () => {
         ),
       /Model call failed after maximum retries/
     );
+  });
+
+  it("surfaces non-retryable model errors without retries or fallback", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    disableRetrySleep(manager);
+    const manualActionError = new GeminiDeepResearchRequiresActionError(
+      "interaction-manual",
+      "manual plan approval required"
+    );
+    const model = new ScriptedChatModel(
+      createModelConfig({ modelName: "manual-action-model" }),
+      [],
+      [manualActionError]
+    );
+    registerModel(manager, model);
+
+    await assert.rejects(
+      () =>
+        manager.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Small,
+          [{ role: "user", message: "research" }],
+          {
+            overrideMaxRetries: 3,
+            fallbackModelProvider: PsAiModelProvider.OpenAI,
+            fallbackModelName: "fallback-should-not-run",
+          }
+        ),
+      (error: unknown) => {
+        assert.strictEqual(error, manualActionError);
+        return true;
+      }
+    );
+    assert.equal(model.calls.length, 1);
   });
 
   it("retries detailed 5xx failures before succeeding", async () => {
@@ -3100,6 +3174,61 @@ describe("PsAiModelManager price and usage accounting", () => {
         }
       );
       assert.equal(fallbackPrices?.costOutTokensPerMillion, 13);
+    } finally {
+      Reflect.set(PsAiModel, "findOne", originalFindOne);
+    }
+  });
+
+  it("routes aliased Deep Research database models by apiModelName", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    process.env.GOOGLE_API_KEY = "db-google-key";
+
+    const { PsAiModel } = await import("../../dbModels/aiModel.js");
+    const originalFindOne = Reflect.get(PsAiModel, "findOne");
+    const dbModelConfig: PsAiModelConfiguration = {
+      ...createAiModel({
+        type: PsAiModelType.TextReasoning,
+        modelSize: PsAiModelSize.Large,
+        provider: PsAiModelProvider.Google,
+        model: "research-large",
+        apiModel: "deep-research-max-preview-04-2026",
+      }).configuration,
+    };
+
+    Reflect.set(PsAiModel, "findOne", async () => ({
+      id: 901,
+      configuration: dbModelConfig,
+    }));
+
+    try {
+      const manager = createNoopManager();
+      const internals = asInternals(manager);
+      const fallback = new ScriptedChatModel(
+        createModelConfig({
+          apiKey: "fallback-key",
+          modelName: "fallback-google",
+          provider: PsAiModelProvider.Google,
+        })
+      );
+      registerModel(manager, fallback);
+
+      const ephemeral = await internals.createEphemeralModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        {
+          modelProvider: PsAiModelProvider.Google,
+          modelName: "research-large",
+        }
+      );
+
+      assert.ok(ephemeral instanceof GoogleGeminiDeepResearch);
+      assert.equal(ephemeral.dbModelId, 901);
+      assert.equal(ephemeral.config.modelName, "research-large");
+      assert.equal(
+        ephemeral.config.apiModelName,
+        "deep-research-max-preview-04-2026"
+      );
     } finally {
       Reflect.set(PsAiModel, "findOne", originalFindOne);
     }

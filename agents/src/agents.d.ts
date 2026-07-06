@@ -28,6 +28,13 @@ type PsOpenAiResponsesInclude =
   | "reasoning.encrypted_content";
 type PsOpenAiResponsesPromptCacheRetention = "in_memory" | "24h";
 type PsOpenAiResponsesTruncation = "auto" | "disabled";
+interface PsGeminiDeepResearchConfig {
+  type: "deep-research";
+  thinking_summaries?: "auto" | "none";
+  visualization?: "off" | "auto";
+  collaborative_planning?: boolean;
+  enable_bigquery_tool?: boolean;
+}
 
 interface PsPromptImage {
   mimeType: string;
@@ -148,6 +155,13 @@ interface PsCallModelOptions {
   modelReasoningEffort?: PsReasoningEffort;
   safetyIdentifier?: string;
   geminiRegions?: string[];
+  geminiDeepResearchConfig?: PsGeminiDeepResearchConfig;
+  /**
+   * Optional conversation/thread key used to isolate Gemini Deep Research
+   * continuation state. If omitted, Deep Research calls are stateless from
+   * the wrapper's perspective and will not reuse previous_interaction_id.
+   */
+  geminiDeepResearchStateKey?: string;
   /**
    * Optional local conversation/thread key used to isolate OpenAI Responses
    * continuation state. Pass a stable key per conversation if you want
@@ -245,6 +259,8 @@ interface PsModelRequestOptions {
   responsesStateKey?: string;
   deleteOpenAiResponsesAfterIdleMinutes?: number;
   geminiRegions?: string[];
+  geminiDeepResearchConfig?: PsGeminiDeepResearchConfig;
+  geminiDeepResearchStateKey?: string;
   builtInTools?: PsBuiltInTool[];
   timeoutMs?: number;
   useOpenAiResponsesBackground?: boolean;
