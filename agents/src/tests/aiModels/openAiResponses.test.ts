@@ -1516,6 +1516,16 @@ describe("OpenAiResponses", () => {
     });
     assert.equal(captured.prompt_cache_key, "cache-key-1");
     assert.equal(captured.prompt_cache_retention, "24h");
+    assert.deepEqual(result.usageItemData?.request?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "openai",
+      keyPresent: true,
+      retention: "24h",
+      geminiCachedContentNamePresent: false,
+      appliedMode: "openai-prompt-cache",
+      unsupportedReason: null,
+    });
     assert.deepEqual(captured.metadata, { workflow: "responses-parity" });
     assert.deepEqual(captured.moderation, { mode: "auto" });
     assert.equal(captured.top_p, 0.7);

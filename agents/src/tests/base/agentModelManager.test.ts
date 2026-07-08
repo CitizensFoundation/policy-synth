@@ -1265,6 +1265,7 @@ describe("PsAiModelManager utility routing", () => {
         builtInTools,
         store: false,
         textFormat: { type: "json_object" },
+        promptCache: { key: "cache-key", retention: "24h" },
         promptCacheKey: "cache-key",
         promptCacheRetention: "24h",
         metadata: { workflow: "manager" },

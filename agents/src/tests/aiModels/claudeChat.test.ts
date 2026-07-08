@@ -16,7 +16,8 @@ type ClaudeChatInstance = InstanceType<typeof ClaudeChat>;
 type ClaudeChatInternals = {
   formatMessages: (
     messages: PsModelMessage[],
-    media?: PsPromptImage[]
+    media?: PsPromptImage[],
+    requestOptions?: PsModelRequestOptions
   ) => { system?: unknown; messages: Array<Record<string, unknown>> };
   sanitizeToolId: (id: string | undefined) => string;
   buildTools: (
@@ -54,6 +55,7 @@ type RecordedClaudeRequest = {
   tools?: unknown[];
   tool_choice?: unknown;
   system?: unknown;
+  cache_control?: unknown;
   output_config?: unknown;
   stream?: boolean;
   betas?: string[];
@@ -503,6 +505,221 @@ describe("ClaudeChat", () => {
     );
   });
 
+  it("attaches Claude cache control to user-only prompts", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(createConfig());
+    let captured: RecordedClaudeRequest | undefined;
+
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-user-only-cache",
+            model: "claude-3-opus-20240229",
+            stop_reason: "end_turn",
+            usage: {
+              input_tokens: 3,
+              output_tokens: 2,
+            },
+            content: [{ type: "text", text: "cached response" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.system, undefined);
+    assert.deepEqual(captured.messages, [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "hello",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      },
+    ]);
+    assert.equal(result?.content, "cached response");
+    assert.deepEqual(result?.usageItemData?.request?.promptCache, {
+      requested: false,
+      enabled: true,
+      provider: "anthropic",
+      keyPresent: false,
+      retention: null,
+      geminiCachedContentNamePresent: false,
+      appliedMode: "claude-cache-control",
+      unsupportedReason: null,
+    });
+  });
+
+  it("adds the Anthropic extended-cache TTL beta flag for Claude 1h retention", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(createConfig());
+    let captured: RecordedClaudeRequest | undefined;
+
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used in this test");
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async (params) => {
+            captured = params as RecordedClaudeRequest;
+            return {
+              id: "claude-1h-cache",
+              model: "claude-3-opus-20240229",
+              stop_reason: "end_turn",
+              usage: {
+                input_tokens: 3,
+                output_tokens: 2,
+              },
+              content: [{ type: "text", text: "1h cached response" }],
+            };
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { promptCache: { retention: "1h" } }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.stream, false);
+    assert.deepEqual(captured.betas, ["extended-cache-ttl-2025-04-11"]);
+    assert.deepEqual(captured.messages, [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "hello",
+            cache_control: { type: "ephemeral", ttl: "1h" },
+          },
+        ],
+      },
+    ]);
+    assert.equal(result?.content, "1h cached response");
+  });
+
+  it("omits Claude 1h cache TTL on Bedrock transport", async () => {
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "bedrock-token";
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(createConfig());
+    let captured: RecordedClaudeRequest | undefined;
+
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-bedrock-1h-cache",
+            model: "claude-3-opus-20240229",
+            stop_reason: "end_turn",
+            usage: {
+              input_tokens: 3,
+              output_tokens: 2,
+            },
+            content: [{ type: "text", text: "bedrock cache response" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { promptCache: { retention: "1h" } }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.stream, false);
+    assert.equal(captured.betas, undefined);
+    assert.deepEqual(captured.messages, [
+      {
+        role: "user",
+        content: [
+          {
+            type: "text",
+            text: "hello",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
+      },
+    ]);
+    assert.deepEqual(result?.usageItemData?.request?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "anthropic",
+      keyPresent: false,
+      retention: "1h",
+      geminiCachedContentNamePresent: false,
+      appliedMode: "claude-cache-control",
+      unsupportedReason:
+        "Claude 1h prompt cache TTL requires direct Anthropic transport; using default ephemeral cache control.",
+    });
+    assert.equal(result?.content, "bedrock cache response");
+  });
+
   it("formats messages, sanitizes tool ids, filters tools, and maps tool choices", () => {
     const model = new ClaudeChat(
       createConfig({
@@ -544,6 +761,28 @@ describe("ClaudeChat", () => {
         cache_control: { type: "ephemeral" },
       },
     ]);
+    assert.deepEqual(
+      internals.formatMessages(
+        [{ role: "system", message: "system prompt" }],
+        undefined,
+        { promptCache: { enabled: false } }
+      ).system,
+      [{ type: "text", text: "system prompt" }]
+    );
+    assert.deepEqual(
+      internals.formatMessages(
+        [{ role: "system", message: "system prompt" }],
+        undefined,
+        { promptCache: { retention: "1h" } }
+      ).system,
+      [
+        {
+          type: "text",
+          text: "system prompt",
+          cache_control: { type: "ephemeral", ttl: "1h" },
+        },
+      ]
+    );
     assert.deepEqual(formatted.messages, [
       {
         role: "user",
@@ -862,7 +1101,13 @@ describe("ClaudeChat", () => {
     assert.deepEqual(captured.messages, [
       {
         role: "user",
-        content: [{ type: "text", text: "" }],
+        content: [
+          {
+            type: "text",
+            text: "",
+            cache_control: { type: "ephemeral" },
+          },
+        ],
       },
     ]);
 

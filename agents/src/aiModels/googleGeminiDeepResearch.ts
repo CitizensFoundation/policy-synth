@@ -5,6 +5,10 @@ import type {
 } from "openai/resources/chat/completions";
 
 import { GoogleGeminiChat } from "./googleGeminiChat.js";
+import {
+  buildPromptCacheUsageData,
+  normalizePromptCacheOptions,
+} from "./promptCacheOptions.js";
 
 const GEMINI_DEEP_RESEARCH_POLL_INTERVAL_MS = 10_000;
 const GEMINI_DEEP_RESEARCH_CANCEL_TIMEOUT_MS = 10_000;
@@ -123,6 +127,15 @@ export class GeminiDeepResearchRequiresActionError extends Error {
     this.name = "GeminiDeepResearchRequiresActionError";
     this.interactionId = interactionId;
     this.actionText = actionText;
+  }
+}
+
+export class GeminiDeepResearchTimeoutError extends Error {
+  readonly isPsNonRetryableModelError = true;
+
+  constructor(timeoutMs: number) {
+    super(`Gemini Deep Research interaction timed out after ${timeoutMs}ms`);
+    this.name = GEMINI_DEEP_RESEARCH_TIMEOUT_ERROR;
   }
 }
 
@@ -596,11 +609,7 @@ export class GoogleGeminiDeepResearch extends GoogleGeminiChat {
 
     const remainingMs = this.getRemainingTimeoutMs(deadlineMs);
     if (typeof remainingMs === "number" && remainingMs <= 0) {
-      const error = new Error(
-        `Gemini Deep Research interaction timed out after ${timeoutMs}ms`
-      );
-      error.name = GEMINI_DEEP_RESEARCH_TIMEOUT_ERROR;
-      throw error;
+      throw new GeminiDeepResearchTimeoutError(timeoutMs);
     }
   }
 
@@ -690,6 +699,7 @@ export class GoogleGeminiDeepResearch extends GoogleGeminiChat {
     requestOptions?: PsModelRequestOptions,
     planningInteraction?: GeminiInteraction
   ): PsModelUsageItemProviderData {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
     return {
       provider: "google",
       apiFamily: "interactions",
@@ -705,6 +715,18 @@ export class GoogleGeminiDeepResearch extends GoogleGeminiChat {
           requestOptions?.geminiDeepResearchStateKey ?? null,
         systemInstructionPresent: Boolean(request.system_instruction),
         timeoutMs: requestOptions?.timeoutMs ?? null,
+        promptCache: promptCache
+          ? buildPromptCacheUsageData({
+              provider: "google",
+              promptCache,
+              appliedMode:
+                promptCache.enabled === false ? "disabled" : "unsupported",
+              unsupportedReason:
+                promptCache.enabled === false
+                  ? undefined
+                  : "Gemini Deep Research does not expose explicit prompt cache controls through this wrapper; provider-side implicit caching may still apply.",
+            })
+          : null,
       },
       usageRaw: this.buildUsageRaw(interaction, planningInteraction),
       usageNormalized: usage,

@@ -11,6 +11,12 @@ import type {
 
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+import {
+  buildPromptCacheUsageData,
+  isOpenAiPromptCacheRetention,
+  normalizePromptCacheOptions,
+  type PromptCacheUsageData,
+} from "./promptCacheOptions.js";
 
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
@@ -138,6 +144,10 @@ export class OpenAiChat extends BaseChatModel {
         : undefined,
      // parallel_tool_calls: this.cfg.parallelToolCalls === true,
     };
+    const promptCacheUsageData = this.applyOpenAiPromptCacheOptions(
+      common,
+      requestOptions
+    );
 
     /* ------------------------------------------------------------------ *
      * 4  Streaming vs Non‑streaming                                      *
@@ -151,7 +161,11 @@ export class OpenAiChat extends BaseChatModel {
         stream_options: { include_usage: true },
       };
 
-      return await this.handleStreaming(params, streamingCallback);
+      return await this.handleStreaming(
+        params,
+        streamingCallback,
+        promptCacheUsageData
+      );
     } else {
       const params: ChatCompletionCreateParamsNonStreaming = {
         ...common,
@@ -160,7 +174,7 @@ export class OpenAiChat extends BaseChatModel {
         max_tokens: isReasoning ? undefined : this.cfg.maxTokensOut,
       };
 
-      return await this.handleNonStreaming(params);
+      return await this.handleNonStreaming(params, promptCacheUsageData);
     }
   }
 
@@ -245,6 +259,7 @@ export class OpenAiChat extends BaseChatModel {
       stream: boolean;
       toolChoice: ChatCompletionToolChoiceOption | "auto";
       toolCount: number;
+      promptCache?: PromptCacheUsageData;
     },
     usage: {
       tokensIn: number;
@@ -269,6 +284,7 @@ export class OpenAiChat extends BaseChatModel {
         regionalProcessing: this.cfg.regionalProcessing ?? null,
         reasoningEffort: this.cfg.reasoningEffort ?? null,
         maxTokensOut: this.cfg.maxTokensOut ?? null,
+        promptCache: request.promptCache ?? null,
       },
       usageRaw: response.usage ?? undefined,
       usageNormalized: {
@@ -290,7 +306,8 @@ export class OpenAiChat extends BaseChatModel {
 
   private async handleStreaming(
     params: ChatCompletionCreateParamsStreaming,
-    onChunk?: (c: string) => void
+    onChunk?: (c: string) => void,
+    promptCacheUsageData?: PromptCacheUsageData
   ): Promise<PsBaseModelReturnParameters> {
     const stream = this.client.chat.completions.stream(params);
 
@@ -320,6 +337,7 @@ export class OpenAiChat extends BaseChatModel {
         stream: true,
         toolChoice: params.tool_choice ?? "auto",
         toolCount: params.tools?.length ?? 0,
+        promptCache: promptCacheUsageData,
       },
       {
         tokensIn: results.usage?.prompt_tokens ?? 0,
@@ -347,7 +365,8 @@ export class OpenAiChat extends BaseChatModel {
   }
 
   private async handleNonStreaming(
-    params: ChatCompletionCreateParamsNonStreaming
+    params: ChatCompletionCreateParamsNonStreaming,
+    promptCacheUsageData?: PromptCacheUsageData
   ): Promise<PsBaseModelReturnParameters> {
     const resp = await this.client.chat.completions.create(params);
 
@@ -367,6 +386,7 @@ export class OpenAiChat extends BaseChatModel {
         stream: false,
         toolChoice: params.tool_choice ?? "auto",
         toolCount: params.tools?.length ?? 0,
+        promptCache: promptCacheUsageData,
       },
       {
         tokensIn: usage.prompt_tokens,
@@ -416,6 +436,48 @@ export class OpenAiChat extends BaseChatModel {
       }
     }
     return toolCalls;
+  }
+
+  private applyOpenAiPromptCacheOptions(
+    params: {
+      prompt_cache_key?: string;
+      prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
+    },
+    requestOptions?: PsModelRequestOptions
+  ): PromptCacheUsageData | undefined {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
+    if (!promptCache) {
+      return undefined;
+    }
+    if (promptCache.enabled === false) {
+      return buildPromptCacheUsageData({
+        provider: "openai",
+        promptCache,
+        appliedMode: "disabled",
+      });
+    }
+
+    const retention = isOpenAiPromptCacheRetention(promptCache.retention)
+      ? promptCache.retention
+      : undefined;
+    if (promptCache.key) {
+      params.prompt_cache_key = promptCache.key;
+    }
+    if (retention) {
+      params.prompt_cache_retention = retention;
+    }
+
+    const unsupportedReason =
+      promptCache.retention && !retention
+        ? "OpenAI prompt cache retention supports only in_memory or 24h; requested retention was ignored."
+        : undefined;
+    return buildPromptCacheUsageData({
+      provider: "openai",
+      promptCache,
+      appliedMode:
+        promptCache.key || retention ? "openai-prompt-cache" : "unsupported",
+      unsupportedReason,
+    });
   }
 }
 

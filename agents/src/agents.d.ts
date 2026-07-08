@@ -27,6 +27,17 @@ type PsOpenAiResponsesInclude =
   | "message.output_text.logprobs"
   | "reasoning.encrypted_content";
 type PsOpenAiResponsesPromptCacheRetention = "in_memory" | "24h";
+type PsPromptCacheRetention =
+  | PsOpenAiResponsesPromptCacheRetention
+  | "ephemeral"
+  | "1h";
+
+interface PsPromptCacheOptions {
+  enabled?: boolean;
+  key?: string;
+  retention?: PsPromptCacheRetention;
+  geminiCachedContentName?: string;
+}
 type PsOpenAiResponsesTruncation = "auto" | "disabled";
 interface PsGeminiDeepResearchConfig {
   type: "deep-research";
@@ -207,6 +218,7 @@ interface PsCallModelOptions {
   allowedTools?: string[];
   store?: boolean;
   textFormat?: Record<string, unknown>;
+  promptCache?: PsPromptCacheOptions;
   promptCacheKey?: string;
   promptCacheRetention?: PsOpenAiResponsesPromptCacheRetention;
   metadata?: Record<string, string>;
@@ -266,6 +278,7 @@ interface PsModelRequestOptions {
   useOpenAiResponsesBackground?: boolean;
   store?: boolean;
   textFormat?: Record<string, unknown>;
+  promptCache?: PsPromptCacheOptions;
   promptCacheKey?: string;
   promptCacheRetention?: PsOpenAiResponsesPromptCacheRetention;
   metadata?: Record<string, string>;

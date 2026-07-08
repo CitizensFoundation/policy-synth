@@ -159,6 +159,7 @@ type RecordedGeminiRequest = {
     safetySettings?: unknown[];
     maxOutputTokens?: number;
     thinkingConfig?: Record<string, unknown>;
+    cachedContent?: string;
   };
 };
 
@@ -412,6 +413,130 @@ describe("GoogleGeminiChat", () => {
       result.usageItemData?.providerMetadata?.location,
       "us-central1"
     );
+  });
+
+  it("attaches caller-managed Gemini cached content names", async () => {
+    const model = new SpyGoogleGeminiChat(createConfig());
+
+    let captured: RecordedGeminiRequest | undefined;
+    setMockAi(model, {
+      models: {
+        generateContent: async (params) => {
+          captured = params as RecordedGeminiRequest;
+          return {
+            text: "cached Gemini",
+            functionCalls: [],
+            usageMetadata: {
+              promptTokenCount: 8,
+              candidatesTokenCount: 2,
+              cachedContentTokenCount: 4,
+            },
+            candidates: [
+              {
+                finishReason: "STOP",
+                content: {
+                  parts: [{ text: "cached Gemini" }],
+                },
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      undefined,
+      "auto",
+      undefined,
+      {
+        promptCache: {
+          geminiCachedContentName: "cachedContents/shared-context",
+        },
+      }
+    );
+
+    assert.ok(captured);
+    assert.equal(
+      captured.config?.cachedContent,
+      "cachedContents/shared-context"
+    );
+    assert.equal(captured.config?.systemInstruction, undefined);
+    assert.equal(captured.config?.tools, undefined);
+    assert.equal(captured.config?.toolConfig, undefined);
+    assert.equal(result.cachedInTokens, 4);
+    assert.deepEqual(result.usageItemData?.request?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "google",
+      keyPresent: false,
+      retention: null,
+      geminiCachedContentNamePresent: true,
+      appliedMode: "gemini-cached-content",
+      unsupportedReason: null,
+    });
+  });
+
+  it("skips Gemini cached content when request-level system or tools would conflict", async () => {
+    const model = new SpyGoogleGeminiChat(createConfig());
+
+    let captured: RecordedGeminiRequest | undefined;
+    setMockAi(model, {
+      models: {
+        generateContent: async (params) => {
+          captured = params as RecordedGeminiRequest;
+          return createGeminiResponse("uncached Gemini");
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [
+        { role: "system", message: "system prompt" },
+        { role: "user", message: "hello" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [
+        {
+          type: "function",
+          function: {
+            name: "lookup",
+            parameters: {
+              type: "object",
+            },
+          },
+        },
+      ],
+      "auto",
+      undefined,
+      {
+        promptCache: {
+          geminiCachedContentName: "cachedContents/shared-context",
+        },
+      }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.config?.cachedContent, undefined);
+    assert.equal(captured.config?.systemInstruction, "system prompt");
+    assert.ok(captured.config?.tools);
+    assert.ok(captured.config?.toolConfig);
+    assert.deepEqual(result.usageItemData?.request?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "google",
+      keyPresent: false,
+      retention: null,
+      geminiCachedContentNamePresent: true,
+      appliedMode: "unsupported",
+      unsupportedReason:
+        "Gemini generateContent cachedContent cannot be combined with request-level systemInstruction, tools, toolConfig; include those fields when creating the cached content or omit geminiCachedContentName.",
+    });
   });
 
   it("rotates across request-supplied Gemini regions and records the selected region", async () => {
@@ -1209,6 +1334,30 @@ describe("GoogleGeminiChat", () => {
     });
     assert.equal(result.usageItemData?.request?.thinkingLevel, null);
     assert.equal(result.usageItemData?.request?.thinkingBudget, 8192);
+  });
+
+  it("omits thinkingBudget for Gemini models before 2.5", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({
+        modelName: "gemini-2.0-flash",
+        maxThinkingTokens: 8192,
+      })
+    );
+    let captured: RecordedGeminiRequest | undefined;
+    setMockAi(model, {
+      models: {
+        generateContent: async (params) => {
+          captured = params as RecordedGeminiRequest;
+          return createGeminiResponse("ok");
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.equal(captured?.config?.thinkingConfig, undefined);
+    assert.equal(result.usageItemData?.request?.thinkingLevel, null);
+    assert.equal(result.usageItemData?.request?.thinkingBudget, null);
   });
 
   it("omits thinkingConfig for Gemini 3 without reasoning effort and for default dynamic thinking", async () => {

@@ -164,7 +164,14 @@ describe("GoogleGeminiDeepResearch", () => {
       undefined,
       "auto",
       undefined,
-      { timeoutMs: 60_000 }
+      {
+        timeoutMs: 60_000,
+        promptCache: {
+          key: "research-cache-key",
+          retention: "24h",
+          geminiCachedContentName: "cachedContents/research-context",
+        },
+      }
     );
 
     assert.equal(result.content, "final research report");
@@ -190,6 +197,17 @@ describe("GoogleGeminiDeepResearch", () => {
     );
     assert.equal(result.usageItemData?.request?.background, true);
     assert.equal(result.usageItemData?.request?.store, true);
+    assert.deepEqual(result.usageItemData?.request?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "google",
+      keyPresent: true,
+      retention: "24h",
+      geminiCachedContentNamePresent: true,
+      appliedMode: "unsupported",
+      unsupportedReason:
+        "Gemini Deep Research does not expose explicit prompt cache controls through this wrapper; provider-side implicit caching may still apply.",
+    });
   });
 
   it("rejects terminal failed interactions without cancelling", async () => {
@@ -270,7 +288,16 @@ describe("GoogleGeminiDeepResearch", () => {
         generate(model, [{ role: "user", message: "research" }], {
           timeoutMs: 5,
         }),
-      /timed out/
+      (error) => {
+        assert.ok(error instanceof Error);
+        assert.match(error.message, /timed out/);
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: unknown })
+            .isPsNonRetryableModelError,
+          true
+        );
+        return true;
+      }
     );
     assert.deepEqual(cancelledIds, ["interaction-timeout"]);
   });

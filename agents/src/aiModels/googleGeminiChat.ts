@@ -21,6 +21,11 @@ import type {
 import { BaseChatModel } from "./baseChatModel.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
 import { appendFile } from "fs/promises";
+import {
+  buildPromptCacheUsageData,
+  normalizePromptCacheOptions,
+  type PromptCacheUsageData,
+} from "./promptCacheOptions.js";
 
 const DEFAULT_GEMINI_MODEL_NAME = "gemini-2.5-flash-lite";
 
@@ -191,6 +196,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     return /gemini-3/i.test(String(this.getApiModelName()));
   }
 
+  private isGemini25Model(): boolean {
+    return /gemini-2\.5/i.test(String(this.getApiModelName()));
+  }
+
   private mapReasoningEffortToThinkingLevel(
     effort: PsReasoningEffort
   ): ThinkingLevel {
@@ -215,6 +224,10 @@ export class GoogleGeminiChat extends BaseChatModel {
             ),
           }
         : undefined;
+    }
+
+    if (!this.isGemini25Model()) {
+      return undefined;
     }
 
     return typeof this.config.maxThinkingTokens === "number" &&
@@ -366,6 +379,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       allowedFunctionNames?: string[];
       systemInstructionPresent: boolean;
       thinkingConfig?: ThinkingConfig;
+      promptCache?: PromptCacheUsageData;
       geminiRegions: string[];
       selectedGeminiRegion: string | null;
     },
@@ -392,6 +406,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         maxTokensOut: this.maxTokensOut ?? null,
         thinkingLevel: request.thinkingConfig?.thinkingLevel ?? null,
         thinkingBudget: request.thinkingConfig?.thinkingBudget ?? null,
+        promptCache: request.promptCache ?? null,
         geminiRegions:
           this.useVertex && request.geminiRegions.length > 0
             ? request.geminiRegions
@@ -570,7 +585,8 @@ export class GoogleGeminiChat extends BaseChatModel {
     toolConfig: ToolConfig | undefined,
     systemInstruction: string,
     execution: GeminiExecutionContext,
-    streamState: { emittedOutput: boolean }
+    streamState: { emittedOutput: boolean },
+    promptCacheUsageData?: PromptCacheUsageData
   ): Promise<UsageItemResult> {
     if (streaming) {
       const stream = await ai.models.generateContentStream(params);
@@ -627,6 +643,7 @@ export class GoogleGeminiChat extends BaseChatModel {
               toolConfig?.functionCallingConfig?.allowedFunctionNames,
             systemInstructionPresent: Boolean(systemInstruction),
             thinkingConfig: params.config?.thinkingConfig,
+            promptCache: promptCacheUsageData,
             geminiRegions: execution.requestedRegions,
             selectedGeminiRegion: execution.selectedRegion,
           },
@@ -675,6 +692,7 @@ export class GoogleGeminiChat extends BaseChatModel {
             toolConfig?.functionCallingConfig?.allowedFunctionNames,
           systemInstructionPresent: Boolean(systemInstruction),
           thinkingConfig: params.config?.thinkingConfig,
+          promptCache: promptCacheUsageData,
           geminiRegions: execution.requestedRegions,
           selectedGeminiRegion: execution.selectedRegion,
         },
@@ -810,6 +828,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     if (thinkingConfig) {
       config.thinkingConfig = thinkingConfig;
     }
+    const promptCacheUsageData = this.applyGeminiPromptCacheOptions(
+      config,
+      requestOptions
+    );
 
     const params: GenerateContentParameters = {
       model: this.modelName,
@@ -838,7 +860,8 @@ export class GoogleGeminiChat extends BaseChatModel {
             requestedRegions: executionPlan.requestedRegions,
             selectedRegion,
           },
-          streamState
+          streamState,
+          promptCacheUsageData
         );
       } catch (error) {
         const annotatedError = this.annotateRegionError(
@@ -877,6 +900,70 @@ export class GoogleGeminiChat extends BaseChatModel {
 
   protected handleStreamChunk(_chunk: GenerateContentResponse) {
     // no-op; subclasses may override
+  }
+
+  private applyGeminiPromptCacheOptions(
+    config: GenerateContentConfig,
+    requestOptions?: PsModelRequestOptions
+  ): PromptCacheUsageData | undefined {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
+    if (!promptCache) {
+      return undefined;
+    }
+    if (promptCache.enabled === false) {
+      return buildPromptCacheUsageData({
+        provider: "google",
+        promptCache,
+        appliedMode: "disabled",
+      });
+    }
+    if (!promptCache.geminiCachedContentName) {
+      return buildPromptCacheUsageData({
+        provider: "google",
+        promptCache,
+        appliedMode: "unsupported",
+        unsupportedReason:
+          "Gemini generateContent explicit prompt caching requires a caller-managed geminiCachedContentName.",
+      });
+    }
+
+    const hasRequestSystemInstruction =
+      typeof config.systemInstruction === "string"
+        ? config.systemInstruction.trim().length > 0
+        : config.systemInstruction !== undefined;
+    const hasRequestTools = config.tools !== undefined;
+    const hasRequestToolConfig = config.toolConfig !== undefined;
+    if (
+      hasRequestSystemInstruction ||
+      hasRequestTools ||
+      hasRequestToolConfig
+    ) {
+      const conflicts = [
+        hasRequestSystemInstruction ? "systemInstruction" : undefined,
+        hasRequestTools ? "tools" : undefined,
+        hasRequestToolConfig ? "toolConfig" : undefined,
+      ].filter((value): value is string => value !== undefined);
+      return buildPromptCacheUsageData({
+        provider: "google",
+        promptCache,
+        appliedMode: "unsupported",
+        unsupportedReason:
+          `Gemini generateContent cachedContent cannot be combined with request-level ${conflicts.join(
+            ", "
+          )}; include those fields when creating the cached content or omit geminiCachedContentName.`,
+      });
+    }
+
+    delete config.systemInstruction;
+    config.cachedContent = promptCache.geminiCachedContentName;
+    this.logger.debug(
+      "Using caller-managed Gemini cached content; request-level systemInstruction/tools/toolConfig are not present."
+    );
+    return buildPromptCacheUsageData({
+      provider: "google",
+      promptCache,
+      appliedMode: "gemini-cached-content",
+    });
   }
 
   protected handleFinalResponse(_response: GenerateContentResponse) {

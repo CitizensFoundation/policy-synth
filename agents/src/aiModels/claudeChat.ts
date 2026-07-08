@@ -10,6 +10,7 @@ import type {
   MessageCreateParamsNonStreaming as AnthropicBetaMessageCreateParamsNonStreaming,
 } from "@anthropic-ai/sdk/resources/beta/messages/messages.js";
 import type {
+  CacheControlEphemeral,
   ContentBlock,
   ContentBlockParam,
   ImageBlockParam,
@@ -30,16 +31,31 @@ import type {
 } from "openai/resources/chat/completions";
 import { BaseChatModel } from "./baseChatModel.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
+import {
+  buildPromptCacheUsageData,
+  normalizePromptCacheOptions,
+  type PromptCacheUsageData,
+} from "./promptCacheOptions.js";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
 const CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG: AnthropicBeta =
   "server-side-fallback-2026-06-01";
+const CLAUDE_EXTENDED_CACHE_TTL_BETA_FLAG: AnthropicBeta =
+  "extended-cache-ttl-2025-04-11";
 const CLAUDE_FABLE_FALLBACK_MODEL = "claude-opus-4-8";
 type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
 type UsageItemPayload = PsModelUsageItemProviderData & Record<string, unknown>;
+type ClaudeNonCacheableContentBlock = Extract<
+  ContentBlockParam,
+  { type: "thinking" | "redacted_thinking" }
+>;
+type ClaudeCacheableContentBlock = Exclude<
+  ContentBlockParam,
+  ClaudeNonCacheableContentBlock
+>;
 type ClaudeUsageResponseMetadata = {
   id?: string | null;
   usage?: Record<string, unknown> | null;
@@ -336,7 +352,8 @@ export class ClaudeChat extends BaseChatModel {
       cachedInTokens: number;
       cacheReadInputTokens: number;
     },
-    requestKind: "stream" | "non_stream"
+    requestKind: "stream" | "non_stream",
+    promptCacheUsageData: PromptCacheUsageData
   ): UsageItemPayload {
     return {
       provider: "anthropic",
@@ -364,6 +381,7 @@ export class ClaudeChat extends BaseChatModel {
           : null,
         thinking: requestOptions.thinking ?? null,
         outputConfig: requestOptions.output_config ?? null,
+        promptCache: promptCacheUsageData,
       },
       usageRaw: response.usage ?? undefined,
       usageNormalized: {
@@ -416,7 +434,7 @@ export class ClaudeChat extends BaseChatModel {
     tools: ChatCompletionTool[] = [],
     toolChoice: ChatCompletionToolChoiceOption | "auto" = "auto",
     allowedTools: string[] = [],
-    _requestOptions?: PsModelRequestOptions
+    requestOptionsForModel?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters | undefined> {
     this.logger.debug(
       `Model config: type=${this.config.modelType}, size=${this.config.modelSize}, ` +
@@ -429,11 +447,23 @@ export class ClaudeChat extends BaseChatModel {
 
     const { system, messages: anthropicMessages } = this.formatMessages(
       messages,
-      media
+      media,
+      requestOptionsForModel
     );
+    const promptCacheUsageData =
+      this.getClaudePromptCacheUsageData(requestOptionsForModel);
 
     if (!anthropicMessages.length) {
       anthropicMessages.push({ role: "user", content: [{ type: "text", text: "" }] });
+    }
+    if (!system) {
+      const cacheControl = this.getClaudeCacheControl(requestOptionsForModel);
+      if (cacheControl) {
+        this.attachCacheControlToLastMessageBlock(
+          anthropicMessages,
+          cacheControl
+        );
+      }
     }
 
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
@@ -494,8 +524,11 @@ export class ClaudeChat extends BaseChatModel {
 
     if (streaming) {
       const streamRequestOptions: AnthropicMessageStreamParams = requestOptions;
-      const betaStreamRequestOptions = this.usesBetaMessages()
-        ? this.buildBetaStreamRequestOptions(requestOptions)
+      const betaStreamRequestOptions = this.usesBetaMessages(requestOptionsForModel)
+        ? this.buildBetaStreamRequestOptions(
+            requestOptions,
+            requestOptionsForModel
+          )
         : undefined;
       const stream = betaStreamRequestOptions
         ? await client.beta.messages.stream(betaStreamRequestOptions)
@@ -593,7 +626,8 @@ export class ClaudeChat extends BaseChatModel {
             cachedInTokens,
             cacheReadInputTokens,
           },
-          "stream"
+          "stream",
+          promptCacheUsageData
         ),
       };
 
@@ -603,8 +637,11 @@ export class ClaudeChat extends BaseChatModel {
         ...requestOptions,
         stream: false,
       };
-      const betaCreateRequestOptions = this.usesBetaMessages()
-        ? this.buildBetaCreateRequestOptions(requestOptions)
+      const betaCreateRequestOptions = this.usesBetaMessages(requestOptionsForModel)
+        ? this.buildBetaCreateRequestOptions(
+            requestOptions,
+            requestOptionsForModel
+          )
         : undefined;
       const response = betaCreateRequestOptions
         ? await client.beta.messages.create(betaCreateRequestOptions)
@@ -665,7 +702,8 @@ export class ClaudeChat extends BaseChatModel {
             cachedInTokens,
             cacheReadInputTokens,
           },
-          "non_stream"
+          "non_stream",
+          promptCacheUsageData
         ),
       };
 
@@ -675,7 +713,8 @@ export class ClaudeChat extends BaseChatModel {
 
   private formatMessages(
     messages: PsModelMessage[],
-    media?: PsPromptImage[]
+    media?: PsPromptImage[],
+    requestOptions?: PsModelRequestOptions
   ): { system?: string | TextBlockParam[]; messages: MessageParam[] } {
     const systemParts: string[] = [];
     const formatted: MessageParam[] = [];
@@ -720,18 +759,118 @@ export class ClaudeChat extends BaseChatModel {
 
     this.attachMediaBlocks(formatted, media);
 
+    const cacheControl = this.getClaudeCacheControl(requestOptions);
     const system =
       systemParts.length > 0
         ? [
             {
               type: "text",
               text: systemParts.join("\n\n"),
-              cache_control: { type: "ephemeral" },
+              ...(cacheControl ? { cache_control: cacheControl } : {}),
             } satisfies TextBlockParam,
           ]
         : undefined;
 
     return { system, messages: formatted };
+  }
+
+  private getClaudeCacheControl(
+    requestOptions?: PsModelRequestOptions
+  ): CacheControlEphemeral | undefined {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
+    if (promptCache?.enabled === false) {
+      return undefined;
+    }
+
+    if (
+      promptCache?.retention === "1h" &&
+      this.getTransport() === "anthropic"
+    ) {
+      return { type: "ephemeral", ttl: "1h" };
+    }
+
+    return { type: "ephemeral" };
+  }
+
+  private attachCacheControlToLastMessageBlock(
+    messages: MessageParam[],
+    cacheControl: CacheControlEphemeral
+  ): void {
+    for (let messageIndex = messages.length - 1; messageIndex >= 0; messageIndex -= 1) {
+      const message = messages[messageIndex];
+
+      if (typeof message.content === "string") {
+        message.content = [
+          {
+            type: "text",
+            text: message.content,
+            cache_control: cacheControl,
+          },
+        ];
+        return;
+      }
+
+      if (!Array.isArray(message.content)) {
+        continue;
+      }
+
+      for (
+        let blockIndex = message.content.length - 1;
+        blockIndex >= 0;
+        blockIndex -= 1
+      ) {
+        const block = message.content[blockIndex];
+        if (this.isClaudeCacheableContentBlock(block)) {
+          const cachedBlock: ClaudeCacheableContentBlock = {
+            ...block,
+            cache_control: cacheControl,
+          };
+          message.content[blockIndex] = cachedBlock;
+          return;
+        }
+      }
+    }
+  }
+
+  private isClaudeCacheableContentBlock(
+    block: ContentBlockParam
+  ): block is ClaudeCacheableContentBlock {
+    return block.type !== "thinking" && block.type !== "redacted_thinking";
+  }
+
+  private getClaudePromptCacheUsageData(
+    requestOptions?: PsModelRequestOptions
+  ): PromptCacheUsageData {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
+    if (promptCache?.enabled === false) {
+      return buildPromptCacheUsageData({
+        provider: "anthropic",
+        promptCache,
+        appliedMode: "disabled",
+      });
+    }
+
+    let unsupportedReason: string | undefined;
+    if (
+      promptCache?.retention === "in_memory" ||
+      promptCache?.retention === "24h"
+    ) {
+      unsupportedReason =
+        "Claude prompt cache supports ephemeral cache control; OpenAI retention was ignored.";
+    } else if (
+      promptCache?.retention === "1h" &&
+      this.getTransport() !== "anthropic"
+    ) {
+      unsupportedReason =
+        "Claude 1h prompt cache TTL requires direct Anthropic transport; using default ephemeral cache control.";
+    }
+
+    return buildPromptCacheUsageData({
+      provider: "anthropic",
+      promptCache,
+      appliedMode: "claude-cache-control",
+      unsupportedReason,
+    });
   }
 
   private buildUserContentBlocks(text?: string): ContentBlockParam[] {
@@ -968,15 +1107,25 @@ export class ClaudeChat extends BaseChatModel {
     return { value: input };
   }
 
-  private usesBetaMessages(): boolean {
+  private usesExtendedCacheTtlBeta(
+    requestOptions?: PsModelRequestOptions
+  ): boolean {
     return (
-      this.useClaude1mContextBetaFlag ||
-      this.useFastMode ||
-      this.useServerSideRefusalFallback
+      this.getTransport() === "anthropic" &&
+      this.getClaudeCacheControl(requestOptions)?.ttl === "1h"
     );
   }
 
-  private buildBetaFlags(): AnthropicBeta[] {
+  private usesBetaMessages(requestOptions?: PsModelRequestOptions): boolean {
+    return (
+      this.useClaude1mContextBetaFlag ||
+      this.useFastMode ||
+      this.useServerSideRefusalFallback ||
+      this.usesExtendedCacheTtlBeta(requestOptions)
+    );
+  }
+
+  private buildBetaFlags(requestOptions?: PsModelRequestOptions): AnthropicBeta[] {
     const betas: AnthropicBeta[] = [];
 
     if (this.useClaude1mContextBetaFlag) {
@@ -991,6 +1140,10 @@ export class ClaudeChat extends BaseChatModel {
       betas.push(CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG);
     }
 
+    if (this.usesExtendedCacheTtlBeta(requestOptions)) {
+      betas.push(CLAUDE_EXTENDED_CACHE_TTL_BETA_FLAG);
+    }
+
     return betas;
   }
 
@@ -1003,25 +1156,27 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private buildBetaCreateRequestOptions(
-    requestOptions: AnthropicMessageCreateParamsBase
+    requestOptions: AnthropicMessageCreateParamsBase,
+    modelRequestOptions?: PsModelRequestOptions
   ): AnthropicBetaMessageCreateParamsNonStreaming {
     const fallbacks = this.buildServerSideFallbacks();
     return {
       ...requestOptions,
       stream: false,
-      betas: this.buildBetaFlags(),
+      betas: this.buildBetaFlags(modelRequestOptions),
       speed: this.useFastMode ? "fast" : undefined,
       ...(fallbacks ? { fallbacks } : {}),
     };
   }
 
   private buildBetaStreamRequestOptions(
-    requestOptions: AnthropicMessageCreateParamsBase
+    requestOptions: AnthropicMessageCreateParamsBase,
+    modelRequestOptions?: PsModelRequestOptions
   ): AnthropicBetaMessageStreamParams {
     const fallbacks = this.buildServerSideFallbacks();
     return {
       ...requestOptions,
-      betas: this.buildBetaFlags(),
+      betas: this.buildBetaFlags(modelRequestOptions),
       speed: this.useFastMode ? "fast" : undefined,
       ...(fallbacks ? { fallbacks } : {}),
     };

@@ -7,6 +7,7 @@ import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { GoogleGeminiDeepResearch } from "../aiModels/googleGeminiDeepResearch.js";
 import { GoogleGeminiThought } from "../aiModels/googleGeminiThought.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
+import { normalizePromptCacheOptions } from "../aiModels/promptCacheOptions.js";
 import type {
   BaseRealtimeModel,
   PsRealtimeSession,
@@ -1745,6 +1746,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
     if (options.textFormat) {
       requestOptions.textFormat = options.textFormat;
+    }
+    const promptCache = normalizePromptCacheOptions(options);
+    if (promptCache) {
+      requestOptions.promptCache = promptCache;
     }
     if (options.promptCacheKey) {
       requestOptions.promptCacheKey = options.promptCacheKey;

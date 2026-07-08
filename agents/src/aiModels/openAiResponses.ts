@@ -21,6 +21,12 @@ import {
 } from "./openAiResponsesCleanup.js";
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
+import {
+  buildPromptCacheUsageData,
+  isOpenAiPromptCacheRetention,
+  normalizePromptCacheOptions,
+  type PromptCacheUsageData,
+} from "./promptCacheOptions.js";
 
 export type {
   StoredResponseCleanupClient,
@@ -47,6 +53,8 @@ type ResponsesCreateParams = Record<string, unknown> & {
   include?: ResponsesInclude[];
   model?: string;
   previous_response_id?: string;
+  prompt_cache_key?: string;
+  prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
   store?: boolean;
   stream?: boolean;
 };
@@ -55,6 +63,8 @@ type ResponsesCreateUsageParams = {
   include?: unknown[];
   model?: string;
   previous_response_id?: string | null;
+  prompt_cache_key?: string;
+  prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
   service_tier?: string | null;
   store?: boolean;
   stream?: boolean;
@@ -577,12 +587,10 @@ export class OpenAiResponses extends BaseChatModel {
     if (requestOptions?.textFormat) {
       common.text = { format: requestOptions.textFormat };
     }
-    if (requestOptions?.promptCacheKey) {
-      common.prompt_cache_key = requestOptions.promptCacheKey;
-    }
-    if (requestOptions?.promptCacheRetention) {
-      common.prompt_cache_retention = requestOptions.promptCacheRetention;
-    }
+    const promptCacheUsageData = this.applyOpenAiPromptCacheOptions(
+      common,
+      requestOptions
+    );
     if (requestOptions?.metadata) {
       common.metadata = requestOptions.metadata;
     }
@@ -648,10 +656,15 @@ export class OpenAiResponses extends BaseChatModel {
       result = await this.handleStreaming(
         params,
         streamingCallback,
-        requestOptions
+        requestOptions,
+        promptCacheUsageData
       );
     } else {
-      result = await this.handleNonStreaming(params, requestOptions);
+      result = await this.handleNonStreaming(
+        params,
+        requestOptions,
+        promptCacheUsageData
+      );
     }
 
     if (storeResponses) {
@@ -1142,6 +1155,8 @@ export class OpenAiResponses extends BaseChatModel {
       background?: boolean;
       service_tier?: string | null;
       previous_response_id?: string | null;
+      prompt_cache_key?: string;
+      prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
       model?: string;
     } | ResponsesCreateUsageParams,
     usage: {
@@ -1150,7 +1165,8 @@ export class OpenAiResponses extends BaseChatModel {
       cachedInTokens: number;
       reasoningTokens: number;
       audioTokens: number;
-    }
+    },
+    promptCacheUsageData?: PromptCacheUsageData
   ): UsageItemPayload {
     const requestedBuiltInTools = this.getBuiltInToolTypesFromResponsesTools(
       params.tools
@@ -1179,6 +1195,7 @@ export class OpenAiResponses extends BaseChatModel {
         background: params.background ?? false,
         include: params.include ?? null,
         requestedPreviousResponseId: params.previous_response_id ?? null,
+        promptCache: promptCacheUsageData ?? null,
       },
       usageRaw: response.usage ?? undefined,
       usageNormalized: {
@@ -1218,6 +1235,48 @@ export class OpenAiResponses extends BaseChatModel {
         : {}),
       maxRetries: 0,
     };
+  }
+
+  private applyOpenAiPromptCacheOptions(
+    params: {
+      prompt_cache_key?: string;
+      prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
+    },
+    requestOptions?: PsModelRequestOptions
+  ): PromptCacheUsageData | undefined {
+    const promptCache = normalizePromptCacheOptions(requestOptions);
+    if (!promptCache) {
+      return undefined;
+    }
+    if (promptCache.enabled === false) {
+      return buildPromptCacheUsageData({
+        provider: "openai",
+        promptCache,
+        appliedMode: "disabled",
+      });
+    }
+
+    const retention = isOpenAiPromptCacheRetention(promptCache.retention)
+      ? promptCache.retention
+      : undefined;
+    if (promptCache.key) {
+      params.prompt_cache_key = promptCache.key;
+    }
+    if (retention) {
+      params.prompt_cache_retention = retention;
+    }
+
+    const unsupportedReason =
+      promptCache.retention && !retention
+        ? "OpenAI prompt cache retention supports only in_memory or 24h; requested retention was ignored."
+        : undefined;
+    return buildPromptCacheUsageData({
+      provider: "openai",
+      promptCache,
+      appliedMode:
+        promptCache.key || retention ? "openai-prompt-cache" : "unsupported",
+      unsupportedReason,
+    });
   }
 
   private getEffectiveResponsesSdkTimeoutMs(
@@ -1380,7 +1439,8 @@ export class OpenAiResponses extends BaseChatModel {
   private async handleStreaming(
     params: any,
     onChunk?: (c: string) => void,
-    requestOptions?: PsModelRequestOptions
+    requestOptions?: PsModelRequestOptions,
+    promptCacheUsageData?: PromptCacheUsageData
   ): Promise<PsBaseModelReturnParameters> {
     // Responses SSE: create({ stream: true }) returns an async iterator of events
     this.logger.debug(
@@ -1600,7 +1660,8 @@ export class OpenAiResponses extends BaseChatModel {
         cachedInTokens,
         reasoningTokens,
         audioTokens,
-      }
+      },
+      promptCacheUsageData
     );
 
     this.logger.info(
@@ -1811,7 +1872,8 @@ export class OpenAiResponses extends BaseChatModel {
 
   private async handleNonStreaming(
     params: any,
-    requestOptions?: PsModelRequestOptions
+    requestOptions?: PsModelRequestOptions,
+    promptCacheUsageData?: PromptCacheUsageData
   ): Promise<PsBaseModelReturnParameters> {
     const useBackground = Boolean(requestOptions?.useOpenAiResponsesBackground);
     const requestParams = useBackground
@@ -1874,7 +1936,8 @@ export class OpenAiResponses extends BaseChatModel {
         cachedInTokens,
         reasoningTokens,
         audioTokens,
-      }
+      },
+      promptCacheUsageData
     );
 
     this.logger.debug(`Tool calls: ${JSON.stringify(toolCalls, null, 2)}`);

@@ -24,6 +24,8 @@ type RecordedChatRequest = {
   safety_identifier?: string;
   service_tier?: string;
   logit_bias?: Record<string, number>;
+  prompt_cache_key?: string;
+  prompt_cache_retention?: string;
   temperature?: number;
   reasoning_effort?: string;
   max_tokens?: number;
@@ -314,13 +316,21 @@ describe("OpenAiChat", () => {
       tools,
       "auto",
       ["lookup"],
-      { safetyIdentifier: "safe-override" }
+      {
+        safetyIdentifier: "safe-override",
+        promptCache: {
+          key: "chat-cache-key",
+          retention: "24h",
+        },
+      }
     );
 
     assert.ok(captured);
     assert.equal(captured.model, "gpt-4o");
     assert.equal(captured.service_tier, "priority");
     assert.equal(captured.safety_identifier, "safe-override");
+    assert.equal(captured.prompt_cache_key, "chat-cache-key");
+    assert.equal(captured.prompt_cache_retention, "24h");
     assert.equal(captured.temperature, 0.25);
     assert.equal(captured.max_tokens, 256);
     assert.equal(captured.max_completion_tokens, undefined);
@@ -377,6 +387,16 @@ describe("OpenAiChat", () => {
       | undefined;
     assert.equal(usageRequest?.requestedServiceTier, "priority");
     assert.equal(usageRequest?.toolCount, 2);
+    assert.deepEqual(usageRequest?.promptCache, {
+      requested: true,
+      enabled: true,
+      provider: "openai",
+      keyPresent: true,
+      retention: "24h",
+      geminiCachedContentNamePresent: false,
+      appliedMode: "openai-prompt-cache",
+      unsupportedReason: null,
+    });
   });
 
   it("switches reasoning models to max_completion_tokens and xhigh effort", async () => {
