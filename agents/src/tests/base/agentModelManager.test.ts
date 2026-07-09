@@ -382,7 +382,7 @@ class ScriptedChatModel extends BaseChatModel {
   }
 }
 
-class DelayedFirstAttemptModel extends BaseChatModel {
+class NeverCompletingFirstAttemptModel extends BaseChatModel {
   generateCalls = 0;
   requestOptionsHistory: Array<PsModelRequestOptions | undefined> = [];
 
@@ -404,12 +404,7 @@ class DelayedFirstAttemptModel extends BaseChatModel {
     this.requestOptionsHistory.push(requestOptions);
 
     if (this.generateCalls === 1) {
-      await new Promise((resolve) => setTimeout(resolve, 75));
-      return {
-        content: "late first attempt",
-        tokensIn: 1,
-        tokensOut: 1,
-      };
+      return new Promise<PsBaseModelReturnParameters>(() => undefined);
     }
 
     return {
@@ -2402,7 +2397,7 @@ describe("PsAiModelManager text model calls", () => {
       [],
       [Object.assign(new Error("Invalid API key"), { status: 401 })]
     );
-    const fallback = new DelayedFirstAttemptModel(
+    const fallback = new NeverCompletingFirstAttemptModel(
       createModelConfig({
         modelName: "timeout-fallback-model",
         timeoutMs: 1000,
@@ -3971,7 +3966,7 @@ describe("PsAiModelManager call options", () => {
       42,
       7
     );
-    const model = new DelayedFirstAttemptModel({
+    const model = new NeverCompletingFirstAttemptModel({
       apiKey: "timeout-test-key",
       modelName: "timeout-test-model",
       provider: PsAiModelProvider.OpenAI,
