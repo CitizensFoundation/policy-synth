@@ -45,8 +45,13 @@ type RecordedResponsesRequest = {
   parallel_tool_calls?: boolean;
   max_tool_calls?: number;
   previous_response_id?: string;
+  multi_agent?: {
+    enabled?: boolean;
+    max_concurrent_subagents?: number;
+  };
   reasoning?: {
     effort?: string;
+    mode?: string;
   };
   model?: string;
   stream?: boolean;
@@ -55,6 +60,7 @@ type RecordedResponsesRequest = {
 };
 
 type RecordedResponsesRequestOptions = {
+  headers?: Record<string, string>;
   timeout?: number;
   maxRetries?: number;
 };
@@ -144,6 +150,9 @@ type OpenAiResponsesInternals = {
   ) => { content: string; phase?: PsAssistantMessagePhase };
   extractOrderedOutputItems: (resp: unknown) => PsResponseOutputItem[];
   extractToolCallsFromResponse: (resp: unknown) => ToolCall[];
+  buildMultiAgentOptionsForResponses: (
+    requestOptions?: PsModelRequestOptions
+  ) => { enabled: boolean; max_concurrent_subagents?: number } | undefined;
   isPhaseAwareResponsesModel: () => boolean;
   resetResponsesState: () => void;
 };
@@ -1080,6 +1089,7 @@ describe("OpenAiResponses", () => {
       maxTokensOut: 512,
       temperature: 0.2,
       reasoningEffort: "high",
+      reasoningMode: "pro",
       maxThinkingTokens: 1234,
     });
 
@@ -1087,6 +1097,7 @@ describe("OpenAiResponses", () => {
     assert.equal(model.getCloneConfig().maxTokensOut, 512);
     assert.equal(model.getCloneConfig().temperature, 0.2);
     assert.equal(model.getCloneConfig().reasoningEffort, "high");
+    assert.equal(model.getCloneConfig().reasoningMode, "pro");
     assert.equal(model.getCloneConfig().maxThinkingTokens, 1234);
 
     process.env.AZURE_OPENAI_KEY = "azure-key";
@@ -1387,6 +1398,7 @@ describe("OpenAiResponses", () => {
         modelType: PsAiModelType.TextReasoning,
         inferenceType: "fast",
         reasoningEffort: "max",
+        reasoningMode: "pro",
         temperature: 0.9,
       })
     );
@@ -1612,6 +1624,329 @@ describe("OpenAiResponses", () => {
     assert.equal(usageRequest?.requestedInferenceType, "fast");
     assert.equal(usageRequest?.requestedServiceTier, "priority");
     assert.equal(usageRequest?.regionalProcessing, "eu");
+    assert.equal(usageRequest?.reasoningMode, null);
+  });
+
+  it("passes Responses reasoning mode without requiring explicit effort", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6",
+        modelType: PsAiModelType.TextReasoning,
+        reasoningEffort: undefined,
+        reasoningMode: "pro",
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-mode-only",
+          usage: {},
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "mode only" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.deepEqual(captured.reasoning, { mode: "pro" });
+    assert.equal(result.content, "mode only");
+    assert.equal(result.usageItemData?.request?.reasoningMode, "pro");
+  });
+
+  it("passes Multi-agent params and beta header for GPT 5.6 Responses models", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    let capturedOptions: RecordedResponsesRequestOptions | undefined;
+    setMockClient(model, {
+      create: async (params, options) => {
+        captured = params as RecordedResponsesRequest;
+        capturedOptions = options;
+        return {
+          id: "resp-multi-agent",
+          usage: {},
+          output: [
+            {
+              type: "message",
+              agent: { agent_name: "/root/worker" },
+              content: [{ type: "output_text", text: "subagent note" }],
+            },
+            {
+              type: "function_call",
+              agent: { agent_name: "/root/worker" },
+              call_id: "call-child",
+              name: "lookup",
+              arguments: '{"id":1}',
+            },
+            {
+              type: "message",
+              agent: { agent_name: "/root" },
+              phase: "final_answer",
+              content: [{ type: "output_text", text: "root answer" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        maxToolCalls: 4,
+        multiAgent: {
+          enabled: true,
+          maxConcurrentSubagents: 2,
+        },
+      }
+    );
+
+    assert.ok(captured);
+    assert.deepEqual(captured.multi_agent, {
+      enabled: true,
+      max_concurrent_subagents: 2,
+    });
+    assert.equal(captured.max_tool_calls, undefined);
+    assert.equal(
+      capturedOptions?.headers?.["OpenAI-Beta"],
+      "responses_multi_agent=v1"
+    );
+    assert.equal(result.content, "root answer");
+    assert.deepEqual(result.toolCalls, [
+      {
+        id: "call-child",
+        name: "lookup",
+        arguments: { id: 1 },
+      },
+    ]);
+    assert.deepEqual(result.orderedOutputItems, [
+      {
+        type: "tool_call",
+        toolCall: {
+          id: "call-child",
+          name: "lookup",
+          arguments: { id: 1 },
+        },
+      },
+      {
+        type: "assistant_message",
+        message: {
+          content: "root answer",
+          phase: "final_answer",
+        },
+      },
+    ]);
+    assert.equal(result.usageItemData?.request?.multiAgent, captured.multi_agent);
+  });
+
+  it("does not expose child text through the output_text fallback", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
+
+    setMockClient(model, {
+      create: async () => ({
+        id: "resp-child-only",
+        output_text: "private child analysis",
+        output: [
+          {
+            type: "message",
+            agent: { agent_name: "/root/worker" },
+            content: [
+              { type: "output_text", text: "private child analysis" },
+            ],
+          },
+          {
+            type: "function_call",
+            agent: { agent_name: "/root/worker" },
+            call_id: "call-child-only",
+            name: "lookup",
+            arguments: '{"id":2}',
+          },
+        ],
+        usage: {},
+      }),
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { multiAgent: { enabled: true } }
+    );
+
+    assert.equal(result.content, "");
+    assert.deepEqual(result.assistantMessages, []);
+    assert.deepEqual(result.toolCalls, [
+      {
+        id: "call-child-only",
+        name: "lookup",
+        arguments: { id: 2 },
+      },
+    ]);
+  });
+
+  it("retains the Multi-agent beta header across continuations until state reset", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    const capturedOptions: RecordedResponsesRequestOptions[] = [];
+
+    setMockClient(model, {
+      create: async (params, options) => {
+        capturedRequests.push(params as RecordedResponsesRequest);
+        capturedOptions.push(options ?? {});
+        return {
+          id: `resp-beta-continuation-${capturedRequests.length}`,
+          output: [
+            {
+              type: "message",
+              agent: { agent_name: "/root" },
+              phase: "final_answer",
+              content: [{ type: "output_text", text: "ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { multiAgent: { enabled: true } }
+    );
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "again" },
+      ]
+    );
+
+    asInternals(model).resetResponsesState();
+    await model.generate([{ role: "user", message: "fresh" }]);
+
+    assert.equal(capturedRequests[0].previous_response_id, undefined);
+    assert.equal(
+      capturedOptions[0].headers?.["OpenAI-Beta"],
+      "responses_multi_agent=v1"
+    );
+    assert.equal(
+      capturedRequests[1].previous_response_id,
+      "resp-beta-continuation-1"
+    );
+    assert.equal(
+      capturedOptions[1].headers?.["OpenAI-Beta"],
+      "responses_multi_agent=v1"
+    );
+    assert.equal(capturedRequests[2].previous_response_id, undefined);
+    assert.equal(capturedOptions[2].headers?.["OpenAI-Beta"], undefined);
+  });
+
+  it("omits Multi-agent concurrency that rounds down to zero", () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
+
+    const multiAgent = asInternals(model).buildMultiAgentOptionsForResponses({
+      multiAgent: {
+        enabled: true,
+        maxConcurrentSubagents: 0.5,
+      },
+    });
+
+    assert.deepEqual(multiAgent, { enabled: true });
+  });
+
+  it("omits Multi-agent beta params for unsupported Responses models", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.5",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    let capturedOptions: RecordedResponsesRequestOptions | undefined;
+    setMockClient(model, {
+      create: async (params, options) => {
+        captured = params as RecordedResponsesRequest;
+        capturedOptions = options;
+        return {
+          id: "resp-no-multi-agent",
+          usage: {},
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "plain answer" }],
+            },
+          ],
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        maxToolCalls: 4,
+        multiAgent: {
+          enabled: true,
+          maxConcurrentSubagents: 2,
+        },
+      }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.multi_agent, undefined);
+    assert.equal(captured.max_tool_calls, 4);
+    assert.equal(capturedOptions?.headers?.["OpenAI-Beta"], undefined);
+    assert.equal(result.content, "plain answer");
+    assert.equal(result.usageItemData?.request?.multiAgent, null);
   });
 
   it("passes native max reasoning effort only for GPT 5.6+ Responses models", async () => {
@@ -2214,7 +2549,12 @@ describe("OpenAiResponses", () => {
   });
 
   it("cancels background Responses on local timeout", async () => {
-    const model = new OpenAiResponses(createConfig());
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+      })
+    );
     Reflect.set(model, "backgroundPollDelayMs", 5);
 
     let cancelledResponseId: string | undefined;
@@ -2251,6 +2591,9 @@ describe("OpenAiResponses", () => {
           {
             timeoutMs: 1,
             useOpenAiResponsesBackground: true,
+            multiAgent: {
+              enabled: true,
+            },
           }
         ),
       (error) => {
@@ -2267,7 +2610,11 @@ describe("OpenAiResponses", () => {
     );
 
     assert.equal(cancelledResponseId, "resp-background-timeout");
-    assert.deepEqual(cancelOptions, { timeout: 10_000, maxRetries: 0 });
+    assert.deepEqual(cancelOptions, {
+      timeout: 10_000,
+      headers: { "OpenAI-Beta": "responses_multi_agent=v1" },
+      maxRetries: 0,
+    });
     assert.equal(Reflect.get(model, "previousResponseId"), undefined);
   });
 
@@ -2669,6 +3016,110 @@ describe("OpenAiResponses", () => {
         "OpenAI Responses cleanup queued stored response resp-clean-2 at <time>",
       ]
     );
+  });
+
+  it("carries the Multi-agent beta header into deferred response deletion", async () => {
+    const redis = new InMemoryCleanupRedis();
+    OpenAiResponses.setStoredResponseCleanupRedisClientForTests(redis);
+
+    const model = new OpenAiResponses(
+      createConfig({
+        modelName: "gpt-5.6-sol",
+        modelType: PsAiModelType.TextReasoning,
+        credentialRef: "aiModel:42",
+      })
+    );
+    let responseCount = 0;
+    setMockClient(model, {
+      create: async () => {
+        responseCount++;
+        return {
+          id: `resp-multi-agent-cleanup-${responseCount}`,
+          output: [
+            {
+              type: "message",
+              agent: { agent_name: "/root" },
+              phase: "final_answer",
+              content: [{ type: "output_text", text: "cleanup ok" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const cleanupOptions: PsModelRequestOptions = {
+      responsesStateKey: "multi-agent-cleanup",
+      deleteOpenAiResponsesAfterIdleMinutes: 30,
+    };
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        ...cleanupOptions,
+        multiAgent: { enabled: true },
+      }
+    );
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "cleanup ok" },
+        { role: "user", message: "again" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      cleanupOptions
+    );
+
+    const queued = redis.getOnlyRecord();
+    assert.equal(queued.record.multiAgentBeta, true);
+    assert.deepEqual(queued.record.responseIds, [
+      "resp-multi-agent-cleanup-1",
+      "resp-multi-agent-cleanup-2",
+    ]);
+
+    const deleteCalls: Array<{
+      responseId: string;
+      headers?: Record<string, string>;
+    }> = [];
+    const summary = await OpenAiResponses.deleteIdleStoredResponses({
+      redis,
+      nowMs: Date.now() + 31 * 60_000,
+      clientFactory: (record) => {
+        assert.equal(record.multiAgentBeta, true);
+        return {
+          responses: {
+            delete: async (responseId, options) => {
+              deleteCalls.push({
+                responseId,
+                headers: options?.headers,
+              });
+            },
+          },
+        };
+      },
+    });
+
+    assert.equal(summary.responsesDeleted, 2);
+    assert.deepEqual(deleteCalls, [
+      {
+        responseId: "resp-multi-agent-cleanup-2",
+        headers: { "OpenAI-Beta": "responses_multi_agent=v1" },
+      },
+      {
+        responseId: "resp-multi-agent-cleanup-1",
+        headers: { "OpenAI-Beta": "responses_multi_agent=v1" },
+      },
+    ]);
   });
 
   it("preserves cleanup failure metadata when scheduling a new response", async () => {

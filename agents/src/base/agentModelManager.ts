@@ -309,6 +309,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         maxContextTokens: model.configuration.maxContextTokens,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
+        reasoningMode: model.configuration.reasoningMode,
         maxThinkingTokens: this.maxThinkingTokens,
         timeoutMs:
           (model.configuration as any).timeoutMs ?? this.modelCallTimeoutMs,
@@ -404,6 +405,70 @@ export class PsAiModelManager extends PolicySynthAgentBase {
    * If provider is not specified, we'll reuse the provider from the fallback model
    * or environment. This returns `undefined` if no ephemeral override was requested.
    */
+  private getModelSizeFallbackPriority(
+    modelSize: PsAiModelSize
+  ): PsAiModelSize[] {
+    switch (modelSize) {
+      case PsAiModelSize.Large:
+        return [
+          PsAiModelSize.Large,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Small,
+        ];
+      case PsAiModelSize.Medium:
+        return [
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+          PsAiModelSize.Small,
+        ];
+      case PsAiModelSize.Small:
+        return [
+          PsAiModelSize.Small,
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+        ];
+      default:
+        return [
+          PsAiModelSize.Medium,
+          PsAiModelSize.Large,
+          PsAiModelSize.Small,
+        ];
+    }
+  }
+
+  private selectConfiguredModelForSize(
+    modelType: PsAiModelType,
+    modelSize: PsAiModelSize
+  ):
+    | {
+        model: BaseChatModel;
+        selectedModelSize: PsAiModelSize;
+        selectedBySize: boolean;
+      }
+    | undefined {
+    for (const size of this.getModelSizeFallbackPriority(modelSize)) {
+      const modelKey = `${modelType}_${size}`;
+      this.logger.debug(`Checking model ${modelKey}`);
+      const model = this.models.get(modelKey);
+      if (model) {
+        return {
+          model,
+          selectedModelSize: size,
+          selectedBySize: true,
+        };
+      }
+    }
+
+    const model = this.modelsByType.get(modelType);
+    return model
+      ? {
+          model,
+          selectedModelSize: model.config.modelSize,
+          selectedBySize: false,
+        }
+      : undefined;
+  }
+
   private async createEphemeralModel(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,
@@ -413,7 +478,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const isOverrideRequested =
       (options.modelProvider != null && options.modelName != null) ||
       options.regionalProcessing != null ||
-      options.inferenceType != null;
+      options.inferenceType != null ||
+      options.modelReasoningMode != null;
 
     if (!isOverrideRequested) {
       return undefined;
@@ -434,13 +500,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       );
     }
 
-    // Fall back to a known model (or the first model of the same type)
-    const fallbackModelKey = `${modelType}_${modelSize}`;
-    let fallbackModel = this.models.get(fallbackModelKey);
-    if (!fallbackModel) {
-      // if not found by size, use any model of that type
-      fallbackModel = this.modelsByType.get(modelType);
-    }
+    // Use the same configured size priority as the normal call path.
+    const fallbackSelection = this.selectConfiguredModelForSize(
+      modelType,
+      modelSize
+    );
+    let fallbackModel = fallbackSelection?.model;
 
     if (!fallbackModel) {
       // As a last-ditch: might rely on environment
@@ -567,10 +632,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         dbConfig?.defaultTemperature ??
         this.modelTemperature,
       reasoningEffort: options.modelReasoningEffort ?? this.reasoningEffort,
+      reasoningMode:
+        options.modelReasoningMode ??
+        dbConfig?.reasoningMode ??
+        fallbackModel.config?.reasoningMode,
       maxThinkingTokens:
         options.modelMaxThinkingTokens ?? this.maxThinkingTokens,
       modelType: options.modelType ?? dbConfig?.type ?? modelType,
-      modelSize: dbConfig?.modelSize ?? modelSize,
+      modelSize:
+        dbConfig?.modelSize ??
+        (isContextOnlyOverride ? fallbackModel.config.modelSize : modelSize),
       timeoutMs: dbConfig?.timeoutMs ?? this.modelCallTimeoutMs,
       prices: dbConfig?.prices ?? fallbackModel.config?.prices ?? ({} as any),
     };
@@ -657,6 +728,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     if (dbModel) {
       ephemeralModel.dbModelId = dbModel.id;
+    } else if (
+      isContextOnlyOverride &&
+      fallbackModel.dbModelId !== undefined
+    ) {
+      ephemeralModel.dbModelId = fallbackModel.dbModelId;
     }
 
     ephemeralModel.provider = provider;
@@ -811,65 +887,22 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       );
     }
 
-    // 2) Otherwise, do your fallback priority as before
-    const getFallbackPriority = (size: PsAiModelSize): PsAiModelSize[] => {
-      switch (size) {
-        case PsAiModelSize.Large:
-          return [
-            PsAiModelSize.Large,
-            PsAiModelSize.Medium,
-            PsAiModelSize.Small,
-          ];
-        case PsAiModelSize.Medium:
-          return [
-            PsAiModelSize.Medium,
-            PsAiModelSize.Large,
-            PsAiModelSize.Small,
-          ];
-        case PsAiModelSize.Small:
-          return [
-            PsAiModelSize.Small,
-            PsAiModelSize.Medium,
-            PsAiModelSize.Large,
-          ];
-        default:
-          return [
-            PsAiModelSize.Medium,
-            PsAiModelSize.Large,
-            PsAiModelSize.Small,
-          ];
-      }
-    };
-
-    const modelSizePriority = getFallbackPriority(modelSize);
-
-    let model: BaseChatModel | undefined;
-    let selectedModelSize: PsAiModelSize = modelSize;
-
-    for (const size of modelSizePriority) {
-      const modelKey = `${modelType}_${size}`;
-      this.logger.debug(`Checking model ${modelKey}`);
-      model = this.models.get(modelKey);
-      if (model) {
-        selectedModelSize = size;
-        if (size !== modelSize) {
-          this.logger.warn(`Model not found for ${modelSize}, using ${size}`);
-        }
-        break;
-      }
+    // 2) Otherwise, select the configured model using the normal size priority.
+    const selection = this.selectConfiguredModelForSize(modelType, modelSize);
+    if (!selection) {
+      throw new Error(`No model available for type ${modelType}`);
     }
 
-    if (!model) {
-      // fallback to "any" model by type
-      model = this.modelsByType.get(modelType);
-      if (model) {
-        this.logger.warn(
-          `Model not found by size, using default ${modelType} model`
-        );
-        selectedModelSize = model.config.modelSize;
-      } else {
-        throw new Error(`No model available for type ${modelType}`);
-      }
+    let { model } = selection;
+    const { selectedModelSize } = selection;
+    if (!selection.selectedBySize) {
+      this.logger.warn(
+        `Model not found by size, using default ${modelType} model`
+      );
+    } else if (selectedModelSize !== modelSize) {
+      this.logger.warn(
+        `Model not found for ${modelSize}, using ${selectedModelSize}`
+      );
     }
 
     model = this.getStateIsolatedResponsesModel(model, options);
@@ -1397,6 +1430,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
                 maxTokensOut: options.maxTokensOut,
                 modelMaxThinkingTokens: options.modelMaxThinkingTokens,
                 modelReasoningEffort: options.modelReasoningEffort,
+                modelReasoningMode: options.modelReasoningMode,
               }
             );
             if (!fallbackEphemeral) {
@@ -1565,6 +1599,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     | "maxTokensOut"
     | "temperature"
     | "reasoningEffort"
+    | "reasoningMode"
     | "maxThinkingTokens"
   > {
     const baseConfig = model.getCloneConfig();
@@ -1581,6 +1616,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         options.modelReasoningEffort ??
         this.reasoningEffort ??
         baseConfig.reasoningEffort,
+      reasoningMode: options.modelReasoningMode ?? baseConfig.reasoningMode,
       maxThinkingTokens:
         options.modelMaxThinkingTokens ??
         this.maxThinkingTokens ??
@@ -1737,6 +1773,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
     if (options.builtInTools?.length) {
       requestOptions.builtInTools = options.builtInTools;
+    }
+    if (options.multiAgent) {
+      requestOptions.multiAgent = options.multiAgent;
     }
     if (options.useOpenAiResponsesBackground) {
       requestOptions.useOpenAiResponsesBackground = true;

@@ -48,13 +48,23 @@ type UsageItemResult = PsBaseModelReturnParameters & {
 };
 type ResponsesTool = Record<string, unknown>;
 type ResponsesInclude = PsOpenAiResponsesInclude;
+type ResponsesReasoningOptions = {
+  effort?: PsReasoningEffort;
+  mode?: PsOpenAiResponsesReasoningMode;
+};
+type ResponsesMultiAgentOptions = {
+  enabled: boolean;
+  max_concurrent_subagents?: number;
+};
 type ResponsesCreateParams = Record<string, unknown> & {
   background?: boolean;
   include?: ResponsesInclude[];
   model?: string;
+  multi_agent?: ResponsesMultiAgentOptions;
   previous_response_id?: string;
   prompt_cache_key?: string;
   prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
+  reasoning?: ResponsesReasoningOptions;
   store?: boolean;
   stream?: boolean;
 };
@@ -62,9 +72,11 @@ type ResponsesCreateUsageParams = {
   background?: boolean;
   include?: unknown[];
   model?: string;
+  multi_agent?: ResponsesMultiAgentOptions | null;
   previous_response_id?: string | null;
   prompt_cache_key?: string;
   prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
+  reasoning?: ResponsesReasoningOptions | null;
   service_tier?: string | null;
   store?: boolean;
   stream?: boolean;
@@ -98,6 +110,7 @@ export class OpenAiResponses extends BaseChatModel {
   private phaseAwareModelName: string;
   private transportBaseUrl?: string;
   private previousResponseId?: string;
+  private previousResponseRequiresMultiAgentBeta = false;
   private sentToolOutputIds = new Set<string>();
   private lastSubmittedMessageCount = 0;
   private lastNoInputContinuationSignature?: string;
@@ -131,6 +144,30 @@ export class OpenAiResponses extends BaseChatModel {
     return version.minor >= 6;
   }
 
+  private supportsReasoningMode(): boolean {
+    const version = OpenAiResponses.parseGptModelVersion(
+      this.phaseAwareModelName
+    );
+    if (!version) return false;
+
+    if (version.major > 5) return true;
+    if (version.major < 5) return false;
+    return version.minor >= 6;
+  }
+
+  private supportsMultiAgent(): boolean {
+    if (this.usingAzure) return false;
+
+    const version = OpenAiResponses.parseGptModelVersion(
+      this.phaseAwareModelName
+    );
+    if (!version) return false;
+
+    if (version.major > 5) return true;
+    if (version.major < 5) return false;
+    return version.minor >= 6;
+  }
+
   private mapReasoningEffortForResponses(): PsReasoningEffort | undefined {
     const effort = this.cfg.reasoningEffort;
     if (!effort) return undefined;
@@ -138,6 +175,57 @@ export class OpenAiResponses extends BaseChatModel {
       return "xhigh";
     }
     return effort;
+  }
+
+  private buildReasoningOptionsForResponses():
+    | ResponsesReasoningOptions
+    | undefined {
+    const effort = this.mapReasoningEffortForResponses();
+    const mode = this.supportsReasoningMode()
+      ? this.cfg.reasoningMode
+      : undefined;
+
+    if (!effort && !mode) {
+      return undefined;
+    }
+
+    return {
+      ...(mode ? { mode } : {}),
+      ...(effort ? { effort } : {}),
+    };
+  }
+
+  private buildMultiAgentOptionsForResponses(
+    requestOptions?: PsModelRequestOptions
+  ): ResponsesMultiAgentOptions | undefined {
+    const multiAgent = requestOptions?.multiAgent;
+    if (!multiAgent?.enabled || !this.supportsMultiAgent()) {
+      return undefined;
+    }
+
+    const maxConcurrentSubagents = multiAgent.maxConcurrentSubagents;
+    const normalizedMaxConcurrentSubagents =
+      typeof maxConcurrentSubagents === "number" &&
+      Number.isFinite(maxConcurrentSubagents)
+        ? Math.floor(maxConcurrentSubagents)
+        : undefined;
+
+    return {
+      enabled: true,
+      ...(normalizedMaxConcurrentSubagents !== undefined &&
+      normalizedMaxConcurrentSubagents > 0
+        ? { max_concurrent_subagents: normalizedMaxConcurrentSubagents }
+        : {}),
+    };
+  }
+
+  private requiresMultiAgentBetaHeader(
+    requestOptions?: PsModelRequestOptions
+  ): boolean {
+    return (
+      this.previousResponseRequiresMultiAgentBeta ||
+      Boolean(this.buildMultiAgentOptionsForResponses(requestOptions))
+    );
   }
 
   static setStoredResponseCleanupRedisClientForTests(
@@ -207,6 +295,7 @@ export class OpenAiResponses extends BaseChatModel {
       settings,
       identity: this.getStoredResponseCleanupIdentity(settings.responsesStateKey),
       responseId,
+      multiAgentBeta: this.requiresMultiAgentBetaHeader(requestOptions),
       logger: this.logger as OpenAiResponsesCleanupLogger,
     });
   }
@@ -378,6 +467,7 @@ export class OpenAiResponses extends BaseChatModel {
       | "maxTokensOut"
       | "temperature"
       | "reasoningEffort"
+      | "reasoningMode"
       | "maxThinkingTokens"
     >
   ): void {
@@ -402,6 +492,10 @@ export class OpenAiResponses extends BaseChatModel {
       this.cfg.reasoningEffort = overrides.reasoningEffort;
     }
 
+    if ("reasoningMode" in overrides) {
+      this.cfg.reasoningMode = overrides.reasoningMode;
+    }
+
     if (overrides.maxThinkingTokens !== undefined) {
       this.cfg.maxThinkingTokens = overrides.maxThinkingTokens;
     }
@@ -414,6 +508,7 @@ export class OpenAiResponses extends BaseChatModel {
     this.lastSubmittedMessageCount = 0;
     this.lastNoInputContinuationSignature = undefined;
     this.previousResponseId = undefined;
+    this.previousResponseRequiresMultiAgentBeta = false;
   }
 
   private attachImagesToLastUserMessage(
@@ -606,7 +701,11 @@ export class OpenAiResponses extends BaseChatModel {
     if (requestOptions?.parallelToolCalls !== undefined) {
       common.parallel_tool_calls = requestOptions.parallelToolCalls;
     }
-    if (requestOptions?.maxToolCalls !== undefined) {
+    const multiAgent = this.buildMultiAgentOptionsForResponses(requestOptions);
+    if (multiAgent) {
+      common.multi_agent = multiAgent;
+    }
+    if (requestOptions?.maxToolCalls !== undefined && !multiAgent) {
       common.max_tool_calls = requestOptions.maxToolCalls;
     }
 
@@ -623,9 +722,9 @@ export class OpenAiResponses extends BaseChatModel {
     if (instructions) common.instructions = instructions;
 
     if (isReasoning) {
-      const effort = this.mapReasoningEffortForResponses();
-      if (effort) {
-        common.reasoning = { effort };
+      const reasoning = this.buildReasoningOptionsForResponses();
+      if (reasoning) {
+        common.reasoning = reasoning;
       }
     }
 
@@ -1157,6 +1256,8 @@ export class OpenAiResponses extends BaseChatModel {
       previous_response_id?: string | null;
       prompt_cache_key?: string;
       prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
+      multi_agent?: ResponsesMultiAgentOptions | null;
+      reasoning?: ResponsesReasoningOptions | null;
       model?: string;
     } | ResponsesCreateUsageParams,
     usage: {
@@ -1190,6 +1291,8 @@ export class OpenAiResponses extends BaseChatModel {
           null,
         regionalProcessing: this.cfg.regionalProcessing ?? null,
         reasoningEffort: this.cfg.reasoningEffort ?? null,
+        reasoningMode: params.reasoning?.mode ?? null,
+        multiAgent: params.multi_agent ?? null,
         maxTokensOut: this.cfg.maxTokensOut ?? null,
         store: params.store ?? null,
         background: params.background ?? false,
@@ -1232,6 +1335,9 @@ export class OpenAiResponses extends BaseChatModel {
     return {
       ...(typeof timeoutMs === "number" && Number.isFinite(timeoutMs)
         ? { timeout: Math.max(1, Math.ceil(timeoutMs)) }
+        : {}),
+      ...(this.requiresMultiAgentBetaHeader(requestOptions)
+        ? { headers: { "OpenAI-Beta": "responses_multi_agent=v1" } }
         : {}),
       maxRetries: 0,
     };
@@ -1490,6 +1596,13 @@ export class OpenAiResponses extends BaseChatModel {
 
       const state = getItemState(item.id);
       state.hasItemMetadata = true;
+
+      if (!this.isRootOrUnattributedAgentItem(item)) {
+        state.allowOutput = false;
+        state.pendingDeltas = [];
+        return;
+      }
+
       const phase =
         item?.phase === "commentary" || item?.phase === "final_answer"
           ? item.phase
@@ -1543,6 +1656,10 @@ export class OpenAiResponses extends BaseChatModel {
         type === "response.text.delta" ||
         type === "response.refusal.delta"
       ) {
+        if (!this.isRootOrUnattributedAgentItem(event)) {
+          continue;
+        }
+
         const delta =
           type === "response.refusal.delta"
             ? event?.delta ?? ""
@@ -1624,6 +1741,12 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (params.store !== false) {
       this.previousResponseId = finalResponse?.id ?? this.previousResponseId;
+      if (
+        this.previousResponseId &&
+        this.buildMultiAgentOptionsForResponses(requestOptions)
+      ) {
+        this.previousResponseRequiresMultiAgentBeta = true;
+      }
     }
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
@@ -1700,12 +1823,13 @@ export class OpenAiResponses extends BaseChatModel {
 
   private async cancelBackgroundResponse(
     responseId: string,
+    requestOptions?: PsModelRequestOptions,
     timeoutMs = OPENAI_RESPONSES_BACKGROUND_CANCEL_TIMEOUT_MS
   ): Promise<void> {
     try {
       await this.client.responses.cancel(
         responseId,
-        this.getResponsesRequestOptions(undefined, timeoutMs)
+        this.getResponsesRequestOptions(requestOptions, timeoutMs)
       );
       this.logger.debug(
         `Cancelled OpenAI Responses background response ${responseId}`
@@ -1763,7 +1887,11 @@ export class OpenAiResponses extends BaseChatModel {
     const cancelKnownResponse = async () => {
       if (!responseId || cancelRequested) return;
       cancelRequested = true;
-      await this.cancelBackgroundResponse(responseId, cancelTimeoutMs);
+      await this.cancelBackgroundResponse(
+        responseId,
+        requestOptions,
+        cancelTimeoutMs
+      );
     };
 
     try {
@@ -1900,6 +2028,12 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (requestParams.store !== false) {
       this.previousResponseId = resp?.id ?? this.previousResponseId;
+      if (
+        this.previousResponseId &&
+        this.buildMultiAgentOptionsForResponses(requestOptions)
+      ) {
+        this.previousResponseRequiresMultiAgentBeta = true;
+      }
     }
 
     this.logger.debug(`previousResponseId: ${this.previousResponseId}`);
@@ -1987,6 +2121,7 @@ export class OpenAiResponses extends BaseChatModel {
       if (!Array.isArray(out)) return "";
       let buffer = "";
       for (const item of out) {
+        if (!this.isRootOrUnattributedAgentItem(item)) continue;
         if (item?.type === "message" && Array.isArray(item.content)) {
           for (const c of item.content) {
             if (
@@ -2014,6 +2149,7 @@ export class OpenAiResponses extends BaseChatModel {
 
       for (const item of out) {
         if (item?.type !== "message") continue;
+        if (!this.isRootOrUnattributedAgentItem(item)) continue;
 
         const content = this.extractTextFromMessageItem(item);
         const phase =
@@ -2054,6 +2190,21 @@ export class OpenAiResponses extends BaseChatModel {
     return buffer;
   }
 
+  private isRootOrUnattributedAgentItem(item: any): boolean {
+    const agentName = item?.agent?.agent_name;
+    return typeof agentName !== "string" || agentName === "/root";
+  }
+
+  private hasNonRootAgentItems(resp: unknown): boolean {
+    if (!isRecord(resp) || !Array.isArray(resp.output)) return false;
+
+    return resp.output.some((item) => {
+      if (!isRecord(item) || !isRecord(item.agent)) return false;
+      const agentName = item.agent.agent_name;
+      return typeof agentName === "string" && agentName !== "/root";
+    });
+  }
+
   private joinAssistantMessageContent(messages: ResponseAssistantMessage[]): string {
     return messages.map((message) => message.content).join("");
   }
@@ -2067,6 +2218,8 @@ export class OpenAiResponses extends BaseChatModel {
 
       for (const item of out) {
         if (item?.type === "message") {
+          if (!this.isRootOrUnattributedAgentItem(item)) continue;
+
           const message = {
             content: this.extractTextFromMessageItem(item),
             phase:
@@ -2152,9 +2305,15 @@ export class OpenAiResponses extends BaseChatModel {
       };
     }
 
-    return {
-      content: (resp as any).output_text ?? this.extractTextFromResponse(resp) ?? "",
-    };
+    const extractedText = this.extractTextFromResponse(resp);
+    const outputText =
+      !this.hasNonRootAgentItems(resp) &&
+      isRecord(resp) &&
+      typeof resp.output_text === "string"
+        ? resp.output_text
+        : "";
+
+    return { content: extractedText || outputText };
   }
 
   private extractToolCallsFromResponse(resp: any): ToolCall[] {

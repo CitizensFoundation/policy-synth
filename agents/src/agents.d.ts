@@ -12,6 +12,7 @@ type PsReasoningEffort = 'low' | 'medium' | 'high' | 'xhigh' | 'max';
 type PsInferenceType = "flex" | "priority" | "fast";
 type PsOpenAiInferenceType = Extract<PsInferenceType, "flex" | "priority">;
 type PsOpenAiRegionalProcessing = "eu";
+type PsOpenAiResponsesReasoningMode = "standard" | "pro";
 type PsAnthropicInferenceType = Extract<PsInferenceType, "fast">;
 type PsAssistantMessagePhase = "commentary" | "final_answer";
 type PsBuiltInToolSearchContextSize = "low" | "medium" | "high";
@@ -59,6 +60,11 @@ interface PsBuiltInToolUserLocation {
   country?: string | null;
   region?: string | null;
   timezone?: string | null;
+}
+
+interface PsOpenAiResponsesMultiAgentOptions {
+  enabled: boolean;
+  maxConcurrentSubagents?: number;
 }
 
 type PsBuiltInTool =
@@ -128,6 +134,7 @@ interface PsAiModelConfig {
   temperature?: number;
   safetyIdentifier?: string;
   reasoningEffort?: PsReasoningEffort;
+  reasoningMode?: PsOpenAiResponsesReasoningMode;
   maxThinkingTokens?: number;
   timeoutMs?: number;
   prices: PsBaseModelPriceConfiguration;
@@ -164,6 +171,7 @@ interface PsCallModelOptions {
   maxTokensOut?: number;
   modelMaxThinkingTokens?: number;
   modelReasoningEffort?: PsReasoningEffort;
+  modelReasoningMode?: PsOpenAiResponsesReasoningMode;
   safetyIdentifier?: string;
   geminiRegions?: string[];
   geminiDeepResearchConfig?: PsGeminiDeepResearchConfig;
@@ -212,6 +220,7 @@ interface PsCallModelOptions {
    * provider and are separate from local function tools.
    */
   builtInTools?: PsBuiltInTool[];
+  multiAgent?: PsOpenAiResponsesMultiAgentOptions;
   /**
    * Names of function tools the model is allowed to call when using the model.
    */
@@ -274,6 +283,7 @@ interface PsModelRequestOptions {
   geminiDeepResearchConfig?: PsGeminiDeepResearchConfig;
   geminiDeepResearchStateKey?: string;
   builtInTools?: PsBuiltInTool[];
+  multiAgent?: PsOpenAiResponsesMultiAgentOptions;
   timeoutMs?: number;
   useOpenAiResponsesBackground?: boolean;
   store?: boolean;
@@ -432,6 +442,7 @@ interface PsAiModelConfiguration {
   limitTPM?: number;
   limitRPM?: number;
   timeoutMs?: number;
+  reasoningMode?: PsOpenAiResponsesReasoningMode;
 }
 
 // tablename "ps_ai_models"

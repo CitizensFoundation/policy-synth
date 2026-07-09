@@ -38,6 +38,7 @@ export type StoredResponseCleanupRecord = {
   credentialRef?: string;
   transportBaseUrl?: string;
   regionalProcessing?: PsOpenAiRegionalProcessing;
+  multiAgentBeta?: boolean;
   createdAtMs: number;
   failureCount?: number;
   lastFailureAtMs?: number;
@@ -47,7 +48,10 @@ export type StoredResponseCleanupRecord = {
 
 export type StoredResponseCleanupClient = {
   responses: {
-    delete(responseId: string): Promise<unknown>;
+    delete(
+      responseId: string,
+      options?: { headers?: Record<string, string> }
+    ): Promise<unknown>;
   };
 };
 
@@ -241,6 +245,7 @@ if ARGV[10] ~= "" then record["failureCount"] = tonumber(ARGV[10]) end
 if ARGV[11] ~= "" then record["lastFailureAtMs"] = tonumber(ARGV[11]) end
 if ARGV[12] ~= "" then record["lastFailureMessage"] = ARGV[12] end
 if ARGV[13] ~= "" then record["deadLetteredAtMs"] = tonumber(ARGV[13]) end
+if ARGV[14] == "true" then record["multiAgentBeta"] = true end
 
 redis.call("SET", KEYS[1], cjson.encode(record))
 redis.call("ZADD", KEYS[2], tostring(dueAtMs), KEYS[1])
@@ -533,11 +538,13 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
     settings,
     identity,
     responseId,
+    multiAgentBeta,
     logger,
   }: {
     settings: OpenAiResponsesCleanupSettings;
     identity: OpenAiResponsesCleanupIdentity;
     responseId: string;
+    multiAgentBeta?: boolean;
     logger: OpenAiResponsesCleanupLogger;
   }): Promise<void> {
     try {
@@ -556,6 +563,7 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
         credentialRef: identity.credentialRef,
         transportBaseUrl: identity.transportBaseUrl,
         regionalProcessing: identity.regionalProcessing,
+        multiAgentBeta: multiAgentBeta || undefined,
         createdAtMs: nowMs,
       };
 
@@ -722,7 +730,16 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
 
         for (const responseId of [...record.responseIds].reverse()) {
           try {
-            await client.responses.delete(responseId);
+            await client.responses.delete(
+              responseId,
+              record.multiAgentBeta
+                ? {
+                    headers: {
+                      "OpenAI-Beta": "responses_multi_agent=v1",
+                    },
+                  }
+                : undefined
+            );
             responsesDeleted++;
             deletedResponseIds.add(responseId);
             this.logger.info(
@@ -1356,7 +1373,8 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
             record.failureCount ?? "",
             record.lastFailureAtMs ?? "",
             record.lastFailureMessage ?? "",
-            record.deadLetteredAtMs ?? ""
+            record.deadLetteredAtMs ?? "",
+            record.multiAgentBeta ? "true" : ""
           ),
         redisOperationTimeoutMs
       );
@@ -1408,6 +1426,8 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
       lastFailureMessage:
         record.lastFailureMessage ?? existingRecord?.lastFailureMessage,
       deadLetteredAtMs: record.deadLetteredAtMs ?? existingRecord?.deadLetteredAtMs,
+      multiAgentBeta:
+        record.multiAgentBeta || existingRecord?.multiAgentBeta || undefined,
     };
 
     await this.withCleanupRedisTimeout(
@@ -1634,6 +1654,7 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
             : undefined,
         regionalProcessing:
           parsed.regionalProcessing === "eu" ? "eu" : undefined,
+        multiAgentBeta: parsed.multiAgentBeta === true ? true : undefined,
         createdAtMs,
         failureCount:
           typeof parsed.failureCount === "number" &&

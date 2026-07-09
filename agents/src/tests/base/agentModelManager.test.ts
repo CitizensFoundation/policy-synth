@@ -33,8 +33,10 @@ process.env.DB_PORT ??= "5432";
 
 type RecordedResponsesRequest = {
   max_output_tokens?: number;
+  previous_response_id?: string;
   reasoning?: {
     effort?: string;
+    mode?: string;
   };
   service_tier?: string;
 };
@@ -93,6 +95,7 @@ type PsAiModelManagerInternals = {
     | "maxTokensOut"
     | "temperature"
     | "reasoningEffort"
+    | "reasoningMode"
     | "maxThinkingTokens"
   >;
   getApiKeyForProvider: (provider: string) => string;
@@ -975,6 +978,7 @@ describe("PsAiModelManager ephemeral model overrides", () => {
         maxTokensOut: 1024,
         modelMaxThinkingTokens: 4096,
         modelReasoningEffort: "high",
+        modelReasoningMode: "pro",
         modelType: PsAiModelType.TextReasoning,
       }
     );
@@ -988,7 +992,102 @@ describe("PsAiModelManager ephemeral model overrides", () => {
     assert.equal(model.config.maxTokensOut, 1024);
     assert.equal(model.config.maxThinkingTokens, 4096);
     assert.equal(model.config.reasoningEffort, "high");
+    assert.equal(model.config.reasoningMode, "pro");
     assert.equal(model.config.modelType, PsAiModelType.TextReasoning);
+  });
+
+  it("creates an ephemeral model for a mode-only Responses call override", async () => {
+    useStandardResponsesEnv();
+    const manager = createManager({ model: "gpt-5.6" });
+    const internals = asInternals(manager);
+
+    const model = await internals.createEphemeralModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      {
+        modelReasoningMode: "pro",
+      }
+    );
+
+    assert.ok(model instanceof OpenAiResponses);
+    assert.equal(model.config.reasoningMode, "pro");
+  });
+
+  it("uses normal size fallback selection for a mode-only Responses override", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    const internals = asInternals(manager);
+    const largeModel = new OpenAiResponses(
+      createModelConfig({
+        apiKey: "large-key",
+        provider: PsAiModelProvider.OpenAIResponses,
+        modelName: "gpt-5.6-large",
+        modelType: PsAiModelType.TextReasoning,
+        modelSize: PsAiModelSize.Large,
+      }) as PsOpenAiModelConfig
+    );
+    const smallModel = new OpenAiResponses(
+      createModelConfig({
+        apiKey: "small-key",
+        provider: PsAiModelProvider.OpenAIResponses,
+        modelName: "gpt-5.6-small",
+        modelType: PsAiModelType.TextReasoning,
+        modelSize: PsAiModelSize.Small,
+      }) as PsOpenAiModelConfig
+    );
+
+    registerModel(
+      manager,
+      largeModel,
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Large,
+      501
+    );
+    registerModel(
+      manager,
+      smallModel,
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      502
+    );
+
+    const model = await internals.createEphemeralModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Medium,
+      { modelReasoningMode: "pro" }
+    );
+
+    assert.ok(model instanceof OpenAiResponses);
+    assert.equal(model.config.modelName, "gpt-5.6-large");
+    assert.equal(model.config.modelSize, PsAiModelSize.Large);
+    assert.equal(model.dbModelId, 501);
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-size-fallback",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "large fallback" }],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const result = await manager.callModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Medium,
+      [{ role: "user", message: "hello" }],
+      { modelReasoningMode: "pro" }
+    );
+
+    assert.equal(result, "large fallback");
+    assert.equal(captured?.reasoning?.mode, "pro");
   });
 
   it("falls back to environment models and rejects unsupported ephemeral providers", async () => {
@@ -1228,6 +1327,10 @@ describe("PsAiModelManager utility routing", () => {
       visualization: "auto",
       enable_bigquery_tool: true,
     };
+    const multiAgent: PsOpenAiResponsesMultiAgentOptions = {
+      enabled: true,
+      maxConcurrentSubagents: 3,
+    };
 
     assert.deepEqual(internals.getModelRequestOptions({}, 12_345), {
       timeoutMs: 12_345,
@@ -1241,6 +1344,7 @@ describe("PsAiModelManager utility routing", () => {
           geminiDeepResearchConfig,
           geminiDeepResearchStateKey: "gemini-thread",
           builtInTools,
+          multiAgent,
           store: false,
           textFormat: { type: "json_object" },
           promptCacheKey: "cache-key",
@@ -1263,6 +1367,7 @@ describe("PsAiModelManager utility routing", () => {
         geminiDeepResearchConfig,
         geminiDeepResearchStateKey: "gemini-thread",
         builtInTools,
+        multiAgent,
         store: false,
         textFormat: { type: "json_object" },
         promptCache: { key: "cache-key", retention: "24h" },
@@ -3833,6 +3938,7 @@ describe("PsAiModelManager call options", () => {
         maxTokensOut: 777,
         temperature: 0.33,
         reasoningEffort: "high",
+        reasoningMode: "pro",
         maxThinkingTokens: 55,
       }) as PsOpenAiModelConfig
     );
@@ -3847,6 +3953,7 @@ describe("PsAiModelManager call options", () => {
       maxTokensOut: 777,
       temperature: 0.33,
       reasoningEffort: "high",
+      reasoningMode: "pro",
       maxThinkingTokens: 55,
     });
   });
@@ -3910,6 +4017,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       PsAiModelSize.Small,
       createResponsesOptions({
         modelReasoningEffort: "medium",
+        modelReasoningMode: "standard",
       })
     );
 
@@ -3923,6 +4031,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       PsAiModelSize.Small,
       createResponsesOptions({
         modelReasoningEffort: "high",
+        modelReasoningMode: "pro",
       })
     );
     const third = await internals.createEphemeralModel(
@@ -3930,6 +4039,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       PsAiModelSize.Small,
       createResponsesOptions({
         modelReasoningEffort: "medium",
+        modelReasoningMode: "standard",
       })
     );
 
@@ -3941,6 +4051,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       ["call_1", "call_2"]
     );
     assert.equal(third.config.reasoningEffort, "medium");
+    assert.equal(third.config.reasoningMode, "standard");
     assert.equal(internals.statefulResponsesModelCache.size, 1);
   });
 
@@ -3954,6 +4065,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       PsAiModelType.TextReasoning,
       PsAiModelSize.Small,
       createResponsesOptions({
+        modelName: "gpt-5.6",
         modelReasoningEffort: "medium",
       })
     );
@@ -3964,16 +4076,19 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
       PsAiModelType.TextReasoning,
       PsAiModelSize.Small,
       createResponsesOptions({
+        modelName: "gpt-5.6",
         modelReasoningEffort: "high",
         inferenceType: "fast",
         maxTokensOut: 1024,
         modelMaxThinkingTokens: 4096,
         modelTemperature: 0.15,
+        modelReasoningMode: "pro",
       })
     );
 
     assert.strictEqual(second, first);
     assert.equal(second.config.reasoningEffort, "high");
+    assert.equal(second.config.reasoningMode, "pro");
     assert.equal(second.config.inferenceType, "priority");
     assert.equal(second.config.maxTokensOut, 1024);
     assert.equal(second.maxTokensOut, 1024);
@@ -4001,9 +4116,116 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
 
     assert.ok(captured);
     assert.equal(captured.reasoning?.effort, "high");
+    assert.equal(captured.reasoning?.mode, "pro");
     assert.equal(captured.max_output_tokens, 1024);
     assert.equal(captured.service_tier, "priority");
     assert.equal(result.content, "ok");
+  });
+
+  it("preserves Responses state and clears a completed mode-only override", async () => {
+    useStandardResponsesEnv();
+
+    const manager = createManager({ model: "gpt-5.6" });
+    const internals = asInternals(manager);
+    const configuredModel = internals.modelsByType.get(
+      PsAiModelType.TextReasoning
+    );
+
+    assert.ok(configuredModel instanceof OpenAiResponses);
+
+    const cachedStatefulModel = internals.getStateIsolatedResponsesModel(
+      configuredModel,
+      {
+        responsesStateKey: "conversation-a",
+      }
+    );
+
+    assert.ok(cachedStatefulModel instanceof OpenAiResponses);
+
+    const capturedRequests: RecordedResponsesRequest[] = [];
+    setMockClient(cachedStatefulModel, {
+      create: async (params) => {
+        const request = params as RecordedResponsesRequest;
+        capturedRequests.push(request);
+        const responseNumber = capturedRequests.length;
+        return {
+          id:
+            responseNumber === 1
+              ? "resp-configured-first"
+              : responseNumber === 2
+                ? "resp-configured-second"
+                : "resp-configured-third",
+          output: [
+            {
+              type: "message",
+              content: [
+                {
+                  type: "output_text",
+                  text:
+                    responseNumber === 1
+                      ? "first"
+                      : responseNumber === 2
+                        ? "second"
+                        : "third",
+                },
+              ],
+            },
+          ],
+          usage: {},
+        };
+      },
+    });
+
+    const first = await manager.callModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        responsesStateKey: "conversation-a",
+      }
+    );
+    const second = await manager.callModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      [
+        { role: "user", message: "hello" },
+        { role: "user", message: "follow up" },
+      ],
+      {
+        responsesStateKey: "conversation-a",
+        modelReasoningMode: "pro",
+      }
+    );
+    const third = await manager.callModel(
+      PsAiModelType.TextReasoning,
+      PsAiModelSize.Small,
+      [
+        { role: "user", message: "hello" },
+        { role: "user", message: "follow up" },
+        { role: "user", message: "one more" },
+      ],
+      {
+        responsesStateKey: "conversation-a",
+      }
+    );
+
+    assert.equal(first, "first");
+    assert.equal(second, "second");
+    assert.equal(third, "third");
+    assert.equal(capturedRequests.length, 3);
+    assert.equal(capturedRequests[0].previous_response_id, undefined);
+    assert.equal(
+      capturedRequests[1].previous_response_id,
+      "resp-configured-first"
+    );
+    assert.equal(capturedRequests[1].reasoning?.mode, "pro");
+    assert.equal(
+      capturedRequests[2].previous_response_id,
+      "resp-configured-second"
+    );
+    assert.equal(capturedRequests[2].reasoning?.mode, undefined);
+    assert.equal(cachedStatefulModel.config.reasoningMode, undefined);
+    assert.equal(internals.statefulResponsesModelCache.size, 1);
   });
 
   it("creates a separate stateful bucket when modelName changes", async () => {
@@ -4123,6 +4345,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
     const first = internals.getStateIsolatedResponsesModel(configuredModel, {
       responsesStateKey: "conversation-a",
       modelReasoningEffort: "medium",
+      modelReasoningMode: "standard",
     });
 
     Reflect.set(first, "previousResponseId", "configured-resp");
@@ -4130,10 +4353,12 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
     const second = internals.getStateIsolatedResponsesModel(configuredModel, {
       responsesStateKey: "conversation-a",
       modelReasoningEffort: "high",
+      modelReasoningMode: "pro",
     });
     const third = internals.getStateIsolatedResponsesModel(configuredModel, {
       responsesStateKey: "conversation-a",
       modelReasoningEffort: "medium",
+      modelReasoningMode: "standard",
     });
 
     assert.notStrictEqual(first, configuredModel);
@@ -4141,6 +4366,7 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
     assert.strictEqual(third, first);
     assert.equal(Reflect.get(third, "previousResponseId"), "configured-resp");
     assert.equal(third.config.reasoningEffort, "medium");
+    assert.equal(third.config.reasoningMode, "standard");
     assert.equal(internals.statefulResponsesModelCache.size, 1);
   });
 
