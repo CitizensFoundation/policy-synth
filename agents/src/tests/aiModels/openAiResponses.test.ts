@@ -80,6 +80,12 @@ type ResponsesClientMock = {
     options?: RecordedResponsesRequestOptions
   ) => Promise<unknown>;
 };
+type ResponsesFailureError = Error & {
+  code?: unknown;
+  error?: unknown;
+  cause?: unknown;
+  status?: unknown;
+};
 type AuditLogger = {
   debug: (...args: unknown[]) => void;
   error: (...args: unknown[]) => void;
@@ -180,6 +186,22 @@ const asInternals = (model: OpenAiResponsesInstance) =>
 
 const setMockClient = (model: object, responses: ResponsesClientMock) => {
   Reflect.set(model, "client", { responses });
+};
+
+const assertResponsesFailure = (
+  error: unknown,
+  expectedMessage: string,
+  expectedProviderError: Record<string, unknown>
+): boolean => {
+  assert.ok(error instanceof Error);
+  const responsesError = error as ResponsesFailureError;
+  assert.equal(responsesError.name, "Error");
+  assert.equal(responsesError.message, expectedMessage);
+  assert.equal(responsesError.code, expectedProviderError.code);
+  assert.equal(responsesError.error, expectedProviderError);
+  assert.equal(responsesError.cause, expectedProviderError);
+  assert.equal("status" in responsesError, false);
+  return true;
 };
 
 const getApiKeyFingerprintCredentialRef = (apiKey: string): string =>
@@ -2006,11 +2028,15 @@ describe("OpenAiResponses", () => {
     assert.equal(Reflect.get(incompleteModel, "previousResponseId"), undefined);
 
     const failedModel = new OpenAiResponses(createConfig());
+    const failedProviderError = {
+      code: "server_error",
+      message: "server down",
+    };
     setMockClient(failedModel, {
       create: async () => ({
         id: "resp-failed",
         status: "failed",
-        error: { code: "server_error", message: "server down" },
+        error: failedProviderError,
         output: [],
         usage: {},
       }),
@@ -2018,7 +2044,12 @@ describe("OpenAiResponses", () => {
 
     await assert.rejects(
       () => failedModel.generate([{ role: "user", message: "hello" }]),
-      /Responses API response failed: server_error: server down/
+      (error: unknown) =>
+        assertResponsesFailure(
+          error,
+          "Responses API response failed: server_error: server down",
+          failedProviderError
+        )
     );
     assert.equal(Reflect.get(failedModel, "previousResponseId"), undefined);
   });
@@ -2511,6 +2542,10 @@ describe("OpenAiResponses", () => {
   it("rejects terminal failed background Responses", async () => {
     const model = new OpenAiResponses(createConfig());
     Reflect.set(model, "backgroundPollDelayMs", 0);
+    const providerError = {
+      code: "context_length_exceeded",
+      message: "input is too long",
+    };
 
     setMockClient(model, {
       create: async () => ({
@@ -2522,7 +2557,7 @@ describe("OpenAiResponses", () => {
       retrieve: async (responseId) => ({
         id: responseId,
         status: "failed",
-        error: { code: "server_error", message: "server down" },
+        error: providerError,
         output: [],
         usage: {},
       }),
@@ -2543,7 +2578,12 @@ describe("OpenAiResponses", () => {
             useOpenAiResponsesBackground: true,
           }
         ),
-      /Responses API response failed: server_error: server down/
+      (error: unknown) =>
+        assertResponsesFailure(
+          error,
+          "Responses API response failed: context_length_exceeded: input is too long",
+          providerError
+        )
     );
     assert.equal(Reflect.get(model, "previousResponseId"), undefined);
   });
@@ -5059,12 +5099,16 @@ describe("OpenAiResponses", () => {
     assert.deepEqual(chunks, ["Hello ", "world"]);
     assert.equal(result.content, "Hello world");
 
+    const legacyStreamProviderError = {
+      code: "context_length_exceeded",
+      message: "boom",
+    };
     setMockClient(model, {
       create: async () => ({
         async *[Symbol.asyncIterator]() {
           yield {
             type: "response.error",
-            error: { message: "boom" },
+            error: legacyStreamProviderError,
           };
         },
       }),
@@ -5072,7 +5116,8 @@ describe("OpenAiResponses", () => {
 
     await assert.rejects(
       () => model.generate([{ role: "user", message: "hello" }], true),
-      /boom/
+      (error: unknown) =>
+        assertResponsesFailure(error, "boom", legacyStreamProviderError)
     );
 
     setMockClient(model, {
@@ -5092,13 +5137,16 @@ describe("OpenAiResponses", () => {
     );
 
     const directErrorModel = new OpenAiResponses(createConfig());
+    const directStreamProviderError = {
+      type: "error",
+      code: "request_too_large",
+      message: "direct stream failure",
+      param: null,
+    };
     setMockClient(directErrorModel, {
       create: async () => ({
         async *[Symbol.asyncIterator]() {
-          yield {
-            type: "error",
-            message: "direct stream failure",
-          };
+          yield directStreamProviderError;
         },
       }),
     });
@@ -5106,10 +5154,19 @@ describe("OpenAiResponses", () => {
     await assert.rejects(
       () =>
         directErrorModel.generate([{ role: "user", message: "hello" }], true),
-      /direct stream failure/
+      (error: unknown) =>
+        assertResponsesFailure(
+          error,
+          "direct stream failure",
+          directStreamProviderError
+        )
     );
 
     const failedEventModel = new OpenAiResponses(createConfig());
+    const failedEventProviderError = {
+      code: "server_error",
+      message: "server down",
+    };
     setMockClient(failedEventModel, {
       create: async () => ({
         async *[Symbol.asyncIterator]() {
@@ -5118,7 +5175,7 @@ describe("OpenAiResponses", () => {
             response: {
               id: "stream-failed",
               status: "failed",
-              error: { code: "server_error", message: "server down" },
+              error: failedEventProviderError,
               output: [],
             },
           };
@@ -5129,7 +5186,12 @@ describe("OpenAiResponses", () => {
     await assert.rejects(
       () =>
         failedEventModel.generate([{ role: "user", message: "hello" }], true),
-      /Responses API response failed: server_error: server down/
+      (error: unknown) =>
+        assertResponsesFailure(
+          error,
+          "Responses API response failed: server_error: server down",
+          failedEventProviderError
+        )
     );
 
     const incompleteEventModel = new OpenAiResponses(createConfig());

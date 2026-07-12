@@ -2188,8 +2188,12 @@ describe("PsAiModelManager text model calls", () => {
       PsAiModelType.TextReasoning
     );
     assert.ok(responsesModel instanceof OpenAiResponses);
+    let responsesCallCount = 0;
     Reflect.set(responsesModel, "generate", async () => {
-      throw tokenError;
+      responsesCallCount += 1;
+      throw new Error(
+        "Responses API response failed: context_length_exceeded: input is too long"
+      );
     });
     await assert.rejects(
       () =>
@@ -2198,9 +2202,44 @@ describe("PsAiModelManager text model calls", () => {
           PsAiModelSize.Small,
           [{ role: "user", message: "long prompt" }],
           {}
-        ),
-      /maximum context length/
+      ),
+      /context_length_exceeded/
     );
+    assert.equal(responsesCallCount, 1);
+
+    for (const code of ["server_error", "rate_limit_exceeded"]) {
+      const transientManager = createNoopManager();
+      disableRetrySleep(transientManager);
+      const providerError = { code, message: `${code} from Responses API` };
+      const transientError = Object.assign(
+        new Error(`Responses API response failed: ${code}: transient failure`),
+        {
+          code,
+          error: providerError,
+          cause: providerError,
+        }
+      );
+      const transientModel = new ScriptedChatModel(
+        createModelConfig({
+          modelName: `responses-${code}`,
+          provider: PsAiModelProvider.OpenAIResponses,
+        }),
+        [createModelResult("recovered")],
+        [transientError]
+      );
+      registerModel(transientManager, transientModel);
+
+      assert.equal(
+        await transientManager.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Small,
+          [{ role: "user", message: "retry transient failure" }],
+          { overrideMaxRetries: 2 }
+        ),
+        "recovered"
+      );
+      assert.equal(transientModel.calls.length, 2);
+    }
   });
 
   it("throws after repeated JSON parse failures reach the fixed retry limit", async () => {

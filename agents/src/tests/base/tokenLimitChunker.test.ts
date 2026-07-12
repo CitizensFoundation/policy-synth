@@ -114,6 +114,12 @@ describe("TokenLimitChunker", () => {
     );
     assert.equal(
       TokenLimitChunker.isTokenLimitError({
+        error: { code: "context_length_exceeded" },
+      }),
+      true
+    );
+    assert.equal(
+      TokenLimitChunker.isTokenLimitError({
         message: "Please reduce the length of the messages",
       }),
       true
@@ -149,7 +155,26 @@ describe("TokenLimitChunker", () => {
       true
     );
     assert.equal(
+      TokenLimitChunker.isTokenLimitError({
+        message:
+          "Responses API response failed: CONTEXT_LENGTH_EXCEEDED: input is too long",
+      }),
+      true
+    );
+    assert.equal(
+      TokenLimitChunker.isTokenLimitError({
+        message: "Responses API error (request_too_large): payload rejected",
+      }),
+      true
+    );
+    assert.equal(
       TokenLimitChunker.isTokenLimitError({ message: "ordinary failure" }),
+      false
+    );
+    assert.equal(
+      TokenLimitChunker.isTokenLimitError({
+        message: "The request was too large for the upstream cache",
+      }),
       false
     );
 

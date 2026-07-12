@@ -11,6 +11,9 @@ import { PolicySynthAgentBase } from "./agentBase.js";
 import { GoogleGenAI, Content } from "@google/genai";
 import pLimit from "p-limit";
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
 export interface ModelCaller {
   callModel(
     type: PsAiModelType,
@@ -89,12 +92,16 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
   static isTokenLimitError(err: unknown): boolean {
     if (!err) return false;
 
-    const m = String((err as any).message ?? "").toLowerCase();
+    const error = isRecord(err) ? err : undefined;
+    const nestedError = isRecord(error?.error) ? error.error : undefined;
+    const response = isRecord(error?.response) ? error.response : undefined;
+    const responseData = isRecord(response?.data) ? response.data : undefined;
+    const responseError = isRecord(responseData?.error)
+      ? responseData.error
+      : undefined;
+    const m = String(error?.message ?? "").toLowerCase();
     const code = String(
-      (err as any).code ??
-        (err as any)?.error?.code ??
-        (err as any)?.response?.data?.error?.code ??
-        ""
+      error?.code ?? nestedError?.code ?? responseError?.code ?? ""
     ).toLowerCase();
 
     if (code === "context_length_exceeded" || code === "request_too_large")
@@ -107,6 +114,8 @@ export class TokenLimitChunker extends PolicySynthAgentBase {
       m.includes("please reduce the length of the messages") ||
       m.includes("exceeds context window size") ||
       m.includes("request exceeds the maximum allowed number of bytes") ||
+      m.includes("context_length_exceeded") ||
+      m.includes("request_too_large") ||
       m.includes("string too long")
     );
   }

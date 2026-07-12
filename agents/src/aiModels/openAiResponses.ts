@@ -83,6 +83,14 @@ type ResponsesCreateUsageParams = {
   tool_choice?: unknown;
   tools?: unknown[];
 };
+type ResponsesProviderError = Record<string, unknown> & {
+  code?: string;
+  message?: string;
+};
+type ResponsesErrorDetails = {
+  message: string;
+  providerError?: ResponsesProviderError;
+};
 
 const OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS = 2_000;
 const OPENAI_RESPONSES_BACKGROUND_REQUEST_TIMEOUT_MS = 60_000;
@@ -790,10 +798,10 @@ export class OpenAiResponses extends BaseChatModel {
     );
   }
 
-  private getResponseStatusErrorMessage(
+  private getResponseStatusErrorDetails(
     response: unknown,
     fallback = "Responses API response did not complete"
-  ): string | undefined {
+  ): ResponsesErrorDetails | undefined {
     if (!isRecord(response)) {
       return undefined;
     }
@@ -814,17 +822,22 @@ export class OpenAiResponses extends BaseChatModel {
 
     if (status === "completed") {
       if (errorMessage) {
-        return errorCode
-          ? `Responses API error (${errorCode}): ${errorMessage}`
-          : `Responses API error: ${errorMessage}`;
+        return {
+          message: errorCode
+            ? `Responses API error (${errorCode}): ${errorMessage}`
+            : `Responses API error: ${errorMessage}`,
+          providerError: error,
+        };
       }
       return undefined;
     }
 
     if (status === "incomplete" || incompleteReason) {
-      return incompleteReason
-        ? `Responses API response incomplete: ${incompleteReason}`
-        : "Responses API response incomplete";
+      return {
+        message: incompleteReason
+          ? `Responses API response incomplete: ${incompleteReason}`
+          : "Responses API response incomplete",
+      };
     }
 
     if (
@@ -836,26 +849,53 @@ export class OpenAiResponses extends BaseChatModel {
       const detail = errorMessage
         ? `: ${errorCode ? `${errorCode}: ` : ""}${errorMessage}`
         : "";
-      return `Responses API response ${status}${detail}`;
+      return {
+        message: `Responses API response ${status}${detail}`,
+        providerError: error,
+      };
     }
 
     if (errorMessage) {
-      return errorCode
-        ? `Responses API error (${errorCode}): ${errorMessage}`
-        : `Responses API error: ${errorMessage}`;
+      return {
+        message: errorCode
+          ? `Responses API error (${errorCode}): ${errorMessage}`
+          : `Responses API error: ${errorMessage}`,
+        providerError: error,
+      };
     }
 
     return undefined;
   }
 
+  private createResponsesError(details: ResponsesErrorDetails): Error {
+    const error = details.providerError
+      ? new Error(details.message, { cause: details.providerError })
+      : new Error(details.message);
+
+    if (details.providerError) {
+      const enrichedError = error as Error & {
+        code?: string;
+        error?: ResponsesProviderError;
+      };
+      if (typeof details.providerError.code === "string") {
+        enrichedError.code = details.providerError.code;
+      }
+      enrichedError.error = details.providerError;
+    }
+
+    return error;
+  }
+
   private assertResponseCompleted(response: unknown): void {
-    const message = this.getResponseStatusErrorMessage(response);
-    if (message) {
-      throw new Error(message);
+    const errorDetails = this.getResponseStatusErrorDetails(response);
+    if (errorDetails) {
+      throw this.createResponsesError(errorDetails);
     }
   }
 
-  private getStreamingErrorMessage(event: unknown): string | undefined {
+  private getStreamingErrorDetails(
+    event: unknown
+  ): ResponsesErrorDetails | undefined {
     if (!isRecord(event)) {
       return undefined;
     }
@@ -863,10 +903,10 @@ export class OpenAiResponses extends BaseChatModel {
     const type = typeof event.type === "string" ? event.type : undefined;
     if (type === "response.failed" || type === "response.incomplete") {
       return (
-        this.getResponseStatusErrorMessage(
+        this.getResponseStatusErrorDetails(
           event.response,
           `Streaming ${type} event from Responses API`
-        ) ?? `Streaming ${type} event from Responses API`
+        ) ?? { message: `Streaming ${type} event from Responses API` }
       );
     }
 
@@ -874,13 +914,20 @@ export class OpenAiResponses extends BaseChatModel {
       const error = isRecord(event.error) ? event.error : undefined;
       const message =
         typeof error?.message === "string" ? error.message : undefined;
-      return message ?? "Streaming error from Responses API";
+      return {
+        message: message ?? "Streaming error from Responses API",
+        providerError: error,
+      };
     }
 
     if (type === "error") {
-      return typeof event.message === "string"
-        ? event.message
-        : "Streaming error from Responses API";
+      return {
+        message:
+          typeof event.message === "string"
+            ? event.message
+            : "Streaming error from Responses API",
+        providerError: event,
+      };
     }
 
     return undefined;
@@ -1693,9 +1740,9 @@ export class OpenAiResponses extends BaseChatModel {
         continue;
       }
 
-      const streamingErrorMessage = this.getStreamingErrorMessage(event);
-      if (streamingErrorMessage) {
-        throw new Error(streamingErrorMessage);
+      const streamingErrorDetails = this.getStreamingErrorDetails(event);
+      if (streamingErrorDetails) {
+        throw this.createResponsesError(streamingErrorDetails);
       }
     }
 
