@@ -10,6 +10,7 @@ import {
   HarmCategory,
   ThinkingLevel,
   type ThinkingConfig,
+  type Tool,
   ToolConfig,
 } from "@google/genai";
 
@@ -26,6 +27,17 @@ import {
   normalizePromptCacheOptions,
   type PromptCacheUsageData,
 } from "./promptCacheOptions.js";
+import {
+  getSearchContextIgnoredOption,
+  getSingleWebSearchTool,
+  PsBuiltInToolConfigurationError,
+  type PsBuiltInToolsProviderMetadata,
+  type PsNormalizedWebSearchCitation,
+  type PsNormalizedWebSearchEntryPoint,
+  type PsNormalizedWebSearchSource,
+  type PsWebSearchBuiltInTool,
+  wrapBuiltInToolProviderError,
+} from "./builtInToolSupport.js";
 
 const DEFAULT_GEMINI_MODEL_NAME = "gemini-2.5-flash-lite";
 
@@ -382,6 +394,7 @@ export class GoogleGeminiChat extends BaseChatModel {
       promptCache?: PromptCacheUsageData;
       geminiRegions: string[];
       selectedGeminiRegion: string | null;
+      builtInToolsMetadata?: PsBuiltInToolsProviderMetadata;
     },
     usage: {
       tokensIn: number;
@@ -414,6 +427,8 @@ export class GoogleGeminiChat extends BaseChatModel {
         selectedGeminiRegion: this.useVertex
           ? request.selectedGeminiRegion
           : null,
+        requestedBuiltInTools:
+          request.builtInToolsMetadata?.requested ?? null,
       },
       usageRaw: usageRaw ?? undefined,
       usageNormalized: {
@@ -439,6 +454,7 @@ export class GoogleGeminiChat extends BaseChatModel {
         selectedGeminiRegion: this.useVertex
           ? request.selectedGeminiRegion
           : null,
+        builtInTools: request.builtInToolsMetadata ?? null,
         promptTokenCount:
           (usageRaw?.promptTokenCount as number | undefined) ?? null,
         candidatesTokenCount:
@@ -453,6 +469,215 @@ export class GoogleGeminiChat extends BaseChatModel {
           (usageRaw?.cachedContentTokenCount as number | undefined) ?? null,
       },
     };
+  }
+
+  private buildGeminiWebSearchTool(
+    tool: PsWebSearchBuiltInTool | undefined,
+    hasFunctionTools: boolean
+  ): Tool | undefined {
+    if (!tool) {
+      return undefined;
+    }
+
+    if (tool.allowedDomains?.length) {
+      throw new PsBuiltInToolConfigurationError(
+        "Gemini native googleSearch does not support allowedDomains with equivalent semantics."
+      );
+    }
+    if (tool.userLocation) {
+      throw new PsBuiltInToolConfigurationError(
+        "Gemini native googleSearch does not support a per-request userLocation with equivalent semantics."
+      );
+    }
+    if (hasFunctionTools && !this.isGemini3Model()) {
+      throw new PsBuiltInToolConfigurationError(
+        "Combining Gemini native googleSearch with function tools requires a Gemini 3 model."
+      );
+    }
+
+    return { googleSearch: {} };
+  }
+
+  private getGeminiGroundingMetadata(
+    response: GenerateContentResponse
+  ): unknown[] {
+    const metadata: unknown[] = [];
+    for (const candidate of response.candidates ?? []) {
+      if (candidate.groundingMetadata) {
+        metadata.push(candidate.groundingMetadata);
+      }
+    }
+    return metadata;
+  }
+
+  private buildGeminiBuiltInToolsMetadata(
+    tool: PsWebSearchBuiltInTool | undefined,
+    groundingMetadata: unknown[]
+  ): PsBuiltInToolsProviderMetadata | undefined {
+    if (!tool) {
+      return undefined;
+    }
+
+    const queries = new Set<string>();
+    const sources: PsNormalizedWebSearchSource[] = [];
+    const citations: PsNormalizedWebSearchCitation[] = [];
+    const results: unknown[] = [];
+    let searchEntryPoint: PsNormalizedWebSearchEntryPoint | undefined;
+    const allChunkSources: Array<PsNormalizedWebSearchSource | undefined> = [];
+    const supportGroups: Array<{
+      supports: unknown[];
+      chunkSources: Array<PsNormalizedWebSearchSource | undefined>;
+    }> = [];
+
+    for (const rawMetadata of groundingMetadata) {
+      if (!this.isRecord(rawMetadata)) {
+        continue;
+      }
+
+      if (Array.isArray(rawMetadata.webSearchQueries)) {
+        for (const query of rawMetadata.webSearchQueries) {
+          if (typeof query === "string" && query.trim()) {
+            queries.add(query);
+          }
+        }
+      }
+
+      if (this.isRecord(rawMetadata.searchEntryPoint)) {
+        const renderedContent = rawMetadata.searchEntryPoint.renderedContent;
+        const sdkBlob = rawMetadata.searchEntryPoint.sdkBlob;
+        if (typeof renderedContent === "string" || typeof sdkBlob === "string") {
+          searchEntryPoint = {
+            renderedContent:
+              typeof renderedContent === "string"
+                ? renderedContent
+                : searchEntryPoint?.renderedContent,
+            sdkBlob:
+              typeof sdkBlob === "string"
+                ? sdkBlob
+                : searchEntryPoint?.sdkBlob,
+          };
+        }
+      }
+
+      const chunks = Array.isArray(rawMetadata.groundingChunks)
+        ? rawMetadata.groundingChunks
+        : [];
+      const chunkSources: Array<PsNormalizedWebSearchSource | undefined> = [];
+      for (const chunk of chunks) {
+        results.push(chunk);
+        if (!this.isRecord(chunk) || !this.isRecord(chunk.web)) {
+          chunkSources.push(undefined);
+          continue;
+        }
+        const url = chunk.web.uri;
+        if (typeof url !== "string") {
+          chunkSources.push(undefined);
+          continue;
+        }
+        const source: PsNormalizedWebSearchSource = {
+          url,
+          title:
+            typeof chunk.web.title === "string" ? chunk.web.title : undefined,
+        };
+        sources.push(source);
+        chunkSources.push(source);
+      }
+
+      allChunkSources.push(...chunkSources);
+
+      if (Array.isArray(rawMetadata.groundingSupports)) {
+        supportGroups.push({
+          supports: rawMetadata.groundingSupports,
+          chunkSources,
+        });
+      }
+    }
+
+    for (const group of supportGroups) {
+      const availableSources = group.chunkSources.some(Boolean)
+        ? group.chunkSources
+        : allChunkSources;
+      for (const support of group.supports) {
+        if (!this.isRecord(support)) {
+          continue;
+        }
+        const segment = this.isRecord(support.segment)
+          ? support.segment
+          : undefined;
+        const indices = Array.isArray(support.groundingChunkIndices)
+          ? support.groundingChunkIndices
+          : [];
+        for (const index of indices) {
+          if (typeof index !== "number") {
+            continue;
+          }
+          const source = availableSources[index];
+          if (!source) {
+            continue;
+          }
+          citations.push({
+            ...source,
+            citedText:
+              typeof segment?.text === "string" ? segment.text : undefined,
+            startIndex:
+              typeof segment?.startIndex === "number"
+                ? segment.startIndex
+                : undefined,
+            endIndex:
+              typeof segment?.endIndex === "number"
+                ? segment.endIndex
+                : undefined,
+            ...(typeof segment?.partIndex === "number"
+              ? { partIndex: segment.partIndex }
+              : {}),
+            ...(typeof segment?.startIndex === "number" ||
+              typeof segment?.endIndex === "number"
+              ? { indexUnit: "utf8_byte" as const }
+              : {}),
+          });
+        }
+      }
+    }
+
+    const metadata: PsBuiltInToolsProviderMetadata = {
+      requested: ["web_search"],
+      ignoredOptions: getSearchContextIgnoredOption(tool, "Gemini"),
+      webSearchCalls: [
+        {
+          status: groundingMetadata.length ? "completed" : "not_used",
+          queries: queries.size ? [...queries] : undefined,
+          sources: tool.includeSources
+            ? this.dedupeGeminiSources(sources)
+            : undefined,
+          citations: tool.includeSources && citations.length
+            ? citations
+            : undefined,
+          results: tool.includeResults && results.length ? results : undefined,
+          ...(searchEntryPoint ? { searchEntryPoint } : {}),
+        },
+      ],
+    };
+    if (tool.includeResults) {
+      metadata.rawProviderData = groundingMetadata;
+    }
+    return metadata;
+  }
+
+  private dedupeGeminiSources(
+    sources: PsNormalizedWebSearchSource[]
+  ): PsNormalizedWebSearchSource[] {
+    const byUrl = new Map<string, PsNormalizedWebSearchSource>();
+    for (const source of sources) {
+      const existing = byUrl.get(source.url);
+      if (!existing || (!existing.title && source.title)) {
+        byUrl.set(source.url, source);
+      }
+    }
+    return [...byUrl.values()];
+  }
+
+  private isRecord(value: unknown): value is Record<string, unknown> {
+    return typeof value === "object" && value !== null && !Array.isArray(value);
   }
 
   private getErrorStatus(error: unknown): number | undefined {
@@ -583,34 +808,55 @@ export class GoogleGeminiChat extends BaseChatModel {
     toolChoice: ChatCompletionToolChoiceOption | "auto",
     functionDeclarations: FunctionDeclaration[] | undefined,
     toolConfig: ToolConfig | undefined,
+    webSearchTool: PsWebSearchBuiltInTool | undefined,
     systemInstruction: string,
     execution: GeminiExecutionContext,
     streamState: { emittedOutput: boolean },
     promptCacheUsageData?: PromptCacheUsageData
   ): Promise<UsageItemResult> {
     if (streaming) {
-      const stream = await ai.models.generateContentStream(params);
+      const stream = await (async () => {
+        try {
+          return await ai.models.generateContentStream(params);
+        } catch (error) {
+          throw wrapBuiltInToolProviderError(
+            error,
+            "Gemini",
+            Boolean(webSearchTool)
+          );
+        }
+      })();
       let text = "";
       const toolCalls: FunctionCall[] = [];
+      const groundingMetadata: unknown[] = [];
       let last: GenerateContentResponse | undefined;
 
-      for await (const chunk of stream) {
-        this.assertGeminiNotBlocked(chunk);
-        this.handleStreamChunk(chunk);
-        last = chunk;
-        if (chunk.text) {
-          text += chunk.text;
-          streamState.emittedOutput = true;
-          streamingCallback?.(chunk.text);
+      try {
+        for await (const chunk of stream) {
+          this.assertGeminiNotBlocked(chunk);
+          this.handleStreamChunk(chunk);
+          groundingMetadata.push(...this.getGeminiGroundingMetadata(chunk));
+          last = chunk;
+          if (chunk.text) {
+            text += chunk.text;
+            streamState.emittedOutput = true;
+            streamingCallback?.(chunk.text);
+          }
+          if (chunk.functionCalls?.length) {
+            toolCalls.push(...chunk.functionCalls);
+            streamState.emittedOutput = true;
+          }
         }
-        if (chunk.functionCalls?.length) {
-          toolCalls.push(...chunk.functionCalls);
-          streamState.emittedOutput = true;
-        }
-      }
 
-      if (last) {
-        this.handleFinalResponse(last);
+        if (last) {
+          this.handleFinalResponse(last);
+        }
+      } catch (error) {
+        throw wrapBuiltInToolProviderError(
+          error,
+          "Gemini",
+          Boolean(webSearchTool)
+        );
       }
 
       const usage = last?.usageMetadata ?? {};
@@ -619,6 +865,10 @@ export class GoogleGeminiChat extends BaseChatModel {
       const tokensOut = this.tokensOut(usage);
       const cached = usage.cachedContentTokenCount ?? 0;
       const reasoningTokens = usage.thoughtsTokenCount ?? 0;
+      const builtInToolsMetadata = this.buildGeminiBuiltInToolsMetadata(
+        webSearchTool,
+        groundingMetadata
+      );
       await this.logTokens(tokensIn, tokensOut, cached);
 
       return {
@@ -646,6 +896,7 @@ export class GoogleGeminiChat extends BaseChatModel {
             promptCache: promptCacheUsageData,
             geminiRegions: execution.requestedRegions,
             selectedGeminiRegion: execution.selectedRegion,
+            builtInToolsMetadata,
           },
           {
             tokensIn,
@@ -657,7 +908,17 @@ export class GoogleGeminiChat extends BaseChatModel {
       };
     }
 
-    const response = await ai.models.generateContent(params);
+    const response = await (async () => {
+      try {
+        return await ai.models.generateContent(params);
+      } catch (error) {
+        throw wrapBuiltInToolProviderError(
+          error,
+          "Gemini",
+          Boolean(webSearchTool)
+        );
+      }
+    })();
     this.assertGeminiNotBlocked(response);
     this.handleFinalResponse(response);
 
@@ -667,6 +928,10 @@ export class GoogleGeminiChat extends BaseChatModel {
     const tokensOut = this.tokensOut(usage);
     const cached = usage.cachedContentTokenCount ?? 0;
     const reasoningTokens = usage.thoughtsTokenCount ?? 0;
+    const builtInToolsMetadata = this.buildGeminiBuiltInToolsMetadata(
+      webSearchTool,
+      this.getGeminiGroundingMetadata(response)
+    );
     this.logger.debug("Gemini usage: " + JSON.stringify(usage, null, 2));
     await this.logTokens(tokensIn, tokensOut, cached);
 
@@ -695,6 +960,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           promptCache: promptCacheUsageData,
           geminiRegions: execution.requestedRegions,
           selectedGeminiRegion: execution.selectedRegion,
+          builtInToolsMetadata,
         },
         {
           tokensIn,
@@ -816,10 +1082,23 @@ export class GoogleGeminiChat extends BaseChatModel {
       };
     }
 
+    const webSearchTool = getSingleWebSearchTool(
+      requestOptions?.builtInTools,
+      "Gemini"
+    );
+    const geminiWebSearchTool = this.buildGeminiWebSearchTool(
+      webSearchTool,
+      Boolean(functionDeclarations?.length)
+    );
+    const requestTools: Tool[] = [
+      ...(functionDeclarations ? [{ functionDeclarations }] : []),
+      ...(geminiWebSearchTool ? [geminiWebSearchTool] : []),
+    ];
+
     const thinkingConfig = this.buildThinkingConfig();
     const config: GenerateContentConfig = {
       systemInstruction: systemInstruction,
-      tools: functionDeclarations ? [{ functionDeclarations }] : undefined,
+      tools: requestTools.length ? requestTools : undefined,
       toolConfig,
       safetySettings: GoogleGeminiChat.safetySettings,
       maxOutputTokens: this.maxTokensOut,
@@ -855,6 +1134,7 @@ export class GoogleGeminiChat extends BaseChatModel {
           toolChoice,
           functionDeclarations,
           toolConfig,
+          webSearchTool,
           systemInstruction,
           {
             requestedRegions: executionPlan.requestedRegions,

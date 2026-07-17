@@ -1267,6 +1267,392 @@ describe("GoogleGeminiChat", () => {
     assert.equal(result.usageItemData?.request?.thinkingBudget, null);
   });
 
+  it("maps Gemini 3 Google Search with function tools and normalizes grounding metadata", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-3.5-flash" })
+    );
+    let captured: RecordedGeminiRequest | undefined;
+    setMockAi(model, {
+      models: {
+        generateContent: async (params) => {
+          captured = params as RecordedGeminiRequest;
+          return {
+            text: "Grounded Gemini answer",
+            usageMetadata: {
+              promptTokenCount: 8,
+              candidatesTokenCount: 4,
+            },
+            candidates: [
+              {
+                finishReason: "STOP",
+                content: { parts: [{ text: "Grounded Gemini answer" }] },
+                groundingMetadata: {
+                  webSearchQueries: ["latest Iceland policy"],
+                  groundingChunks: [
+                    {
+                      web: {
+                        uri: "https://example.com/iceland-policy",
+                        title: "Iceland policy",
+                      },
+                    },
+                  ],
+                  groundingSupports: [
+                    {
+                      segment: {
+                        startIndex: 0,
+                        endIndex: 23,
+                        partIndex: 0,
+                        text: "Grounded Gemini answer",
+                      },
+                      groundingChunkIndices: [0],
+                    },
+                  ],
+                },
+              },
+            ],
+          };
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search current policy" }],
+      false,
+      undefined,
+      undefined,
+      [
+        {
+          type: "function",
+          function: {
+            name: "lookup",
+            parameters: { type: "object" },
+          },
+        },
+      ],
+      "auto",
+      [],
+      {
+        builtInTools: [
+          {
+            type: "web_search",
+            searchContextSize: "medium",
+            includeSources: true,
+            includeResults: true,
+          },
+        ],
+      }
+    );
+
+    assert.deepEqual(captured?.config?.tools, [
+      {
+        functionDeclarations: [
+          {
+            name: "lookup",
+            description: undefined,
+            parametersJsonSchema: { type: "object" },
+          },
+        ],
+      },
+      { googleSearch: {} },
+    ]);
+    assert.equal(result.content, "Grounded Gemini answer");
+    const metadata = result.usageItemData?.providerMetadata?.builtInTools as
+      | Record<string, unknown>
+      | undefined;
+    assert.deepEqual(metadata?.requested, ["web_search"]);
+    assert.deepEqual(metadata?.ignoredOptions, [
+      {
+        option: "searchContextSize",
+        reason: "Gemini has no equivalent search-context-size control.",
+      },
+    ]);
+    assert.deepEqual(metadata?.webSearchCalls, [
+      {
+        status: "completed",
+        queries: ["latest Iceland policy"],
+        sources: [
+          {
+            url: "https://example.com/iceland-policy",
+            title: "Iceland policy",
+          },
+        ],
+        citations: [
+          {
+            url: "https://example.com/iceland-policy",
+            title: "Iceland policy",
+            citedText: "Grounded Gemini answer",
+            startIndex: 0,
+            endIndex: 23,
+            partIndex: 0,
+            indexUnit: "utf8_byte",
+          },
+        ],
+        results: [
+          {
+            web: {
+              uri: "https://example.com/iceland-policy",
+              title: "Iceland policy",
+            },
+          },
+        ],
+      },
+    ]);
+    assert.ok(metadata?.rawProviderData);
+  });
+
+  it("preserves Gemini's required search entry point without raw result inclusion", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-3.5-flash" })
+    );
+    setMockAi(model, {
+      models: {
+        generateContent: async () => ({
+          text: "Grounded answer",
+          usageMetadata: {
+            promptTokenCount: 2,
+            candidatesTokenCount: 2,
+          },
+          candidates: [
+            {
+              finishReason: "STOP",
+              content: { parts: [{ text: "Grounded answer" }] },
+              groundingMetadata: {
+                webSearchQueries: ["current answer"],
+                searchEntryPoint: {
+                  renderedContent: "<div>Google Search suggestions</div>",
+                  sdkBlob: "encoded-sdk-blob",
+                },
+              },
+            },
+          ],
+        }),
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { builtInTools: [{ type: "web_search" }] }
+    );
+    const metadata = result.usageItemData?.providerMetadata?.builtInTools as
+      | {
+          rawProviderData?: unknown;
+          webSearchCalls?: Array<Record<string, unknown>>;
+        }
+      | undefined;
+
+    assert.deepEqual(metadata?.webSearchCalls?.[0].searchEntryPoint, {
+      renderedContent: "<div>Google Search suggestions</div>",
+      sdkBlob: "encoded-sdk-blob",
+    });
+    assert.equal(metadata?.rawProviderData, undefined);
+  });
+
+  it("rejects unsupported Gemini web-search semantics before calling the API", async () => {
+    const restrictedModel = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-3.5-flash" })
+    );
+    let apiCalled = false;
+    setMockAi(restrictedModel, {
+      models: {
+        generateContent: async () => {
+          apiCalled = true;
+          return createGeminiResponse("unexpected");
+        },
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        restrictedModel.generate(
+          [{ role: "user", message: "Search" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          {
+            builtInTools: [
+              { type: "web_search", allowedDomains: ["example.com"] },
+            ],
+          }
+        ),
+      /does not support allowedDomains/
+    );
+    assert.equal(apiCalled, false);
+
+    const legacyCombination = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-2.5-pro" })
+    );
+    setMockAi(legacyCombination, {
+      models: {
+        generateContent: async () => {
+          apiCalled = true;
+          return createGeminiResponse("unexpected");
+        },
+      },
+    });
+    await assert.rejects(
+      () =>
+        legacyCombination.generate(
+          [{ role: "user", message: "Search" }],
+          false,
+          undefined,
+          undefined,
+          [
+            {
+              type: "function",
+              function: { name: "lookup", parameters: { type: "object" } },
+            },
+          ],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      /requires a Gemini 3 model/
+    );
+    assert.equal(apiCalled, false);
+  });
+
+  it("merges Gemini streaming grounding metadata", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-3.5-flash" })
+    );
+    setMockAi(model, {
+      models: {
+        generateContentStream: async () => ({
+          async *[Symbol.asyncIterator]() {
+            yield {
+              text: "Café ",
+              candidates: [
+                {
+                  finishReason: "STOP",
+                  content: { parts: [{ text: "Café " }] },
+                  groundingMetadata: {
+                    webSearchQueries: ["stream query"],
+                    groundingChunks: [
+                      {
+                        web: {
+                          uri: "https://example.com/stream",
+                          title: "Stream source",
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            };
+            yield {
+              text: "answer",
+              usageMetadata: {
+                promptTokenCount: 3,
+                candidatesTokenCount: 2,
+              },
+              candidates: [
+                {
+                  finishReason: "STOP",
+                  content: { parts: [{ text: "answer" }] },
+                  groundingMetadata: {
+                    groundingSupports: [
+                      {
+                        segment: {
+                          startIndex: 0,
+                          endIndex: 12,
+                          partIndex: 0,
+                          text: "Café answer",
+                        },
+                        groundingChunkIndices: [0],
+                      },
+                    ],
+                  },
+                },
+              ],
+            };
+          },
+        }),
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search" }],
+      true,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        builtInTools: [
+          { type: "web_search", includeSources: true, includeResults: true },
+        ],
+      }
+    );
+
+    assert.equal(result.content, "Café answer");
+    const metadata = result.usageItemData?.providerMetadata?.builtInTools as
+      | { webSearchCalls?: Array<Record<string, unknown>> }
+      | undefined;
+    assert.deepEqual(metadata?.webSearchCalls?.[0].queries, ["stream query"]);
+    assert.deepEqual(metadata?.webSearchCalls?.[0].sources, [
+      { url: "https://example.com/stream", title: "Stream source" },
+    ]);
+    assert.deepEqual(metadata?.webSearchCalls?.[0].citations, [
+      {
+        url: "https://example.com/stream",
+        title: "Stream source",
+        citedText: "Café answer",
+        startIndex: 0,
+        endIndex: 12,
+        partIndex: 0,
+        indexUnit: "utf8_byte",
+      },
+    ]);
+  });
+
+  it("marks Gemini web-search errors raised during stream iteration as non-retryable", async () => {
+    const model = new SpyGoogleGeminiChat(
+      createConfig({ modelName: "gemini-3.5-flash" })
+    );
+    const providerError = Object.assign(
+      new Error("google_search is not supported for this model"),
+      { status: 400 }
+    );
+    setMockAi(model, {
+      models: {
+        generateContentStream: async () => ({
+          async *[Symbol.asyncIterator]() {
+            throw providerError;
+          },
+        }),
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "Search" }],
+          true,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      (error: unknown) =>
+        typeof error === "object" &&
+        error !== null &&
+        "isPsNonRetryableModelError" in error &&
+        error.isPsNonRetryableModelError === true
+    );
+  });
+
   it("maps Gemini 3 reasoning effort to thinkingLevel", async () => {
     const lowModel = new SpyGoogleGeminiChat(
       createConfig({

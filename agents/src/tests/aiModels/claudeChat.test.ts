@@ -44,6 +44,13 @@ type ClaudeChatInternals = {
     content: Array<Record<string, unknown>>
   ) => string;
   getEstimatedNumTokensFromMessages: (messages: PsModelMessage[]) => Promise<number>;
+  buildClaudeBuiltInToolsMetadata: (
+    tool: Extract<PsBuiltInTool, { type: "web_search" }> | undefined,
+    content: unknown[] | null | undefined,
+    usage: unknown
+  ) =>
+    | { webSearchCalls?: Array<Record<string, unknown>> }
+    | undefined;
 };
 
 type RecordedClaudeRequest = {
@@ -1117,6 +1124,865 @@ describe("ClaudeChat", () => {
     assert.equal(result?.cachedInTokens, 2);
     assert.equal(result?.usageItemData?.providerMetadata?.transport, "anthropic");
     assert.equal(result?.usageItemData?.request?.mode, "non_stream");
+  });
+
+  it("maps direct Claude web search and normalizes sources, citations, and raw results", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          captured = params as RecordedClaudeRequest;
+          return {
+            id: "claude-search-1",
+            model: "claude-opus-4-8",
+            stop_reason: "end_turn",
+            usage: {
+              input_tokens: 10,
+              output_tokens: 6,
+              server_tool_use: {
+                web_search_requests: 1,
+                web_fetch_requests: 0,
+              },
+            },
+            content: [
+              {
+                type: "server_tool_use",
+                id: "srvtoolu-search-1",
+                name: "web_search",
+                input: { query: "latest policy news" },
+              },
+              {
+                type: "web_search_tool_result",
+                tool_use_id: "srvtoolu-search-1",
+                content: [
+                  {
+                    type: "web_search_result",
+                    url: "https://example.com/policy",
+                    title: "Policy update",
+                    page_age: null,
+                    encrypted_content: "encrypted",
+                  },
+                ],
+              },
+              {
+                type: "text",
+                text: "A current answer.",
+                citations: [
+                  {
+                    type: "web_search_result_location",
+                    url: "https://example.com/policy",
+                    title: "Policy update",
+                    cited_text: "A current answer.",
+                    encrypted_index: "index",
+                  },
+                ],
+              },
+            ],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used in this test");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "What changed?" }],
+      false,
+      undefined,
+      undefined,
+      [
+        {
+          type: "function",
+          function: {
+            name: "lookup",
+            parameters: { type: "object" },
+          },
+        },
+      ],
+      "auto",
+      [],
+      {
+        builtInTools: [
+          {
+            type: "web_search",
+            searchContextSize: "high",
+            allowedDomains: ["example.com"],
+            userLocation: { country: "IS", timezone: "Atlantic/Reykjavik" },
+            includeSources: true,
+            includeResults: true,
+          },
+        ],
+      }
+    );
+
+    assert.deepEqual(captured?.tools, [
+      {
+        name: "lookup",
+        description: undefined,
+        input_schema: { type: "object" },
+      },
+      {
+        name: "web_search",
+        allowed_domains: ["example.com"],
+        user_location: {
+          type: "approximate",
+          city: undefined,
+          country: "IS",
+          region: undefined,
+          timezone: "Atlantic/Reykjavik",
+        },
+        type: "web_search_20260318",
+        response_inclusion: "full",
+      },
+    ]);
+    assert.deepEqual(captured?.tool_choice, {
+      type: "auto",
+      disable_parallel_tool_use: undefined,
+    });
+    assert.equal(result?.content, "A current answer.");
+
+    const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
+      | Record<string, unknown>
+      | undefined;
+    assert.deepEqual(metadata?.requested, ["web_search"]);
+    assert.deepEqual(metadata?.ignoredOptions, [
+      {
+        option: "searchContextSize",
+        reason: "Claude has no equivalent search-context-size control.",
+      },
+    ]);
+    assert.deepEqual(metadata?.webSearchCalls, [
+      {
+        id: "srvtoolu-search-1",
+        status: "completed",
+        queries: ["latest policy news"],
+        sources: [
+          { url: "https://example.com/policy", title: "Policy update" },
+        ],
+        citations: [
+          {
+            url: "https://example.com/policy",
+            title: "Policy update",
+            citedText: "A current answer.",
+          },
+        ],
+        results: [
+          {
+            type: "web_search_result",
+            url: "https://example.com/policy",
+            title: "Policy update",
+            page_age: null,
+            encrypted_content: "encrypted",
+          },
+        ],
+      },
+    ]);
+    assert.ok(metadata?.rawProviderData);
+  });
+
+  it("associates Claude citations with the search calls containing their result URLs", () => {
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const metadata = asInternals(model).buildClaudeBuiltInToolsMetadata(
+      { type: "web_search", includeSources: true },
+      [
+        {
+          type: "server_tool_use",
+          id: "search-first",
+          name: "web_search",
+          input: { query: "first query" },
+        },
+        {
+          type: "web_search_tool_result",
+          tool_use_id: "search-first",
+          content: [
+            {
+              type: "web_search_result",
+              url: "https://example.com/first",
+              title: "First result",
+            },
+          ],
+        },
+        {
+          type: "server_tool_use",
+          id: "search-second",
+          name: "web_search",
+          input: { query: "second query" },
+        },
+        {
+          type: "web_search_tool_result",
+          tool_use_id: "search-second",
+          content: [
+            {
+              type: "web_search_result",
+              url: "https://example.com/second",
+              title: "Second result",
+            },
+          ],
+        },
+        {
+          type: "text",
+          text: "Combined answer",
+          citations: [
+            {
+              type: "web_search_result_location",
+              url: "https://example.com/first",
+              title: "First result",
+              cited_text: "Evidence from the first search",
+            },
+            {
+              type: "web_search_result_location",
+              url: "https://example.com/second",
+              title: "Second result",
+              cited_text: "Evidence from the second search",
+            },
+          ],
+        },
+      ],
+      {}
+    );
+
+    assert.deepEqual(metadata?.webSearchCalls, [
+      {
+        id: "search-first",
+        status: "completed",
+        queries: ["first query"],
+        sources: [
+          { url: "https://example.com/first", title: "First result" },
+        ],
+        citations: [
+          {
+            url: "https://example.com/first",
+            title: "First result",
+            citedText: "Evidence from the first search",
+          },
+        ],
+      },
+      {
+        id: "search-second",
+        status: "completed",
+        queries: ["second query"],
+        sources: [
+          { url: "https://example.com/second", title: "Second result" },
+        ],
+        citations: [
+          {
+            url: "https://example.com/second",
+            title: "Second result",
+            citedText: "Evidence from the second search",
+          },
+        ],
+      },
+    ]);
+  });
+
+  it("normalizes Claude web-search metadata from the final streaming message", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const finalMessage = {
+      id: "claude-stream-search",
+      usage: {
+        input_tokens: 4,
+        output_tokens: 2,
+        server_tool_use: { web_search_requests: 1, web_fetch_requests: 0 },
+      },
+      content: [
+        {
+          type: "server_tool_use",
+          id: "stream-search-1",
+          name: "web_search",
+          input: { query: "stream search" },
+        },
+        {
+          type: "web_search_tool_result",
+          tool_use_id: "stream-search-1",
+          content: [
+            {
+              type: "web_search_result",
+              url: "https://example.com/stream",
+              title: "Stream result",
+              encrypted_content: "encrypted",
+            },
+          ],
+        },
+        {
+          type: "text",
+          text: "Stream answer",
+          citations: [],
+        },
+      ],
+    };
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used");
+        },
+        stream: async () => ({
+          async *[Symbol.asyncIterator]() {
+            yield {
+              type: "content_block_start",
+              content_block: { type: "text", text: "" },
+            };
+            yield {
+              type: "content_block_delta",
+              delta: { type: "text_delta", text: "Stream answer" },
+            };
+          },
+          finalMessage: async () => finalMessage,
+        }),
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search" }],
+      true,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        builtInTools: [
+          { type: "web_search", includeSources: true, includeResults: true },
+        ],
+      }
+    );
+    const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
+      | { webSearchCalls?: Array<Record<string, unknown>> }
+      | undefined;
+    assert.equal(result?.content, "Stream answer");
+    assert.deepEqual(metadata?.webSearchCalls?.[0].queries, ["stream search"]);
+    assert.deepEqual(metadata?.webSearchCalls?.[0].sources, [
+      { url: "https://example.com/stream", title: "Stream result" },
+    ]);
+  });
+
+  it("marks Claude web-search errors raised during stream iteration as non-retryable", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const providerError = Object.assign(
+      new Error("web_search is not supported for this model"),
+      { status: 400 }
+    );
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used");
+        },
+        stream: async () => ({
+          async *[Symbol.asyncIterator]() {
+            throw providerError;
+          },
+          finalMessage: async () => {
+            throw new Error("finalMessage should not be reached");
+          },
+        }),
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        model.generate(
+          [{ role: "user", message: "Search" }],
+          true,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      (error: unknown) =>
+        typeof error === "object" &&
+        error !== null &&
+        "isPsNonRetryableModelError" in error &&
+        error.isPsNonRetryableModelError === true
+    );
+  });
+
+  it("continues non-streaming Claude web searches after pause_turn", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const pausedContent = [
+      {
+        type: "server_tool_use",
+        id: "paused-search",
+        name: "web_search",
+        input: { query: "long-running search" },
+      },
+      {
+        type: "web_search_tool_result",
+        tool_use_id: "paused-search",
+        content: [
+          {
+            type: "web_search_result",
+            url: "https://example.com/paused",
+            title: "Paused search result",
+          },
+        ],
+      },
+      { type: "text", text: "Partial " },
+    ];
+    const requests: RecordedClaudeRequest[] = [];
+    setMockClient(model, {
+      messages: {
+        create: async (params) => {
+          requests.push(params as RecordedClaudeRequest);
+          if (requests.length === 1) {
+            return {
+              id: "claude-paused",
+              model: "claude-opus-4-8",
+              stop_reason: "pause_turn",
+              usage: {
+                input_tokens: 4,
+                output_tokens: 2,
+                server_tool_use: {
+                  web_search_requests: 1,
+                  web_fetch_requests: 2,
+                },
+              },
+              content: pausedContent,
+            };
+          }
+          return {
+            id: "claude-complete",
+            model: "claude-opus-4-8",
+            stop_reason: "end_turn",
+            usage: {
+              input_tokens: 6,
+              output_tokens: 3,
+              server_tool_use: {
+                web_search_requests: 2,
+                web_fetch_requests: 1,
+              },
+            },
+            content: [{ type: "text", text: "answer" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      {
+        builtInTools: [
+          { type: "web_search", includeSources: true, includeResults: true },
+        ],
+      }
+    );
+
+    assert.equal(requests.length, 2);
+    assert.deepEqual(requests[1].messages?.[1], {
+      role: "assistant",
+      content: pausedContent,
+    });
+    assert.equal(result?.content, "Partial answer");
+    assert.equal(result?.tokensIn, 10);
+    assert.equal(result?.tokensOut, 5);
+    const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
+      | {
+          rawProviderData?: { serverToolUse?: unknown };
+          webSearchCalls?: Array<Record<string, unknown>>;
+        }
+      | undefined;
+    assert.deepEqual(metadata?.webSearchCalls?.[0].queries, [
+      "long-running search",
+    ]);
+    assert.deepEqual(metadata?.webSearchCalls?.[0].sources, [
+      { url: "https://example.com/paused", title: "Paused search result" },
+    ]);
+    assert.deepEqual(metadata?.rawProviderData?.serverToolUse, {
+      web_search_requests: 3,
+      web_fetch_requests: 3,
+    });
+  });
+
+  it("continues streaming Claude web searches after pause_turn", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const pausedContent = [{ type: "text", text: "Stream partial " }];
+    const finalMessages = [
+      {
+        id: "claude-stream-paused",
+        model: "claude-opus-4-8",
+        stop_reason: "pause_turn",
+        usage: {
+          input_tokens: 3,
+          output_tokens: 2,
+          server_tool_use: {
+            web_search_requests: 1,
+            web_fetch_requests: 0,
+          },
+        },
+        content: pausedContent,
+      },
+      {
+        id: "claude-stream-complete",
+        model: "claude-opus-4-8",
+        stop_reason: "end_turn",
+        usage: {
+          input_tokens: 5,
+          output_tokens: 1,
+          server_tool_use: {
+            web_search_requests: 2,
+            web_fetch_requests: 1,
+          },
+        },
+        content: [{ type: "text", text: "done" }],
+      },
+    ];
+    const requests: RecordedClaudeRequest[] = [];
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used");
+        },
+        stream: async (params) => {
+          requests.push(params as RecordedClaudeRequest);
+          const index = requests.length - 1;
+          const streamedText = index === 0 ? "Stream partial " : "done";
+          return {
+            async *[Symbol.asyncIterator]() {
+              yield {
+                type: "content_block_delta",
+                delta: { type: "text_delta", text: streamedText },
+              };
+            },
+            finalMessage: async () => finalMessages[index],
+          };
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "Search" }],
+      true,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { builtInTools: [{ type: "web_search", includeResults: true }] }
+    );
+
+    assert.equal(requests.length, 2);
+    assert.deepEqual(requests[1].messages?.[1], {
+      role: "assistant",
+      content: pausedContent,
+    });
+    assert.equal(result?.content, "Stream partial done");
+    assert.equal(result?.tokensIn, 8);
+    assert.equal(result?.tokensOut, 3);
+    const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
+      | { rawProviderData?: { serverToolUse?: unknown } }
+      | undefined;
+    assert.deepEqual(metadata?.rawProviderData?.serverToolUse, {
+      web_search_requests: 3,
+      web_fetch_requests: 1,
+    });
+  });
+
+  it("bounds repeated Claude pause_turn continuations in both response modes", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const isContinuationLimitError = (error: unknown) =>
+      typeof error === "object" &&
+      error !== null &&
+      "name" in error &&
+      error.name === "ClaudePauseTurnContinuationLimitError" &&
+      "isPsNonRetryableModelError" in error &&
+      error.isPsNonRetryableModelError === true;
+
+    const nonStreamingModel = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    let createCalls = 0;
+    setMockClient(nonStreamingModel, {
+      messages: {
+        create: async () => {
+          createCalls += 1;
+          return {
+            id: `claude-paused-${createCalls}`,
+            model: "claude-opus-4-8",
+            stop_reason: "pause_turn",
+            usage: { input_tokens: 1, output_tokens: 1 },
+            content: [],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        nonStreamingModel.generate(
+          [{ role: "user", message: "Search" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      isContinuationLimitError
+    );
+    assert.equal(createCalls, 5);
+
+    const streamingModel = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    let streamCalls = 0;
+    setMockClient(streamingModel, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used");
+        },
+        stream: async () => {
+          streamCalls += 1;
+          return {
+            async *[Symbol.asyncIterator]() {},
+            finalMessage: async () => ({
+              id: `claude-stream-paused-${streamCalls}`,
+              model: "claude-opus-4-8",
+              stop_reason: "pause_turn",
+              usage: { input_tokens: 1, output_tokens: 1 },
+              content: [],
+            }),
+          };
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        streamingModel.generate(
+          [{ role: "user", message: "Search" }],
+          true,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      isContinuationLimitError
+    );
+    assert.equal(streamCalls, 5);
+  });
+
+  it("uses basic Claude web search on Vertex and rejects it on Bedrock", async () => {
+    process.env.USE_VERTEX_FOR_CLAUDE = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    process.env.GOOGLE_CLOUD_LOCATION = "us-central1";
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+
+    const vertexModel = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    let vertexRequest: RecordedClaudeRequest | undefined;
+    setMockClient(vertexModel, {
+      messages: {
+        create: async (params) => {
+          vertexRequest = params as RecordedClaudeRequest;
+          return {
+            id: "vertex-search",
+            usage: { input_tokens: 1, output_tokens: 1 },
+            content: [{ type: "text", text: "Vertex answer" }],
+          };
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error("beta.messages.create should not be used");
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used");
+          },
+        },
+      },
+    });
+    await vertexModel.generate(
+      [{ role: "user", message: "Search" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { builtInTools: [{ type: "web_search" }] }
+    );
+    assert.equal(
+      (vertexRequest?.tools?.[0] as { type?: string } | undefined)?.type,
+      "web_search_20250305"
+    );
+
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "token";
+    const bedrockModel = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    let bedrockCalled = false;
+    setMockClient(bedrockModel, {
+      messages: {
+        create: async () => {
+          bedrockCalled = true;
+          throw new Error("unexpected Bedrock request");
+        },
+        stream: async () => {
+          bedrockCalled = true;
+          throw new Error("unexpected Bedrock request");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            bedrockCalled = true;
+            throw new Error("unexpected Bedrock request");
+          },
+          stream: async () => {
+            bedrockCalled = true;
+            throw new Error("unexpected Bedrock request");
+          },
+        },
+      },
+    });
+
+    await assert.rejects(
+      () =>
+        bedrockModel.generate(
+          [{ role: "user", message: "Search" }],
+          false,
+          undefined,
+          undefined,
+          [],
+          "auto",
+          [],
+          { builtInTools: [{ type: "web_search" }] }
+        ),
+      (error: unknown) =>
+        typeof error === "object" &&
+        error !== null &&
+        "isPsNonRetryableModelError" in error &&
+        error.isPsNonRetryableModelError === true
+    );
+    assert.equal(bedrockCalled, false);
   });
 
   it("throws clearly when the Anthropic client is missing and maps high thinking budget", async () => {

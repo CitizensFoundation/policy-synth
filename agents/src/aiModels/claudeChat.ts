@@ -22,8 +22,11 @@ import type {
   TextBlockParam,
   Tool,
   ToolChoice,
+  ToolUnion,
   ToolResultBlockParam,
   ToolUseBlockParam,
+  WebSearchTool20250305,
+  WebSearchTool20260318,
 } from "@anthropic-ai/sdk/resources/messages/messages.js";
 import type {
   ChatCompletionTool,
@@ -36,6 +39,17 @@ import {
   normalizePromptCacheOptions,
   type PromptCacheUsageData,
 } from "./promptCacheOptions.js";
+import {
+  getSearchContextIgnoredOption,
+  getSingleWebSearchTool,
+  PsBuiltInToolConfigurationError,
+  type PsBuiltInToolsProviderMetadata,
+  type PsNormalizedWebSearchCall,
+  type PsNormalizedWebSearchCitation,
+  type PsNormalizedWebSearchSource,
+  type PsWebSearchBuiltInTool,
+  wrapBuiltInToolProviderError,
+} from "./builtInToolSupport.js";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
@@ -44,6 +58,17 @@ const CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG: AnthropicBeta =
 const CLAUDE_EXTENDED_CACHE_TTL_BETA_FLAG: AnthropicBeta =
   "extended-cache-ttl-2025-04-11";
 const CLAUDE_FABLE_FALLBACK_MODEL = "claude-opus-4-8";
+const MAX_CLAUDE_PAUSE_TURN_CONTINUATIONS = 4;
+class ClaudePauseTurnContinuationLimitError extends Error {
+  readonly isPsNonRetryableModelError = true;
+
+  constructor() {
+    super(
+      `Claude returned pause_turn after ${MAX_CLAUDE_PAUSE_TURN_CONTINUATIONS} continuation requests.`
+    );
+    this.name = "ClaudePauseTurnContinuationLimitError";
+  }
+}
 type UsageItemResult = PsBaseModelReturnParameters & {
   usageItemData?: UsageItemPayload;
 };
@@ -65,6 +90,10 @@ type ClaudeUsageResponseMetadata = {
   stop_reason?: string | null;
   stop_details?: unknown;
   content?: unknown[] | null;
+};
+type ClaudeServerToolUsage = {
+  web_fetch_requests: number;
+  web_search_requests: number;
 };
 type ClaudeTokenCountingClient = {
   messages: {
@@ -353,7 +382,8 @@ export class ClaudeChat extends BaseChatModel {
       cacheReadInputTokens: number;
     },
     requestKind: "stream" | "non_stream",
-    promptCacheUsageData: PromptCacheUsageData
+    promptCacheUsageData: PromptCacheUsageData,
+    builtInToolsMetadata?: PsBuiltInToolsProviderMetadata
   ): UsageItemPayload {
     return {
       provider: "anthropic",
@@ -382,6 +412,7 @@ export class ClaudeChat extends BaseChatModel {
         thinking: requestOptions.thinking ?? null,
         outputConfig: requestOptions.output_config ?? null,
         promptCache: promptCacheUsageData,
+        requestedBuiltInTools: builtInToolsMetadata?.requested ?? null,
       },
       usageRaw: response.usage ?? undefined,
       usageNormalized: {
@@ -411,6 +442,7 @@ export class ClaudeChat extends BaseChatModel {
           : null,
         fallbackBlocks: this.extractFallbackBlocks(response.content),
         fallbackIterations: response.usage?.iterations ?? null,
+        builtInTools: builtInToolsMetadata ?? null,
         bedrockRegion: this.usingBedrock
           ? process.env.AWS_REGION ??
             process.env.AWS_DEFAULT_REGION ??
@@ -423,6 +455,314 @@ export class ClaudeChat extends BaseChatModel {
             "europe-west1"
           : null,
       },
+    };
+  }
+
+  private buildClaudeWebSearchTool(
+    tool: PsWebSearchBuiltInTool | undefined
+  ): ToolUnion | undefined {
+    if (!tool) {
+      return undefined;
+    }
+
+    const transport = this.getTransport();
+    if (transport === "bedrock") {
+      throw new PsBuiltInToolConfigurationError(
+        "Claude native web_search is not available through Amazon Bedrock. " +
+          "Use the direct Anthropic API, Claude on Vertex, or an application-hosted search function."
+      );
+    }
+
+    const common = {
+      name: "web_search" as const,
+      allowed_domains: tool.allowedDomains?.length
+        ? tool.allowedDomains
+        : undefined,
+      user_location: tool.userLocation
+        ? {
+            type: "approximate" as const,
+            city: tool.userLocation.city,
+            country: tool.userLocation.country,
+            region: tool.userLocation.region,
+            timezone: tool.userLocation.timezone,
+          }
+        : undefined,
+    };
+
+    if (transport === "vertex") {
+      return {
+        ...common,
+        type: "web_search_20250305",
+      } satisfies WebSearchTool20250305;
+    }
+
+    return {
+      ...common,
+      type: "web_search_20260318",
+      response_inclusion: tool.includeResults ? "full" : "excluded",
+    } satisfies WebSearchTool20260318;
+  }
+
+  private getClaudeWebSearchQueries(input: unknown): string[] | undefined {
+    if (!ClaudeChat.isRecord(input)) {
+      return undefined;
+    }
+
+    const queries = new Set<string>();
+    const query = input.query;
+    if (typeof query === "string" && query.trim()) {
+      queries.add(query);
+    }
+    if (Array.isArray(input.queries)) {
+      for (const value of input.queries) {
+        if (typeof value === "string" && value.trim()) {
+          queries.add(value);
+        }
+      }
+    }
+    return queries.size ? [...queries] : undefined;
+  }
+
+  private buildClaudeBuiltInToolsMetadata(
+    tool: PsWebSearchBuiltInTool | undefined,
+    content: unknown[] | null | undefined,
+    usage: unknown
+  ): PsBuiltInToolsProviderMetadata | undefined {
+    if (!tool) {
+      return undefined;
+    }
+
+    const calls: PsNormalizedWebSearchCall[] = [];
+    const callsById = new Map<string, PsNormalizedWebSearchCall>();
+    const callsByResultUrl = new Map<string, PsNormalizedWebSearchCall[]>();
+    const relevantBlocks: unknown[] = [];
+    const citationOccurrences: Array<{
+      citation: PsNormalizedWebSearchCitation;
+      precedingCall?: PsNormalizedWebSearchCall;
+    }> = [];
+    let lastObservedCall: PsNormalizedWebSearchCall | undefined;
+
+    const getOrCreateCall = (id?: string): PsNormalizedWebSearchCall => {
+      if (id) {
+        const existing = callsById.get(id);
+        if (existing) {
+          return existing;
+        }
+      }
+      const call: PsNormalizedWebSearchCall = id ? { id } : {};
+      calls.push(call);
+      if (id) {
+        callsById.set(id, call);
+      }
+      return call;
+    };
+
+    for (const block of content ?? []) {
+      if (!ClaudeChat.isRecord(block)) {
+        continue;
+      }
+
+      if (block.type === "server_tool_use" && block.name === "web_search") {
+        relevantBlocks.push(block);
+        const id = typeof block.id === "string" ? block.id : undefined;
+        const call = getOrCreateCall(id);
+        lastObservedCall = call;
+        call.status = "requested";
+        call.queries = this.getClaudeWebSearchQueries(block.input);
+        continue;
+      }
+
+      if (block.type === "web_search_tool_result") {
+        relevantBlocks.push(block);
+        const id =
+          typeof block.tool_use_id === "string" ? block.tool_use_id : undefined;
+        const call = getOrCreateCall(id);
+        lastObservedCall = call;
+        if (Array.isArray(block.content)) {
+          call.status = "completed";
+          if (tool.includeResults) {
+            call.results = block.content;
+          }
+          const resultSources = block.content.flatMap((result) => {
+            if (!ClaudeChat.isRecord(result) || typeof result.url !== "string") {
+              return [];
+            }
+            return [
+              {
+                url: result.url,
+                title:
+                  typeof result.title === "string" ? result.title : undefined,
+              } satisfies PsNormalizedWebSearchSource,
+            ];
+          });
+          for (const source of resultSources) {
+            const matchingCalls = callsByResultUrl.get(source.url) ?? [];
+            if (!matchingCalls.includes(call)) {
+              matchingCalls.push(call);
+              callsByResultUrl.set(source.url, matchingCalls);
+            }
+          }
+          if (tool.includeSources) {
+            call.sources = resultSources;
+          }
+        } else if (ClaudeChat.isRecord(block.content)) {
+          call.status = "failed";
+          call.error =
+            typeof block.content.error_code === "string"
+              ? block.content.error_code
+              : "unknown_error";
+        }
+        continue;
+      }
+
+      if (block.type === "text" && Array.isArray(block.citations)) {
+        for (const citation of block.citations) {
+          if (
+            !ClaudeChat.isRecord(citation) ||
+            citation.type !== "web_search_result_location" ||
+            typeof citation.url !== "string"
+          ) {
+            continue;
+          }
+          citationOccurrences.push({
+            citation: {
+              url: citation.url,
+              title:
+                typeof citation.title === "string" ? citation.title : undefined,
+              citedText:
+                typeof citation.cited_text === "string"
+                  ? citation.cited_text
+                  : undefined,
+            },
+            precedingCall: lastObservedCall,
+          });
+        }
+      }
+    }
+
+    if (citationOccurrences.length && tool.includeSources) {
+      for (const { citation, precedingCall } of citationOccurrences) {
+        const matchingCalls = callsByResultUrl.get(citation.url);
+        const targetCalls = matchingCalls?.length
+          ? matchingCalls
+          : [precedingCall ?? calls.at(-1) ?? getOrCreateCall()];
+
+        for (const call of targetCalls) {
+          const citations = call.citations ?? [];
+          if (
+            !citations.some(
+              (existing) =>
+                existing.url === citation.url &&
+                existing.citedText === citation.citedText
+            )
+          ) {
+            citations.push(citation);
+          }
+          call.citations = citations;
+          call.sources = this.dedupeWebSearchSources([
+            ...(call.sources ?? []),
+            { url: citation.url, title: citation.title },
+          ]);
+          call.status ??= "completed";
+        }
+      }
+    }
+
+    for (const call of calls) {
+      if (call.sources) {
+        call.sources = this.dedupeWebSearchSources(call.sources);
+      }
+    }
+
+    const usageRecord = ClaudeChat.isRecord(usage) ? usage : undefined;
+    const serverToolUse = usageRecord?.server_tool_use;
+    const metadata: PsBuiltInToolsProviderMetadata = {
+      requested: ["web_search"],
+      ignoredOptions: getSearchContextIgnoredOption(tool, "Claude"),
+      webSearchCalls: calls.length ? calls : undefined,
+    };
+    if (tool.includeResults) {
+      metadata.rawProviderData = {
+        content: relevantBlocks,
+        serverToolUse: serverToolUse ?? null,
+      };
+    }
+    return metadata;
+  }
+
+  private dedupeWebSearchSources(
+    sources: PsNormalizedWebSearchSource[]
+  ): PsNormalizedWebSearchSource[] {
+    const byUrl = new Map<string, PsNormalizedWebSearchSource>();
+    for (const source of sources) {
+      const existing = byUrl.get(source.url);
+      if (!existing || (!existing.title && source.title)) {
+        byUrl.set(source.url, source);
+      }
+    }
+    return [...byUrl.values()];
+  }
+
+  private appendClaudePauseTurnResponse(
+    requestOptions: AnthropicMessageCreateParamsBase,
+    content: Array<ContentBlock | BetaContentBlock>
+  ): AnthropicMessageCreateParamsBase {
+    return {
+      ...requestOptions,
+      messages: [
+        ...requestOptions.messages,
+        {
+          role: "assistant",
+          content: content as ContentBlockParam[],
+        },
+      ],
+    };
+  }
+
+  private getClaudeUsageAccounting(usage: {
+    input_tokens?: number | null;
+    output_tokens?: number | null;
+    cache_creation_input_tokens?: number | null;
+    cache_read_input_tokens?: number | null;
+  }): {
+    tokensIn: number;
+    tokensOut: number;
+    cachedInTokens: number;
+    cacheReadInputTokens: number;
+  } {
+    const cachedInTokens = usage.cache_creation_input_tokens ?? 0;
+    const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
+    let tokensIn = usage.input_tokens ?? 0;
+
+    if (usage.cache_creation_input_tokens != null) {
+      tokensIn += usage.cache_creation_input_tokens * 1.25;
+    }
+    if (cacheReadInputTokens !== 0) {
+      tokensIn += cacheReadInputTokens * 0.1;
+    }
+
+    return {
+      tokensIn,
+      tokensOut: usage.output_tokens ?? 0,
+      cachedInTokens,
+      cacheReadInputTokens,
+    };
+  }
+
+  private aggregateClaudeServerToolUsage(
+    accumulated: ClaudeServerToolUsage | undefined,
+    usage: { server_tool_use?: ClaudeServerToolUsage | null }
+  ): ClaudeServerToolUsage | undefined {
+    const current = usage.server_tool_use;
+    if (!current) {
+      return accumulated;
+    }
+
+    return {
+      web_fetch_requests:
+        (accumulated?.web_fetch_requests ?? 0) + current.web_fetch_requests,
+      web_search_requests:
+        (accumulated?.web_search_requests ?? 0) + current.web_search_requests,
     };
   }
 
@@ -478,7 +818,16 @@ export class ClaudeChat extends BaseChatModel {
     }
 
     const filteredTools = this.buildTools(tools, allowedTools);
-    const choice = this.mapToolChoice(toolChoice, filteredTools.length > 0);
+    const webSearchTool = getSingleWebSearchTool(
+      requestOptionsForModel?.builtInTools,
+      "Claude"
+    );
+    const claudeWebSearchTool = this.buildClaudeWebSearchTool(webSearchTool);
+    const requestTools: ToolUnion[] = [
+      ...filteredTools,
+      ...(claudeWebSearchTool ? [claudeWebSearchTool] : []),
+    ];
+    const choice = this.mapToolChoice(toolChoice, requestTools.length > 0);
 
     const client = this.client;
     if (!client) {
@@ -513,8 +862,8 @@ export class ClaudeChat extends BaseChatModel {
         ? { temperature: requestTemperature }
         : {}),
       thinking: thinkingConfig,
-      tools: filteredTools.length ? filteredTools : undefined,
-      tool_choice: filteredTools.length ? choice : undefined,
+      tools: requestTools.length ? requestTools : undefined,
+      tool_choice: requestTools.length ? choice : undefined,
       system,
       output_config:
         this.useAdaptiveThinking && wantsThinking
@@ -523,63 +872,139 @@ export class ClaudeChat extends BaseChatModel {
     };
 
     if (streaming) {
-      const streamRequestOptions: AnthropicMessageStreamParams = requestOptions;
-      const betaStreamRequestOptions = this.usesBetaMessages(requestOptionsForModel)
-        ? this.buildBetaStreamRequestOptions(
-            requestOptions,
+      const completion = await (async () => {
+        let activeRequestOptions = requestOptions;
+        let aggregated = "";
+        const streamedToolCalls: ToolCall[] = [];
+        const allResponseContent: Array<ContentBlock | BetaContentBlock> = [];
+        let tokensIn = 0;
+        let tokensOut = 0;
+        let cachedInTokens = 0;
+        let cacheReadInputTokens = 0;
+        let serverToolUse: ClaudeServerToolUsage | undefined;
+        let pauseTurnContinuations = 0;
+
+        while (true) {
+          const streamRequestOptions: AnthropicMessageStreamParams =
+            activeRequestOptions;
+          const betaStreamRequestOptions = this.usesBetaMessages(
             requestOptionsForModel
           )
-        : undefined;
-      const stream = betaStreamRequestOptions
-        ? await client.beta.messages.stream(betaStreamRequestOptions)
-        : await client.messages.stream(streamRequestOptions);
+            ? this.buildBetaStreamRequestOptions(
+                activeRequestOptions,
+                requestOptionsForModel
+              )
+            : undefined;
+          const stream = await (async () => {
+            try {
+              return betaStreamRequestOptions
+                ? await client.beta.messages.stream(betaStreamRequestOptions)
+                : await client.messages.stream(streamRequestOptions);
+            } catch (error) {
+              throw wrapBuiltInToolProviderError(
+                error,
+                "Claude",
+                Boolean(webSearchTool)
+              );
+            }
+          })();
 
-      let aggregated = "";
-      const toolCalls: ToolCall[] = [];
+          const currentFinalMessage = await (async () => {
+            try {
+              for await (const messageStreamEvent of stream) {
+                if (streamingCallback) {
+                  streamingCallback(messageStreamEvent);
+                }
 
-      for await (const messageStreamEvent of stream) {
-        if (streamingCallback) {
-          streamingCallback(messageStreamEvent);
-        }
+                if (messageStreamEvent.type === "content_block_start") {
+                  if (messageStreamEvent.content_block.type === "text") {
+                    aggregated += messageStreamEvent.content_block.text;
+                  } else if (
+                    messageStreamEvent.content_block.type === "tool_use"
+                  ) {
+                    streamedToolCalls.push({
+                      id: messageStreamEvent.content_block.id ?? "",
+                      name: messageStreamEvent.content_block.name ?? "unknown",
+                      arguments: this.normalizeToolInput(
+                        messageStreamEvent.content_block.input
+                      ),
+                    });
+                  }
+                } else if (
+                  messageStreamEvent.type === "content_block_delta" &&
+                  messageStreamEvent.delta.type === "text_delta"
+                ) {
+                  aggregated += messageStreamEvent.delta.text;
+                }
+              }
 
-        if (messageStreamEvent.type === "content_block_start") {
-          if (messageStreamEvent.content_block.type === "text") {
-            aggregated += messageStreamEvent.content_block.text;
-          } else if (messageStreamEvent.content_block.type === "tool_use") {
-            toolCalls.push({
-              id: messageStreamEvent.content_block.id ?? "",
-              name: messageStreamEvent.content_block.name ?? "unknown",
-              arguments: this.normalizeToolInput(
-                messageStreamEvent.content_block.input
-              ),
-            });
+              return await stream.finalMessage();
+            } catch (error) {
+              throw wrapBuiltInToolProviderError(
+                error,
+                "Claude",
+                Boolean(webSearchTool)
+              );
+            }
+          })();
+
+          allResponseContent.push(...currentFinalMessage.content);
+          const usage = this.getClaudeUsageAccounting(
+            currentFinalMessage.usage
+          );
+          tokensIn += usage.tokensIn;
+          tokensOut += usage.tokensOut;
+          cachedInTokens += usage.cachedInTokens;
+          cacheReadInputTokens += usage.cacheReadInputTokens;
+          serverToolUse = this.aggregateClaudeServerToolUsage(
+            serverToolUse,
+            currentFinalMessage.usage
+          );
+
+          const currentMetadata = currentFinalMessage as {
+            stop_reason?: string | null;
+          };
+          if (currentMetadata.stop_reason !== "pause_turn") {
+            return {
+              finalMessage: currentFinalMessage,
+              allResponseContent,
+              aggregated,
+              streamedToolCalls,
+              tokensIn,
+              tokensOut,
+              cachedInTokens,
+              cacheReadInputTokens,
+              serverToolUse,
+            };
           }
-        } else if (
-          messageStreamEvent.type === "content_block_delta" &&
-          messageStreamEvent.delta.type === "text_delta"
-        ) {
-          aggregated += messageStreamEvent.delta.text;
+
+          if (
+            pauseTurnContinuations >= MAX_CLAUDE_PAUSE_TURN_CONTINUATIONS
+          ) {
+            throw new ClaudePauseTurnContinuationLimitError();
+          }
+          pauseTurnContinuations += 1;
+
+          activeRequestOptions = this.appendClaudePauseTurnResponse(
+            activeRequestOptions,
+            currentFinalMessage.content
+          );
         }
-      }
-
-      const finalMessage = await stream.finalMessage();
-      let tokensIn = finalMessage.usage.input_tokens ?? 0;
-      let tokensOut = finalMessage.usage.output_tokens ?? 0;
-      const cachedInTokens = finalMessage.usage.cache_creation_input_tokens ?? 0;
-      const cacheReadInputTokens =
-        finalMessage.usage.cache_read_input_tokens ?? 0;
-
-      if (finalMessage.usage.cache_creation_input_tokens != null) {
-        tokensIn += finalMessage.usage.cache_creation_input_tokens * 1.25;
-      }
-
-      if (cacheReadInputTokens !== 0) {
-        tokensIn += cacheReadInputTokens * 0.1;
-      }
-
+      })();
+      const {
+        finalMessage,
+        allResponseContent,
+        aggregated,
+        streamedToolCalls,
+        tokensIn,
+        tokensOut,
+        cachedInTokens,
+        cacheReadInputTokens,
+        serverToolUse,
+      } = completion;
       const mergedToolCalls = this.mergeToolCalls(
-        toolCalls,
-        this.extractToolCalls(finalMessage.content)
+        streamedToolCalls,
+        this.extractToolCalls(allResponseContent)
       );
       const finalMessageMetadata = finalMessage as {
         model?: string | null;
@@ -589,6 +1014,14 @@ export class ClaudeChat extends BaseChatModel {
         speed?: string | null;
         service_tier?: string | null;
       };
+      const builtInToolsMetadata = this.buildClaudeBuiltInToolsMetadata(
+        webSearchTool,
+        allResponseContent,
+        {
+          ...finalMessage.usage,
+          server_tool_use: serverToolUse ?? null,
+        }
+      );
 
       const result: UsageItemResult = {
         tokensIn,
@@ -597,7 +1030,7 @@ export class ClaudeChat extends BaseChatModel {
         content:
           aggregated ||
           this.getTextFromResponseContent(
-            finalMessage.content,
+            allResponseContent,
             finalMessageMetadata.stop_reason,
             finalMessageMetadata.stop_details
           ),
@@ -608,7 +1041,7 @@ export class ClaudeChat extends BaseChatModel {
             model: finalMessageMetadata.model ?? null,
             stop_reason: finalMessageMetadata.stop_reason ?? null,
             stop_details: finalMessageMetadata.stop_details,
-            content: finalMessageMetadata.content ?? null,
+            content: allResponseContent,
             usage:
               (finalMessage.usage ?? null) as unknown as
                 | Record<string, unknown>
@@ -627,39 +1060,102 @@ export class ClaudeChat extends BaseChatModel {
             cacheReadInputTokens,
           },
           "stream",
-          promptCacheUsageData
+          promptCacheUsageData,
+          builtInToolsMetadata
         ),
       };
 
       return result;
     } else {
-      const createRequestOptions: AnthropicMessageCreateParamsNonStreaming = {
-        ...requestOptions,
-        stream: false,
-      };
-      const betaCreateRequestOptions = this.usesBetaMessages(requestOptionsForModel)
-        ? this.buildBetaCreateRequestOptions(
-            requestOptions,
+      const completion = await (async () => {
+        let activeRequestOptions = requestOptions;
+        const allResponseContent: Array<ContentBlock | BetaContentBlock> = [];
+        let tokensIn = 0;
+        let tokensOut = 0;
+        let cachedInTokens = 0;
+        let cacheReadInputTokens = 0;
+        let serverToolUse: ClaudeServerToolUsage | undefined;
+        let pauseTurnContinuations = 0;
+
+        while (true) {
+          const createRequestOptions: AnthropicMessageCreateParamsNonStreaming = {
+            ...activeRequestOptions,
+            stream: false,
+          };
+          const betaCreateRequestOptions = this.usesBetaMessages(
             requestOptionsForModel
           )
-        : undefined;
-      const response = betaCreateRequestOptions
-        ? await client.beta.messages.create(betaCreateRequestOptions)
-        : await client.messages.create(createRequestOptions);
-      this.logger.debug(`Generated response: ${JSON.stringify(response, null, 2)}`);
-      let tokensIn = response.usage.input_tokens ?? 0;
-      let tokensOut = response.usage.output_tokens ?? 0;
-      const cachedInTokens = response.usage.cache_creation_input_tokens ?? 0;
-      const cacheReadInputTokens = response.usage.cache_read_input_tokens ?? 0;
+            ? this.buildBetaCreateRequestOptions(
+                activeRequestOptions,
+                requestOptionsForModel
+              )
+            : undefined;
+          const currentResponse = await (async () => {
+            try {
+              return betaCreateRequestOptions
+                ? await client.beta.messages.create(betaCreateRequestOptions)
+                : await client.messages.create(createRequestOptions);
+            } catch (error) {
+              throw wrapBuiltInToolProviderError(
+                error,
+                "Claude",
+                Boolean(webSearchTool)
+              );
+            }
+          })();
+          this.logger.debug(
+            `Generated response: ${JSON.stringify(currentResponse, null, 2)}`
+          );
 
-      if (response.usage.cache_creation_input_tokens != null) {
-        tokensIn += response.usage.cache_creation_input_tokens * 1.25;
-      }
+          allResponseContent.push(...currentResponse.content);
+          const usage = this.getClaudeUsageAccounting(currentResponse.usage);
+          tokensIn += usage.tokensIn;
+          tokensOut += usage.tokensOut;
+          cachedInTokens += usage.cachedInTokens;
+          cacheReadInputTokens += usage.cacheReadInputTokens;
+          serverToolUse = this.aggregateClaudeServerToolUsage(
+            serverToolUse,
+            currentResponse.usage
+          );
 
-      if (cacheReadInputTokens !== 0) {
-        tokensIn += cacheReadInputTokens * 0.1;
-      }
-      const toolCalls = this.extractToolCalls(response.content);
+          const currentMetadata = currentResponse as {
+            stop_reason?: string | null;
+          };
+          if (currentMetadata.stop_reason !== "pause_turn") {
+            return {
+              response: currentResponse,
+              allResponseContent,
+              tokensIn,
+              tokensOut,
+              cachedInTokens,
+              cacheReadInputTokens,
+              serverToolUse,
+            };
+          }
+
+          if (
+            pauseTurnContinuations >= MAX_CLAUDE_PAUSE_TURN_CONTINUATIONS
+          ) {
+            throw new ClaudePauseTurnContinuationLimitError();
+          }
+          pauseTurnContinuations += 1;
+
+          activeRequestOptions = this.appendClaudePauseTurnResponse(
+            activeRequestOptions,
+            currentResponse.content
+          );
+        }
+      })();
+      const {
+        response,
+        allResponseContent,
+        tokensIn,
+        tokensOut,
+        cachedInTokens,
+        cacheReadInputTokens,
+        serverToolUse,
+      } = completion;
+      const toolCalls = this.extractToolCalls(allResponseContent);
       const responseMetadata = response as {
         model?: string | null;
         stop_reason?: string | null;
@@ -668,12 +1164,20 @@ export class ClaudeChat extends BaseChatModel {
         speed?: string | null;
         service_tier?: string | null;
       };
+      const builtInToolsMetadata = this.buildClaudeBuiltInToolsMetadata(
+        webSearchTool,
+        allResponseContent,
+        {
+          ...response.usage,
+          server_tool_use: serverToolUse ?? null,
+        }
+      );
       const result: UsageItemResult = {
         tokensIn: tokensIn,
         tokensOut: tokensOut,
         cachedInTokens,
         content: this.getTextFromResponseContent(
-          response.content,
+          allResponseContent,
           responseMetadata.stop_reason,
           responseMetadata.stop_details
         ),
@@ -684,7 +1188,7 @@ export class ClaudeChat extends BaseChatModel {
             model: responseMetadata.model ?? null,
             stop_reason: responseMetadata.stop_reason ?? null,
             stop_details: responseMetadata.stop_details,
-            content: responseMetadata.content ?? null,
+            content: allResponseContent,
             usage:
               (response.usage ?? null) as unknown as
                 | Record<string, unknown>
@@ -703,7 +1207,8 @@ export class ClaudeChat extends BaseChatModel {
             cacheReadInputTokens,
           },
           "non_stream",
-          promptCacheUsageData
+          promptCacheUsageData,
+          builtInToolsMetadata
         ),
       };
 
