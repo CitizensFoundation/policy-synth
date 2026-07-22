@@ -24,6 +24,8 @@ export interface AddAiModelParams {
   type: PsAiModelType;
   modelSize: PsAiModelSize;
   provider: string;
+  accountingVersion?: PsUsageAccountingVersion;
+  cacheWriteInputCostMultiplier?: number;
   costInTokensPerMillion: number;
   costOutTokensPerMillion: number;
   costInCachedContextTokensPerMillion: number;
@@ -88,11 +90,20 @@ export async function addAiModel(
       type: params.type,
       modelSize: params.modelSize,
       provider: params.provider,
+      ...(params.accountingVersion !== undefined
+        ? { accountingVersion: params.accountingVersion }
+        : {}),
       prices: {
         costInTokensPerMillion: params.costInTokensPerMillion,
         costOutTokensPerMillion: params.costOutTokensPerMillion,
         costInCachedContextTokensPerMillion:
           params.costInCachedContextTokensPerMillion,
+        ...(params.cacheWriteInputCostMultiplier !== undefined
+          ? {
+              cacheWriteInputCostMultiplier:
+                params.cacheWriteInputCostMultiplier,
+            }
+          : {}),
         currency: params.currency,
       },
       maxTokensOut: params.maxTokensOut,
@@ -119,10 +130,10 @@ export async function addAiModel(
 }
 
 export const addAiModelUsage =
-  "Usage: ts-node addAiModelSeed.ts <name> <organizationId> <userId> <type> <modelSize> <provider> <costInTokensPerMillion> <costOutTokensPerMillion> <costInCachedContextTokensPerMillion> <currency> <maxTokensOut> <defaultTemperature> <model> <active>";
+  "Usage: ts-node addAiModelSeed.ts <name> <organizationId> <userId> <type> <modelSize> <provider> <costInTokensPerMillion> <costOutTokensPerMillion> <costInCachedContextTokensPerMillion> <currency> <maxTokensOut> <defaultTemperature> <model> <active> [accountingVersion] [cacheWriteInputCostMultiplier]";
 
 export function parseAddAiModelArgs(args: string[]): AddAiModelParams {
-  if (args.length !== 14) {
+  if (args.length < 14 || args.length > 16) {
     throw new Error(addAiModelUsage);
   }
 
@@ -141,6 +152,8 @@ export function parseAddAiModelArgs(args: string[]): AddAiModelParams {
     defaultTemperature,
     model,
     active,
+    accountingVersion,
+    cacheWriteInputCostMultiplier,
   ] = args;
 
   if (!Object.values(PsAiModelType).includes(type as PsAiModelType)) {
@@ -151,6 +164,28 @@ export function parseAddAiModelArgs(args: string[]): AddAiModelParams {
     throw new Error("Invalid AI model size");
   }
 
+  if (
+    accountingVersion !== undefined &&
+    accountingVersion !== "1" &&
+    accountingVersion !== "2"
+  ) {
+    throw new Error("Invalid accounting version; expected 1 or 2");
+  }
+
+  const parsedCacheWriteInputCostMultiplier =
+    cacheWriteInputCostMultiplier === undefined
+      ? undefined
+      : Number(cacheWriteInputCostMultiplier);
+  if (
+    parsedCacheWriteInputCostMultiplier !== undefined &&
+    (!Number.isFinite(parsedCacheWriteInputCostMultiplier) ||
+      parsedCacheWriteInputCostMultiplier < 0)
+  ) {
+    throw new Error(
+      "Invalid cache-write input cost multiplier; expected a non-negative number"
+    );
+  }
+
   return {
     name,
     organizationId: Number(organizationId),
@@ -158,6 +193,19 @@ export function parseAddAiModelArgs(args: string[]): AddAiModelParams {
     type: type as PsAiModelType,
     modelSize: modelSize as PsAiModelSize,
     provider,
+    ...(accountingVersion !== undefined
+      ? {
+          accountingVersion: Number(
+            accountingVersion
+          ) as PsUsageAccountingVersion,
+        }
+      : {}),
+    ...(parsedCacheWriteInputCostMultiplier !== undefined
+      ? {
+          cacheWriteInputCostMultiplier:
+            parsedCacheWriteInputCostMultiplier,
+        }
+      : {}),
     costInTokensPerMillion: Number(costInTokensPerMillion),
     costOutTokensPerMillion: Number(costOutTokensPerMillion),
     costInCachedContextTokensPerMillion: Number(

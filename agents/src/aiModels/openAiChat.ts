@@ -17,6 +17,7 @@ import {
   normalizePromptCacheOptions,
   type PromptCacheUsageData,
 } from "./promptCacheOptions.js";
+import { getOpenAiCacheWriteInTokens } from "./openAiUsage.js";
 
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PsAiModel } from "../dbModels/aiModel.js";
@@ -265,6 +266,7 @@ export class OpenAiChat extends BaseChatModel {
       tokensIn: number;
       tokensOut: number;
       cachedInTokens: number;
+      cacheWriteInTokens: number;
       reasoningTokens: number;
       audioTokens: number;
     }
@@ -291,6 +293,7 @@ export class OpenAiChat extends BaseChatModel {
         tokensIn: usage.tokensIn,
         tokensOut: usage.tokensOut,
         cachedInTokens: usage.cachedInTokens,
+        cacheWriteInTokens: usage.cacheWriteInTokens,
         reasoningTokens: usage.reasoningTokens,
         audioTokens: usage.audioTokens,
       },
@@ -326,6 +329,7 @@ export class OpenAiChat extends BaseChatModel {
     const toolCalls = this.handleToolCalls(
       results.choices[0]?.message?.tool_calls ?? []
     );
+    const cacheWriteInTokens = getOpenAiCacheWriteInTokens(results.usage);
 
     const usageItemData = this.buildUsageItemData(
       {
@@ -343,6 +347,7 @@ export class OpenAiChat extends BaseChatModel {
         tokensIn: results.usage?.prompt_tokens ?? 0,
         tokensOut: results.usage?.completion_tokens ?? 0,
         cachedInTokens: results.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+        cacheWriteInTokens,
         reasoningTokens:
           results.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
         audioTokens: results.usage?.completion_tokens_details?.audio_tokens ?? 0,
@@ -354,6 +359,7 @@ export class OpenAiChat extends BaseChatModel {
       tokensIn: results.usage?.prompt_tokens ?? 0,
       tokensOut: results.usage?.completion_tokens ?? 0,
       cachedInTokens: results.usage?.prompt_tokens_details?.cached_tokens ?? 0,
+      cacheWriteInTokens,
       reasoningTokens:
         results.usage?.completion_tokens_details?.reasoning_tokens ?? 0,
       audioTokens: results.usage?.completion_tokens_details?.audio_tokens ?? 0,
@@ -376,6 +382,7 @@ export class OpenAiChat extends BaseChatModel {
     const toolCalls = this.handleToolCalls(msg.tool_calls ?? []);
 
     const usage = resp.usage!;
+    const cacheWriteInTokens = getOpenAiCacheWriteInTokens(usage);
     const usageItemData = this.buildUsageItemData(
       {
         id: resp.id ?? null,
@@ -392,6 +399,7 @@ export class OpenAiChat extends BaseChatModel {
         tokensIn: usage.prompt_tokens,
         tokensOut: usage.completion_tokens,
         cachedInTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+        cacheWriteInTokens,
         reasoningTokens: usage.completion_tokens_details?.reasoning_tokens ?? 0,
         audioTokens: usage.completion_tokens_details?.audio_tokens ?? 0,
       }
@@ -402,6 +410,7 @@ export class OpenAiChat extends BaseChatModel {
       tokensIn: usage.prompt_tokens,
       tokensOut: usage.completion_tokens,
       cachedInTokens: usage.prompt_tokens_details?.cached_tokens ?? 0,
+      cacheWriteInTokens,
       reasoningTokens: usage.completion_tokens_details?.reasoning_tokens ?? 0,
       audioTokens: usage.completion_tokens_details?.audio_tokens ?? 0,
       toolCalls,

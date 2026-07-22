@@ -34,6 +34,7 @@ describe("resolvePriceConfigurationForContext", () => {
       priorityTokensIn: 12,
       priorityTokensCachedIn: 6,
       priorityTokensOut: 24,
+      cacheWriteInputCostMultiplier: 1.25,
       flexPriorityTokensEnabledOnLongContext: true,
       currency: "USD",
     };
@@ -51,6 +52,7 @@ describe("resolvePriceConfigurationForContext", () => {
     assert.equal(resolved.longContextCostInTokensPerMillion, 18);
     assert.equal(resolved.longContextCostInCachedContextTokensPerMillion, 9);
     assert.equal(resolved.longContextCostOutTokensPerMillion, 36);
+    assert.equal(resolved.cacheWriteInputCostMultiplier, 1.25);
     assert.equal(prices.costInTokensPerMillion, 10);
   });
 

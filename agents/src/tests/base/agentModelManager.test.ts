@@ -487,6 +487,7 @@ describe("PsAiModelManager initialization", () => {
           modelSize: PsAiModelSize.Medium,
           model: "claude-3-haiku-20240307",
           provider: PsAiModelProvider.Anthropic,
+          accountingVersion: 2,
         },
         12
       ),
@@ -551,6 +552,11 @@ describe("PsAiModelManager initialization", () => {
     assert.ok(
       manager.models.get(`${PsAiModelType.Text}_${PsAiModelSize.Medium}`) instanceof
         ClaudeChat
+    );
+    assert.equal(
+      manager.models.get(`${PsAiModelType.Text}_${PsAiModelSize.Medium}`)?.config
+        .accountingVersion,
+      2
     );
     assert.ok(
       manager.models.get(
@@ -1605,6 +1611,7 @@ describe("PsAiModelManager text model calls", () => {
       createModelConfig({
         modelSize: PsAiModelSize.Medium,
         modelName: "medium-model",
+        accountingVersion: 2,
       }),
       [createModelResult("  medium result  ", { cachedInTokens: 1 })]
     );
@@ -1628,6 +1635,7 @@ describe("PsAiModelManager text model calls", () => {
     assert.equal(manager.usageItemCalls.length, 1);
     assert.equal(manager.usageItemCalls[0][0].modelSize, PsAiModelSize.Medium);
     assert.equal(manager.usageItemCalls[0][0].cachedInTokens, 1);
+    assert.equal(manager.usageItemCalls[0][0].accountingVersion, 2);
   });
 
   it("handles exact, default-size, type-only, and missing text model selection", async () => {
@@ -3199,6 +3207,7 @@ describe("PsAiModelManager text model calls", () => {
       tokensIn: 10,
       tokensOut: 5,
       cachedInTokens: 3,
+      cacheWriteInTokens: 0,
       agentId: 42,
       userId: 7,
       modelId: -1,
@@ -3226,6 +3235,7 @@ describe("PsAiModelManager price and usage accounting", () => {
         provider: PsAiModelProvider.OpenAI,
         model: "db-override-model",
         apiModel: "gpt-5.5",
+        accountingVersion: 2,
         maxContextTokens: 12345,
         timeoutMs: 9876,
         prices: {
@@ -3290,6 +3300,7 @@ describe("PsAiModelManager price and usage accounting", () => {
       assert.equal(ephemeral.config.modelSize, PsAiModelSize.Large);
       assert.equal(ephemeral.config.modelName, "db-override-model");
       assert.equal(ephemeral.config.apiModelName, "gpt-5.5");
+      assert.equal(ephemeral.config.accountingVersion, 2);
       assert.equal(ephemeral.config.maxContextTokens, 12345);
       assert.equal(ephemeral.config.timeoutMs, 9876);
 
@@ -3700,6 +3711,77 @@ describe("PsAiModelManager price and usage accounting", () => {
     assert.equal(receivedEvents[0].modelId, -1);
   });
 
+  it("persists disjoint normal-context cache-write input counts", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    delete process.env.DISABLE_DB_USAGE_TRACKING;
+
+    const { sequelize } = await import("../../dbModels/index.js");
+    const { PsModelUsage } = await import("../../dbModels/modelUsage.js");
+    const originalTransaction = Reflect.get(sequelize, "transaction");
+    const originalFindOrCreate = Reflect.get(PsModelUsage, "findOrCreate");
+    let defaults: Record<string, unknown> | undefined;
+    let increments: Record<string, unknown> | undefined;
+
+    Reflect.set(
+      sequelize,
+      "transaction",
+      async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback({ id: "tx" })
+    );
+    Reflect.set(PsModelUsage, "findOrCreate", async (options: unknown) => {
+      defaults = (options as { defaults: Record<string, unknown> }).defaults;
+      return [
+        {
+          increment: async (fields: Record<string, unknown>) => {
+            increments = fields;
+          },
+        },
+        false,
+      ];
+    });
+
+    try {
+      const manager = new PsAiModelManager(
+        [],
+        [],
+        256,
+        0.4,
+        "medium",
+        0,
+        42,
+        7
+      );
+      await manager.saveTokenUsage(
+        "normal-context-model",
+        PsAiModelProvider.OpenAI,
+        prices,
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        100,
+        20,
+        5,
+        776,
+        undefined,
+        { cacheWriteInTokens: 30 }
+      );
+    } finally {
+      Reflect.set(sequelize, "transaction", originalTransaction);
+      Reflect.set(PsModelUsage, "findOrCreate", originalFindOrCreate);
+    }
+
+    assert.ok(defaults);
+    assert.equal(defaults.token_in_count, 50);
+    assert.equal(defaults.token_in_cached_context_count, 20);
+    assert.equal(defaults.token_in_cache_write_count, 30);
+    assert.equal(defaults.long_context_token_in_count, 0);
+    assert.equal(defaults.long_context_token_in_cache_write_count, 0);
+    assert.ok(increments);
+    assert.equal(increments.token_in_count, 50);
+    assert.equal(increments.token_in_cached_context_count, 20);
+    assert.equal(increments.token_in_cache_write_count, 30);
+  });
+
   it("persists long-context token usage and surfaces persistence failures", async () => {
     useStandardResponsesEnv();
     delete process.env.DISABLE_DB_INIT;
@@ -3737,6 +3819,7 @@ describe("PsAiModelManager price and usage accounting", () => {
     const receivedEvents: Array<{
       longContextTokenIn: number;
       longContextTokenInCached: number;
+      longContextCacheWriteInTokens: number;
       longContextTokenOut: number;
     }> = [];
     const listener = (event: unknown) => {
@@ -3744,6 +3827,7 @@ describe("PsAiModelManager price and usage accounting", () => {
         event as {
           longContextTokenIn: number;
           longContextTokenInCached: number;
+          longContextCacheWriteInTokens: number;
           longContextTokenOut: number;
         }
       );
@@ -3760,22 +3844,30 @@ describe("PsAiModelManager price and usage accounting", () => {
         100,
         20,
         5,
-        777
+        777,
+        undefined,
+        { cacheWriteInTokens: 30 }
       );
 
       assert.equal(
         ((persisted[0].defaults as Record<string, unknown>)
           .long_context_token_in_count as number),
-        80
+        50
       );
       assert.equal(
         ((persisted[0].defaults as Record<string, unknown>)
           .long_context_token_in_cached_context_count as number),
         20
       );
+      assert.equal(
+        ((persisted[0].defaults as Record<string, unknown>)
+          .long_context_token_in_cache_write_count as number),
+        30
+      );
       assert.equal(increments[0].long_context_token_out_count, 5);
-      assert.equal(receivedEvents[0].longContextTokenIn, 80);
+      assert.equal(receivedEvents[0].longContextTokenIn, 50);
       assert.equal(receivedEvents[0].longContextTokenInCached, 20);
+      assert.equal(receivedEvents[0].longContextCacheWriteInTokens, 30);
       assert.equal(receivedEvents[0].longContextTokenOut, 5);
 
       Reflect.set(sequelize, "transaction", async () => {

@@ -98,6 +98,8 @@ const prices: PsBaseModelPriceConfiguration = {
   costInTokensPerMillion: 1_000_000,
   costOutTokensPerMillion: 2_000_000,
   costInCachedContextTokensPerMillion: 500_000,
+  costPerThousandWebSearches: 1_000,
+  cacheWriteInputCostMultiplier: 1.25,
   longContextTokenThreshold: 100,
   longContextCostInTokensPerMillion: 3_000_000,
   longContextCostInCachedContextTokensPerMillion: 1_000_000,
@@ -128,6 +130,7 @@ const usageItemData = (
   usageNormalized: {
     tokensIn: 200,
     cachedInTokens: 50,
+    cacheWriteInTokens: 20,
     tokensOut: 40,
     reasoningTokens: 10,
     audioTokens: 5,
@@ -185,7 +188,20 @@ describe("AgentCostItemManager", () => {
         agent_id: 10,
         agent_name: null,
         ai_model_name: null,
-        data: JSON.stringify(usageItemData()),
+        data: JSON.stringify(
+          usageItemData({
+            accountingVersion: 2,
+            providerMetadata: {
+              builtInTools: {
+                webSearchCallCount: 3,
+                webSearchCalls: [
+                  { status: "completed" },
+                  { status: "not_used" },
+                ],
+              },
+            },
+          })
+        ),
         price_cfg: prices,
       },
       {
@@ -228,19 +244,25 @@ describe("AgentCostItemManager", () => {
         assert.equal(detailed.length, 2);
         assert.equal(detailed[0].agentName, "Agent 10");
         assert.equal(detailed[0].aiModelName, "GPT");
+        assert.equal(detailed[0].accountingVersion, 2);
+        assert.equal(detailed[1].accountingVersion, 1);
         assert.equal(detailed[0].tokenInCount, 200);
+        assert.equal(detailed[0].longContextTokenInCacheWriteCount, 20);
         assert.equal(detailed[0].tokenOutCount, 40);
-        assert.equal(detailed[0].totalCost, 660);
+        assert.equal(detailed[0].costInCacheWriteLong, 75);
+        assert.equal(detailed[0].webSearchCallCount, 3);
+        assert.equal(detailed[0].costWebSearch, 3);
+        assert.equal(detailed[0].totalCost, 678);
         assert.equal(detailed[1].totalCost, 50);
 
         assert.deepEqual(await manager.getAgentCosts(10, [10, 11]), {
           agentCosts: [
-            { agentId: 10, level: 0, cost: 660 },
+            { agentId: 10, level: 0, cost: 678 },
             { agentId: 11, level: 1, cost: 50 },
           ],
-          totalCost: "710.00",
+          totalCost: "728.00",
         });
-        assert.equal(await manager.getSingleAgentCosts(10), "710.00");
+        assert.equal(await manager.getSingleAgentCosts(10), "728.00");
       }
     );
   });
@@ -554,6 +576,25 @@ describe("AgentCostItemManager", () => {
         }),
         price_cfg: prices,
       },
+      {
+        created_at: new Date("2025-05-06T00:00:00.000Z"),
+        agent_id: 45,
+        data: usageItemData({
+          pricing: {
+            configuredPrices: {
+              ...prices,
+              longContextCostInTokensPerMillion: 0,
+            },
+          },
+          usage: {
+            token_in_count: 0,
+            token_out_count: 0,
+            long_context_token_in_cache_write_count: 4,
+          },
+          usageNormalized: undefined,
+        }),
+        price_cfg: prices,
+      },
     ];
 
     await withPatched(sequelize, "query", async () => rows, async () => {
@@ -566,6 +607,11 @@ describe("AgentCostItemManager", () => {
         detailed.find((row) => row.agentId === 44)?.longContextTokenInCount,
         200
       );
+      assert.equal(
+        detailed.find((row) => row.agentId === 45)?.costInCacheWriteLong,
+        0
+      );
+      assert.equal(detailed.find((row) => row.agentId === 45)?.totalCost, 0);
     });
   });
 
@@ -588,6 +634,7 @@ describe("AgentCostManager", () => {
         agent_id: 1,
         agent_name: "Root",
         ai_model_name: "Model",
+        accounting_version: "2",
         price_cfg: prices,
         token_in_count: "10",
         token_out_count: "20",
@@ -601,6 +648,7 @@ describe("AgentCostManager", () => {
         long_context_token_out_reasoning_count: "3",
         long_context_token_out_audio_count: "2",
         long_context_token_out_image_count: "1",
+        web_search_call_count: "2",
       },
     ];
 
@@ -619,20 +667,35 @@ describe("AgentCostManager", () => {
             { id: 2, level: 1 },
           ];
         }
+        assert.match(sql, /WITH aggregated_usage AS/);
+        assert.match(sql, /SUM\(COALESCE\(mu\.token_in_count, 0\)\)/);
+        assert.match(sql, /GROUP BY mu\.agent_id, mu\.model_id/);
+        assert.match(sql, /web_search_item_counts AS/);
+        assert.match(sql, /webSearchCallCount/);
+        assert.match(sql, /web_search_counts AS/);
+        assert.match(sql, /SUM\(web_search_call_count\)/);
+        assert.match(sql, /GROUP BY agent_id, model_id/);
+        assert.match(sql, /LEFT JOIN web_search_counts/);
+        assert.doesNotMatch(sql, /mui\.agent_id = mu\.agent_id/);
+        assert.match(sql, /ps_model_usage_item/);
+        assert.match(sql, /not_used/);
         return usageRows;
       },
       async () => {
         const detailed = await manager.getDetailedAgentCosts(1);
         assert.equal(detailed.length, 1);
-        assert.equal(detailed[0].totalCost, 124.5);
+        assert.equal(detailed[0].webSearchCallCount, 2);
+        assert.equal(detailed[0].accountingVersion, 2);
+        assert.equal(detailed[0].costWebSearch, 2);
+        assert.equal(detailed[0].totalCost, 126.5);
         assert.equal(detailed[0].tokenInCount, 25);
         assert.equal(detailed[0].tokenOutCount, 34);
 
         assert.deepEqual(await manager.getAgentCosts(1), {
-          agentCosts: [{ agentId: 1, level: 0, cost: 124.5 }],
-          totalCost: "124.50",
+          agentCosts: [{ agentId: 1, level: 0, cost: 126.5 }],
+          totalCost: "126.50",
         });
-        assert.equal(await manager.getSingleAgentCosts(1), "124.50");
+        assert.equal(await manager.getSingleAgentCosts(1), "126.50");
       }
     );
   });
@@ -696,7 +759,9 @@ describe("AgentCostManager", () => {
       async () => {
         const detailed = await manager.getDetailedAgentCosts(1);
         assert.equal(detailed.length, 2);
-        assert.equal(detailed[0].totalCost, 11);
+        assert.equal(detailed[0].totalCost, 14);
+        assert.equal(detailed[0].accountingVersion, 1);
+        assert.equal(detailed[0].costInLong, 3);
         assert.equal(detailed[0].costOutLong, 10);
         assert.equal(detailed[0].costInCachedLong, 1);
         assert.equal(detailed[1].totalCost, 0);
@@ -709,9 +774,9 @@ describe("AgentCostManager", () => {
         }>;
         assert.deepEqual(aggregateRows, [
           { agentId: 3, level: -1, cost: 0 },
-          { agentId: 2, level: 1, cost: 11 },
+          { agentId: 2, level: 1, cost: 14 },
         ]);
-        assert.equal(aggregate.totalCost, "11.00");
+        assert.equal(aggregate.totalCost, "14.00");
         assert.equal(await manager.getSingleAgentCosts(99), "0.00");
       }
     );
@@ -737,9 +802,11 @@ describe("AgentCostManager", () => {
     type LegacyCostBreakdown = {
       costInNormal: number;
       costInCached: number;
+      costInCacheWrite: number;
       costInLong: number;
       costOutNormal: number;
       costInCachedLong: number;
+      costInCacheWriteLong: number;
       costOutLong: number;
       totalCost: number;
     };
@@ -765,10 +832,14 @@ describe("AgentCostManager", () => {
     assert.deepEqual(calcCosts(baseUsage, noPrices), {
       costInNormal: 0,
       costInCached: 0,
+      costInCacheWrite: 0,
       costInLong: 0,
       costOutNormal: 0,
       costInCachedLong: 0,
+      costInCacheWriteLong: 0,
       costOutLong: 0,
+      webSearchCallCount: 0,
+      costWebSearch: 0,
       totalCost: 0,
     });
 
@@ -786,13 +857,121 @@ describe("AgentCostManager", () => {
     assert.deepEqual(calcCosts(longOnlyUsage, fallbackPrices), {
       costInNormal: 0,
       costInCached: 0,
+      costInCacheWrite: 0,
       costInLong: 0,
       costOutNormal: 0,
       costInCachedLong: 0.5,
+      costInCacheWriteLong: 0,
       costOutLong: 2,
+      webSearchCallCount: 0,
+      costWebSearch: 0,
       totalCost: 2.5,
     });
     assert.equal(calcCosts(longOnlyUsage, noPrices).totalCost, 0);
+
+    const cacheWriteUsage: PsModelUsageAttributes = {
+      ...baseUsage,
+      token_in_cache_write_count: 1,
+      long_context_token_in_cache_write_count: 1,
+    };
+    const cacheWriteCosts = calcCosts(cacheWriteUsage, prices);
+    assert.equal(cacheWriteCosts.costInCacheWrite, 1.25);
+    assert.equal(cacheWriteCosts.costInCacheWriteLong, 3.75);
+    assert.equal(cacheWriteCosts.totalCost, 5);
+
+    const zeroLongCacheWriteCosts = calcCosts(cacheWriteUsage, {
+      ...prices,
+      longContextCostInTokensPerMillion: 0,
+    });
+    assert.equal(zeroLongCacheWriteCosts.costInCacheWrite, 1.25);
+    assert.equal(zeroLongCacheWriteCosts.costInCacheWriteLong, 0);
+    assert.equal(zeroLongCacheWriteCosts.totalCost, 1.25);
+  });
+
+  it("keeps compact and usage-item long-context fallback costs in parity", () => {
+    type CostBreakdown = {
+      costInNormal: number;
+      costInCached: number;
+      costInCacheWrite: number;
+      costInLong: number;
+      costOutNormal: number;
+      costInCachedLong: number;
+      costInCacheWriteLong: number;
+      costOutLong: number;
+      webSearchCallCount: number;
+      costWebSearch: number;
+      totalCost: number;
+    };
+    const compactManager = new AgentCostManager();
+    const itemManager = new AgentCostItemManager();
+    const calcCompact = (
+      compactManager as unknown as {
+        calcCosts: (
+          usage: PsModelUsageAttributes,
+          prices: PsBaseModelPriceConfiguration
+        ) => CostBreakdown;
+      }
+    ).calcCosts.bind(compactManager);
+    const calcItem = (
+      itemManager as unknown as {
+        calcCostsFromItem: (
+          data: PsModelUsageItemData,
+          fallbackPrices?: PsBaseModelPriceConfiguration | null
+        ) => CostBreakdown;
+      }
+    ).calcCostsFromItem.bind(itemManager);
+    const compactUsage: PsModelUsageAttributes = {
+      id: 0,
+      user_id: 0,
+      created_at: new Date("2025-04-02T00:00:00.000Z"),
+      updated_at: new Date("2025-04-02T00:00:00.000Z"),
+      model_id: 0,
+      token_in_count: 0,
+      token_out_count: 0,
+      long_context_token_in_count: 2,
+      long_context_token_in_cached_context_count: 3,
+      long_context_token_in_cache_write_count: 4,
+      long_context_token_out_count: 5,
+    };
+    const usage = {
+      token_in_count: 0,
+      token_out_count: 0,
+      long_context_token_in_count: 2,
+      long_context_token_in_cached_context_count: 3,
+      long_context_token_in_cache_write_count: 4,
+      long_context_token_out_count: 5,
+    } satisfies PsModelUsageTokenCounts;
+    const fallbackPrices: PsBaseModelPriceConfiguration = {
+      costInTokensPerMillion: 1_000_000,
+      costInCachedContextTokensPerMillion: 500_000,
+      costOutTokensPerMillion: 2_000_000,
+      cacheWriteInputCostMultiplier: 1.25,
+      currency: "USD",
+    };
+    const explicitZeroPrices: PsBaseModelPriceConfiguration = {
+      ...fallbackPrices,
+      longContextCostInTokensPerMillion: 0,
+      longContextCostInCachedContextTokensPerMillion: 0,
+      longContextCostOutTokensPerMillion: 0,
+    };
+
+    for (const [caseName, casePrices, expectedTotal] of [
+      ["fallback", fallbackPrices, 18.5],
+      ["explicit zero", explicitZeroPrices, 0],
+    ] as const) {
+      const compactCosts = calcCompact(compactUsage, casePrices);
+      const itemCosts = calcItem(
+        usageItemData({
+          pricing: { configuredPrices: casePrices },
+          usage,
+          usageNormalized: undefined,
+        }),
+        casePrices
+      );
+
+      assert.deepEqual(itemCosts, compactCosts, caseName);
+      assert.equal(compactCosts.totalCost, expectedTotal, caseName);
+    }
   });
 
   it("sorts legacy aggregate ties and totals single-agent rows with omitted counts", async () => {

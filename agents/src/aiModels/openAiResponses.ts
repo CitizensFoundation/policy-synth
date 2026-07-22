@@ -27,6 +27,7 @@ import {
   normalizePromptCacheOptions,
   type PromptCacheUsageData,
 } from "./promptCacheOptions.js";
+import { getOpenAiCacheWriteInTokens } from "./openAiUsage.js";
 
 export type {
   StoredResponseCleanupClient,
@@ -1311,6 +1312,7 @@ export class OpenAiResponses extends BaseChatModel {
       tokensIn: number;
       tokensOut: number;
       cachedInTokens: number;
+      cacheWriteInTokens: number;
       reasoningTokens: number;
       audioTokens: number;
     },
@@ -1352,6 +1354,7 @@ export class OpenAiResponses extends BaseChatModel {
         tokensIn: usage.tokensIn,
         tokensOut: usage.tokensOut,
         cachedInTokens: usage.cachedInTokens,
+        cacheWriteInTokens: usage.cacheWriteInTokens,
         reasoningTokens: usage.reasoningTokens,
         audioTokens: usage.audioTokens,
       },
@@ -1810,6 +1813,7 @@ export class OpenAiResponses extends BaseChatModel {
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
+    const cacheWriteInTokens = getOpenAiCacheWriteInTokens(usage);
     const reasoningTokens: number =
       usage.output_tokens_details?.reasoning_tokens ?? 0;
     const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
@@ -1828,6 +1832,7 @@ export class OpenAiResponses extends BaseChatModel {
         tokensIn,
         tokensOut,
         cachedInTokens,
+        cacheWriteInTokens,
         reasoningTokens,
         audioTokens,
       },
@@ -1842,6 +1847,7 @@ export class OpenAiResponses extends BaseChatModel {
           tokensIn,
           tokensOut,
           cachedInTokens,
+          cacheWriteInTokens,
           reasoningTokens,
           audioTokens,
           toolCalls,
@@ -1856,6 +1862,7 @@ export class OpenAiResponses extends BaseChatModel {
       tokensIn,
       tokensOut,
       cachedInTokens,
+      cacheWriteInTokens,
       reasoningTokens,
       audioTokens,
       phase,
@@ -2097,6 +2104,7 @@ export class OpenAiResponses extends BaseChatModel {
       usage.input_tokens_details?.cached_tokens ??
       usage.prompt_tokens_details?.cached_tokens ??
       0;
+    const cacheWriteInTokens = getOpenAiCacheWriteInTokens(usage);
     const reasoningTokens: number =
       usage.output_tokens_details?.reasoning_tokens ?? 0;
     const audioTokens: number = usage.output_tokens_details?.audio_tokens ?? 0;
@@ -2115,6 +2123,7 @@ export class OpenAiResponses extends BaseChatModel {
         tokensIn,
         tokensOut,
         cachedInTokens,
+        cacheWriteInTokens,
         reasoningTokens,
         audioTokens,
       },
@@ -2131,6 +2140,7 @@ export class OpenAiResponses extends BaseChatModel {
           tokensIn,
           tokensOut,
           cachedInTokens,
+          cacheWriteInTokens,
           reasoningTokens,
           audioTokens,
           toolCalls,
@@ -2145,6 +2155,7 @@ export class OpenAiResponses extends BaseChatModel {
       tokensIn,
       tokensOut,
       cachedInTokens,
+      cacheWriteInTokens,
       reasoningTokens,
       audioTokens,
       phase,

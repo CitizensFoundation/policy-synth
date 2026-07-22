@@ -83,6 +83,13 @@ describe("dbModels model definitions", () => {
     assert.equal(dbIndex.PsAgentConnector.getTableName(), "ps_agent_connectors");
     assert.equal(dbIndex.PsModelUsage.getTableName(), "ps_model_usage");
     assert.equal(dbIndex.PsModelUsageItem.getTableName(), "ps_model_usage_item");
+    assert.ok(
+      dbIndex.PsModelUsage.getAttributes().token_in_cache_write_count
+    );
+    assert.ok(
+      dbIndex.PsModelUsage.getAttributes()
+        .long_context_token_in_cache_write_count
+    );
 
     const agent = dbIndex.PsAgent.build({
       id: 7,
@@ -130,12 +137,14 @@ describe("dbModels model definitions", () => {
       "index:ps_model_usage_item_agent_id:agent_id",
       "index:ps_model_usage_item_connector_id:connector_id",
       "index:ps_model_usage_item_created_at:created_at",
+      "describe",
     ]);
   });
 
   it("handles existing application-level tables and concurrent index creation", async () => {
     const originalGetQueryInterface = dbIndex.sequelize.getQueryInterface;
     const addedIndexes: string[] = [];
+    const addedColumns: string[] = [];
     Reflect.set(dbIndex.sequelize, "getQueryInterface", () => ({
       describeTable: async () => ({
         id: {},
@@ -155,6 +164,16 @@ describe("dbModels model definitions", () => {
           original: { code: "42P07" },
         });
       },
+      addColumn: async (_tableName: string, columnName: string) => {
+        addedColumns.push(columnName);
+        if (columnName === "token_in_cache_write_count") {
+          throw {
+            parent: {
+              code: "42701",
+            },
+          };
+        }
+      },
     }));
 
     try {
@@ -168,6 +187,10 @@ describe("dbModels model definitions", () => {
       "ps_model_usage_item_agent_id",
       "ps_model_usage_item_connector_id",
       "ps_model_usage_item_created_at",
+    ]);
+    assert.deepEqual(addedColumns, [
+      "token_in_cache_write_count",
+      "long_context_token_in_cache_write_count",
     ]);
   });
 
@@ -309,6 +332,7 @@ describe("dbModels model definitions", () => {
           { name: "ps_model_usage_item_created_at" },
         ],
         addIndex: async () => undefined,
+        addColumn: async () => undefined,
       };
     });
 

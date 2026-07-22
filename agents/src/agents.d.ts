@@ -108,6 +108,8 @@ interface PsAzureAiModelConfig {
   temperature?: number;
 }
 
+type PsUsageAccountingVersion = 1 | 2;
+
 interface PsAiModelConfig {
   apiKey: string;
   /**
@@ -120,6 +122,11 @@ interface PsAiModelConfig {
    */
   apiModelName?: string;
   provider?: string;
+  /**
+   * Selects provider usage-accounting semantics. Missing values retain the
+   * legacy v1 behavior so existing model records remain compatible.
+   */
+  accountingVersion?: PsUsageAccountingVersion;
   /**
    * Non-secret credential identity for follow-up provider operations that need
    * to select the same account/key without storing the key itself.
@@ -324,20 +331,27 @@ interface ToolCall {
 
 interface PsModelUsageItemProviderData extends Record<string, unknown> {
   apiFamily: string;
+  accountingVersion?: PsUsageAccountingVersion;
   request?: Record<string, unknown>;
   usageRaw?: Record<string, unknown>;
   usageNormalized?: PsModelUsageNormalizedCounts;
   providerMetadata?: Record<string, unknown>;
 }
 
+interface PsTokenUsageAccountingDetails {
+  cacheWriteInTokens?: number;
+}
+
 interface PsModelUsageItemSaveContext {
   modelName: string;
   modelProvider: string;
+  accountingVersion?: PsUsageAccountingVersion;
   prices: PsBaseModelPriceConfiguration;
   modelType: import("./aiModelTypes.js").PsAiModelType;
   modelSize: import("./aiModelTypes.js").PsAiModelSize;
   tokensIn: number;
   cachedInTokens: number;
+  cacheWriteInTokens?: number;
   tokensOut: number;
   reasoningTokens?: number;
   audioTokens?: number;
@@ -365,6 +379,7 @@ interface PsBaseModelReturnParameters {
   tokensOut: number;
   content: string;
   cachedInTokens?: number;
+  cacheWriteInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
   usageItemData?: PsModelUsageItemProviderData;
@@ -394,6 +409,9 @@ interface PsBaseModelPriceConfiguration {
   costInTokensPerMillion: number;
   costOutTokensPerMillion: number;
   costInCachedContextTokensPerMillion: number;
+  costPerThousandWebSearches?: number;
+  /** Multiplier applied to the effective uncached input rate for cache writes. */
+  cacheWriteInputCostMultiplier?: number;
   longContextCostInTokensPerMillion?: number;
   longContextCostInCachedContextTokensPerMillion?: number;
   longContextCostOutTokensPerMillion?: number;
@@ -430,6 +448,8 @@ interface PsAiModelConfiguration {
    */
   apiModel?: string;
   provider: string;
+  /** Missing values use legacy v1 provider accounting semantics. */
+  accountingVersion?: PsUsageAccountingVersion;
   inferenceType?: PsInferenceType;
   regionalProcessing?: PsOpenAiRegionalProcessing;
   active: boolean;
@@ -472,8 +492,10 @@ interface PsModelUsageAttributes extends PsBaseModelClassNoUuid {
   token_in_count: number;
   token_out_count: number;
   token_in_cached_context_count?: number;
+  token_in_cache_write_count?: number;
   long_context_token_in_count?: number;
   long_context_token_in_cached_context_count?: number;
+  long_context_token_in_cache_write_count?: number;
   token_out_reasoning_count?: number;
   token_out_audio_count?: number;
   token_out_image_count?: number;
@@ -489,8 +511,10 @@ interface PsModelUsageAccountingSnapshot {
   tokenInCount: number;
   tokenOutCount: number;
   tokenInCachedContextCount: number;
+  tokenInCacheWriteCount?: number;
   longContextTokenInCount: number;
   longContextTokenInCachedContextCount: number;
+  longContextTokenInCacheWriteCount?: number;
   longContextTokenOutCount: number;
   longContextApplied: boolean;
   longContextTokenThreshold?: number;
@@ -502,6 +526,7 @@ interface PsModelUsageNormalizedCounts {
   tokensIn: number;
   tokensOut: number;
   cachedInTokens?: number;
+  cacheWriteInTokens?: number;
   reasoningTokens?: number;
   audioTokens?: number;
   imageTokens?: number;
@@ -512,11 +537,13 @@ interface PsModelUsageTokenCounts {
   token_in_count: number;
   token_out_count: number;
   token_in_cached_context_count?: number;
+  token_in_cache_write_count?: number;
   token_out_reasoning_count?: number;
   token_out_audio_count?: number;
   token_out_image_count?: number;
   long_context_token_in_count?: number;
   long_context_token_in_cached_context_count?: number;
+  long_context_token_in_cache_write_count?: number;
   long_context_token_out_count?: number;
   long_context_token_out_reasoning_count?: number;
   long_context_token_out_audio_count?: number;
@@ -525,6 +552,7 @@ interface PsModelUsageTokenCounts {
 
 interface PsModelUsageItemData {
   version: 1;
+  accountingVersion?: PsUsageAccountingVersion;
   provider: string;
   apiFamily: string;
   timestamp: string;
@@ -648,8 +676,10 @@ interface PsTokenUsageEvent {
   tokensIn: number;
   tokensOut: number;
   cachedInTokens?: number;
+  cacheWriteInTokens?: number;
   longContextTokenIn?: number;
   longContextTokenInCached?: number;
+  longContextCacheWriteInTokens?: number;
   longContextTokenOut?: number;
   agentId?: number;
   userId?: number;
@@ -828,21 +858,28 @@ interface PsDetailedAgentCostResults {
   agentId?: number;
   agentName: string;
   aiModelName: string;
+  accountingVersion: PsUsageAccountingVersion;
   tokenInCount: number;
   tokenInCachedContextCount: number;
+  tokenInCacheWriteCount: number;
   longContextTokenInCount: number;
   longContextTokenOutCount: number;
   longContextTokenInCachedContextCount: number;
+  longContextTokenInCacheWriteCount: number;
   tokenOutCount: number;
   costIn: number;
   costOut: number;
   totalCost: number;
   costInNormal: number;
   costInCached: number;
+  costInCacheWrite: number;
   costInLong: number;
   costInCachedLong: number;
+  costInCacheWriteLong: number;
   costOutNormal: number;
   costOutLong: number;
+  webSearchCallCount: number;
+  costWebSearch: number;
 }
 
 /* Examples of structured questions for agent classes (for AI programmers)

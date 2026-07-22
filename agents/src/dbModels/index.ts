@@ -37,6 +37,11 @@ const models: Models = {
 };
 
 const MODEL_USAGE_ITEM_TABLE = "ps_model_usage_item";
+const MODEL_USAGE_TABLE = "ps_model_usage";
+const MODEL_USAGE_CACHE_WRITE_COLUMNS = [
+  "token_in_cache_write_count",
+  "long_context_token_in_cache_write_count",
+] as const;
 const MODEL_USAGE_ITEM_INDEXES: Array<{
   name: string;
   fields: string[];
@@ -61,7 +66,32 @@ const isAlreadyExistsError = (error: unknown) => {
     (error as { original?: { code?: string }; parent?: { code?: string } })
       ?.parent?.code;
 
-  return code === "42P07" || message.toLowerCase().includes("already exists");
+  return (
+    code === "42P07" ||
+    code === "42701" ||
+    message.toLowerCase().includes("already exists")
+  );
+};
+
+const isMissingTableError = (error: unknown) => {
+  const message =
+    error instanceof Error
+      ? error.message
+      : typeof error === "string"
+        ? error
+        : "";
+  const code =
+    (error as { original?: { code?: string }; parent?: { code?: string } })
+      ?.original?.code ??
+    (error as { original?: { code?: string }; parent?: { code?: string } })
+      ?.parent?.code;
+
+  const normalizedMessage = message.toLowerCase();
+  return (
+    code === "42P01" ||
+    normalizedMessage.includes("does not exist") ||
+    normalizedMessage.includes("missing table")
+  );
 };
 
 let applicationLevelSyncPromise: Promise<void> | undefined;
@@ -141,6 +171,35 @@ const applicationLevelSync = async () => {
         throw error;
       }
     }
+  }
+
+  try {
+    const modelUsageColumns = await queryInterface.describeTable(
+      MODEL_USAGE_TABLE
+    );
+    for (const columnName of MODEL_USAGE_CACHE_WRITE_COLUMNS) {
+      if (columnName in modelUsageColumns) {
+        continue;
+      }
+      try {
+        await queryInterface.addColumn(MODEL_USAGE_TABLE, columnName, {
+          type: DataTypes.INTEGER,
+          allowNull: false,
+          defaultValue: 0,
+        });
+      } catch (error) {
+        if (!isAlreadyExistsError(error)) {
+          throw error;
+        }
+      }
+    }
+  } catch (error) {
+    if (!isMissingTableError(error)) {
+      throw error;
+    }
+    PolicySynthAgentBase.logger.info(
+      `Skipped cache-write columns because ${MODEL_USAGE_TABLE} does not exist yet`
+    );
   }
 };
 

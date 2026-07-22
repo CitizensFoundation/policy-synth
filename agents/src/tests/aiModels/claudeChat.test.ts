@@ -49,7 +49,11 @@ type ClaudeChatInternals = {
     content: unknown[] | null | undefined,
     usage: unknown
   ) =>
-    | { webSearchCalls?: Array<Record<string, unknown>> }
+    | {
+        webSearchCallCount?: number;
+        webSearchCalls?: Array<Record<string, unknown>>;
+        rawProviderData?: unknown;
+      }
     | undefined;
 };
 
@@ -94,6 +98,7 @@ const createConfig = (
   modelName: "claude-3-opus-20240229",
   modelType: PsAiModelType.Text,
   modelSize: PsAiModelSize.Small,
+  accountingVersion: 2,
   maxTokensOut: 256,
   temperature: 0.4,
   prices: {
@@ -1053,6 +1058,7 @@ describe("ClaudeChat", () => {
     const model = new ClaudeChat(
       createConfig({
         modelName: "claude-3-opus-20240229",
+        accountingVersion: 1,
         reasoningEffort: "medium",
         maxTokensOut: 4096,
       })
@@ -1122,6 +1128,14 @@ describe("ClaudeChat", () => {
     assert.equal(result?.tokensIn, 15);
     assert.equal(result?.tokensOut, 3);
     assert.equal(result?.cachedInTokens, 2);
+    assert.equal(result?.cacheWriteInTokens, undefined);
+    assert.equal(result?.usageItemData?.accountingVersion, 1);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 15,
+      tokensOut: 3,
+      cachedInTokens: 2,
+      cacheReadInputTokens: 5,
+    });
     assert.equal(result?.usageItemData?.providerMetadata?.transport, "anthropic");
     assert.equal(result?.usageItemData?.request?.mode, "non_stream");
   });
@@ -1296,6 +1310,27 @@ describe("ClaudeChat", () => {
       },
     ]);
     assert.ok(metadata?.rawProviderData);
+    assert.equal(metadata?.webSearchCallCount, 1);
+  });
+
+  it("persists Claude's provider-reported search count without raw results", () => {
+    const model = new ClaudeChat(
+      createConfig({ modelName: "claude-opus-4-8" })
+    );
+    const metadata = asInternals(model).buildClaudeBuiltInToolsMetadata(
+      { type: "web_search" },
+      [],
+      {
+        server_tool_use: {
+          web_search_requests: 3,
+          web_fetch_requests: 1,
+        },
+      }
+    );
+
+    assert.equal(metadata?.webSearchCallCount, 3);
+    assert.equal(metadata?.webSearchCalls, undefined);
+    assert.equal(metadata?.rawProviderData, undefined);
   });
 
   it("associates Claude citations with the search calls containing their result URLs", () => {
@@ -1482,9 +1517,13 @@ describe("ClaudeChat", () => {
       }
     );
     const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
-      | { webSearchCalls?: Array<Record<string, unknown>> }
+      | {
+          webSearchCallCount?: number;
+          webSearchCalls?: Array<Record<string, unknown>>;
+        }
       | undefined;
     assert.equal(result?.content, "Stream answer");
+    assert.equal(metadata?.webSearchCallCount, 1);
     assert.deepEqual(metadata?.webSearchCalls?.[0].queries, ["stream search"]);
     assert.deepEqual(metadata?.webSearchCalls?.[0].sources, [
       { url: "https://example.com/stream", title: "Stream result" },
@@ -1590,6 +1629,8 @@ describe("ClaudeChat", () => {
               usage: {
                 input_tokens: 4,
                 output_tokens: 2,
+                cache_creation_input_tokens: 2,
+                cache_read_input_tokens: 1,
                 server_tool_use: {
                   web_search_requests: 1,
                   web_fetch_requests: 2,
@@ -1605,6 +1646,8 @@ describe("ClaudeChat", () => {
             usage: {
               input_tokens: 6,
               output_tokens: 3,
+              cache_creation_input_tokens: 3,
+              cache_read_input_tokens: 2,
               server_tool_use: {
                 web_search_requests: 2,
                 web_fetch_requests: 1,
@@ -1650,14 +1693,25 @@ describe("ClaudeChat", () => {
       content: pausedContent,
     });
     assert.equal(result?.content, "Partial answer");
-    assert.equal(result?.tokensIn, 10);
+    assert.equal(result?.tokensIn, 18);
     assert.equal(result?.tokensOut, 5);
+    assert.equal(result?.cachedInTokens, 3);
+    assert.equal(result?.cacheWriteInTokens, 5);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 18,
+      tokensOut: 5,
+      cachedInTokens: 3,
+      cacheWriteInTokens: 5,
+      cacheReadInputTokens: 3,
+    });
     const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
       | {
           rawProviderData?: { serverToolUse?: unknown };
+          webSearchCallCount?: number;
           webSearchCalls?: Array<Record<string, unknown>>;
         }
       | undefined;
+    assert.equal(metadata?.webSearchCallCount, 3);
     assert.deepEqual(metadata?.webSearchCalls?.[0].queries, [
       "long-running search",
     ]);
@@ -1687,6 +1741,8 @@ describe("ClaudeChat", () => {
         usage: {
           input_tokens: 3,
           output_tokens: 2,
+          cache_creation_input_tokens: 1,
+          cache_read_input_tokens: 2,
           server_tool_use: {
             web_search_requests: 1,
             web_fetch_requests: 0,
@@ -1701,6 +1757,8 @@ describe("ClaudeChat", () => {
         usage: {
           input_tokens: 5,
           output_tokens: 1,
+          cache_creation_input_tokens: 2,
+          cache_read_input_tokens: 3,
           server_tool_use: {
             web_search_requests: 2,
             web_fetch_requests: 1,
@@ -1759,11 +1817,24 @@ describe("ClaudeChat", () => {
       content: pausedContent,
     });
     assert.equal(result?.content, "Stream partial done");
-    assert.equal(result?.tokensIn, 8);
+    assert.equal(result?.tokensIn, 16);
     assert.equal(result?.tokensOut, 3);
+    assert.equal(result?.cachedInTokens, 5);
+    assert.equal(result?.cacheWriteInTokens, 3);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 16,
+      tokensOut: 3,
+      cachedInTokens: 5,
+      cacheWriteInTokens: 3,
+      cacheReadInputTokens: 5,
+    });
     const metadata = result?.usageItemData?.providerMetadata?.builtInTools as
-      | { rawProviderData?: { serverToolUse?: unknown } }
+      | {
+          rawProviderData?: { serverToolUse?: unknown };
+          webSearchCallCount?: number;
+        }
       | undefined;
+    assert.equal(metadata?.webSearchCallCount, 3);
     assert.deepEqual(metadata?.rawProviderData?.serverToolUse, {
       web_search_requests: 3,
       web_fetch_requests: 1,
@@ -2071,6 +2142,9 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.providerMetadata?.transport, "bedrock");
     assert.equal(result?.usageItemData?.providerMetadata?.bedrockRegion, "us-west-2");
     assert.equal(result?.usageItemData?.providerMetadata?.appliedServiceTier, "standard");
+    assert.equal(result?.tokensIn, 14);
+    assert.equal(result?.cachedInTokens, 10);
+    assert.equal(result?.cacheWriteInTokens, 0);
   });
 
   it("uses Bedrock fallback region metadata when no AWS region is configured", async () => {
@@ -2350,9 +2424,17 @@ describe("ClaudeChat", () => {
     assert.equal(captured.stream, false);
 
     assert.equal(result?.content, "Hello Claude");
-    assert.equal(result?.tokensIn, 16);
+    assert.equal(result?.tokensIn, 24);
     assert.equal(result?.tokensOut, 5);
-    assert.equal(result?.cachedInTokens, 4);
+    assert.equal(result?.cachedInTokens, 10);
+    assert.equal(result?.cacheWriteInTokens, 4);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 24,
+      tokensOut: 5,
+      cachedInTokens: 10,
+      cacheWriteInTokens: 4,
+      cacheReadInputTokens: 10,
+    });
     assert.deepEqual(result?.toolCalls, [
       {
         id: "call-1",
@@ -2564,7 +2646,16 @@ describe("ClaudeChat", () => {
     assert.equal(captured.betas, undefined);
     assert.equal(streamedEvents.length, 3);
     assert.equal(result?.content, "Legacy stream");
-    assert.equal(result?.tokensIn, 7);
+    assert.equal(result?.tokensIn, 16);
+    assert.equal(result?.cachedInTokens, 10);
+    assert.equal(result?.cacheWriteInTokens, 0);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 16,
+      tokensOut: 1,
+      cachedInTokens: 10,
+      cacheWriteInTokens: 0,
+      cacheReadInputTokens: 10,
+    });
     assert.deepEqual(result?.toolCalls, [
       {
         id: "call-legacy",

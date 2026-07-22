@@ -19,9 +19,11 @@ export class PsModelUsage
 
   declare token_in_count: number;
   declare token_in_cached_context_count: number;
+  declare token_in_cache_write_count: number;
 
   declare long_context_token_in_count: number;
   declare long_context_token_in_cached_context_count: number;
+  declare long_context_token_in_cache_write_count: number;
 
   declare token_out_count: number;
   declare token_out_reasoning_count: number;
@@ -72,12 +74,22 @@ PsModelUsage.init(
       allowNull: false,
       defaultValue: 0,
     },
+    token_in_cache_write_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
     long_context_token_in_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,
     },
     long_context_token_in_cached_context_count: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    },
+    long_context_token_in_cache_write_count: {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 0,

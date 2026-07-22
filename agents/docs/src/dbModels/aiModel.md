@@ -57,6 +57,7 @@ const newModel = await PsAiModel.create({
       costInTokensPerMillion: 30,
       costOutTokensPerMillion: 60,
       costInCachedContextTokensPerMillion: 10,
+      costPerThousandWebSearches: 10,
       currency: "USD"
     },
     maxTokensOut: 4096,

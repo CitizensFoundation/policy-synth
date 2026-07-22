@@ -50,6 +50,7 @@ import {
   type PsWebSearchBuiltInTool,
   wrapBuiltInToolProviderError,
 } from "./builtInToolSupport.js";
+import { resolveUsageAccountingVersion } from "../base/modelUsageAccounting.js";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
@@ -379,6 +380,7 @@ export class ClaudeChat extends BaseChatModel {
       tokensIn: number;
       tokensOut: number;
       cachedInTokens: number;
+      cacheWriteInTokens?: number;
       cacheReadInputTokens: number;
     },
     requestKind: "stream" | "non_stream",
@@ -388,6 +390,7 @@ export class ClaudeChat extends BaseChatModel {
     return {
       provider: "anthropic",
       apiFamily: "messages",
+      accountingVersion: this.getAccountingVersion(),
       transport: this.getTransport(),
       modelName: this.config.modelName,
       request: {
@@ -419,6 +422,9 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn: usage.tokensIn,
         tokensOut: usage.tokensOut,
         cachedInTokens: usage.cachedInTokens,
+        ...(usage.cacheWriteInTokens !== undefined
+          ? { cacheWriteInTokens: usage.cacheWriteInTokens }
+          : {}),
         cacheReadInputTokens: usage.cacheReadInputTokens,
       },
       providerMetadata: {
@@ -676,9 +682,17 @@ export class ClaudeChat extends BaseChatModel {
 
     const usageRecord = ClaudeChat.isRecord(usage) ? usage : undefined;
     const serverToolUse = usageRecord?.server_tool_use;
+    const webSearchCallCount =
+      ClaudeChat.isRecord(serverToolUse) &&
+      typeof serverToolUse.web_search_requests === "number" &&
+      Number.isFinite(serverToolUse.web_search_requests) &&
+      serverToolUse.web_search_requests >= 0
+        ? Math.floor(serverToolUse.web_search_requests)
+        : undefined;
     const metadata: PsBuiltInToolsProviderMetadata = {
       requested: ["web_search"],
       ignoredOptions: getSearchContextIgnoredOption(tool, "Claude"),
+      ...(webSearchCallCount !== undefined ? { webSearchCallCount } : {}),
       webSearchCalls: calls.length ? calls : undefined,
     };
     if (tool.includeResults) {
@@ -728,25 +742,40 @@ export class ClaudeChat extends BaseChatModel {
     tokensIn: number;
     tokensOut: number;
     cachedInTokens: number;
+    cacheWriteInTokens?: number;
     cacheReadInputTokens: number;
   } {
-    const cachedInTokens = usage.cache_creation_input_tokens ?? 0;
+    const cacheWriteInTokens = usage.cache_creation_input_tokens ?? 0;
     const cacheReadInputTokens = usage.cache_read_input_tokens ?? 0;
-    let tokensIn = usage.input_tokens ?? 0;
 
-    if (usage.cache_creation_input_tokens != null) {
-      tokensIn += usage.cache_creation_input_tokens * 1.25;
+    if (this.getAccountingVersion() === 1) {
+      return {
+        tokensIn:
+          (usage.input_tokens ?? 0) +
+          cacheWriteInTokens * 1.25 +
+          cacheReadInputTokens * 0.1,
+        tokensOut: usage.output_tokens ?? 0,
+        cachedInTokens: cacheWriteInTokens,
+        cacheReadInputTokens,
+      };
     }
-    if (cacheReadInputTokens !== 0) {
-      tokensIn += cacheReadInputTokens * 0.1;
-    }
+
+    const tokensIn =
+      (usage.input_tokens ?? 0) +
+      cacheReadInputTokens +
+      cacheWriteInTokens;
 
     return {
       tokensIn,
       tokensOut: usage.output_tokens ?? 0,
-      cachedInTokens,
+      cachedInTokens: cacheReadInputTokens,
+      cacheWriteInTokens,
       cacheReadInputTokens,
     };
+  }
+
+  private getAccountingVersion(): PsUsageAccountingVersion {
+    return resolveUsageAccountingVersion(this.config.accountingVersion);
   }
 
   private aggregateClaudeServerToolUsage(
@@ -880,6 +909,7 @@ export class ClaudeChat extends BaseChatModel {
         let tokensIn = 0;
         let tokensOut = 0;
         let cachedInTokens = 0;
+        let cacheWriteInTokens = 0;
         let cacheReadInputTokens = 0;
         let serverToolUse: ClaudeServerToolUsage | undefined;
         let pauseTurnContinuations = 0;
@@ -955,6 +985,7 @@ export class ClaudeChat extends BaseChatModel {
           tokensIn += usage.tokensIn;
           tokensOut += usage.tokensOut;
           cachedInTokens += usage.cachedInTokens;
+          cacheWriteInTokens += usage.cacheWriteInTokens ?? 0;
           cacheReadInputTokens += usage.cacheReadInputTokens;
           serverToolUse = this.aggregateClaudeServerToolUsage(
             serverToolUse,
@@ -973,6 +1004,7 @@ export class ClaudeChat extends BaseChatModel {
               tokensIn,
               tokensOut,
               cachedInTokens,
+              cacheWriteInTokens,
               cacheReadInputTokens,
               serverToolUse,
             };
@@ -999,6 +1031,7 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn,
         tokensOut,
         cachedInTokens,
+        cacheWriteInTokens,
         cacheReadInputTokens,
         serverToolUse,
       } = completion;
@@ -1027,6 +1060,9 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn,
         tokensOut,
         cachedInTokens,
+        ...(this.getAccountingVersion() === 2
+          ? { cacheWriteInTokens }
+          : {}),
         content:
           aggregated ||
           this.getTextFromResponseContent(
@@ -1057,6 +1093,9 @@ export class ClaudeChat extends BaseChatModel {
             tokensIn,
             tokensOut,
             cachedInTokens,
+            ...(this.getAccountingVersion() === 2
+              ? { cacheWriteInTokens }
+              : {}),
             cacheReadInputTokens,
           },
           "stream",
@@ -1073,6 +1112,7 @@ export class ClaudeChat extends BaseChatModel {
         let tokensIn = 0;
         let tokensOut = 0;
         let cachedInTokens = 0;
+        let cacheWriteInTokens = 0;
         let cacheReadInputTokens = 0;
         let serverToolUse: ClaudeServerToolUsage | undefined;
         let pauseTurnContinuations = 0;
@@ -1112,6 +1152,7 @@ export class ClaudeChat extends BaseChatModel {
           tokensIn += usage.tokensIn;
           tokensOut += usage.tokensOut;
           cachedInTokens += usage.cachedInTokens;
+          cacheWriteInTokens += usage.cacheWriteInTokens ?? 0;
           cacheReadInputTokens += usage.cacheReadInputTokens;
           serverToolUse = this.aggregateClaudeServerToolUsage(
             serverToolUse,
@@ -1128,6 +1169,7 @@ export class ClaudeChat extends BaseChatModel {
               tokensIn,
               tokensOut,
               cachedInTokens,
+              cacheWriteInTokens,
               cacheReadInputTokens,
               serverToolUse,
             };
@@ -1152,6 +1194,7 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn,
         tokensOut,
         cachedInTokens,
+        cacheWriteInTokens,
         cacheReadInputTokens,
         serverToolUse,
       } = completion;
@@ -1176,6 +1219,9 @@ export class ClaudeChat extends BaseChatModel {
         tokensIn: tokensIn,
         tokensOut: tokensOut,
         cachedInTokens,
+        ...(this.getAccountingVersion() === 2
+          ? { cacheWriteInTokens }
+          : {}),
         content: this.getTextFromResponseContent(
           allResponseContent,
           responseMetadata.stop_reason,
@@ -1204,6 +1250,9 @@ export class ClaudeChat extends BaseChatModel {
             tokensIn,
             tokensOut,
             cachedInTokens,
+            ...(this.getAccountingVersion() === 2
+              ? { cacheWriteInTokens }
+              : {}),
             cacheReadInputTokens,
           },
           "non_stream",

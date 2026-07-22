@@ -1,6 +1,7 @@
 import type { Sequelize } from "sequelize";
 
 import { PolicySynthAgentBase } from "./agentBase.js";
+import { resolveUsageAccountingVersion } from "./modelUsageAccounting.js";
 
 let sequelize: Sequelize | undefined;
 let PsModelUsageItem:
@@ -73,6 +74,9 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
       tokensOut: ctx.usageItemData?.usageNormalized?.tokensOut ?? ctx.tokensOut,
       cachedInTokens:
         ctx.usageItemData?.usageNormalized?.cachedInTokens ?? ctx.cachedInTokens,
+      cacheWriteInTokens:
+        ctx.usageItemData?.usageNormalized?.cacheWriteInTokens ??
+        ctx.cacheWriteInTokens,
       reasoningTokens:
         ctx.usageItemData?.usageNormalized?.reasoningTokens ??
         ctx.reasoningTokens,
@@ -92,6 +96,7 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
         ctx.tokensIn ||
         ctx.tokensOut ||
         ctx.cachedInTokens ||
+        ctx.cacheWriteInTokens ||
         ctx.reasoningTokens ||
         ctx.audioTokens
     );
@@ -102,6 +107,9 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
   ): PsModelUsageItemData {
     return {
       version: 1,
+      accountingVersion: resolveUsageAccountingVersion(
+        ctx.accountingVersion ?? ctx.usageItemData?.accountingVersion
+      ),
       provider: ctx.modelProvider,
       apiFamily: ctx.usageItemData?.apiFamily ?? ctx.modelProvider,
       timestamp: new Date().toISOString(),

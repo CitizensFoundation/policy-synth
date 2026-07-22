@@ -244,7 +244,10 @@ describe("OpenAiChat", () => {
           usage: {
             prompt_tokens: 11,
             completion_tokens: 7,
-            prompt_tokens_details: { cached_tokens: 3 },
+            prompt_tokens_details: {
+              cached_tokens: 3,
+              cache_write_tokens: 4,
+            },
             completion_tokens_details: {
               reasoning_tokens: 1,
               audio_tokens: 2,
@@ -372,6 +375,11 @@ describe("OpenAiChat", () => {
     assert.equal(result.tokensIn, 11);
     assert.equal(result.tokensOut, 7);
     assert.equal(result.cachedInTokens, 3);
+    assert.equal(result.cacheWriteInTokens, 4);
+    assert.equal(
+      result.usageItemData?.usageNormalized?.cacheWriteInTokens,
+      4
+    );
     assert.equal(result.reasoningTokens, 1);
     assert.equal(result.audioTokens, 2);
     assert.deepEqual(result.toolCalls, [
@@ -514,7 +522,10 @@ describe("OpenAiChat", () => {
               usage: {
                 prompt_tokens: 9,
                 completion_tokens: 2,
-                prompt_tokens_details: { cached_tokens: 0 },
+                prompt_tokens_details: {
+                  cached_tokens: 0,
+                  cache_write_tokens: 5,
+                },
                 completion_tokens_details: {
                   reasoning_tokens: 0,
                   audio_tokens: 0,
@@ -538,6 +549,11 @@ describe("OpenAiChat", () => {
     assert.equal(captured.max_tokens, 256);
     assert.deepEqual(callbackChunks, ["Hello ", "world"]);
     assert.equal(result.content, "Hello world");
+    assert.equal(result.cacheWriteInTokens, 5);
+    assert.equal(
+      result.usageItemData?.usageNormalized?.cacheWriteInTokens,
+      5
+    );
     assert.deepEqual(result.toolCalls, [
       {
         id: "tool-1",

@@ -28,6 +28,7 @@ import type {
 import { PsAiModelProvider } from "../aiModelTypes.js";
 import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
 import { PsModelUsageItemManager } from "./modelUsageItemManager.js";
+import { partitionModelInputUsage } from "./modelUsageAccounting.js";
 
 const isGeminiDeepResearchModelName = (name?: string): boolean =>
   name?.toLowerCase().startsWith("deep-research") ?? false;
@@ -302,6 +303,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         modelName: model.configuration.model,
         apiModelName: model.configuration.apiModel,
         provider: model.configuration.provider,
+        accountingVersion: model.configuration.accountingVersion,
         credentialRef: `aiModel:${apiKeyConfig.aiModelId}`,
         inferenceType: model.configuration.inferenceType,
         regionalProcessing: model.configuration.regionalProcessing,
@@ -615,6 +617,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         overrideModelName ?? dbConfig?.model ?? fallbackModel.modelName,
       apiModelName,
       provider: provider,
+      accountingVersion:
+        dbConfig !== undefined
+          ? dbConfig.accountingVersion
+          : isContextOnlyOverride
+            ? fallbackModel.config?.accountingVersion
+            : undefined,
       credentialRef,
       inferenceType:
         options.inferenceType ??
@@ -1175,6 +1183,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             tokensIn,
             tokensOut,
             cachedInTokens,
+            cacheWriteInTokens,
             reasoningTokens,
             audioTokens,
             usageItemData,
@@ -1191,11 +1200,13 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.saveTokenUsageItem({
             modelName: String(model.modelName),
             modelProvider: model.provider ?? "Unknown",
+            accountingVersion: model.config.accountingVersion,
             prices: configuredPrices,
             modelType,
             modelSize,
             tokensIn,
             cachedInTokens: cachedInTokens ?? 0,
+            cacheWriteInTokens,
             tokensOut,
             reasoningTokens,
             audioTokens,
@@ -1215,7 +1226,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             tokensIn,
             cachedInTokens ?? 0,
             tokensOut,
-            model.dbModelId
+            model.dbModelId,
+            undefined,
+            { cacheWriteInTokens }
           );
 
           const hasToolCalls = Boolean(toolCalls && toolCalls.length);
@@ -2150,8 +2163,10 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     cachedInTokens: number,
     tokensOut: number,
     modelIdOverride?: number,
-    callOptions?: PsCallModelOptions
+    callOptions?: PsCallModelOptions,
+    accounting?: PsTokenUsageAccountingDetails
   ) {
+    const cacheWriteInTokens = accounting?.cacheWriteInTokens ?? 0;
     const modelKey = `${modelType}_${modelSize}`;
     let finalModelId =
       modelIdOverride ??
@@ -2184,7 +2199,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       process.env.DISABLE_DB_USAGE_TRACKING === "true";
     if (disableUsageTracking) {
       this.logger.info(
-        `(Database Usage Tracking Disabled) Token usage for ${modelName} (${modelType} ${modelSize}): in=${tokensIn} cached=${cachedInTokens} out=${tokensOut}`
+        `(Database Usage Tracking Disabled) Token usage for ${modelName} (${modelType} ${modelSize}): in=${tokensIn} cached=${cachedInTokens} cacheWrite=${cacheWriteInTokens} out=${tokensOut}`
       );
       if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
         policySynthEvents.emit(TOKEN_USAGE_EVENT, {
@@ -2195,6 +2210,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           tokensIn,
           tokensOut,
           cachedInTokens,
+          cacheWriteInTokens,
           agentId: this.agentId,
           userId: this.userId,
           modelId: finalModelId,
@@ -2204,28 +2220,19 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       return;
     }
 
-    let longContextTokenIn = 0;
-    let longContextTokenInCached = 0;
-    let longContextTokenOut = 0;
-
-    if (
-      prices &&
-      prices.longContextTokenThreshold &&
-      tokensIn >= prices.longContextTokenThreshold
-    ) {
-      longContextTokenIn = cachedInTokens
-        ? tokensIn - cachedInTokens
-        : tokensIn;
-      longContextTokenOut = tokensOut;
-      longContextTokenInCached = cachedInTokens ?? 0;
-      tokensIn = 0;
-      tokensOut = 0;
-      cachedInTokens = 0;
-    } else {
-      if (cachedInTokens) {
-        tokensIn = tokensIn - cachedInTokens;
-      }
+    const inputUsage = partitionModelInputUsage(
+      tokensIn,
+      cachedInTokens,
+      cacheWriteInTokens,
+      prices?.longContextTokenThreshold
+    );
+    if (inputUsage.cacheComponentsExceedTotal) {
+      this.logger.warn(
+        `Cache input components exceed total input tokens for ${modelName}: total=${tokensIn} cached=${cachedInTokens} cacheWrite=${cacheWriteInTokens}`
+      );
     }
+    const storedTokensOut = inputUsage.longContextApplied ? 0 : tokensOut;
+    const longContextTokenOut = inputUsage.longContextApplied ? tokensOut : 0;
 
     if (finalModelId === -1) {
       this.logger.error(
@@ -2237,9 +2244,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           modelProvider,
           modelType,
           modelSize,
-          tokensIn,
-          tokensOut,
-          cachedInTokens,
+          tokensIn: inputUsage.tokenInCount,
+          tokensOut: storedTokensOut,
+          cachedInTokens: inputUsage.tokenInCachedContextCount,
+          cacheWriteInTokens: inputUsage.tokenInCacheWriteCount,
+          longContextTokenIn: inputUsage.longContextTokenInCount,
+          longContextTokenInCached:
+            inputUsage.longContextTokenInCachedContextCount,
+          longContextCacheWriteInTokens:
+            inputUsage.longContextTokenInCacheWriteCount,
+          longContextTokenOut,
           agentId: this.agentId,
           userId: this.userId,
           modelId: finalModelId,
@@ -2251,7 +2265,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
 
     if (process.env.DISABLE_DB_INIT) {
       this.logger.info(
-        `(Database Initialization Disabled) Token usage for ${modelName} (${modelType} ${modelSize}) was not persisted: in=${tokensIn} cached=${cachedInTokens} out=${tokensOut}`
+        `(Database Initialization Disabled) Token usage for ${modelName} (${modelType} ${modelSize}) was not persisted: in=${inputUsage.tokenInCount} cached=${inputUsage.tokenInCachedContextCount} cacheWrite=${inputUsage.tokenInCacheWriteCount} longIn=${inputUsage.longContextTokenInCount} longCached=${inputUsage.longContextTokenInCachedContextCount} longCacheWrite=${inputUsage.longContextTokenInCacheWriteCount} out=${storedTokensOut} longOut=${longContextTokenOut}`
       );
       if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
         policySynthEvents.emit(TOKEN_USAGE_EVENT, {
@@ -2259,9 +2273,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           modelProvider,
           modelType,
           modelSize,
-          tokensIn,
-          tokensOut,
-          cachedInTokens,
+          tokensIn: inputUsage.tokenInCount,
+          tokensOut: storedTokensOut,
+          cachedInTokens: inputUsage.tokenInCachedContextCount,
+          cacheWriteInTokens: inputUsage.tokenInCacheWriteCount,
+          longContextTokenIn: inputUsage.longContextTokenInCount,
+          longContextTokenInCached:
+            inputUsage.longContextTokenInCachedContextCount,
+          longContextCacheWriteInTokens:
+            inputUsage.longContextTokenInCacheWriteCount,
+          longContextTokenOut,
           agentId: this.agentId,
           userId: this.userId,
           modelId: finalModelId,
@@ -2283,13 +2304,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             agent_id: this.agentId,
           },
           defaults: {
-            token_in_count: tokensIn,
-            token_out_count: tokensOut,
-            token_in_cached_context_count: cachedInTokens,
-            long_context_token_in_count: longContextTokenIn,
+            token_in_count: inputUsage.tokenInCount,
+            token_out_count: storedTokensOut,
+            token_in_cached_context_count:
+              inputUsage.tokenInCachedContextCount,
+            token_in_cache_write_count: inputUsage.tokenInCacheWriteCount,
+            long_context_token_in_count: inputUsage.longContextTokenInCount,
             long_context_token_out_count: longContextTokenOut,
             long_context_token_in_cached_context_count:
-              longContextTokenInCached,
+              inputUsage.longContextTokenInCachedContextCount,
+            long_context_token_in_cache_write_count:
+              inputUsage.longContextTokenInCacheWriteCount,
             model_id: finalModelId,
             agent_id: this.agentId,
             user_id: this.userId,
@@ -2300,13 +2325,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (!created) {
           await usage.increment(
             {
-              token_in_count: tokensIn,
-              token_out_count: tokensOut,
-              token_in_cached_context_count: cachedInTokens,
-              long_context_token_in_count: longContextTokenIn,
+              token_in_count: inputUsage.tokenInCount,
+              token_out_count: storedTokensOut,
+              token_in_cached_context_count:
+                inputUsage.tokenInCachedContextCount,
+              token_in_cache_write_count: inputUsage.tokenInCacheWriteCount,
+              long_context_token_in_count: inputUsage.longContextTokenInCount,
               long_context_token_out_count: longContextTokenOut,
               long_context_token_in_cached_context_count:
-                longContextTokenInCached,
+                inputUsage.longContextTokenInCachedContextCount,
+              long_context_token_in_cache_write_count:
+                inputUsage.longContextTokenInCacheWriteCount,
             },
             { transaction: t }
           );
@@ -2314,7 +2343,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       });
 
       this.logger.info(
-        `Saved tokens id: ${finalModelId} type:${modelType}/${modelSize} provider:${modelProvider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${tokensIn} cached:${cachedInTokens} longIn:${longContextTokenIn} longCached:${longContextTokenInCached} out:${tokensOut} longOut:${longContextTokenOut}`
+        `Saved tokens id: ${finalModelId} type:${modelType}/${modelSize} provider:${modelProvider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${inputUsage.tokenInCount} cached:${inputUsage.tokenInCachedContextCount} cacheWrite:${inputUsage.tokenInCacheWriteCount} longIn:${inputUsage.longContextTokenInCount} longCached:${inputUsage.longContextTokenInCachedContextCount} longCacheWrite:${inputUsage.longContextTokenInCacheWriteCount} out:${storedTokensOut} longOut:${longContextTokenOut}`
       );
       if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
         policySynthEvents.emit(TOKEN_USAGE_EVENT, {
@@ -2322,12 +2351,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           modelProvider,
           modelType,
           modelSize,
-          tokensIn,
-          tokensOut,
-          cachedInTokens,
-          longContextTokenIn: longContextTokenIn,
-          longContextTokenInCached: longContextTokenInCached,
-          longContextTokenOut: longContextTokenOut,
+          tokensIn: inputUsage.tokenInCount,
+          tokensOut: storedTokensOut,
+          cachedInTokens: inputUsage.tokenInCachedContextCount,
+          cacheWriteInTokens: inputUsage.tokenInCacheWriteCount,
+          longContextTokenIn: inputUsage.longContextTokenInCount,
+          longContextTokenInCached:
+            inputUsage.longContextTokenInCachedContextCount,
+          longContextCacheWriteInTokens:
+            inputUsage.longContextTokenInCacheWriteCount,
+          longContextTokenOut,
           agentId: this.agentId,
           userId: this.userId,
           modelId: finalModelId,

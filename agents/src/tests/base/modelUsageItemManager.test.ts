@@ -164,6 +164,7 @@ describe("PsModelUsageItemManager", () => {
     try {
       await manager.saveUsageItem({
         ...baseContext(),
+        accountingVersion: 2,
         connectorId: 12,
         inferenceType: "priority",
         regionalProcessing: "eu",
@@ -176,6 +177,7 @@ describe("PsModelUsageItemManager", () => {
             tokensIn: 11,
             tokensOut: 6,
             cachedInTokens: 4,
+            cacheWriteInTokens: 5,
             reasoningTokens: 3,
             audioTokens: 2,
             imageTokens: 1,
@@ -201,6 +203,7 @@ describe("PsModelUsageItemManager", () => {
       connector_id: 12,
       data: {
         version: 1,
+        accountingVersion: 2,
         provider: PsAiModelProvider.OpenAI,
         apiFamily: "openaiResponses",
         timestamp: (createdPayloads[0] as { data: { timestamp: string } }).data
@@ -229,6 +232,7 @@ describe("PsModelUsageItemManager", () => {
           tokensIn: 11,
           tokensOut: 6,
           cachedInTokens: 4,
+          cacheWriteInTokens: 5,
           reasoningTokens: 3,
           audioTokens: 2,
           imageTokens: 1,
@@ -243,6 +247,7 @@ describe("PsModelUsageItemManager", () => {
             tokensIn: 11,
             tokensOut: 6,
             cachedInTokens: 4,
+            cacheWriteInTokens: 5,
             reasoningTokens: 3,
             audioTokens: 2,
             imageTokens: 1,
@@ -266,6 +271,44 @@ describe("PsModelUsageItemManager", () => {
     assert.match(
       (createdPayloads[0] as { data: { timestamp: string } }).data.timestamp,
       /^\d{4}-\d{2}-\d{2}T/
+    );
+  });
+
+  it("persists cache-write-only usage from the save context", async () => {
+    process.env.SYNC_DB_FOR_APP = "false";
+    delete process.env.DISABLE_DB_INIT;
+    delete process.env.DISABLE_DB_USAGE_TRACKING;
+
+    const manager = new PsModelUsageItemManager();
+    const originalCreate = PsModelUsageItem.create;
+    const createdPayloads: unknown[] = [];
+    PsModelUsageItem.create = (async (payload: unknown) => {
+      createdPayloads.push(payload);
+      return {} as Awaited<ReturnType<typeof PsModelUsageItem.create>>;
+    }) as typeof PsModelUsageItem.create;
+
+    try {
+      await manager.saveUsageItem({
+        ...baseContext(),
+        tokensIn: 0,
+        cachedInTokens: 0,
+        cacheWriteInTokens: 6,
+        tokensOut: 0,
+        reasoningTokens: 0,
+        audioTokens: 0,
+      });
+    } finally {
+      PsModelUsageItem.create = originalCreate;
+    }
+
+    assert.equal(createdPayloads.length, 1);
+    assert.equal(
+      (
+        createdPayloads[0] as {
+          data: { usageNormalized: PsModelUsageNormalizedCounts };
+        }
+      ).data.usageNormalized.cacheWriteInTokens,
+      6
     );
   });
 
@@ -346,6 +389,7 @@ describe("PsModelUsageItemManager", () => {
       agent_id: 42,
       data: {
         version: 1,
+        accountingVersion: 1,
         provider: PsAiModelProvider.OpenAI,
         apiFamily: "anthropic",
         timestamp: (createdPayloads[0] as { data: { timestamp: string } }).data
@@ -373,6 +417,7 @@ describe("PsModelUsageItemManager", () => {
           tokensIn: 0,
           tokensOut: 0,
           cachedInTokens: 0,
+          cacheWriteInTokens: undefined,
           reasoningTokens: undefined,
           audioTokens: undefined,
           imageTokens: undefined,

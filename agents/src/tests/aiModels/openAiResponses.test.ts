@@ -1438,7 +1438,10 @@ describe("OpenAiResponses", () => {
           usage: {
             input_tokens: 10,
             output_tokens: 6,
-            input_tokens_details: { cached_tokens: 2 },
+            input_tokens_details: {
+              cached_tokens: 2,
+              cache_write_tokens: 4,
+            },
             output_tokens_details: {
               reasoning_tokens: 3,
               audio_tokens: 0,
@@ -1602,6 +1605,11 @@ describe("OpenAiResponses", () => {
 
     assert.equal(result.content, "done");
     assert.equal(result.phase, "final_answer");
+    assert.equal(result.cacheWriteInTokens, 4);
+    assert.equal(
+      result.usageItemData?.usageNormalized?.cacheWriteInTokens,
+      4
+    );
     assert.deepEqual(result.assistantMessages, [
       { content: "thinking...", phase: "commentary" },
       { content: "done", phase: "final_answer" },
@@ -4306,7 +4314,10 @@ describe("OpenAiResponses", () => {
                 usage: {
                   input_tokens: 8,
                   output_tokens: 4,
-                  input_tokens_details: { cached_tokens: 1 },
+                  input_tokens_details: {
+                    cached_tokens: 1,
+                    cache_write_tokens: 3,
+                  },
                   output_tokens_details: {
                     reasoning_tokens: 2,
                     audio_tokens: 1,
@@ -4359,6 +4370,11 @@ describe("OpenAiResponses", () => {
     assert.equal(result.tokensIn, 8);
     assert.equal(result.tokensOut, 4);
     assert.equal(result.cachedInTokens, 1);
+    assert.equal(result.cacheWriteInTokens, 3);
+    assert.equal(
+      result.usageItemData?.usageNormalized?.cacheWriteInTokens,
+      3
+    );
     assert.equal(result.reasoningTokens, 2);
     assert.equal(result.audioTokens, 1);
     assert.deepEqual(result.toolCalls, [

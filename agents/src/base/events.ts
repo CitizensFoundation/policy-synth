@@ -11,8 +11,10 @@ export type TokenUsageEvent = {
   tokensIn: number;
   tokensOut: number;
   cachedInTokens?: number;
+  cacheWriteInTokens?: number;
   longContextTokenIn?: number;
   longContextTokenInCached?: number;
+  longContextCacheWriteInTokens?: number;
   longContextTokenOut?: number;
   agentId?: number;
   userId?: number;
@@ -21,5 +23,4 @@ export type TokenUsageEvent = {
 };
 
 export const TOKEN_USAGE_EVENT = "tokenUsage" as const;
-
 

@@ -1,14 +1,124 @@
 import { QueryTypes } from "sequelize";
 import { sequelize } from "../dbModels/index.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
+import {
+  getCacheWriteInputCostMultiplier,
+  getWebSearchCost,
+  resolveLongContextPriceRates,
+  resolveUsageAccountingVersion,
+} from "../base/modelUsageAccounting.js";
+
+const MODEL_USAGE_COUNTER_COLUMNS = [
+  "token_in_count",
+  "token_out_count",
+  "token_in_cached_context_count",
+  "token_in_cache_write_count",
+  "long_context_token_in_count",
+  "long_context_token_in_cached_context_count",
+  "long_context_token_in_cache_write_count",
+  "token_out_reasoning_count",
+  "token_out_audio_count",
+  "token_out_image_count",
+  "long_context_token_out_count",
+  "long_context_token_out_reasoning_count",
+  "long_context_token_out_audio_count",
+  "long_context_token_out_image_count",
+] as const;
+
+const PROVIDER_REPORTED_WEB_SEARCH_COUNT_SQL = `
+  CASE
+    WHEN jsonb_typeof(
+      mui.data->'providerMetadata'->'builtInTools'->'webSearchCallCount'
+    ) = 'number'
+    THEN mui.data->'providerMetadata'->'builtInTools'->'webSearchCallCount'
+    WHEN jsonb_typeof(
+      mui.data->'providerData'->'providerMetadata'->'builtInTools'->'webSearchCallCount'
+    ) = 'number'
+    THEN mui.data->'providerData'->'providerMetadata'->'builtInTools'->'webSearchCallCount'
+    ELSE NULL
+  END
+`;
+
+const NORMALIZED_WEB_SEARCH_CALLS_SQL = `
+  CASE
+    WHEN jsonb_typeof(
+      COALESCE(
+        mui.data->'providerMetadata'->'builtInTools'->'webSearchCalls',
+        mui.data->'providerData'->'providerMetadata'->'builtInTools'->'webSearchCalls'
+      )
+    ) = 'array'
+    THEN COALESCE(
+      mui.data->'providerMetadata'->'builtInTools'->'webSearchCalls',
+      mui.data->'providerData'->'providerMetadata'->'builtInTools'->'webSearchCalls'
+    )
+    ELSE '[]'::jsonb
+  END
+`;
+
+// Compact usage rows are intended to be unique per agent/model, but the
+// database does not enforce that. Aggregate first so concurrent duplicate
+// inserts cannot multiply the independently persisted web-search charges.
+const buildCostAggregationCtes = (
+  modelUsageAgentFilter: string,
+  usageItemAgentFilter: string
+) => `
+  WITH aggregated_usage AS (
+    SELECT
+      MIN(mu.created_at) AS created_at,
+      mu.agent_id,
+      mu.model_id,
+      ${MODEL_USAGE_COUNTER_COLUMNS.map(
+        (column) => `SUM(COALESCE(mu.${column}, 0)) AS ${column}`
+      ).join(",\n      ")}
+    FROM ps_model_usage mu
+    WHERE ${modelUsageAgentFilter}
+    GROUP BY mu.agent_id, mu.model_id
+  ),
+  web_search_item_counts AS (
+    SELECT
+      mui.agent_id,
+      mui.model_id,
+      CASE
+        WHEN (${PROVIDER_REPORTED_WEB_SEARCH_COUNT_SQL}) IS NOT NULL
+        THEN GREATEST(
+          FLOOR(
+            ((${PROVIDER_REPORTED_WEB_SEARCH_COUNT_SQL})::text)::numeric
+          ),
+          0
+        )
+        ELSE (
+          SELECT COUNT(*)
+          FROM jsonb_array_elements(
+            ${NORMALIZED_WEB_SEARCH_CALLS_SQL}
+          ) AS web_search_call(call_data)
+          WHERE jsonb_typeof(web_search_call.call_data) = 'object'
+            AND web_search_call.call_data->>'status' IS DISTINCT FROM 'not_used'
+        )
+      END AS web_search_call_count
+    FROM ps_model_usage_item mui
+    WHERE ${usageItemAgentFilter}
+  ),
+  web_search_counts AS (
+    SELECT
+      agent_id,
+      model_id,
+      SUM(web_search_call_count) AS web_search_call_count
+    FROM web_search_item_counts
+    GROUP BY agent_id, model_id
+  )
+`;
 
 interface PsCostBreakdown {
   costInNormal: number;
   costInCached: number;
+  costInCacheWrite: number;
   costInLong: number;
   costOutNormal: number;
   costInCachedLong: number; // Combined for simplicity as per PsBaseModelPriceConfiguration
+  costInCacheWriteLong: number;
   costOutLong: number;
+  webSearchCallCount: number;
+  costWebSearch: number;
   totalCost: number;
 }
 
@@ -40,7 +150,8 @@ export class AgentCostManager extends PolicySynthAgentBase {
 
   private calcCosts(
     mu: PsModelUsageAttributes,
-    prices: PsBaseModelPriceConfiguration
+    prices: PsBaseModelPriceConfiguration,
+    webSearchCallCount = 0
   ): PsCostBreakdown {
     const costInNormal =
       ((mu.token_in_count || 0) * (prices.costInTokensPerMillion || 0)) /
@@ -51,9 +162,18 @@ export class AgentCostManager extends PolicySynthAgentBase {
         (prices.costInCachedContextTokensPerMillion || 0)) /
       1000000.0;
 
+    const cacheWriteMultiplier = getCacheWriteInputCostMultiplier(prices);
+    const costInCacheWrite =
+      ((mu.token_in_cache_write_count || 0) *
+        (prices.costInTokensPerMillion || 0) *
+        cacheWriteMultiplier) /
+      1000000.0;
+
+    const longContextRates = resolveLongContextPriceRates(prices);
+
     const costInLong =
       ((mu.long_context_token_in_count || 0) *
-        (prices.longContextCostInTokensPerMillion || 0)) /
+        longContextRates.inputTokensPerMillion) /
       1000000.0;
 
     // Sum all token_out_ variants for normal context
@@ -75,35 +195,46 @@ export class AgentCostManager extends PolicySynthAgentBase {
 
     const costOutLong =
       (totalTokenOutLong *
-        (prices.longContextCostOutTokensPerMillion ||
-          prices.costOutTokensPerMillion ||
-          0)) /
+        longContextRates.outputTokensPerMillion) /
       1000000.0;
 
     // Cached Long Context Out Tokens
     // Assuming longContextCostInCachedContextTokensPerMillion implies a similar out cost or fallback
     const costInCachedLong =
       ((mu.long_context_token_in_cached_context_count || 0) * // Note: Using IN cached count for OUT cost calculation as per schema fields
-        (prices.longContextCostInCachedContextTokensPerMillion ||
-          prices.costInCachedContextTokensPerMillion ||
-          0)) /
+        longContextRates.cachedInputTokensPerMillion) /
       1000000.0;
+
+    const costInCacheWriteLong =
+      ((mu.long_context_token_in_cache_write_count || 0) *
+        longContextRates.inputTokensPerMillion *
+        cacheWriteMultiplier) /
+      1000000.0;
+
+    const costWebSearch = getWebSearchCost(webSearchCallCount, prices);
 
     const totalCost =
       costInNormal +
       costInCached +
+      costInCacheWrite +
       costInLong +
       costOutNormal +
       costOutLong +
-      costInCachedLong;
+      costInCachedLong +
+      costInCacheWriteLong +
+      costWebSearch;
 
     return {
       costInNormal,
       costInCached,
+      costInCacheWrite,
       costInLong,
       costOutNormal,
       costInCachedLong,
+      costInCacheWriteLong,
       costOutLong,
+      webSearchCallCount,
+      costWebSearch,
       totalCost,
     };
   }
@@ -119,28 +250,37 @@ export class AgentCostManager extends PolicySynthAgentBase {
 
       const usageRows = await sequelize.query(
         `
+        ${buildCostAggregationCtes(
+          "mu.agent_id IN (:agentIds)",
+          "mui.agent_id IN (:agentIds)"
+        )}
         SELECT
           mu.created_at,
           a.id as agent_id,
           a.configuration->>'name' as agent_name,
           am.name as ai_model_name,
+          am.configuration->>'accountingVersion' AS accounting_version,
           am.configuration->'prices' AS price_cfg,
           mu.token_in_count,
           mu.token_out_count,
           mu.token_in_cached_context_count,
+          mu.token_in_cache_write_count,
           mu.long_context_token_in_count,
           mu.long_context_token_in_cached_context_count,
+          mu.long_context_token_in_cache_write_count,
           mu.token_out_reasoning_count,
           mu.token_out_audio_count,
           mu.token_out_image_count,
           mu.long_context_token_out_count,
           mu.long_context_token_out_reasoning_count,
           mu.long_context_token_out_audio_count,
-          mu.long_context_token_out_image_count
-        FROM ps_model_usage mu
+          mu.long_context_token_out_image_count,
+          COALESCE(wsc.web_search_call_count, 0) AS web_search_call_count
+        FROM aggregated_usage mu
         JOIN ps_ai_models am ON mu.model_id = am.id
         JOIN ps_agents a ON mu.agent_id = a.id
-        WHERE mu.agent_id IN (:agentIds)
+        LEFT JOIN web_search_counts wsc
+          ON wsc.agent_id = mu.agent_id AND wsc.model_id = mu.model_id
         ORDER BY mu.created_at DESC
       `,
         {
@@ -161,6 +301,9 @@ export class AgentCostManager extends PolicySynthAgentBase {
           token_in_cached_context_count: parseInt(
             row.token_in_cached_context_count || "0"
           ),
+          token_in_cache_write_count: parseInt(
+            row.token_in_cache_write_count || "0"
+          ),
           long_context_token_in_count: parseInt(
             row.long_context_token_in_count || "0"
           ),
@@ -169,6 +312,9 @@ export class AgentCostManager extends PolicySynthAgentBase {
           ),
           long_context_token_in_cached_context_count: parseInt(
             row.long_context_token_in_cached_context_count || "0"
+          ),
+          long_context_token_in_cache_write_count: parseInt(
+            row.long_context_token_in_cache_write_count || "0"
           ),
           token_out_count: parseInt(row.token_out_count || "0"),
           token_out_reasoning_count: parseInt(
@@ -189,25 +335,38 @@ export class AgentCostManager extends PolicySynthAgentBase {
         };
 
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
-        const costs = this.calcCosts(modelUsage, prices);
+        const costs = this.calcCosts(
+          modelUsage,
+          prices,
+          parseInt(row.web_search_call_count || "0")
+        );
 
         return {
           createdAt: row.created_at,
           agentId: row.agent_id,
           agentName: row.agent_name,
           aiModelName: row.ai_model_name,
+          accountingVersion: resolveUsageAccountingVersion(
+            row.accounting_version
+          ),
           tokenInCount:
             (modelUsage.token_in_count || 0) +
             (modelUsage.long_context_token_in_count || 0) +
             (modelUsage.token_in_cached_context_count || 0) +
-            (modelUsage.long_context_token_in_cached_context_count || 0),
+            (modelUsage.long_context_token_in_cached_context_count || 0) +
+            (modelUsage.token_in_cache_write_count || 0) +
+            (modelUsage.long_context_token_in_cache_write_count || 0),
           tokenInCachedContextCount:
             modelUsage.token_in_cached_context_count || 0,
+          tokenInCacheWriteCount:
+            modelUsage.token_in_cache_write_count || 0,
           longContextTokenInCount: modelUsage.long_context_token_in_count || 0,
           longContextTokenOutCount:
             modelUsage.long_context_token_out_count || 0,
           longContextTokenInCachedContextCount:
             modelUsage.long_context_token_in_cached_context_count || 0,
+          longContextTokenInCacheWriteCount:
+            modelUsage.long_context_token_in_cache_write_count || 0,
           tokenOutCount:
             (modelUsage.token_out_count || 0) +
             (modelUsage.token_out_reasoning_count || 0) +
@@ -220,15 +379,21 @@ export class AgentCostManager extends PolicySynthAgentBase {
           costIn:
             costs.costInNormal +
             costs.costInCached +
+            costs.costInCacheWrite +
             costs.costInLong +
-            costs.costInCachedLong,
+            costs.costInCachedLong +
+            costs.costInCacheWriteLong,
           costInNormal: costs.costInNormal,
           costInCached: costs.costInCached,
+          costInCacheWrite: costs.costInCacheWrite,
           costInLong: costs.costInLong,
           costInCachedLong: costs.costInCachedLong,
+          costInCacheWriteLong: costs.costInCacheWriteLong,
           costOutNormal: costs.costOutNormal,
           costOutLong: costs.costOutLong,
           costOut: costs.costOutNormal + costs.costOutLong,
+          webSearchCallCount: costs.webSearchCallCount,
+          costWebSearch: costs.costWebSearch,
           totalCost: costs.totalCost,
           // Optionally, include detailed breakdown:
           // costBreakdown: costs
@@ -249,6 +414,10 @@ export class AgentCostManager extends PolicySynthAgentBase {
 
       const usageRows = await sequelize.query(
         `
+        ${buildCostAggregationCtes(
+          "mu.agent_id IN (:agentIds)",
+          "mui.agent_id IN (:agentIds)"
+        )}
         SELECT
           mu.agent_id,
           a.configuration->>'name' as agent_name,
@@ -256,19 +425,23 @@ export class AgentCostManager extends PolicySynthAgentBase {
           mu.token_in_count,
           mu.token_out_count,
           mu.token_in_cached_context_count,
+          mu.token_in_cache_write_count,
           mu.long_context_token_in_count,
           mu.long_context_token_in_cached_context_count,
+          mu.long_context_token_in_cache_write_count,
           mu.token_out_reasoning_count,
           mu.token_out_audio_count,
           mu.token_out_image_count,
           mu.long_context_token_out_count,
           mu.long_context_token_out_reasoning_count,
           mu.long_context_token_out_audio_count,
-          mu.long_context_token_out_image_count
-        FROM ps_model_usage mu
+          mu.long_context_token_out_image_count,
+          COALESCE(wsc.web_search_call_count, 0) AS web_search_call_count
+        FROM aggregated_usage mu
         JOIN ps_ai_models am ON mu.model_id = am.id
         JOIN ps_agents a ON mu.agent_id = a.id
-        WHERE mu.agent_id IN (:agentIds)
+        LEFT JOIN web_search_counts wsc
+          ON wsc.agent_id = mu.agent_id AND wsc.model_id = mu.model_id
       `,
         {
           replacements: { agentIds },
@@ -315,11 +488,17 @@ export class AgentCostManager extends PolicySynthAgentBase {
           token_in_cached_context_count: parseInt(
             row.token_in_cached_context_count || "0"
           ),
+          token_in_cache_write_count: parseInt(
+            row.token_in_cache_write_count || "0"
+          ),
           long_context_token_in_count: parseInt(
             row.long_context_token_in_count || "0"
           ),
           long_context_token_in_cached_context_count: parseInt(
             row.long_context_token_in_cached_context_count || "0"
+          ),
+          long_context_token_in_cache_write_count: parseInt(
+            row.long_context_token_in_cache_write_count || "0"
           ),
           token_out_count: parseInt(row.token_out_count || "0"),
           token_out_reasoning_count: parseInt(
@@ -342,7 +521,11 @@ export class AgentCostManager extends PolicySynthAgentBase {
           agent_id: row.agent_id,
         };
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
-        const costs = this.calcCosts(modelUsage, prices);
+        const costs = this.calcCosts(
+          modelUsage,
+          prices,
+          parseInt(row.web_search_call_count || "0")
+        );
         agentCostMap.set(
           row.agent_id,
           (agentCostMap.get(row.agent_id) || 0) + costs.totalCost
@@ -377,24 +560,31 @@ export class AgentCostManager extends PolicySynthAgentBase {
     try {
       const usageRows = await sequelize.query(
         `
+        ${buildCostAggregationCtes(
+          "mu.agent_id = :agentId",
+          "mui.agent_id = :agentId"
+        )}
         SELECT
           am.configuration->'prices' AS price_cfg,
           mu.token_in_count,
           mu.token_out_count,
           mu.token_in_cached_context_count,
+          mu.token_in_cache_write_count,
           mu.long_context_token_in_count,
-          mu.long_context_token_out_count,
           mu.long_context_token_in_cached_context_count,
+          mu.long_context_token_in_cache_write_count,
           mu.token_out_reasoning_count,
           mu.token_out_audio_count,
           mu.token_out_image_count,
           mu.long_context_token_out_count,
           mu.long_context_token_out_reasoning_count,
           mu.long_context_token_out_audio_count,
-          mu.long_context_token_out_image_count
-        FROM ps_model_usage mu
+          mu.long_context_token_out_image_count,
+          COALESCE(wsc.web_search_call_count, 0) AS web_search_call_count
+        FROM aggregated_usage mu
         JOIN ps_ai_models am ON mu.model_id = am.id
-        WHERE mu.agent_id = :agentId
+        LEFT JOIN web_search_counts wsc
+          ON wsc.agent_id = mu.agent_id AND wsc.model_id = mu.model_id
       `,
         {
           replacements: { agentId },
@@ -419,11 +609,17 @@ export class AgentCostManager extends PolicySynthAgentBase {
           token_in_cached_context_count: parseInt(
             row.token_in_cached_context_count || "0"
           ),
+          token_in_cache_write_count: parseInt(
+            row.token_in_cache_write_count || "0"
+          ),
           long_context_token_in_count: parseInt(
             row.long_context_token_in_count || "0"
           ),
           long_context_token_in_cached_context_count: parseInt(
             row.long_context_token_in_cached_context_count || "0"
+          ),
+          long_context_token_in_cache_write_count: parseInt(
+            row.long_context_token_in_cache_write_count || "0"
           ),
           token_out_count: parseInt(row.token_out_count || "0"),
           token_out_reasoning_count: parseInt(
@@ -446,7 +642,11 @@ export class AgentCostManager extends PolicySynthAgentBase {
           agent_id: agentId,
         };
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
-        const costs = this.calcCosts(modelUsage, prices);
+        const costs = this.calcCosts(
+          modelUsage,
+          prices,
+          parseInt(row.web_search_call_count || "0")
+        );
         totalAgentCost += costs.totalCost;
       });
 

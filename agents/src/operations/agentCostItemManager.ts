@@ -3,14 +3,26 @@ import { QueryTypes } from "sequelize";
 import { ensureApplicationLevelSync, sequelize } from "../dbModels/index.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 import { resolvePriceConfigurationForContext } from "../base/modelPriceUtils.js";
+import {
+  getCacheWriteInputCostMultiplier,
+  getPersistedWebSearchCallCount,
+  getWebSearchCost,
+  partitionModelInputUsage,
+  resolveLongContextPriceRates,
+  resolveUsageAccountingVersion,
+} from "../base/modelUsageAccounting.js";
 
 interface PsUsageItemCostBreakdown {
   costInNormal: number;
   costInCached: number;
+  costInCacheWrite: number;
   costInLong: number;
   costOutNormal: number;
   costInCachedLong: number;
+  costInCacheWriteLong: number;
   costOutLong: number;
+  webSearchCallCount: number;
+  costWebSearch: number;
   totalCost: number;
 }
 
@@ -31,10 +43,14 @@ interface PsAppliedInferenceTypeResolution {
 const zeroCosts = (): PsUsageItemCostBreakdown => ({
   costInNormal: 0,
   costInCached: 0,
+  costInCacheWrite: 0,
   costInLong: 0,
   costOutNormal: 0,
   costInCachedLong: 0,
+  costInCacheWriteLong: 0,
   costOutLong: 0,
+  webSearchCallCount: 0,
+  costWebSearch: 0,
   totalCost: 0,
 });
 
@@ -193,16 +209,22 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
 
     const totalInputTokens = usageNormalized.tokensIn || 0;
     const cachedInputTokens = usageNormalized.cachedInTokens || 0;
+    const cacheWriteInputTokens = usageNormalized.cacheWriteInTokens || 0;
     const totalOutputTokens = usageNormalized.tokensOut || 0;
     const reasoningTokens = usageNormalized.reasoningTokens || 0;
     const audioTokens = usageNormalized.audioTokens || 0;
     const imageTokens = usageNormalized.imageTokens || 0;
-    const longContextTokenThreshold = prices?.longContextTokenThreshold;
-
-    let tokenInCount = totalInputTokens;
-    let tokenInCachedContextCount = cachedInputTokens;
-    let longContextTokenInCount = 0;
-    let longContextTokenInCachedContextCount = 0;
+    const inputUsage = partitionModelInputUsage(
+      totalInputTokens,
+      cachedInputTokens,
+      cacheWriteInputTokens,
+      prices?.longContextTokenThreshold
+    );
+    if (inputUsage.cacheComponentsExceedTotal) {
+      this.logger.warn(
+        `Cache input components exceed total input tokens for usage item ${data.model?.name}: total=${totalInputTokens} cached=${cachedInputTokens} cacheWrite=${cacheWriteInputTokens}`
+      );
+    }
 
     const baseTokenOutCount = Math.max(
       totalOutputTokens - reasoningTokens - audioTokens - imageTokens,
@@ -217,40 +239,34 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
     let longContextTokenOutAudioCount = 0;
     let longContextTokenOutImageCount = 0;
 
-    if (
-      longContextTokenThreshold &&
-      totalInputTokens >= longContextTokenThreshold
-    ) {
-      longContextTokenInCount = cachedInputTokens
-        ? totalInputTokens - cachedInputTokens
-        : totalInputTokens;
-      longContextTokenInCachedContextCount = cachedInputTokens;
-
+    if (inputUsage.longContextApplied) {
       longContextTokenOutCount = tokenOutCount;
       longContextTokenOutReasoningCount = tokenOutReasoningCount;
       longContextTokenOutAudioCount = tokenOutAudioCount;
       longContextTokenOutImageCount = tokenOutImageCount;
 
-      tokenInCount = 0;
-      tokenInCachedContextCount = 0;
       tokenOutCount = 0;
       tokenOutReasoningCount = 0;
       tokenOutAudioCount = 0;
       tokenOutImageCount = 0;
-    } else if (cachedInputTokens) {
-      tokenInCount = totalInputTokens - cachedInputTokens;
     }
 
     return {
-      token_in_count: tokenInCount,
+      token_in_count: inputUsage.tokenInCount,
       token_out_count: tokenOutCount,
-      token_in_cached_context_count: tokenInCachedContextCount || undefined,
+      token_in_cached_context_count:
+        inputUsage.tokenInCachedContextCount || undefined,
+      token_in_cache_write_count:
+        inputUsage.tokenInCacheWriteCount || undefined,
       token_out_reasoning_count: tokenOutReasoningCount || undefined,
       token_out_audio_count: tokenOutAudioCount || undefined,
       token_out_image_count: tokenOutImageCount || undefined,
-      long_context_token_in_count: longContextTokenInCount || undefined,
+      long_context_token_in_count:
+        inputUsage.longContextTokenInCount || undefined,
       long_context_token_in_cached_context_count:
-        longContextTokenInCachedContextCount || undefined,
+        inputUsage.longContextTokenInCachedContextCount || undefined,
+      long_context_token_in_cache_write_count:
+        inputUsage.longContextTokenInCacheWriteCount || undefined,
       long_context_token_out_count: longContextTokenOutCount || undefined,
       long_context_token_out_reasoning_count:
         longContextTokenOutReasoningCount || undefined,
@@ -270,10 +286,12 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
           tokenInCount?: number;
           tokenOutCount?: number;
           tokenInCachedContextCount?: number;
+          tokenInCacheWriteCount?: number;
           tokenOutReasoningCount?: number;
           tokenOutAudioCount?: number;
           longContextTokenInCount?: number;
           longContextTokenInCachedContextCount?: number;
+          longContextTokenInCacheWriteCount?: number;
           longContextTokenOutCount?: number;
           longContextTokenOutReasoningCount?: number;
           longContextTokenOutAudioCount?: number;
@@ -289,11 +307,14 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
         token_in_count: usage.tokenInCount || 0,
         token_out_count: usage.tokenOutCount || 0,
         token_in_cached_context_count: usage.tokenInCachedContextCount,
+        token_in_cache_write_count: usage.tokenInCacheWriteCount,
         token_out_reasoning_count: usage.tokenOutReasoningCount,
         token_out_audio_count: usage.tokenOutAudioCount,
         long_context_token_in_count: usage.longContextTokenInCount,
         long_context_token_in_cached_context_count:
           usage.longContextTokenInCachedContextCount,
+        long_context_token_in_cache_write_count:
+          usage.longContextTokenInCacheWriteCount,
         long_context_token_out_count: usage.longContextTokenOutCount,
         long_context_token_out_reasoning_count:
           usage.longContextTokenOutReasoningCount,
@@ -309,10 +330,14 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
         token_out_count: snapshot.tokenOutCount,
         token_in_cached_context_count:
           snapshot.tokenInCachedContextCount || undefined,
+        token_in_cache_write_count:
+          snapshot.tokenInCacheWriteCount || undefined,
         long_context_token_in_count:
           snapshot.longContextTokenInCount || undefined,
         long_context_token_in_cached_context_count:
           snapshot.longContextTokenInCachedContextCount || undefined,
+        long_context_token_in_cache_write_count:
+          snapshot.longContextTokenInCacheWriteCount || undefined,
         long_context_token_out_count:
           snapshot.longContextTokenOutCount || undefined,
       };
@@ -342,11 +367,19 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
         (effectivePrices.costInCachedContextTokensPerMillion || 0)) /
       1000000.0;
 
+    const cacheWriteMultiplier =
+      getCacheWriteInputCostMultiplier(effectivePrices);
+    const costInCacheWrite =
+      ((usage.token_in_cache_write_count || 0) *
+        (effectivePrices.costInTokensPerMillion || 0) *
+        cacheWriteMultiplier) /
+      1000000.0;
+
+    const longContextRates = resolveLongContextPriceRates(effectivePrices);
+
     const costInLong =
       ((usage.long_context_token_in_count || 0) *
-        (effectivePrices.longContextCostInTokensPerMillion ||
-          effectivePrices.costInTokensPerMillion ||
-          0)) /
+        longContextRates.inputTokensPerMillion) /
       1000000.0;
 
     const costOutNormal =
@@ -362,33 +395,48 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
         (usage.long_context_token_out_reasoning_count || 0) +
         (usage.long_context_token_out_audio_count || 0) +
         (usage.long_context_token_out_image_count || 0)) *
-        (effectivePrices.longContextCostOutTokensPerMillion ||
-          effectivePrices.costOutTokensPerMillion ||
-          0)) /
+        longContextRates.outputTokensPerMillion) /
       1000000.0;
 
     const costInCachedLong =
       ((usage.long_context_token_in_cached_context_count || 0) *
-        (effectivePrices.longContextCostInCachedContextTokensPerMillion ||
-          effectivePrices.costInCachedContextTokensPerMillion ||
-          0)) /
+        longContextRates.cachedInputTokensPerMillion) /
       1000000.0;
+
+    const costInCacheWriteLong =
+      ((usage.long_context_token_in_cache_write_count || 0) *
+        longContextRates.inputTokensPerMillion *
+        cacheWriteMultiplier) /
+      1000000.0;
+
+    const webSearchCallCount = getPersistedWebSearchCallCount(data);
+    const costWebSearch = getWebSearchCost(
+      webSearchCallCount,
+      effectivePrices
+    );
 
     const totalCost =
       costInNormal +
       costInCached +
+      costInCacheWrite +
       costInLong +
       costOutNormal +
       costOutLong +
-      costInCachedLong;
+      costInCachedLong +
+      costInCacheWriteLong +
+      costWebSearch;
 
     return {
       costInNormal,
       costInCached,
+      costInCacheWrite,
       costInLong,
       costOutNormal,
       costInCachedLong,
+      costInCacheWriteLong,
       costOutLong,
+      webSearchCallCount,
+      costWebSearch,
       totalCost,
     };
   }
@@ -449,17 +497,25 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
           agentName: row.agent_name ?? `Agent ${row.agent_id}`,
           aiModelName:
             row.ai_model_name ?? data.model?.name ?? "Unknown AI Model",
+          accountingVersion: resolveUsageAccountingVersion(
+            data.accountingVersion
+          ),
           tokenInCount:
             (usage.token_in_count || 0) +
             (usage.long_context_token_in_count || 0) +
             (usage.token_in_cached_context_count || 0) +
-            (usage.long_context_token_in_cached_context_count || 0),
+            (usage.long_context_token_in_cached_context_count || 0) +
+            (usage.token_in_cache_write_count || 0) +
+            (usage.long_context_token_in_cache_write_count || 0),
           tokenInCachedContextCount:
             usage.token_in_cached_context_count || 0,
+          tokenInCacheWriteCount: usage.token_in_cache_write_count || 0,
           longContextTokenInCount: usage.long_context_token_in_count || 0,
           longContextTokenOutCount: usage.long_context_token_out_count || 0,
           longContextTokenInCachedContextCount:
             usage.long_context_token_in_cached_context_count || 0,
+          longContextTokenInCacheWriteCount:
+            usage.long_context_token_in_cache_write_count || 0,
           tokenOutCount:
             (usage.token_out_count || 0) +
             (usage.token_out_reasoning_count || 0) +
@@ -472,16 +528,22 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
           costIn:
             costs.costInNormal +
             costs.costInCached +
+            costs.costInCacheWrite +
             costs.costInLong +
-            costs.costInCachedLong,
+            costs.costInCachedLong +
+            costs.costInCacheWriteLong,
           costOut: costs.costOutNormal + costs.costOutLong,
           totalCost: costs.totalCost,
           costInNormal: costs.costInNormal,
           costInCached: costs.costInCached,
+          costInCacheWrite: costs.costInCacheWrite,
           costInLong: costs.costInLong,
           costInCachedLong: costs.costInCachedLong,
+          costInCacheWriteLong: costs.costInCacheWriteLong,
           costOutNormal: costs.costOutNormal,
           costOutLong: costs.costOutLong,
+          webSearchCallCount: costs.webSearchCallCount,
+          costWebSearch: costs.costWebSearch,
         } satisfies PsDetailedAgentCostResults,
       ];
     });

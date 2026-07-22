@@ -41,6 +41,8 @@ export interface PsNormalizedWebSearchCall {
 export interface PsBuiltInToolsProviderMetadata {
   requested: Array<PsBuiltInTool["type"]>;
   ignoredOptions?: PsBuiltInToolIgnoredOption[];
+  /** Provider-reported billable calls, when available. */
+  webSearchCallCount?: number;
   webSearchCalls?: PsNormalizedWebSearchCall[];
   rawProviderData?: unknown;
 }

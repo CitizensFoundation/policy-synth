@@ -384,6 +384,8 @@ describe("addNewAiModel tool", () => {
       "0.2",
       "gpt-test",
       "true",
+      "2",
+      "1.25",
     ]);
 
     assert.deepEqual(parsed, {
@@ -393,6 +395,8 @@ describe("addNewAiModel tool", () => {
       type: PsAiModelType.Text,
       modelSize: PsAiModelSize.Medium,
       provider: "openai",
+      accountingVersion: 2,
+      cacheWriteInputCostMultiplier: 1.25,
       costInTokensPerMillion: 3,
       costOutTokensPerMillion: 4,
       costInCachedContextTokensPerMillion: 1.5,
@@ -462,6 +466,49 @@ describe("addNewAiModel tool", () => {
         ]),
       /Invalid AI model size/
     );
+    assert.throws(
+      () =>
+        parseAddAiModelArgs([
+          "GPT Test",
+          "1",
+          "2",
+          PsAiModelType.Text,
+          PsAiModelSize.Medium,
+          "openai",
+          "3",
+          "4",
+          "1.5",
+          "USD",
+          "8192",
+          "0.2",
+          "gpt-test",
+          "true",
+          "3",
+        ]),
+      /Invalid accounting version/
+    );
+    assert.throws(
+      () =>
+        parseAddAiModelArgs([
+          "GPT Test",
+          "1",
+          "2",
+          PsAiModelType.Text,
+          PsAiModelSize.Medium,
+          "openai",
+          "3",
+          "4",
+          "1.5",
+          "USD",
+          "8192",
+          "0.2",
+          "gpt-test",
+          "true",
+          "2",
+          "invalid",
+        ]),
+      /Invalid cache-write input cost multiplier/
+    );
   });
 
   it("deactivates old models and creates the requested model", async () => {
@@ -505,6 +552,8 @@ describe("addNewAiModel tool", () => {
         type: PsAiModelType.Text,
         modelSize: PsAiModelSize.Small,
         provider: "openai",
+        accountingVersion: 2,
+        cacheWriteInputCostMultiplier: 1.25,
         costInTokensPerMillion: 1,
         costOutTokensPerMillion: 2,
         costInCachedContextTokensPerMillion: 0.5,
@@ -526,6 +575,22 @@ describe("addNewAiModel tool", () => {
         }
       ).configuration.prices.costInCachedContextTokensPerMillion,
       0.5
+    );
+    assert.equal(
+      (
+        createdModels[0] as {
+          configuration: PsAiModelConfiguration;
+        }
+      ).configuration.accountingVersion,
+      2
+    );
+    assert.equal(
+      (
+        createdModels[0] as {
+          configuration: PsAiModelConfiguration;
+        }
+      ).configuration.prices.cacheWriteInputCostMultiplier,
+      1.25
     );
   });
 
