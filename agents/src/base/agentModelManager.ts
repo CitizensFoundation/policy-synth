@@ -28,7 +28,10 @@ import type {
 import { PsAiModelProvider } from "../aiModelTypes.js";
 import { policySynthEvents, TOKEN_USAGE_EVENT } from "./events.js";
 import { PsModelUsageItemManager } from "./modelUsageItemManager.js";
-import { partitionModelInputUsage } from "./modelUsageAccounting.js";
+import {
+  partitionModelInputUsage,
+  roundModelInputUsageForPersistence,
+} from "./modelUsageAccounting.js";
 
 const isGeminiDeepResearchModelName = (name?: string): boolean =>
   name?.toLowerCase().startsWith("deep-research") ?? false;
@@ -74,6 +77,22 @@ async function loadDbModules() {
     // Allow retries if loading failed previously
     loadDbModulesPromise = undefined;
     throw error;
+  }
+}
+
+type PsPreparedCompactTokenUsage = {
+  inputUsage: ReturnType<typeof partitionModelInputUsage>;
+  persistedInputUsage: ReturnType<typeof roundModelInputUsageForPersistence>;
+  storedTokensOut: number;
+  longContextTokenOut: number;
+};
+
+export class PsModelUsagePersistenceError extends Error {
+  readonly isPsNonRetryableModelError = true;
+
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "PsModelUsagePersistenceError";
   }
 }
 
@@ -602,6 +621,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       options.modelName !== undefined &&
       options.modelName === String(fallbackModel.modelName) &&
       usesFallbackProvider;
+    const shouldReuseFallbackModelIdentity =
+      isContextOnlyOverride || explicitModelMatchesFallback;
     const shouldReuseFallbackApiModel =
       options.modelName === undefined || explicitModelMatchesFallback;
     const apiModelName =
@@ -620,7 +641,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       accountingVersion:
         dbConfig !== undefined
           ? dbConfig.accountingVersion
-          : isContextOnlyOverride
+          : shouldReuseFallbackModelIdentity
             ? fallbackModel.config?.accountingVersion
             : undefined,
       credentialRef,
@@ -737,7 +758,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     if (dbModel) {
       ephemeralModel.dbModelId = dbModel.id;
     } else if (
-      isContextOnlyOverride &&
+      shouldReuseFallbackModelIdentity &&
       fallbackModel.dbModelId !== undefined
     ) {
       ephemeralModel.dbModelId = fallbackModel.dbModelId;
@@ -1037,6 +1058,31 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  private isDatabaseUsagePersistenceEnabled(): boolean {
+    return (
+      process.env.DISABLE_DB_USAGE_TRACKING !== "true" &&
+      !process.env.DISABLE_DB_INIT &&
+      this.agentId >= 0 &&
+      this.userId >= 0
+    );
+  }
+
+  private assertDatabaseModelIdentity(model: BaseChatModel): void {
+    if (!this.isDatabaseUsagePersistenceEnabled()) {
+      return;
+    }
+
+    if (
+      typeof model.dbModelId !== "number" ||
+      !Number.isInteger(model.dbModelId) ||
+      model.dbModelId <= 0
+    ) {
+      throw new PsModelUsagePersistenceError(
+        `Database-backed model ${model.provider ?? "Unknown"}/${model.modelName} has no persisted model id`
+      );
+    }
+  }
+
   private logDetailedServerError(
     model: BaseChatModel,
     error: any,
@@ -1086,6 +1132,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     messages: PsModelMessage[],
     options: PsCallModelOptions
   ): Promise<any> {
+    this.assertDatabaseModelIdentity(model);
+
     let retryCount = 0;
     let maxRetries = options.limitedRetries
       ? this.limitedLLMmaxRetryCount
@@ -1197,7 +1245,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
               options.priceOverride
             ) ?? model.config.prices;
 
-          await this.saveTokenUsageItem({
+          await this.saveModelUsage({
             modelName: String(model.modelName),
             modelProvider: model.provider ?? "Unknown",
             accountingVersion: model.config.accountingVersion,
@@ -1216,20 +1264,6 @@ export class PsAiModelManager extends PolicySynthAgentBase {
             inferenceType: model.config?.inferenceType,
             usageItemData,
           });
-
-          await this.saveTokenUsage(
-            model.modelName,
-            model.provider ?? "Unknown",
-            configuredPrices,
-            modelType,
-            modelSize,
-            tokensIn,
-            cachedInTokens ?? 0,
-            tokensOut,
-            model.dbModelId,
-            undefined,
-            { cacheWriteInTokens }
-          );
 
           const hasToolCalls = Boolean(toolCalls && toolCalls.length);
           const trimmedContent = content.trim();
@@ -2153,6 +2187,196 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     }
   }
 
+  private prepareCompactTokenUsage(
+    ctx: Pick<
+      PsModelUsageItemSaveContext,
+      | "modelName"
+      | "prices"
+      | "tokensIn"
+      | "cachedInTokens"
+      | "cacheWriteInTokens"
+      | "tokensOut"
+    >
+  ): PsPreparedCompactTokenUsage {
+    const inputUsage = partitionModelInputUsage(
+      ctx.tokensIn,
+      ctx.cachedInTokens,
+      ctx.cacheWriteInTokens ?? 0,
+      ctx.prices?.longContextTokenThreshold
+    );
+    if (inputUsage.cacheComponentsExceedTotal) {
+      this.logger.warn(
+        `Cache input components exceed total input tokens for ${ctx.modelName}: total=${ctx.tokensIn} cached=${ctx.cachedInTokens} cacheWrite=${ctx.cacheWriteInTokens ?? 0}`
+      );
+    }
+
+    return {
+      inputUsage,
+      persistedInputUsage: roundModelInputUsageForPersistence(inputUsage),
+      storedTokensOut: inputUsage.longContextApplied ? 0 : ctx.tokensOut,
+      longContextTokenOut: inputUsage.longContextApplied ? ctx.tokensOut : 0,
+    };
+  }
+
+  private async persistCompactTokenUsage(
+    finalModelId: number,
+    prepared: PsPreparedCompactTokenUsage,
+    transaction: Transaction
+  ): Promise<void> {
+    const PsModelUsageModel = PsModelUsage!;
+    const { persistedInputUsage, storedTokensOut, longContextTokenOut } =
+      prepared;
+    const [usage, created] = await PsModelUsageModel.findOrCreate({
+      where: {
+        model_id: finalModelId,
+        agent_id: this.agentId,
+      },
+      defaults: {
+        token_in_count: persistedInputUsage.tokenInCount,
+        token_out_count: storedTokensOut,
+        token_in_cached_context_count:
+          persistedInputUsage.tokenInCachedContextCount,
+        token_in_cache_write_count:
+          persistedInputUsage.tokenInCacheWriteCount,
+        long_context_token_in_count:
+          persistedInputUsage.longContextTokenInCount,
+        long_context_token_out_count: longContextTokenOut,
+        long_context_token_in_cached_context_count:
+          persistedInputUsage.longContextTokenInCachedContextCount,
+        long_context_token_in_cache_write_count:
+          persistedInputUsage.longContextTokenInCacheWriteCount,
+        model_id: finalModelId,
+        agent_id: this.agentId,
+        user_id: this.userId,
+      },
+      transaction,
+    });
+
+    if (!created) {
+      await usage.increment(
+        {
+          token_in_count: persistedInputUsage.tokenInCount,
+          token_out_count: storedTokensOut,
+          token_in_cached_context_count:
+            persistedInputUsage.tokenInCachedContextCount,
+          token_in_cache_write_count:
+            persistedInputUsage.tokenInCacheWriteCount,
+          long_context_token_in_count:
+            persistedInputUsage.longContextTokenInCount,
+          long_context_token_out_count: longContextTokenOut,
+          long_context_token_in_cached_context_count:
+            persistedInputUsage.longContextTokenInCachedContextCount,
+          long_context_token_in_cache_write_count:
+            persistedInputUsage.longContextTokenInCacheWriteCount,
+        },
+        { transaction }
+      );
+    }
+  }
+
+  private reportPersistedTokenUsage(
+    ctx: Pick<
+      PsModelUsageItemSaveContext,
+      "modelName" | "modelProvider" | "modelType" | "modelSize"
+    >,
+    finalModelId: number,
+    prepared: PsPreparedCompactTokenUsage
+  ): void {
+    const { persistedInputUsage, storedTokensOut, longContextTokenOut } =
+      prepared;
+    this.logger.info(
+      `Saved tokens id: ${finalModelId} type:${ctx.modelType}/${ctx.modelSize} provider:${ctx.modelProvider} model:${ctx.modelName} agent:${this.agentId} user:${this.userId} in:${persistedInputUsage.tokenInCount} cached:${persistedInputUsage.tokenInCachedContextCount} cacheWrite:${persistedInputUsage.tokenInCacheWriteCount} longIn:${persistedInputUsage.longContextTokenInCount} longCached:${persistedInputUsage.longContextTokenInCachedContextCount} longCacheWrite:${persistedInputUsage.longContextTokenInCacheWriteCount} out:${storedTokensOut} longOut:${longContextTokenOut}`
+    );
+    if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
+      policySynthEvents.emit(TOKEN_USAGE_EVENT, {
+        modelName: ctx.modelName,
+        modelProvider: ctx.modelProvider,
+        modelType: ctx.modelType,
+        modelSize: ctx.modelSize,
+        tokensIn: persistedInputUsage.tokenInCount,
+        tokensOut: storedTokensOut,
+        cachedInTokens: persistedInputUsage.tokenInCachedContextCount,
+        cacheWriteInTokens: persistedInputUsage.tokenInCacheWriteCount,
+        longContextTokenIn: persistedInputUsage.longContextTokenInCount,
+        longContextTokenInCached:
+          persistedInputUsage.longContextTokenInCachedContextCount,
+        longContextCacheWriteInTokens:
+          persistedInputUsage.longContextTokenInCacheWriteCount,
+        longContextTokenOut,
+        agentId: this.agentId,
+        userId: this.userId,
+        modelId: finalModelId,
+        timestamp: Date.now(),
+      });
+    }
+  }
+
+  private async saveModelUsage(
+    ctx: PsModelUsageItemSaveContext
+  ): Promise<void> {
+    const finalModelId = ctx.modelId ?? -1;
+
+    if (!this.isDatabaseUsagePersistenceEnabled()) {
+      await this.saveTokenUsageItem({ ...ctx, modelId: finalModelId });
+      await this.saveTokenUsage(
+        ctx.modelName,
+        ctx.modelProvider,
+        ctx.prices,
+        ctx.modelType,
+        ctx.modelSize,
+        ctx.tokensIn,
+        ctx.cachedInTokens,
+        ctx.tokensOut,
+        finalModelId,
+        undefined,
+        { cacheWriteInTokens: ctx.cacheWriteInTokens }
+      );
+      return;
+    }
+
+    if (!Number.isInteger(finalModelId) || finalModelId <= 0) {
+      throw new PsModelUsagePersistenceError(
+        `Database-backed model ${ctx.modelProvider}/${ctx.modelName} has no persisted model id`
+      );
+    }
+
+    const prepared = this.prepareCompactTokenUsage(ctx);
+    try {
+      await Promise.all([
+        loadDbModules(),
+        this.modelUsageItemManager.preparePersistence(),
+      ]);
+      const sequelizeInstance = sequelize!;
+      await sequelizeInstance.transaction(async (transaction: Transaction) => {
+        await this.modelUsageItemManager.saveUsageItem(
+          {
+            ...ctx,
+            modelId: finalModelId,
+            userId: this.userId,
+            agentId: this.agentId,
+          },
+          transaction
+        );
+        await this.persistCompactTokenUsage(
+          finalModelId,
+          prepared,
+          transaction
+        );
+      });
+      this.reportPersistedTokenUsage(ctx, finalModelId, prepared);
+    } catch (error) {
+      this.logger.error("Error persisting atomic model usage records");
+      this.logger.error(error);
+      if (error instanceof PsModelUsagePersistenceError) {
+        throw error;
+      }
+      throw new PsModelUsagePersistenceError(
+        `Failed to persist usage for ${ctx.modelProvider}/${ctx.modelName}`,
+        { cause: error }
+      );
+    }
+  }
+
   public async saveTokenUsage(
     modelName: string,
     modelProvider: string,
@@ -2220,19 +2444,15 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       return;
     }
 
-    const inputUsage = partitionModelInputUsage(
+    const prepared = this.prepareCompactTokenUsage({
+      modelName,
+      prices,
       tokensIn,
       cachedInTokens,
       cacheWriteInTokens,
-      prices?.longContextTokenThreshold
-    );
-    if (inputUsage.cacheComponentsExceedTotal) {
-      this.logger.warn(
-        `Cache input components exceed total input tokens for ${modelName}: total=${tokensIn} cached=${cachedInTokens} cacheWrite=${cacheWriteInTokens}`
-      );
-    }
-    const storedTokensOut = inputUsage.longContextApplied ? 0 : tokensOut;
-    const longContextTokenOut = inputUsage.longContextApplied ? tokensOut : 0;
+      tokensOut,
+    });
+    const { inputUsage, storedTokensOut, longContextTokenOut } = prepared;
 
     if (finalModelId === -1) {
       this.logger.error(
@@ -2295,78 +2515,14 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     try {
       await loadDbModules();
       const sequelizeInstance = sequelize!;
-      const PsModelUsageModel = PsModelUsage!;
-
-      await sequelizeInstance.transaction(async (t: Transaction) => {
-        const [usage, created] = await PsModelUsageModel.findOrCreate({
-          where: {
-            model_id: finalModelId,
-            agent_id: this.agentId,
-          },
-          defaults: {
-            token_in_count: inputUsage.tokenInCount,
-            token_out_count: storedTokensOut,
-            token_in_cached_context_count:
-              inputUsage.tokenInCachedContextCount,
-            token_in_cache_write_count: inputUsage.tokenInCacheWriteCount,
-            long_context_token_in_count: inputUsage.longContextTokenInCount,
-            long_context_token_out_count: longContextTokenOut,
-            long_context_token_in_cached_context_count:
-              inputUsage.longContextTokenInCachedContextCount,
-            long_context_token_in_cache_write_count:
-              inputUsage.longContextTokenInCacheWriteCount,
-            model_id: finalModelId,
-            agent_id: this.agentId,
-            user_id: this.userId,
-          },
-          transaction: t,
-        });
-
-        if (!created) {
-          await usage.increment(
-            {
-              token_in_count: inputUsage.tokenInCount,
-              token_out_count: storedTokensOut,
-              token_in_cached_context_count:
-                inputUsage.tokenInCachedContextCount,
-              token_in_cache_write_count: inputUsage.tokenInCacheWriteCount,
-              long_context_token_in_count: inputUsage.longContextTokenInCount,
-              long_context_token_out_count: longContextTokenOut,
-              long_context_token_in_cached_context_count:
-                inputUsage.longContextTokenInCachedContextCount,
-              long_context_token_in_cache_write_count:
-                inputUsage.longContextTokenInCacheWriteCount,
-            },
-            { transaction: t }
-          );
-        }
-      });
-
-      this.logger.info(
-        `Saved tokens id: ${finalModelId} type:${modelType}/${modelSize} provider:${modelProvider} model:${modelName} agent:${this.agentId} user:${this.userId} in:${inputUsage.tokenInCount} cached:${inputUsage.tokenInCachedContextCount} cacheWrite:${inputUsage.tokenInCacheWriteCount} longIn:${inputUsage.longContextTokenInCount} longCached:${inputUsage.longContextTokenInCachedContextCount} longCacheWrite:${inputUsage.longContextTokenInCacheWriteCount} out:${storedTokensOut} longOut:${longContextTokenOut}`
+      await sequelizeInstance.transaction((transaction: Transaction) =>
+        this.persistCompactTokenUsage(finalModelId, prepared, transaction)
       );
-      if (process.env.PS_EMIT_TOKEN_USAGE_EVENTS) {
-        policySynthEvents.emit(TOKEN_USAGE_EVENT, {
-          modelName,
-          modelProvider,
-          modelType,
-          modelSize,
-          tokensIn: inputUsage.tokenInCount,
-          tokensOut: storedTokensOut,
-          cachedInTokens: inputUsage.tokenInCachedContextCount,
-          cacheWriteInTokens: inputUsage.tokenInCacheWriteCount,
-          longContextTokenIn: inputUsage.longContextTokenInCount,
-          longContextTokenInCached:
-            inputUsage.longContextTokenInCachedContextCount,
-          longContextCacheWriteInTokens:
-            inputUsage.longContextTokenInCacheWriteCount,
-          longContextTokenOut,
-          agentId: this.agentId,
-          userId: this.userId,
-          modelId: finalModelId,
-          timestamp: Date.now(),
-        });
-      }
+      this.reportPersistedTokenUsage(
+        { modelName, modelProvider, modelType, modelSize },
+        finalModelId,
+        prepared
+      );
     } catch (error) {
       this.logger.error("Error saving or updating token usage in database");
       this.logger.error(error);

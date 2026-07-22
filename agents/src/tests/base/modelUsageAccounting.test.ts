@@ -6,6 +6,7 @@ import {
   getPersistedWebSearchCallCount,
   getWebSearchCost,
   partitionModelInputUsage,
+  roundModelInputUsageForPersistence,
   resolveLongContextPriceRates,
   resolveUsageAccountingVersion,
 } from "../../base/modelUsageAccounting.js";
@@ -30,6 +31,18 @@ describe("model usage accounting", () => {
       longContextApplied: false,
       cacheComponentsExceedTotal: false,
     });
+  });
+
+  it("preserves fractional legacy weights until the persistence boundary", () => {
+    const partition = partitionModelInputUsage(11.75, 1, undefined);
+
+    assert.equal(partition.tokenInCount, 10.75);
+    assert.equal(partition.tokenInCachedContextCount, 1);
+
+    const persisted = roundModelInputUsageForPersistence(partition);
+    assert.equal(persisted.tokenInCount, 11);
+    assert.equal(persisted.tokenInCachedContextCount, 1);
+    assert.equal(partition.tokenInCount, 10.75);
   });
 
   it("classifies every input bucket as long context from the original total", () => {

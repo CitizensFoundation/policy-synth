@@ -180,6 +180,43 @@ describe("AgentRegistryManager", () => {
 });
 
 describe("AgentCostItemManager", () => {
+  it("preserves fractional Claude v1 weights when calculating item costs", () => {
+    const manager = new AgentCostItemManager();
+    const fractionalPrices: PsBaseModelPriceConfiguration = {
+      costInTokensPerMillion: 1_000_000,
+      costInCachedContextTokensPerMillion: 500_000,
+      costOutTokensPerMillion: 0,
+      currency: "USD",
+    };
+    const costs = (
+      manager as unknown as {
+        calcCostsFromItem: (
+          data: PsModelUsageItemData,
+          fallbackPrices?: PsBaseModelPriceConfiguration | null
+        ) => {
+          costInNormal: number;
+          costInCached: number;
+          totalCost: number;
+        };
+      }
+    ).calcCostsFromItem(
+      usageItemData({
+        accountingVersion: 1,
+        pricing: { configuredPrices: fractionalPrices },
+        usageNormalized: {
+          tokensIn: 11.75,
+          cachedInTokens: 1,
+          tokensOut: 0,
+        },
+      }),
+      fractionalPrices
+    );
+
+    assert.equal(costs.costInNormal, 10.75);
+    assert.equal(costs.costInCached, 0.5);
+    assert.equal(costs.totalCost, 11.25);
+  });
+
   it("calculates detailed, aggregate, and single-agent costs from usage items", async () => {
     const manager = new AgentCostItemManager();
     const rows = [

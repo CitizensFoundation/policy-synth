@@ -156,46 +156,60 @@ describe("PsModelUsageItemManager", () => {
     const manager = new PsModelUsageItemManager();
     const originalCreate = PsModelUsageItem.create;
     const createdPayloads: unknown[] = [];
-    PsModelUsageItem.create = (async (payload: unknown) => {
+    const createdOptions: unknown[] = [];
+    const transaction = { id: "usage-item-transaction" } as unknown as
+      import("sequelize").Transaction;
+    PsModelUsageItem.create = (async (
+      payload: unknown,
+      options?: unknown
+    ) => {
       createdPayloads.push(payload);
+      createdOptions.push(options);
       return {} as Awaited<ReturnType<typeof PsModelUsageItem.create>>;
     }) as typeof PsModelUsageItem.create;
 
     try {
-      await manager.saveUsageItem({
-        ...baseContext(),
-        accountingVersion: 2,
-        connectorId: 12,
-        inferenceType: "priority",
-        regionalProcessing: "eu",
-        usageItemData: {
-          apiFamily: "openaiResponses",
-          request: {
-            safetyIdentifier: "safe-user",
-          },
-          usageNormalized: {
-            tokensIn: 11,
-            tokensOut: 6,
-            cachedInTokens: 4,
-            cacheWriteInTokens: 5,
-            reasoningTokens: 3,
-            audioTokens: 2,
-            imageTokens: 1,
-            cacheReadInputTokens: 9,
-          },
-          usageRaw: {
-            prompt_tokens: 10,
-          },
-          providerMetadata: {
-            serviceTier: "priority",
+      await manager.saveUsageItem(
+        {
+          ...baseContext(),
+          accountingVersion: 2,
+          connectorId: 12,
+          inferenceType: "priority",
+          regionalProcessing: "eu",
+          usageItemData: {
+            apiFamily: "openaiResponses",
+            request: {
+              safetyIdentifier: "safe-user",
+            },
+            usageNormalized: {
+              tokensIn: 11,
+              tokensOut: 6,
+              cachedInTokens: 4,
+              cacheWriteInTokens: 5,
+              reasoningTokens: 3,
+              audioTokens: 2,
+              imageTokens: 1,
+              cacheReadInputTokens: 9,
+            },
+            usageRaw: {
+              prompt_tokens: 10,
+            },
+            providerMetadata: {
+              serviceTier: "priority",
+            },
           },
         },
-      });
+        transaction
+      );
     } finally {
       PsModelUsageItem.create = originalCreate;
     }
 
     assert.equal(createdPayloads.length, 1);
+    assert.equal(
+      (createdOptions[0] as { transaction?: unknown }).transaction,
+      transaction
+    );
     assert.deepEqual(createdPayloads[0], {
       user_id: 7,
       model_id: 101,
@@ -331,13 +345,16 @@ describe("PsModelUsageItemManager", () => {
     assert.equal(createCalls, 0);
   });
 
-  it("handles disabled or unavailable DB modules without writing usage items", async () => {
+  it("skips disabled DB writes and rejects unavailable DB modules", async () => {
     process.env.DISABLE_DB_INIT = "true";
     await loadPsModelUsageItemDbModules();
 
     delete process.env.DISABLE_DB_INIT;
     const missingModulesManager = new PsModelUsageItemManager(async () => ({}));
-    await missingModulesManager.saveUsageItem(baseContext());
+    await assert.rejects(
+      () => missingModulesManager.saveUsageItem(baseContext()),
+      /Database modules not initialized/
+    );
 
     const failingLoaderManager = new PsModelUsageItemManager(async () => {
       throw new Error("usage item loader failed");

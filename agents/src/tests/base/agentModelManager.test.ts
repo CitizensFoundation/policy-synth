@@ -948,6 +948,67 @@ describe("PsAiModelManager ephemeral model overrides", () => {
     assert.equal(azure?.config.apiKey, "azure-env-key");
   });
 
+  it("retains matching fallback accounting identity without a DB lookup", async () => {
+    useStandardResponsesEnv();
+    process.env.ANTHROPIC_API_KEY = "anthropic-env-key";
+
+    const createMatchingOverride = async (modelName: string, modelId: number) => {
+      const manager = createNoopManager();
+      const fallback = new ScriptedChatModel(
+        createModelConfig({
+          apiKey: "fallback-anthropic-key",
+          modelName,
+          provider: PsAiModelProvider.Anthropic,
+          accountingVersion: 2,
+        })
+      );
+      registerModel(
+        manager,
+        fallback,
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        modelId
+      );
+
+      return asInternals(manager).createEphemeralModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        {
+          modelProvider: PsAiModelProvider.Anthropic,
+          modelName,
+        }
+      );
+    };
+
+    process.env.DISABLE_DB_INIT = "true";
+    const disabledDbModel = await createMatchingOverride(
+      "claude-matching-disabled-db",
+      304
+    );
+    assert.ok(disabledDbModel instanceof ClaudeChat);
+    assert.equal(disabledDbModel.config.accountingVersion, 2);
+    assert.equal(disabledDbModel.dbModelId, 304);
+
+    delete process.env.DISABLE_DB_INIT;
+    const { PsAiModel } = await import("../../dbModels/aiModel.js");
+    const originalFindOne = Reflect.get(PsAiModel, "findOne");
+    Reflect.set(PsAiModel, "findOne", async () => {
+      throw new Error("matching model lookup failed");
+    });
+
+    try {
+      const failedLookupModel = await createMatchingOverride(
+        "claude-matching-failed-lookup",
+        305
+      );
+      assert.ok(failedLookupModel instanceof ClaudeChat);
+      assert.equal(failedLookupModel.config.accountingVersion, 2);
+      assert.equal(failedLookupModel.dbModelId, 305);
+    } finally {
+      Reflect.set(PsAiModel, "findOne", originalFindOne);
+    }
+  });
+
   it("uses type fallback and fallback API keys for context-only overrides", async () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
@@ -1604,6 +1665,216 @@ describe("PsAiModelManager utility routing", () => {
 });
 
 describe("PsAiModelManager text model calls", () => {
+  it("requires an exact persisted model identity before a DB-backed call", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+
+    const manager = createNoopManager();
+    const model = new ScriptedChatModel(
+      createModelConfig({ modelName: "unpersisted-production-model" }),
+      [createModelResult("should not run")]
+    );
+    const modelKey = `${PsAiModelType.Text}_${PsAiModelSize.Small}`;
+    manager.models.set(modelKey, model);
+    manager.modelsByType.set(PsAiModelType.Text, model);
+    manager.modelIds.set(modelKey, 999);
+    manager.modelIdsByType.set(PsAiModelType.Text, 999);
+
+    await assert.rejects(
+      () =>
+        manager.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Small,
+          [{ role: "user", message: "hello" }],
+          {}
+        ),
+      (error: unknown) => {
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: boolean })
+            .isPsNonRetryableModelError,
+          true
+        );
+        assert.match(String(error), /has no persisted model id/);
+        return true;
+      }
+    );
+    assert.equal(model.calls.length, 0);
+    assert.equal(manager.usageItemCalls.length, 0);
+    assert.equal(manager.usageCalls.length, 0);
+  });
+
+  it("keeps missing model identities valid for explicit no-DB calls", async () => {
+    useStandardResponsesEnv();
+
+    const manager = createNoopManager();
+    const model = new ScriptedChatModel(
+      createModelConfig({ modelName: "no-db-script-model" }),
+      [createModelResult("no-db result")]
+    );
+    const modelKey = `${PsAiModelType.Text}_${PsAiModelSize.Small}`;
+    manager.models.set(modelKey, model);
+    manager.modelsByType.set(PsAiModelType.Text, model);
+    manager.modelIds.set(modelKey, 999);
+    manager.modelIdsByType.set(PsAiModelType.Text, 999);
+
+    assert.equal(
+      await manager.callModel(
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        [{ role: "user", message: "hello" }],
+        {}
+      ),
+      "no-db result"
+    );
+    assert.equal(model.calls.length, 1);
+    assert.equal(manager.usageItemCalls[0][0].modelId, -1);
+    assert.equal(manager.usageCalls[0][8], -1);
+  });
+
+  it("commits detailed and compact usage with the same transaction", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    process.env.PS_EMIT_TOKEN_USAGE_EVENTS = "true";
+
+    const { sequelize } = await import("../../dbModels/index.js");
+    const { PsModelUsage } = await import("../../dbModels/modelUsage.js");
+    const originalTransaction = Reflect.get(sequelize, "transaction");
+    const originalFindOrCreate = Reflect.get(PsModelUsage, "findOrCreate");
+    const transaction = { id: "atomic-usage-transaction" } as unknown as
+      import("sequelize").Transaction;
+    let committed = false;
+    let itemTransaction: unknown;
+    let aggregateTransaction: unknown;
+    let eventObservedAfterCommit = false;
+
+    const manager = createNoopManager();
+    const model = new ScriptedChatModel(
+      createModelConfig({ modelName: "atomic-usage-model" }),
+      [createModelResult("atomic result")]
+    );
+    registerModel(manager, model, undefined, undefined, 880);
+    Reflect.set(manager, "modelUsageItemManager", {
+      preparePersistence: async () => undefined,
+      saveUsageItem: async (_payload: unknown, activeTransaction: unknown) => {
+        itemTransaction = activeTransaction;
+      },
+    });
+    Reflect.set(
+      sequelize,
+      "transaction",
+      async (callback: (activeTransaction: unknown) => Promise<unknown>) => {
+        const result = await callback(transaction);
+        committed = true;
+        return result;
+      }
+    );
+    Reflect.set(PsModelUsage, "findOrCreate", async (options: unknown) => {
+      aggregateTransaction = (options as { transaction?: unknown }).transaction;
+      return [{ increment: async () => undefined }, false];
+    });
+    const listener = () => {
+      eventObservedAfterCommit = committed;
+    };
+    policySynthEvents.on(TOKEN_USAGE_EVENT, listener);
+
+    try {
+      assert.equal(
+        await manager.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Small,
+          [{ role: "user", message: "hello" }],
+          {}
+        ),
+        "atomic result"
+      );
+    } finally {
+      policySynthEvents.off(TOKEN_USAGE_EVENT, listener);
+      Reflect.set(sequelize, "transaction", originalTransaction);
+      Reflect.set(PsModelUsage, "findOrCreate", originalFindOrCreate);
+    }
+
+    assert.equal(itemTransaction, transaction);
+    assert.equal(aggregateTransaction, transaction);
+    assert.equal(committed, true);
+    assert.equal(eventObservedAfterCommit, true);
+  });
+
+  it("rolls back either usage write failure without retrying the provider", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+
+    const { sequelize } = await import("../../dbModels/index.js");
+    const { PsModelUsage } = await import("../../dbModels/modelUsage.js");
+    const originalTransaction = Reflect.get(sequelize, "transaction");
+    const originalFindOrCreate = Reflect.get(PsModelUsage, "findOrCreate");
+
+    try {
+      for (const failureStage of ["item", "aggregate"] as const) {
+        let stagedItem = false;
+        let rolledBack = false;
+        let aggregateCalls = 0;
+        const manager = createNoopManager();
+        const model = new ScriptedChatModel(
+          createModelConfig({ modelName: `${failureStage}-failure-model` }),
+          [createModelResult("must not return")]
+        );
+        registerModel(manager, model, undefined, undefined, 881);
+        Reflect.set(manager, "modelUsageItemManager", {
+          preparePersistence: async () => undefined,
+          saveUsageItem: async () => {
+            stagedItem = true;
+            if (failureStage === "item") {
+              throw new Error("item persistence failed");
+            }
+          },
+        });
+        Reflect.set(
+          sequelize,
+          "transaction",
+          async (callback: (transaction: unknown) => Promise<unknown>) => {
+            try {
+              return await callback({ id: `${failureStage}-transaction` });
+            } catch (error) {
+              stagedItem = false;
+              rolledBack = true;
+              throw error;
+            }
+          }
+        );
+        Reflect.set(PsModelUsage, "findOrCreate", async () => {
+          aggregateCalls += 1;
+          throw new Error("aggregate persistence failed");
+        });
+
+        await assert.rejects(
+          () =>
+            manager.callModel(
+              PsAiModelType.Text,
+              PsAiModelSize.Small,
+              [{ role: "user", message: "hello" }],
+              {}
+            ),
+          (error: unknown) => {
+            assert.equal(
+              (error as { isPsNonRetryableModelError?: boolean })
+                .isPsNonRetryableModelError,
+              true,
+              failureStage
+            );
+            return true;
+          }
+        );
+        assert.equal(model.calls.length, 1, failureStage);
+        assert.equal(rolledBack, true, failureStage);
+        assert.equal(stagedItem, false, failureStage);
+        assert.equal(aggregateCalls, failureStage === "item" ? 0 : 1);
+      }
+    } finally {
+      Reflect.set(sequelize, "transaction", originalTransaction);
+      Reflect.set(PsModelUsage, "findOrCreate", originalFindOrCreate);
+    }
+  });
+
   it("falls back from requested size to an available size and trims text output", async () => {
     useStandardResponsesEnv();
     const manager = createNoopManager();
@@ -3780,6 +4051,71 @@ describe("PsAiModelManager price and usage accounting", () => {
     assert.equal(increments.token_in_count, 50);
     assert.equal(increments.token_in_cached_context_count, 20);
     assert.equal(increments.token_in_cache_write_count, 30);
+  });
+
+  it("rounds fractional legacy input weights only when persisting compact counters", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    delete process.env.DISABLE_DB_USAGE_TRACKING;
+
+    const { sequelize } = await import("../../dbModels/index.js");
+    const { PsModelUsage } = await import("../../dbModels/modelUsage.js");
+    const originalTransaction = Reflect.get(sequelize, "transaction");
+    const originalFindOrCreate = Reflect.get(PsModelUsage, "findOrCreate");
+    let defaults: Record<string, unknown> | undefined;
+    let increments: Record<string, unknown> | undefined;
+
+    Reflect.set(
+      sequelize,
+      "transaction",
+      async (callback: (transaction: unknown) => Promise<unknown>) =>
+        callback({ id: "tx" })
+    );
+    Reflect.set(PsModelUsage, "findOrCreate", async (options: unknown) => {
+      defaults = (options as { defaults: Record<string, unknown> }).defaults;
+      return [
+        {
+          increment: async (fields: Record<string, unknown>) => {
+            increments = fields;
+          },
+        },
+        false,
+      ];
+    });
+
+    try {
+      const manager = new PsAiModelManager(
+        [],
+        [],
+        256,
+        0.4,
+        "medium",
+        0,
+        42,
+        7
+      );
+      await manager.saveTokenUsage(
+        "legacy-claude-model",
+        PsAiModelProvider.Anthropic,
+        prices,
+        PsAiModelType.Text,
+        PsAiModelSize.Small,
+        11.75,
+        1,
+        0,
+        778
+      );
+    } finally {
+      Reflect.set(sequelize, "transaction", originalTransaction);
+      Reflect.set(PsModelUsage, "findOrCreate", originalFindOrCreate);
+    }
+
+    assert.ok(defaults);
+    assert.equal(defaults.token_in_count, 11);
+    assert.equal(defaults.token_in_cached_context_count, 1);
+    assert.ok(increments);
+    assert.equal(increments.token_in_count, 11);
+    assert.equal(increments.token_in_cached_context_count, 1);
   });
 
   it("persists long-context token usage and surfaces persistence failures", async () => {

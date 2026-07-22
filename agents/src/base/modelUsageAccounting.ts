@@ -17,7 +17,7 @@ export function resolveUsageAccountingVersion(
 
 const normalizeTokenCount = (value: number | undefined): number =>
   typeof value === "number" && Number.isFinite(value) && value > 0
-    ? Math.floor(value)
+    ? value
     : 0;
 
 export function partitionModelInputUsage(
@@ -62,6 +62,24 @@ export function partitionModelInputUsage(
     longContextTokenInCacheWriteCount: 0,
     longContextApplied,
     cacheComponentsExceedTotal,
+  };
+}
+
+export function roundModelInputUsageForPersistence(
+  usage: PsModelInputUsagePartition
+): PsModelInputUsagePartition {
+  return {
+    ...usage,
+    tokenInCount: Math.round(usage.tokenInCount),
+    tokenInCachedContextCount: Math.round(usage.tokenInCachedContextCount),
+    tokenInCacheWriteCount: Math.round(usage.tokenInCacheWriteCount),
+    longContextTokenInCount: Math.round(usage.longContextTokenInCount),
+    longContextTokenInCachedContextCount: Math.round(
+      usage.longContextTokenInCachedContextCount
+    ),
+    longContextTokenInCacheWriteCount: Math.round(
+      usage.longContextTokenInCacheWriteCount
+    ),
   };
 }
 

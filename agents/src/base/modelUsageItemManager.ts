@@ -1,4 +1,4 @@
-import type { Sequelize } from "sequelize";
+import type { Sequelize, Transaction } from "sequelize";
 
 import { PolicySynthAgentBase } from "./agentBase.js";
 import { resolveUsageAccountingVersion } from "./modelUsageAccounting.js";
@@ -64,6 +64,27 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
       PsModelUsageItemDbModuleLoader = loadPsModelUsageItemDbModules
   ) {
     super();
+  }
+
+  private async requireDbModules(): Promise<{
+    sequelize: Sequelize;
+    PsModelUsageItem: PsModelUsageItemModel;
+  }> {
+    const modules = await this.loadDbModulesForUsageItems();
+    if (!modules.sequelize || !modules.PsModelUsageItem) {
+      throw new Error(
+        "Database modules not initialized for usage item persistence"
+      );
+    }
+
+    return {
+      sequelize: modules.sequelize,
+      PsModelUsageItem: modules.PsModelUsageItem,
+    };
+  }
+
+  async preparePersistence(): Promise<void> {
+    await this.requireDbModules();
   }
 
   private getUsageNormalized(
@@ -141,7 +162,8 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
   }
 
   async saveUsageItem(
-    ctx: PsModelUsageItemSaveContext & { userId: number; agentId: number }
+    ctx: PsModelUsageItemSaveContext & { userId: number; agentId: number },
+    transaction?: Transaction
   ) {
     if (
       process.env.DISABLE_DB_USAGE_TRACKING === "true" ||
@@ -158,17 +180,8 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
       return;
     }
 
-    const {
-      sequelize: loadedSequelize,
-      PsModelUsageItem: loadedPsModelUsageItem,
-    } = await this.loadDbModulesForUsageItems();
-
-    if (!loadedSequelize || !loadedPsModelUsageItem) {
-      this.logger.error(
-        "Database modules not initialized; skipping ps_model_usage_item persistence"
-      );
-      return;
-    }
+    const { PsModelUsageItem: loadedPsModelUsageItem } =
+      await this.requireDbModules();
 
     const modelId = ctx.modelId;
     const data = this.buildUsageItemData(ctx);
@@ -186,6 +199,6 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
         : {}),
     };
 
-    await loadedPsModelUsageItem.create(createPayload);
+    await loadedPsModelUsageItem.create(createPayload, { transaction });
   }
 }

@@ -1074,7 +1074,7 @@ describe("ClaudeChat", () => {
             usage: {
               input_tokens: 12,
               output_tokens: 3,
-              cache_creation_input_tokens: 2,
+              cache_creation_input_tokens: 1,
               cache_read_input_tokens: 5,
               service_tier: "standard",
             },
@@ -1125,15 +1125,15 @@ describe("ClaudeChat", () => {
     ]);
 
     assert.equal(result?.content, "Legacy Claude");
-    assert.equal(result?.tokensIn, 15);
+    assert.equal(result?.tokensIn, 13.75);
     assert.equal(result?.tokensOut, 3);
-    assert.equal(result?.cachedInTokens, 2);
+    assert.equal(result?.cachedInTokens, 1);
     assert.equal(result?.cacheWriteInTokens, undefined);
     assert.equal(result?.usageItemData?.accountingVersion, 1);
     assert.deepEqual(result?.usageItemData?.usageNormalized, {
-      tokensIn: 15,
+      tokensIn: 13.75,
       tokensOut: 3,
-      cachedInTokens: 2,
+      cachedInTokens: 1,
       cacheReadInputTokens: 5,
     });
     assert.equal(result?.usageItemData?.providerMetadata?.transport, "anthropic");
