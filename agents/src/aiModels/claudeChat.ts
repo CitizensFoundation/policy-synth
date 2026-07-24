@@ -276,8 +276,17 @@ export class ClaudeChat extends BaseChatModel {
       normalizedInferenceType === "fast" &&
       !this.useFastMode
     ) {
+      // Fast mode is first-party-Anthropic-only, so a Bedrock/Vertex deployment
+      // silently downgrades a fast-capable model. Name the actual reason: the
+      // model-support wording sends operators looking in the wrong place.
+      const reason = useBedrock
+        ? "the Bedrock transport does not offer fast mode"
+        : useVertex
+          ? "the Vertex transport does not offer fast mode"
+          : "this model does not support it";
       this.logger.warn?.(
-        `Anthropic fast mode requested for ${resolvedModelName}, but this model does not support it`
+        `Anthropic fast mode requested for ${resolvedModelName}, but ${reason}; ` +
+          `the request runs at standard speed and is accounted at standard rates`
       );
     }
     if (config.inferenceType === "priority" && this.useFastMode) {

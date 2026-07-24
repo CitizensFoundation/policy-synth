@@ -10,6 +10,9 @@ process.env.PSQL_DB_PASS ??= "policy_synth_test";
 process.env.DB_PORT ??= "5432";
 
 const { ClaudeChat } = await import("../../aiModels/claudeChat.js");
+const { resolvePriceConfigurationForContext } = await import(
+  "../../base/modelPriceUtils.js"
+);
 
 type ClaudeChatInstance = InstanceType<typeof ClaudeChat>;
 
@@ -466,6 +469,79 @@ describe("ClaudeChat", () => {
         `expected fast mode support for ${modelName}`
       );
     }
+  });
+
+  it("clears inferenceType when fast mode cannot be applied, so accounting stays on standard rates", async () => {
+    // config.inferenceType is what agentModelManager forwards into the usage
+    // item as pricing.inferenceType, which is what selects the fast rate keys.
+    // If fast mode was not actually applied it must be cleared here, or a
+    // Bedrock/Vertex deployment gets standard speed at fast prices.
+    const fastPrices = {
+      costInTokensPerMillion: 5,
+      costInCachedContextTokensPerMillion: 0.5,
+      costOutTokensPerMillion: 25,
+      fastTokensIn: 10,
+      fastTokensCachedIn: 1,
+      fastTokensOut: 50,
+      currency: "USD",
+    };
+    const ratesFor = (inferenceType: PsInferenceType | undefined) =>
+      resolvePriceConfigurationForContext(fastPrices, {
+        provider: "anthropic",
+        inferenceType,
+      });
+
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const direct = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-5",
+        inferenceType: "fast",
+        prices: fastPrices,
+      })
+    );
+    assert.equal(Reflect.get(direct, "useFastMode"), true);
+    assert.equal(direct.config.inferenceType, "fast");
+    assert.equal(ratesFor(direct.config.inferenceType)?.costOutTokensPerMillion, 50);
+
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "bedrock-test-token";
+    const bedrock = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-5",
+        inferenceType: "fast",
+        prices: fastPrices,
+      })
+    );
+    assert.equal(Reflect.get(bedrock, "useFastMode"), false);
+    assert.equal(bedrock.config.inferenceType, undefined);
+    assert.equal(
+      ratesFor(bedrock.config.inferenceType)?.costOutTokensPerMillion,
+      25
+    );
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+
+    process.env.USE_VERTEX_FOR_CLAUDE = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    const vertex = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-5",
+        inferenceType: "fast",
+        prices: fastPrices,
+      })
+    );
+    assert.equal(Reflect.get(vertex, "useFastMode"), false);
+    assert.equal(vertex.config.inferenceType, undefined);
+    assert.equal(
+      ratesFor(vertex.config.inferenceType)?.costOutTokensPerMillion,
+      25
+    );
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+
+    // The raw request is still preserved for observability, so a mismatch
+    // between requestedInferenceType and requestedSpeed stays queryable.
+    assert.equal(Reflect.get(vertex, "requestedInferenceType"), "fast");
   });
 
   it("gates the server-side refusal fallback to the 5-family models", async () => {
