@@ -436,23 +436,145 @@ describe("ClaudeChat", () => {
     );
     assert.equal(Reflect.get(haiku45, "useAdaptiveThinking"), false);
 
-    const opus46 = new ClaudeChat(
-      createConfig({
-        modelName: "claude-opus-4-6",
-        inferenceType: "fast",
-      })
-    );
-    assert.equal(Reflect.get(opus46, "useFastMode"), false);
+    // Opus 4.6 never had fast mode; Opus 4.7 had it removed and now errors on
+    // speed: "fast", so neither may enable it.
+    for (const modelName of ["claude-opus-4-6", "claude-opus-4-7"]) {
+      const noFastModel = new ClaudeChat(
+        createConfig({
+          modelName,
+          inferenceType: "fast",
+        })
+      );
+      assert.equal(Reflect.get(noFastModel, "useFastMode"), false);
+    }
 
-    for (const modelName of ["claude-opus-4-7", "claude-opus-4-8"]) {
+    for (const modelName of [
+      "claude-opus-4-8",
+      "claude-opus-4-8-20260301",
+      "claude-opus-5",
+      "claude-opus-5-fast",
+    ]) {
       const fastModel = new ClaudeChat(
         createConfig({
           modelName,
           inferenceType: "fast",
         })
       );
-      assert.equal(Reflect.get(fastModel, "useFastMode"), true);
+      assert.equal(
+        Reflect.get(fastModel, "useFastMode"),
+        true,
+        `expected fast mode support for ${modelName}`
+      );
     }
+  });
+
+  it("gates the server-side refusal fallback to the 5-family models", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    for (const modelName of [
+      "claude-fable-5",
+      "claude-mythos-5",
+      "claude-opus-5",
+      "claude-opus-5-fast",
+    ]) {
+      const model = new ClaudeChat(createConfig({ modelName }));
+      assert.equal(
+        Reflect.get(model, "useServerSideRefusalFallback"),
+        true,
+        `expected refusal fallback for ${modelName}`
+      );
+    }
+
+    // The fallback target itself, and models outside the documented set, must
+    // not send the parameter.
+    for (const modelName of [
+      "claude-opus-4-8",
+      "claude-opus-4-7",
+      "claude-sonnet-5",
+    ]) {
+      const model = new ClaudeChat(createConfig({ modelName }));
+      assert.equal(
+        Reflect.get(model, "useServerSideRefusalFallback"),
+        false,
+        `did not expect refusal fallback for ${modelName}`
+      );
+    }
+
+    // Not available on Bedrock or Vertex, even for a supported model.
+    process.env.AWS_BEARER_TOKEN_BEDROCK = "bedrock-test-token";
+    const bedrock = new ClaudeChat(createConfig({ modelName: "claude-opus-5" }));
+    assert.equal(Reflect.get(bedrock, "useServerSideRefusalFallback"), false);
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+
+    process.env.USE_VERTEX_FOR_CLAUDE = "true";
+    process.env.GOOGLE_CLOUD_PROJECT = "vertex-project";
+    const vertex = new ClaudeChat(createConfig({ modelName: "claude-opus-5" }));
+    assert.equal(Reflect.get(vertex, "useServerSideRefusalFallback"), false);
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+  });
+
+  it("sends refusal fallbacks and omits sampling params for Claude Opus 5", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    // No reasoningEffort/maxThinkingTokens, so no adaptive thinking block is
+    // sent - the model gate is the only thing keeping temperature off the wire.
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-opus-5",
+        temperature: 0.2,
+      })
+    );
+
+    let captured: RecordedClaudeRequest | undefined;
+    setMockClient(model, {
+      messages: {
+        create: async () => {
+          throw new Error("messages.create should not be used in this test");
+        },
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async (params) => {
+            captured = params as RecordedClaudeRequest;
+            return {
+              id: "claude-opus-5-response",
+              model: "claude-opus-5",
+              stop_reason: "end_turn",
+              usage: { input_tokens: 5, output_tokens: 2 },
+              content: [{ type: "text", text: "Opus 5 response" }],
+            };
+          },
+          stream: async () => {
+            throw new Error("beta.messages.stream should not be used in this test");
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "claude-opus-5");
+    assert.equal(captured.temperature, undefined);
+    assert.deepEqual(captured.betas, ["server-side-fallback-2026-06-01"]);
+    assert.deepEqual(captured.fallbacks, [{ model: "claude-opus-4-8" }]);
+    assert.equal(captured.speed, undefined);
+    assert.equal(result?.content, "Opus 5 response");
+    assert.equal(
+      result?.usageItemData?.request?.serverSideFallbackBeta,
+      "server-side-fallback-2026-06-01"
+    );
+    assert.equal(
+      result?.usageItemData?.request?.fallbackModel,
+      "claude-opus-4-8"
+    );
   });
 
   it("uses adaptive thinking request shape for Claude 5-family models", async () => {

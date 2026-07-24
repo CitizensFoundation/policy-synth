@@ -58,7 +58,12 @@ const CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG: AnthropicBeta =
   "server-side-fallback-2026-06-01";
 const CLAUDE_EXTENDED_CACHE_TTL_BETA_FLAG: AnthropicBeta =
   "extended-cache-ttl-2025-04-11";
-const CLAUDE_FABLE_FALLBACK_MODEL = "claude-opus-4-8";
+// Model used when the config does not name one.
+const CLAUDE_DEFAULT_MODEL = "claude-opus-4-8";
+// Target for the server-side refusal fallback chain. Anthropic routes
+// cyber-category refusals on the 5-family models to Opus 4.8, and it is the
+// documented fallback target for them, so pin it here.
+const CLAUDE_REFUSAL_FALLBACK_MODEL = "claude-opus-4-8";
 const MAX_CLAUDE_PAUSE_TURN_CONTINUATIONS = 4;
 class ClaudePauseTurnContinuationLimitError extends Error {
   readonly isPsNonRetryableModelError = true;
@@ -228,7 +233,7 @@ export class ClaudeChat extends BaseChatModel {
   constructor(config: PsAiModelConfig) {
     const {
       apiKey,
-      modelName = CLAUDE_FABLE_FALLBACK_MODEL,
+      modelName = CLAUDE_DEFAULT_MODEL,
       maxTokensOut = 4096,
     } = config;
 
@@ -410,7 +415,7 @@ export class ClaudeChat extends BaseChatModel {
           ? CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG
           : null,
         fallbackModel: this.useServerSideRefusalFallback
-          ? CLAUDE_FABLE_FALLBACK_MODEL
+          ? CLAUDE_REFUSAL_FALLBACK_MODEL
           : null,
         thinking: requestOptions.thinking ?? null,
         outputConfig: requestOptions.output_config ?? null,
@@ -444,7 +449,7 @@ export class ClaudeChat extends BaseChatModel {
           ? CLAUDE_SERVER_SIDE_FALLBACK_BETA_FLAG
           : null,
         fallbackModel: this.useServerSideRefusalFallback
-          ? CLAUDE_FABLE_FALLBACK_MODEL
+          ? CLAUDE_REFUSAL_FALLBACK_MODEL
           : null,
         fallbackBlocks: this.extractFallbackBlocks(response.content),
         fallbackIterations: response.usage?.iterations ?? null,
@@ -1706,7 +1711,7 @@ export class ClaudeChat extends BaseChatModel {
       return undefined;
     }
 
-    return [{ model: CLAUDE_FABLE_FALLBACK_MODEL }];
+    return [{ model: CLAUDE_REFUSAL_FALLBACK_MODEL }];
   }
 
   private buildBetaCreateRequestOptions(
@@ -1835,14 +1840,27 @@ export class ClaudeChat extends BaseChatModel {
     return major > 4 || (major === 4 && minor !== undefined && minor >= 6);
   }
 
+  // Fast mode (speed: "fast" + the fast-mode beta flag) is a research preview
+  // limited to specific Opus models on the first-party Anthropic API.
+  // Currently: Claude Opus 5 and Claude Opus 4.8.
+  // Opus 4.7 had it removed - speed: "fast" now errors there - so it must not
+  // match. Keep this list explicit: fast mode is a per-model capability, not a
+  // monotonic version property, so add new models here as they ship it.
   private static supportsFastMode(modelName: string): boolean {
-    return /claude-opus-4-[78](?=$|[-@:])/.test(modelName);
+    return /claude-opus-(4-8|5)(?=$|[-@:])/.test(modelName);
   }
 
+  // The 5-family models run safety classifiers that can decline a request:
+  // the call returns HTTP 200 with stop_reason "refusal" and empty content
+  // rather than an error. The server-side fallback chain re-runs the declined
+  // request on CLAUDE_REFUSAL_FALLBACK_MODEL inside the same call instead of
+  // handing the caller an empty response.
+  // Opus 5 and Mythos 5 carry the same classifiers as Fable 5. Sonnet 5 is not
+  // included: it is not in the documented set for this parameter.
   private static supportsServerSideRefusalFallback(
     modelName: string
   ): boolean {
-    return /claude-fable-5(?=$|[-@:])/.test(modelName);
+    return /claude-(fable|mythos|opus)-5(?=$|[-@:])/.test(modelName);
   }
 
   private static hasDefaultOneMillionContext(modelName: string): boolean {
@@ -1857,8 +1875,13 @@ export class ClaudeChat extends BaseChatModel {
       return true;
     }
 
+    // Sampling params were removed from Opus 4.7 onward and stay removed, so
+    // this is a version range rather than a list: Opus 5+ rejects them too.
     const opus = ClaudeChat.modelMajorMinor(modelName, "opus");
-    return opus?.major === 4 && (opus.minor ?? 0) >= 7;
+    if (!opus) {
+      return false;
+    }
+    return opus.major > 4 || (opus.major === 4 && (opus.minor ?? 0) >= 7);
   }
 
   private static normalizeRequestedInferenceType(
