@@ -9,6 +9,7 @@ export const META_MODEL_API_MISSING_KEY_PLACEHOLDER =
 
 export class MetaModelApiConfigurationError extends Error {
   readonly isPsNonRetryableModelError = true;
+  readonly isPsFallbackEligibleModelError = true;
 
   constructor(message: string, options?: ErrorOptions) {
     super(message, options);

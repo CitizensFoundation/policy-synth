@@ -368,7 +368,10 @@ export class AgentCostItemManager extends PolicySynthAgentBase {
       1000000.0;
 
     const cacheWriteMultiplier =
-      getCacheWriteInputCostMultiplier(effectivePrices);
+      getCacheWriteInputCostMultiplier(effectivePrices, {
+        provider: data.provider,
+        accountingVersion: data.accountingVersion,
+      });
     const costInCacheWrite =
       ((usage.token_in_cache_write_count || 0) *
         (effectivePrices.costInTokensPerMillion || 0) *

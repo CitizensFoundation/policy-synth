@@ -1780,6 +1780,61 @@ describe("PsAiModelManager text model calls", () => {
     assert.equal(isolatedClient.apiKey, "missing-meta-model-api-key");
   });
 
+  it("immediately uses an explicit fallback for Meta configuration failures", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    const internals = asInternals(manager);
+    const primary = new OpenAiResponses(
+      createModelConfig({
+        apiKey: undefined,
+        modelName: "muse-spark-1.2",
+        provider: PsAiModelProvider.Meta,
+      }) as PsOpenAiModelConfig
+    );
+    const fallback = new ScriptedChatModel(
+      createModelConfig({ modelName: "fallback-model" }),
+      [createModelResult("  fallback result  ")]
+    );
+    registerModel(manager, primary);
+
+    let retrySleeps = 0;
+    Reflect.set(
+      internals,
+      "sleepBeforeRetry",
+      async (_retryCount: number) => {
+        retrySleeps += 1;
+      }
+    );
+    Reflect.set(
+      internals,
+      "createEphemeralModel",
+      async (
+        _modelType: PsAiModelType,
+        _modelSize: PsAiModelSize,
+        options: PsCallModelOptions
+      ) =>
+        options.modelProvider === PsAiModelProvider.OpenAI &&
+        options.modelName === "fallback-model"
+          ? fallback
+          : undefined
+    );
+
+    const result = await manager.callModel(
+      PsAiModelType.Text,
+      PsAiModelSize.Small,
+      [{ role: "user", message: "hello" }],
+      {
+        fallbackModelProvider: PsAiModelProvider.OpenAI,
+        fallbackModelName: "fallback-model",
+      }
+    );
+
+    assert.equal(result, "fallback result");
+    assert.equal(retrySleeps, 0);
+    assert.equal(fallback.calls.length, 1);
+    assert.equal(manager.usageCalls[0][0], "fallback-model");
+  });
+
   it("requires an exact persisted model identity before a DB-backed call", async () => {
     useStandardResponsesEnv();
     delete process.env.DISABLE_DB_INIT;

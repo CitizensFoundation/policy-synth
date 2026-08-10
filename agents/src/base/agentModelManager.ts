@@ -1081,6 +1081,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     );
   };
 
+  static isFallbackEligibleModelError = (err: unknown) => {
+    return (
+      typeof err === "object" &&
+      err !== null &&
+      "isPsFallbackEligibleModelError" in err &&
+      (err as { isPsFallbackEligibleModelError?: unknown })
+        .isPsFallbackEligibleModelError === true
+    );
+  };
+
   private isDatabaseUsagePersistenceEnabled(): boolean {
     return (
       process.env.DISABLE_DB_USAGE_TRACKING !== "true" &&
@@ -1352,7 +1362,12 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           await this.sleepBeforeRetry(retryCount);
         }
       } catch (error: any) {
-        if (PsAiModelManager.isNonRetryableModelError(error)) {
+        const isFallbackEligibleModelError =
+          PsAiModelManager.isFallbackEligibleModelError(error);
+        if (
+          PsAiModelManager.isNonRetryableModelError(error) &&
+          !(hasExplicitFallback && isFallbackEligibleModelError)
+        ) {
           this.logger.error(
             `Non-retryable model error: ${error.message || error}`
           );
@@ -1471,6 +1486,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         if (
           (is5xxError(error, retryCount) ||
             isProviderAuthenticationError ||
+            isFallbackEligibleModelError ||
             PsAiModelManager.isProhibitedContentError(error) ||
             tooMany429s ||
             tooManyRetriesWithFallback ||

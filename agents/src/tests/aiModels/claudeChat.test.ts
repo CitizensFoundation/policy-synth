@@ -1261,6 +1261,10 @@ describe("ClaudeChat", () => {
         maxTokensOut: 4096,
       })
     );
+    assert.equal(
+      model.config.prices.cacheWriteInputCostMultiplier,
+      undefined
+    );
 
     let captured: RecordedClaudeRequest | undefined;
     setMockClient(model, {
@@ -1338,7 +1342,7 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.request?.mode, "non_stream");
   });
 
-  it("defaults to v2 accounting when accountingVersion is not configured", async () => {
+  it("defaults to v2 accounting and preserves Claude's cache-write premium", async () => {
     delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     delete process.env.USE_VERTEX_FOR_CLAUDE;
     delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
@@ -1349,6 +1353,7 @@ describe("ClaudeChat", () => {
         accountingVersion: undefined,
       })
     );
+    assert.equal(model.config.prices.cacheWriteInputCostMultiplier, 1.25);
 
     setMockClient(model, {
       messages: {

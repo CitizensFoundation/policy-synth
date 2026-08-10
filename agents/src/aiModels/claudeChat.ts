@@ -50,7 +50,10 @@ import {
   type PsWebSearchBuiltInTool,
   wrapBuiltInToolProviderError,
 } from "./builtInToolSupport.js";
-import { resolveEncodingUsageAccountingVersion } from "../base/modelUsageAccounting.js";
+import {
+  ANTHROPIC_DEFAULT_CACHE_WRITE_INPUT_COST_MULTIPLIER,
+  resolveEncodingUsageAccountingVersion,
+} from "../base/modelUsageAccounting.js";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
@@ -231,6 +234,23 @@ export class ClaudeChat extends BaseChatModel {
   config: PsAiModelConfig;
 
   constructor(config: PsAiModelConfig) {
+    if (
+      resolveEncodingUsageAccountingVersion(config.accountingVersion) === 2 &&
+      config.prices.cacheWriteInputCostMultiplier === undefined
+    ) {
+      // V2 persists cache writes as a separate token bucket. Carry Claude's
+      // legacy 1.25 write premium into prices so downstream cost managers do
+      // not apply their provider-neutral multiplier of one.
+      config = {
+        ...config,
+        prices: {
+          ...config.prices,
+          cacheWriteInputCostMultiplier:
+            ANTHROPIC_DEFAULT_CACHE_WRITE_INPUT_COST_MULTIPLIER,
+        },
+      };
+    }
+
     const {
       apiKey,
       modelName = CLAUDE_DEFAULT_MODEL,

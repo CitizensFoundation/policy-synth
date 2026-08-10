@@ -97,15 +97,34 @@ export function roundModelInputUsageForPersistence(
   };
 }
 
+export const ANTHROPIC_DEFAULT_CACHE_WRITE_INPUT_COST_MULTIPLIER = 1.25;
+
+export interface PsCacheWriteInputCostContext {
+  provider?: string;
+  accountingVersion?: unknown;
+}
+
 export function getCacheWriteInputCostMultiplier(
-  prices: PsBaseModelPriceConfiguration
+  prices: PsBaseModelPriceConfiguration,
+  context?: PsCacheWriteInputCostContext
 ): number {
   const multiplier = prices.cacheWriteInputCostMultiplier;
-  return typeof multiplier === "number" &&
+  if (
+    typeof multiplier === "number" &&
     Number.isFinite(multiplier) &&
     multiplier >= 0
-    ? multiplier
-    : 1;
+  ) {
+    return multiplier;
+  }
+
+  if (
+    context?.provider?.toLowerCase() === "anthropic" &&
+    resolveUsageAccountingVersion(context.accountingVersion) === 2
+  ) {
+    return ANTHROPIC_DEFAULT_CACHE_WRITE_INPUT_COST_MULTIPLIER;
+  }
+
+  return 1;
 }
 
 export interface PsLongContextPriceRates {

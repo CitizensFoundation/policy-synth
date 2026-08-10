@@ -217,6 +217,42 @@ describe("AgentCostItemManager", () => {
     assert.equal(costs.totalCost, 11.25);
   });
 
+  it("defaults missing Anthropic v2 cache-write pricing in usage items", () => {
+    const manager = new AgentCostItemManager();
+    const pricesWithoutCacheWriteMultiplier = {
+      ...prices,
+      cacheWriteInputCostMultiplier: undefined,
+    };
+    const costs = (
+      manager as unknown as {
+        calcCostsFromItem: (
+          data: PsModelUsageItemData,
+          fallbackPrices?: PsBaseModelPriceConfiguration | null
+        ) => {
+          costInCacheWrite: number;
+          costInCacheWriteLong: number;
+        };
+      }
+    ).calcCostsFromItem(
+      usageItemData({
+        accountingVersion: 2,
+        provider: "anthropic",
+        pricing: { configuredPrices: pricesWithoutCacheWriteMultiplier },
+        usage: {
+          token_in_count: 0,
+          token_out_count: 0,
+          token_in_cache_write_count: 1,
+          long_context_token_in_cache_write_count: 1,
+        },
+        usageNormalized: undefined,
+      }),
+      pricesWithoutCacheWriteMultiplier
+    );
+
+    assert.equal(costs.costInCacheWrite, 1.25);
+    assert.equal(costs.costInCacheWriteLong, 3.75);
+  });
+
   it("calculates detailed, aggregate, and single-agent costs from usage items", async () => {
     const manager = new AgentCostItemManager();
     const rows = [
@@ -854,7 +890,10 @@ describe("AgentCostManager", () => {
       manager as unknown as {
         calcCosts: (
           usage: PsModelUsageAttributes,
-          prices: PsBaseModelPriceConfiguration
+          prices: PsBaseModelPriceConfiguration,
+          webSearchCallCount?: number,
+          modelProvider?: string,
+          accountingVersion?: unknown
         ) => LegacyCostBreakdown;
       }
     ).calcCosts.bind(manager);
@@ -926,6 +965,20 @@ describe("AgentCostManager", () => {
     assert.equal(zeroLongCacheWriteCosts.costInCacheWrite, 1.25);
     assert.equal(zeroLongCacheWriteCosts.costInCacheWriteLong, 0);
     assert.equal(zeroLongCacheWriteCosts.totalCost, 1.25);
+
+    const pricesWithoutCacheWriteMultiplier = {
+      ...prices,
+      cacheWriteInputCostMultiplier: undefined,
+    };
+    const defaultedAnthropicCosts = calcCosts(
+      cacheWriteUsage,
+      pricesWithoutCacheWriteMultiplier,
+      0,
+      "anthropic",
+      2
+    );
+    assert.equal(defaultedAnthropicCosts.costInCacheWrite, 1.25);
+    assert.equal(defaultedAnthropicCosts.costInCacheWriteLong, 3.75);
   });
 
   it("keeps compact and usage-item long-context fallback costs in parity", () => {

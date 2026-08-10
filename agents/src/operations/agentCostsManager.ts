@@ -151,7 +151,9 @@ export class AgentCostManager extends PolicySynthAgentBase {
   private calcCosts(
     mu: PsModelUsageAttributes,
     prices: PsBaseModelPriceConfiguration,
-    webSearchCallCount = 0
+    webSearchCallCount = 0,
+    modelProvider?: string,
+    accountingVersion?: unknown
   ): PsCostBreakdown {
     const costInNormal =
       ((mu.token_in_count || 0) * (prices.costInTokensPerMillion || 0)) /
@@ -162,7 +164,10 @@ export class AgentCostManager extends PolicySynthAgentBase {
         (prices.costInCachedContextTokensPerMillion || 0)) /
       1000000.0;
 
-    const cacheWriteMultiplier = getCacheWriteInputCostMultiplier(prices);
+    const cacheWriteMultiplier = getCacheWriteInputCostMultiplier(prices, {
+      provider: modelProvider,
+      accountingVersion,
+    });
     const costInCacheWrite =
       ((mu.token_in_cache_write_count || 0) *
         (prices.costInTokensPerMillion || 0) *
@@ -259,6 +264,7 @@ export class AgentCostManager extends PolicySynthAgentBase {
           a.id as agent_id,
           a.configuration->>'name' as agent_name,
           am.name as ai_model_name,
+          am.configuration->>'provider' AS model_provider,
           am.configuration->>'accountingVersion' AS accounting_version,
           am.configuration->'prices' AS price_cfg,
           mu.token_in_count,
@@ -335,10 +341,15 @@ export class AgentCostManager extends PolicySynthAgentBase {
         };
 
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
+        const accountingVersion = resolveEncodingUsageAccountingVersion(
+          row.accounting_version
+        );
         const costs = this.calcCosts(
           modelUsage,
           prices,
-          parseInt(row.web_search_call_count || "0")
+          parseInt(row.web_search_call_count || "0"),
+          row.model_provider,
+          accountingVersion
         );
 
         return {
@@ -349,9 +360,7 @@ export class AgentCostManager extends PolicySynthAgentBase {
           // The label comes from the model's live configuration, which
           // describes how new usage is encoded — resolve it with the same
           // default as the encoder so unversioned Claude models report v2.
-          accountingVersion: resolveEncodingUsageAccountingVersion(
-            row.accounting_version
-          ),
+          accountingVersion,
           tokenInCount:
             (modelUsage.token_in_count || 0) +
             (modelUsage.long_context_token_in_count || 0) +
@@ -424,6 +433,8 @@ export class AgentCostManager extends PolicySynthAgentBase {
         SELECT
           mu.agent_id,
           a.configuration->>'name' as agent_name,
+          am.configuration->>'provider' AS model_provider,
+          am.configuration->>'accountingVersion' AS accounting_version,
           am.configuration->'prices' AS price_cfg,
           mu.token_in_count,
           mu.token_out_count,
@@ -524,10 +535,15 @@ export class AgentCostManager extends PolicySynthAgentBase {
           agent_id: row.agent_id,
         };
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
+        const accountingVersion = resolveEncodingUsageAccountingVersion(
+          row.accounting_version
+        );
         const costs = this.calcCosts(
           modelUsage,
           prices,
-          parseInt(row.web_search_call_count || "0")
+          parseInt(row.web_search_call_count || "0"),
+          row.model_provider,
+          accountingVersion
         );
         agentCostMap.set(
           row.agent_id,
@@ -568,6 +584,8 @@ export class AgentCostManager extends PolicySynthAgentBase {
           "mui.agent_id = :agentId"
         )}
         SELECT
+          am.configuration->>'provider' AS model_provider,
+          am.configuration->>'accountingVersion' AS accounting_version,
           am.configuration->'prices' AS price_cfg,
           mu.token_in_count,
           mu.token_out_count,
@@ -645,10 +663,15 @@ export class AgentCostManager extends PolicySynthAgentBase {
           agent_id: agentId,
         };
         const prices: PsBaseModelPriceConfiguration = row.price_cfg;
+        const accountingVersion = resolveEncodingUsageAccountingVersion(
+          row.accounting_version
+        );
         const costs = this.calcCosts(
           modelUsage,
           prices,
-          parseInt(row.web_search_call_count || "0")
+          parseInt(row.web_search_call_count || "0"),
+          row.model_provider,
+          accountingVersion
         );
         totalAgentCost += costs.totalCost;
       });

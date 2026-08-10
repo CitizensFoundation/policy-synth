@@ -77,7 +77,7 @@ describe("model usage accounting", () => {
     assert.equal(partition.cacheComponentsExceedTotal, true);
   });
 
-  it("uses a configured cache-write multiplier and otherwise defaults to one", () => {
+  it("uses configured and Anthropic v2 cache-write multipliers", () => {
     const prices: PsBaseModelPriceConfiguration = {
       costInTokensPerMillion: 1,
       costInCachedContextTokensPerMillion: 0.1,
@@ -104,6 +104,20 @@ describe("model usage accounting", () => {
       getCacheWriteInputCostMultiplier({
         ...prices,
         cacheWriteInputCostMultiplier: -1,
+      }),
+      1
+    );
+    assert.equal(
+      getCacheWriteInputCostMultiplier(prices, {
+        provider: "anthropic",
+        accountingVersion: 2,
+      }),
+      1.25
+    );
+    assert.equal(
+      getCacheWriteInputCostMultiplier(prices, {
+        provider: "anthropic",
+        accountingVersion: 1,
       }),
       1
     );
