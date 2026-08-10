@@ -757,6 +757,7 @@ describe("AgentCostManager", () => {
         agent_id: 2,
         agent_name: "Child",
         ai_model_name: "Fallback model",
+        accounting_version: "1",
         price_cfg: fallbackPrices,
         long_context_token_in_count: "3",
         long_context_token_in_cached_context_count: "2",
@@ -802,6 +803,8 @@ describe("AgentCostManager", () => {
         assert.equal(detailed[0].costOutLong, 10);
         assert.equal(detailed[0].costInCachedLong, 1);
         assert.equal(detailed[1].totalCost, 0);
+        // No configured accountingVersion → reported as the v2 encode default.
+        assert.equal(detailed[1].accountingVersion, 2);
 
         const aggregate = await manager.getAgentCosts(1);
         const aggregateRows = aggregate.agentCosts as Array<{

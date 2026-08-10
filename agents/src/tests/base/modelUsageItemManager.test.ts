@@ -406,7 +406,7 @@ describe("PsModelUsageItemManager", () => {
       agent_id: 42,
       data: {
         version: 1,
-        accountingVersion: 1,
+        accountingVersion: 2,
         provider: PsAiModelProvider.OpenAI,
         apiFamily: "anthropic",
         timestamp: (createdPayloads[0] as { data: { timestamp: string } }).data

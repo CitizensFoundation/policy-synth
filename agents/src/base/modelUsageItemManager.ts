@@ -1,7 +1,7 @@
 import type { Sequelize, Transaction } from "sequelize";
 
 import { PolicySynthAgentBase } from "./agentBase.js";
-import { resolveUsageAccountingVersion } from "./modelUsageAccounting.js";
+import { resolveEncodingUsageAccountingVersion } from "./modelUsageAccounting.js";
 
 let sequelize: Sequelize | undefined;
 let PsModelUsageItem:
@@ -128,7 +128,10 @@ export class PsModelUsageItemManager extends PolicySynthAgentBase {
   ): PsModelUsageItemData {
     return {
       version: 1,
-      accountingVersion: resolveUsageAccountingVersion(
+      // This labels usage being encoded right now, so it must match the
+      // encode-time default (v2 unless the model explicitly opts into v1) —
+      // not the legacy default used when interpreting already-stored rows.
+      accountingVersion: resolveEncodingUsageAccountingVersion(
         ctx.accountingVersion ?? ctx.usageItemData?.accountingVersion
       ),
       provider: ctx.modelProvider,

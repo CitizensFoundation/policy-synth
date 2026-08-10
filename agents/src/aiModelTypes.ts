@@ -22,4 +22,5 @@ export enum PsAiModelProvider {
   Anthropic = "anthropic",
   Google = "google",
   Azure = "azure",
+  Meta = "meta",
 }

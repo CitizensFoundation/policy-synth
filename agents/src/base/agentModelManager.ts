@@ -4,6 +4,7 @@ import { OpenAiChat } from "../aiModels/openAiChat.js";
 import { OpenAiResponses } from "../aiModels/openAiResponses.js";
 import { OpenAiRealtime } from "../aiModels/openAiRealtime.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
+import { getMetaModelApiEnvCredentials } from "../aiModels/metaModelApi.js";
 import { GoogleGeminiDeepResearch } from "../aiModels/googleGeminiDeepResearch.js";
 import { GoogleGeminiThought } from "../aiModels/googleGeminiThought.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
@@ -157,6 +158,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelProvider = process.env.PS_AI_MODEL_PROVIDER as PsAiModelProvider;
     const modelName = process.env.PS_AI_MODEL_NAME;
     let apiKey: string | undefined;
+    let envCredentialRef: string | undefined;
     let createModel:
       | ((baseConfig: PsAiModelConfig) => BaseChatModel | undefined)
       | undefined;
@@ -188,6 +190,18 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           isGeminiDeepResearchModelName(getGeminiApiModelName(baseConfig))
             ? new GoogleGeminiDeepResearch(baseConfig)
             : new GoogleGeminiChat(baseConfig);
+        break;
+      case PsAiModelProvider.Meta:
+        // Meta Model API (Muse Spark) is served over its OpenAI-compatible
+        // Responses surface.
+        {
+          const envCredentials = getMetaModelApiEnvCredentials();
+          apiKey = envCredentials?.apiKey;
+          // Preserve the credential source so OpenAiResponses can surface the
+          // risk of MODEL_API_KEY even though the key is passed explicitly.
+          envCredentialRef = envCredentials?.credentialRef;
+        }
+        createModel = (baseConfig) => new OpenAiResponses(baseConfig);
         break;
       case PsAiModelProvider.Azure:
         apiKey = process.env.AZURE_API_KEY;
@@ -235,7 +249,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         apiKey: apiKey,
         modelName: modelName,
         provider: modelProvider,
-        credentialRef: this.getEnvCredentialRefForProvider(modelProvider),
+        credentialRef:
+          envCredentialRef ?? this.getEnvCredentialRefForProvider(modelProvider),
         maxTokensOut: this.maxTokensOut,
         temperature: this.modelTemperature,
         reasoningEffort: this.reasoningEffort,
@@ -381,6 +396,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           newModel = new OpenAiChat(baseConfig);
           break;
         case PsAiModelProvider.OpenAIResponses:
+        case PsAiModelProvider.Meta:
           newModel = new OpenAiResponses(baseConfig);
           break;
         case PsAiModelProvider.Google:
@@ -679,9 +695,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       `Ephemeral config: ${JSON.stringify(ephemeralConfig, null, 2)}`
     );
 
+    const providerLower = provider.toLowerCase();
     const usesOpenAiResponses =
-      provider.toLowerCase() === PsAiModelProvider.OpenAIResponses.toLowerCase() ||
-      (provider.toLowerCase() === PsAiModelProvider.OpenAI &&
+      providerLower === PsAiModelProvider.OpenAIResponses.toLowerCase() ||
+      providerLower === PsAiModelProvider.Meta ||
+      (providerLower === PsAiModelProvider.OpenAI &&
         Boolean(options.useOpenAiResponsesIfOpenAi));
     const responsesStateKey = this.getResponsesStateKey(options);
     const useStatefulResponsesCache =
@@ -716,6 +734,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         }
         break;
       case PsAiModelProvider.OpenAIResponses.toLowerCase():
+      case PsAiModelProvider.Meta:
         ephemeralModel = new OpenAiResponses(ephemeralConfig);
         break;
       case PsAiModelProvider.Anthropic:
@@ -792,6 +811,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         return process.env.GOOGLE_API_KEY || process.env.GEMINI_API_KEY || "";
       case PsAiModelProvider.Azure:
         return process.env.AZURE_API_KEY || "";
+      case PsAiModelProvider.Meta:
+        return getMetaModelApiEnvCredentials()?.apiKey || "";
       default:
         return "";
     }
@@ -809,6 +830,8 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         return process.env.GEMINI_API_KEY ? "env:GEMINI_API_KEY" : undefined;
       case PsAiModelProvider.Azure:
         return process.env.AZURE_API_KEY ? "env:AZURE_API_KEY" : undefined;
+      case PsAiModelProvider.Meta:
+        return getMetaModelApiEnvCredentials()?.credentialRef;
       default:
         return undefined;
     }

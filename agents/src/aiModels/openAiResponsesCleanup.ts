@@ -304,7 +304,7 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
 
   static getSettings(
     requestOptions: PsModelRequestOptions | undefined,
-    usingAzure: boolean,
+    unsupportedTransport: string | undefined,
     logger: OpenAiResponsesCleanupLogger
   ): OpenAiResponsesCleanupSettings | undefined {
     const idleMinutes = requestOptions?.deleteOpenAiResponsesAfterIdleMinutes;
@@ -316,9 +316,9 @@ export class OpenAiResponsesCleanup extends PolicySynthAgentBase {
       return undefined;
     }
 
-    if (usingAzure) {
+    if (unsupportedTransport) {
       logger.warn(
-        "Skipping stored OpenAI Responses cleanup scheduling for Azure-compatible Responses transport."
+        `Skipping stored OpenAI Responses cleanup scheduling for ${unsupportedTransport} Responses transport; the cleanup worker only deletes from OpenAI endpoints.`
       );
       return undefined;
     }

@@ -15,6 +15,20 @@ export function resolveUsageAccountingVersion(
   return value === 2 || value === "2" ? 2 : 1;
 }
 
+/**
+ * Version used when ENCODING new usage at call time, as opposed to
+ * interpreting already-stored rows (resolveUsageAccountingVersion, which keeps
+ * defaulting legacy rows to v1). The v1 encoding blends cache-write/read
+ * multipliers into tokensIn, which the partition-based persistence pipeline
+ * then double-counts against cache columns and underprices cache writes, so
+ * new usage defaults to v2 unless a model explicitly opts into v1.
+ */
+export function resolveEncodingUsageAccountingVersion(
+  value: unknown
+): PsUsageAccountingVersion {
+  return value === 1 || value === "1" ? 1 : 2;
+}
+
 const normalizeTokenCount = (value: number | undefined): number =>
   typeof value === "number" && Number.isFinite(value) && value > 0
     ? value

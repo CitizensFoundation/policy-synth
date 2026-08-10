@@ -1338,6 +1338,68 @@ describe("ClaudeChat", () => {
     assert.equal(result?.usageItemData?.request?.mode, "non_stream");
   });
 
+  it("defaults to v2 accounting when accountingVersion is not configured", async () => {
+    delete process.env.AWS_BEARER_TOKEN_BEDROCK;
+    delete process.env.USE_VERTEX_FOR_CLAUDE;
+    delete process.env.USE_GOOGLE_VERTEX_AI_FOR_CLAUDE;
+
+    const model = new ClaudeChat(
+      createConfig({
+        modelName: "claude-3-opus-20240229",
+        accountingVersion: undefined,
+      })
+    );
+
+    setMockClient(model, {
+      messages: {
+        create: async () => ({
+          id: "claude-default-accounting-1",
+          usage: {
+            input_tokens: 12,
+            output_tokens: 3,
+            cache_creation_input_tokens: 1,
+            cache_read_input_tokens: 5,
+            service_tier: "standard",
+          },
+          content: [{ type: "text", text: "Default accounting" }],
+        }),
+        stream: async () => {
+          throw new Error("messages.stream should not be used in this test");
+        },
+      },
+      beta: {
+        messages: {
+          create: async () => {
+            throw new Error(
+              "beta.messages.create should not be used in this test"
+            );
+          },
+          stream: async () => {
+            throw new Error(
+              "beta.messages.stream should not be used in this test"
+            );
+          },
+        },
+      },
+    });
+
+    const result = await model.generate([]);
+
+    assert.equal(result?.content, "Default accounting");
+    assert.equal(result?.tokensIn, 18);
+    assert.equal(result?.tokensOut, 3);
+    assert.equal(result?.cachedInTokens, 5);
+    assert.equal(result?.cacheWriteInTokens, 1);
+    assert.equal(result?.usageItemData?.accountingVersion, 2);
+    assert.deepEqual(result?.usageItemData?.usageNormalized, {
+      tokensIn: 18,
+      tokensOut: 3,
+      cachedInTokens: 5,
+      cacheWriteInTokens: 1,
+      cacheReadInputTokens: 5,
+    });
+  });
+
   it("maps direct Claude web search and normalizes sources, citations, and raw results", async () => {
     delete process.env.AWS_BEARER_TOKEN_BEDROCK;
     delete process.env.USE_VERTEX_FOR_CLAUDE;

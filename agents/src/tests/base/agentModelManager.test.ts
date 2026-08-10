@@ -142,6 +142,8 @@ const originalPsAiModelDeploymentName =
 const originalDisableUsageTracking = process.env.DISABLE_DB_USAGE_TRACKING;
 const originalEmitUsageEvents = process.env.PS_EMIT_TOKEN_USAGE_EVENTS;
 const originalPromptDebug = process.env.PS_PROMPT_DEBUG;
+const originalMetaModelApiKey = process.env.META_MODEL_API_KEY;
+const originalModelApiKey = process.env.MODEL_API_KEY;
 
 const restoreEnv = (key: string, value: string | undefined) => {
   if (value === undefined) {
@@ -171,6 +173,8 @@ const useStandardResponsesEnv = () => {
   delete process.env.AZURE_API_KEY;
   delete process.env.PS_AI_MODEL_ENDPOINT;
   delete process.env.PS_AI_MODEL_DEPLOYMENT_NAME;
+  delete process.env.META_MODEL_API_KEY;
+  delete process.env.MODEL_API_KEY;
   delete process.env.DISABLE_DB_USAGE_TRACKING;
   delete process.env.PS_EMIT_TOKEN_USAGE_EVENTS;
   delete process.env.PS_PROMPT_DEBUG;
@@ -240,6 +244,8 @@ afterEach(() => {
     "PS_AI_MODEL_DEPLOYMENT_NAME",
     originalPsAiModelDeploymentName
   );
+  restoreEnv("META_MODEL_API_KEY", originalMetaModelApiKey);
+  restoreEnv("MODEL_API_KEY", originalModelApiKey);
   restoreEnv("DISABLE_DB_USAGE_TRACKING", originalDisableUsageTracking);
   restoreEnv("PS_EMIT_TOKEN_USAGE_EVENTS", originalEmitUsageEvents);
   restoreEnv("PS_PROMPT_DEBUG", originalPromptDebug);
@@ -522,6 +528,15 @@ describe("PsAiModelManager initialization", () => {
       ),
       createAiModel(
         {
+          type: PsAiModelType.Text,
+          modelSize: PsAiModelSize.Large,
+          model: "muse-spark-1.2",
+          provider: PsAiModelProvider.Meta,
+        },
+        17
+      ),
+      createAiModel(
+        {
           type: PsAiModelType.Realtime,
           modelSize: PsAiModelSize.Small,
           model: "gpt-realtime-2",
@@ -570,6 +585,16 @@ describe("PsAiModelManager initialization", () => {
     assert.ok(
       manager.models.get(`${PsAiModelType.Audio}_${PsAiModelSize.Small}`) instanceof
         AzureOpenAiChat
+    );
+    const metaModel = manager.models.get(
+      `${PsAiModelType.Text}_${PsAiModelSize.Large}`
+    );
+    assert.ok(metaModel instanceof OpenAiResponses);
+    assert.equal(metaModel?.modelName, "muse-spark-1.2");
+    assert.equal(metaModel?.provider, PsAiModelProvider.Meta);
+    assert.equal(
+      manager.modelIds.get(`${PsAiModelType.Text}_${PsAiModelSize.Large}`),
+      17
     );
     assert.ok(
       manager.realtimeModels.get(
@@ -687,6 +712,11 @@ describe("PsAiModelManager initialization", () => {
           PS_AI_MODEL_DEPLOYMENT_NAME: "env-deployment",
         },
       },
+      {
+        provider: PsAiModelProvider.Meta,
+        keyName: "META_MODEL_API_KEY",
+        expectedClass: OpenAiResponses,
+      },
     ];
 
     for (const testCase of cases) {
@@ -723,6 +753,39 @@ describe("PsAiModelManager initialization", () => {
       deepResearchManager.initializeOneModelFromEnv() instanceof
         GoogleGeminiDeepResearch
     );
+  });
+
+  it("surfaces generic MODEL_API_KEY usage during Meta environment initialization", () => {
+    useStandardResponsesEnv();
+    process.env.PS_AI_MODEL_TYPE = PsAiModelType.Text;
+    process.env.PS_AI_MODEL_SIZE = PsAiModelSize.Small;
+    process.env.PS_AI_MODEL_PROVIDER = PsAiModelProvider.Meta;
+    process.env.PS_AI_MODEL_NAME = "muse-spark-1.2";
+    process.env.MODEL_API_KEY = "generic-meta-key";
+
+    const warnings: string[] = [];
+    Object.defineProperty(OpenAiResponses, "logger", {
+      configurable: true,
+      get: () => ({
+        debug: () => undefined,
+        error: () => undefined,
+        info: () => undefined,
+        warn: (message: unknown) => warnings.push(String(message)),
+      }),
+    });
+
+    try {
+      const manager = createNoopManager();
+      const model = manager.initializeOneModelFromEnv();
+
+      assert.ok(model instanceof OpenAiResponses);
+      assert.equal(model.config.credentialRef, "env:MODEL_API_KEY");
+      assert.equal(model.config.apiKey, "generic-meta-key");
+      assert.equal(warnings.length, 1);
+      assert.match(warnings[0], /generic MODEL_API_KEY env var/);
+    } finally {
+      Reflect.deleteProperty(OpenAiResponses, "logger");
+    }
   });
 
   it("rejects unsupported realtime environment model providers", () => {
@@ -1665,6 +1728,58 @@ describe("PsAiModelManager utility routing", () => {
 });
 
 describe("PsAiModelManager text model calls", () => {
+  it("does not retry deferred Meta configuration failures after state isolation", async () => {
+    useStandardResponsesEnv();
+    const manager = createNoopManager();
+    const model = new OpenAiResponses(
+      createModelConfig({
+        apiKey: undefined,
+        modelName: "muse-spark-1.2",
+        provider: PsAiModelProvider.Meta,
+      }) as PsOpenAiModelConfig
+    );
+    registerModel(manager, model);
+
+    let retrySleeps = 0;
+    Reflect.set(
+      asInternals(manager),
+      "sleepBeforeRetry",
+      async (_retryCount: number) => {
+        retrySleeps += 1;
+      }
+    );
+
+    await assert.rejects(
+      () =>
+        manager.callModel(
+          PsAiModelType.Text,
+          PsAiModelSize.Small,
+          [{ role: "user", message: "hello" }],
+          { responsesStateKey: "missing-meta-key" }
+        ),
+      (error: unknown) => {
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: boolean })
+            .isPsNonRetryableModelError,
+          true
+        );
+        assert.match(String(error), /Meta Model API requires an API key/);
+        return true;
+      }
+    );
+
+    assert.equal(retrySleeps, 0);
+    assert.equal(asInternals(manager).statefulResponsesModelCache.size, 1);
+    const isolatedModel = [
+      ...asInternals(manager).statefulResponsesModelCache.values(),
+    ][0];
+    assert.notStrictEqual(isolatedModel, model);
+    const isolatedClient = Reflect.get(isolatedModel, "client") as {
+      apiKey?: string;
+    };
+    assert.equal(isolatedClient.apiKey, "missing-meta-model-api-key");
+  });
+
   it("requires an exact persisted model identity before a DB-backed call", async () => {
     useStandardResponsesEnv();
     delete process.env.DISABLE_DB_INIT;
@@ -4515,6 +4630,61 @@ describe("PsAiModelManager OpenAI Responses state reuse", () => {
     assert.equal(third.config.reasoningEffort, "medium");
     assert.equal(third.config.reasoningMode, "standard");
     assert.equal(internals.statefulResponsesModelCache.size, 1);
+  });
+
+  it("isolates stateful Meta Responses overrides per conversation state key", async () => {
+    useStandardResponsesEnv();
+    const originalMetaKey = process.env.META_MODEL_API_KEY;
+    process.env.META_MODEL_API_KEY = "meta-env-key";
+
+    try {
+      const manager = createManager();
+      const internals = asInternals(manager);
+
+      const metaOptions = (stateKey: string): PsCallModelOptions => ({
+        modelProvider: PsAiModelProvider.Meta,
+        modelName: "muse-spark-1.2",
+        responsesStateKey: stateKey,
+      });
+
+      const conversationA = await internals.createEphemeralModel(
+        PsAiModelType.TextReasoning,
+        PsAiModelSize.Small,
+        metaOptions("conversation-a")
+      );
+      assert.ok(conversationA instanceof OpenAiResponses);
+      Reflect.set(conversationA, "previousResponseId", "meta-resp-a");
+
+      const conversationB = await internals.createEphemeralModel(
+        PsAiModelType.TextReasoning,
+        PsAiModelSize.Small,
+        metaOptions("conversation-b")
+      );
+      assert.ok(conversationB instanceof OpenAiResponses);
+      assert.notStrictEqual(conversationB, conversationA);
+      assert.equal(
+        Reflect.get(conversationB as object, "previousResponseId"),
+        undefined
+      );
+
+      const conversationAReused = await internals.createEphemeralModel(
+        PsAiModelType.TextReasoning,
+        PsAiModelSize.Small,
+        metaOptions("conversation-a")
+      );
+      assert.strictEqual(conversationAReused, conversationA);
+      assert.equal(
+        Reflect.get(conversationAReused as object, "previousResponseId"),
+        "meta-resp-a"
+      );
+      assert.equal(internals.statefulResponsesModelCache.size, 2);
+    } finally {
+      if (originalMetaKey === undefined) {
+        delete process.env.META_MODEL_API_KEY;
+      } else {
+        process.env.META_MODEL_API_KEY = originalMetaKey;
+      }
+    }
   });
 
   it("applies latest runtime overrides before generating on a reused stateful Responses instance", async () => {

@@ -4,8 +4,8 @@ import { PolicySynthAgentBase } from "../base/agentBase.js";
 import {
   getCacheWriteInputCostMultiplier,
   getWebSearchCost,
+  resolveEncodingUsageAccountingVersion,
   resolveLongContextPriceRates,
-  resolveUsageAccountingVersion,
 } from "../base/modelUsageAccounting.js";
 
 const MODEL_USAGE_COUNTER_COLUMNS = [
@@ -346,7 +346,10 @@ export class AgentCostManager extends PolicySynthAgentBase {
           agentId: row.agent_id,
           agentName: row.agent_name,
           aiModelName: row.ai_model_name,
-          accountingVersion: resolveUsageAccountingVersion(
+          // The label comes from the model's live configuration, which
+          // describes how new usage is encoded — resolve it with the same
+          // default as the encoder so unversioned Claude models report v2.
+          accountingVersion: resolveEncodingUsageAccountingVersion(
             row.accounting_version
           ),
           tokenInCount:

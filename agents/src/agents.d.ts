@@ -123,8 +123,12 @@ interface PsAiModelConfig {
   apiModelName?: string;
   provider?: string;
   /**
-   * Selects provider usage-accounting semantics. Missing values retain the
-   * legacy v1 behavior so existing model records remain compatible.
+   * Selects provider usage-accounting semantics. Missing values encode new
+   * usage as v2; only an explicit 1 keeps the legacy v1 encoding. Stored
+   * ps_model_usage_item rows carry the version they were encoded with;
+   * item rows predating the version stamp are interpreted as legacy v1.
+   * Compact ps_model_usage counters are cumulative and unversioned, so
+   * compact reporting labels them with the model's current encoding.
    */
   accountingVersion?: PsUsageAccountingVersion;
   /**
@@ -448,7 +452,10 @@ interface PsAiModelConfiguration {
    */
   apiModel?: string;
   provider: string;
-  /** Missing values use legacy v1 provider accounting semantics. */
+  /**
+   * Missing values encode new usage as v2; only an explicit 1 keeps the
+   * legacy v1 provider accounting semantics.
+   */
   accountingVersion?: PsUsageAccountingVersion;
   inferenceType?: PsInferenceType;
   regionalProcessing?: PsOpenAiRegionalProcessing;
@@ -858,6 +865,12 @@ interface PsDetailedAgentCostResults {
   agentId?: number;
   agentName: string;
   aiModelName: string;
+  /**
+   * For usage-item results: the version stamped on the row at save time.
+   * For compact ps_model_usage results: the model's current encoding
+   * version — cumulative counters are unversioned and may include
+   * increments recorded under the legacy v1 encoding.
+   */
   accountingVersion: PsUsageAccountingVersion;
   tokenInCount: number;
   tokenInCachedContextCount: number;

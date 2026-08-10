@@ -22,6 +22,15 @@ import {
 import { encoding_for_model, TiktokenModel } from "tiktoken";
 import { PsAiModelType } from "../aiModelTypes.js";
 import {
+  getMetaModelApiBaseUrl,
+  getMetaModelApiEnvCredentials,
+  isForeignModelNameForMetaModelApi,
+  isMetaModelApiProvider,
+  META_MODEL_API_DEFAULT_MODEL_NAME,
+  META_MODEL_API_MISSING_KEY_PLACEHOLDER,
+  MetaModelApiConfigurationError,
+} from "./metaModelApi.js";
+import {
   buildPromptCacheUsageData,
   isOpenAiPromptCacheRetention,
   normalizePromptCacheOptions,
@@ -124,6 +133,11 @@ export class OpenAiResponses extends BaseChatModel {
   private lastSubmittedMessageCount = 0;
   private lastNoInputContinuationSignature?: string;
   private usingAzure = false;
+  private usingMetaModelApi = false;
+  // Set when a Meta model is constructed with unusable configuration; the
+  // failure is deferred to request time so one bad model cannot abort
+  // whole-manager initialization or mask a fallback path's original error.
+  private metaConfigurationError?: string;
   private backgroundPollDelayMs = OPENAI_RESPONSES_BACKGROUND_POLL_INTERVAL_MS;
 
   private static parseGptModelVersion(
@@ -180,6 +194,10 @@ export class OpenAiResponses extends BaseChatModel {
   private mapReasoningEffortForResponses(): PsReasoningEffort | undefined {
     const effort = this.cfg.reasoningEffort;
     if (!effort) return undefined;
+    // Meta Model API documents low/medium/high only.
+    if (this.usingMetaModelApi) {
+      return effort === "max" || effort === "xhigh" ? "high" : effort;
+    }
     if (effort === "max" && !this.supportsNativeMaxReasoningEffort()) {
       return "xhigh";
     }
@@ -254,7 +272,11 @@ export class OpenAiResponses extends BaseChatModel {
   ): OpenAiResponsesCleanupSettings | undefined {
     return OpenAiResponsesCleanup.getSettings(
       requestOptions,
-      this.usingAzure,
+      this.usingAzure
+        ? "Azure-compatible"
+        : this.usingMetaModelApi
+          ? "Meta Model API"
+          : undefined,
       this.logger as OpenAiResponsesCleanupLogger
     );
   }
@@ -312,6 +334,11 @@ export class OpenAiResponses extends BaseChatModel {
   private getRequestedServiceTier():
     | PsOpenAiInferenceType
     | undefined {
+    // Meta Model API does not support OpenAI service tiers.
+    if (this.usingMetaModelApi) {
+      return undefined;
+    }
+
     if (this.cfg.inferenceType === "fast") {
       return "priority";
     }
@@ -327,16 +354,22 @@ export class OpenAiResponses extends BaseChatModel {
   }
 
   constructor(config: PsOpenAiModelConfig) {
+    const useMetaModelApi = isMetaModelApiProvider(config.provider);
     const envAzureKey = process.env.AZURE_OPENAI_KEY;
     const envAzureEndpoint = process.env.AZURE_ENDPOINT;
     const envAzureDeployment = process.env.AZURE_DEPLOYMENT_NAME;
     const envAzureApiVersion = process.env.AZURE_OPENAI_API_VERSION;
     const useAzure =
-      !!envAzureKey && !!envAzureEndpoint && !!envAzureDeployment;
+      !useMetaModelApi &&
+      !!envAzureKey &&
+      !!envAzureEndpoint &&
+      !!envAzureDeployment;
 
     let {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY!,
-      modelName = "gpt-4o",
+      modelName = useMetaModelApi
+        ? META_MODEL_API_DEFAULT_MODEL_NAME
+        : "gpt-4o",
       maxTokensOut = 16_384,
     } = config;
     let credentialRef = config.credentialRef;
@@ -358,7 +391,11 @@ export class OpenAiResponses extends BaseChatModel {
     super(config, modelName, maxTokensOut);
     this.apiModelName = apiModelName;
 
-    if (!useAzure && process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY) {
+    if (
+      !useAzure &&
+      !useMetaModelApi &&
+      process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY
+    ) {
       apiKey = process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY;
       credentialRef = "env:PS_AGENT_OVERRIDE_OPENAI_API_KEY";
       this.logger.warn(
@@ -378,6 +415,63 @@ export class OpenAiResponses extends BaseChatModel {
       this.logger.info(
         `Using Azure OpenAI endpoint ${baseURL} with deployment ${modelName}`
       );
+    } else if (useMetaModelApi) {
+      this.usingMetaModelApi = true;
+      const envCredentials = getMetaModelApiEnvCredentials();
+      let usesGenericModelApiKey =
+        config.credentialRef === "env:MODEL_API_KEY";
+      if (config.apiKey === META_MODEL_API_MISSING_KEY_PLACEHOLDER) {
+        // A state-isolated clone must retain the original model's missing-key
+        // failure instead of treating the inert SDK placeholder as a real key.
+        apiKey = META_MODEL_API_MISSING_KEY_PLACEHOLDER;
+        this.metaConfigurationError =
+          "Meta Model API requires an API key: configure the model's apiKey or set META_MODEL_API_KEY / MODEL_API_KEY";
+      } else if (config.apiKey) {
+        apiKey = config.apiKey;
+      } else if (envCredentials) {
+        apiKey = envCredentials.apiKey;
+        credentialRef = envCredentials.credentialRef;
+        usesGenericModelApiKey = envCredentials.usesGenericModelApiKey;
+      } else {
+        // Never let an OpenAI credential (PS_AGENT_OVERRIDE_OPENAI_API_KEY
+        // or the SDK's OPENAI_API_KEY fallback) be transmitted to the Meta
+        // endpoint: construct with an inert placeholder (the SDK rejects an
+        // empty key at construction) and fail at request time instead.
+        apiKey = META_MODEL_API_MISSING_KEY_PLACEHOLDER;
+        this.metaConfigurationError =
+          "Meta Model API requires an API key: configure the model's apiKey or set META_MODEL_API_KEY / MODEL_API_KEY";
+      }
+
+      if (usesGenericModelApiKey) {
+        this.logger.warn(
+          "Using the generic MODEL_API_KEY env var for the Meta Model API; prefer META_MODEL_API_KEY so an unrelated credential is never sent to the Meta endpoint"
+        );
+      }
+
+      const metaRequestModelName = String(apiModelName ?? modelName);
+      if (isForeignModelNameForMetaModelApi(metaRequestModelName)) {
+        this.metaConfigurationError ??= `Model name ${metaRequestModelName} looks like an OpenAI model and cannot be served by the Meta Model API; configure a Muse model name`;
+      }
+
+      const baseURL = getMetaModelApiBaseUrl();
+      this.transportBaseUrl = baseURL;
+      this.client = new OpenAI({
+        apiKey,
+        baseURL,
+        // Explicitly null so the SDK's OPENAI_ORG_ID / OPENAI_PROJECT_ID env
+        // defaults never send OpenAI tenant headers to the Meta endpoint.
+        organization: null,
+        project: null,
+      });
+      this.logger.info(
+        `Using Meta Model API endpoint ${baseURL} for ${modelName}`
+      );
+      // Meta Model API has no OpenAI service tiers or EU regional endpoint.
+      config = {
+        ...config,
+        inferenceType: undefined,
+        regionalProcessing: undefined,
+      };
     } else {
       const enforceEuRegion = process.env.OPENAI_ENFORCE_EU_REGION === "true";
       const effectiveRegionalProcessing =
@@ -426,15 +520,24 @@ export class OpenAiResponses extends BaseChatModel {
     };
     this.config = this.cfg;
     this.requestedInferenceType = requestedInferenceType;
-    if (!this.usingAzure && this.requestedInferenceType === "fast") {
+    if (
+      !this.usingAzure &&
+      !this.usingMetaModelApi &&
+      this.requestedInferenceType === "fast"
+    ) {
       this.logger.info(
         "Mapping inferenceType=fast to OpenAI service_tier=priority"
       );
     }
-    this.logicalModelName = configuredModelName;
+    // Meta identity must come from the actual Meta model, never from the
+    // PS_AI_MODEL_NAME / Azure env fallbacks baked into configuredModelName —
+    // otherwise an OpenAI name there enables gpt-gated request features.
+    this.logicalModelName = useMetaModelApi ? modelName : configuredModelName;
     this.phaseAwareModelName = useAzure
       ? configuredModelName
-      : apiModelName ?? configuredModelName;
+      : useMetaModelApi
+        ? apiModelName ?? modelName
+        : apiModelName ?? configuredModelName;
   }
 
   private isPhaseAwareResponsesModel(): boolean {
@@ -482,8 +585,11 @@ export class OpenAiResponses extends BaseChatModel {
   ): void {
     if ("inferenceType" in overrides) {
       this.requestedInferenceType = overrides.inferenceType;
-      this.cfg.inferenceType =
-        !this.usingAzure && overrides.inferenceType === "fast"
+      // Meta Model API has no service tiers; never restore one at runtime
+      // after the constructor cleared it.
+      this.cfg.inferenceType = this.usingMetaModelApi
+        ? undefined
+        : !this.usingAzure && overrides.inferenceType === "fast"
           ? "priority"
           : overrides.inferenceType;
     }
@@ -564,6 +670,20 @@ export class OpenAiResponses extends BaseChatModel {
     allowedTools: string[] = [],
     requestOptions?: PsModelRequestOptions
   ): Promise<PsBaseModelReturnParameters> {
+    if (this.metaConfigurationError) {
+      throw new MetaModelApiConfigurationError(this.metaConfigurationError);
+    }
+
+    if (
+      this.usingMetaModelApi &&
+      requestOptions?.useOpenAiResponsesBackground
+    ) {
+      this.logger.warn(
+        "OpenAI Responses background mode is not supported on the Meta Model API transport; running the request synchronously."
+      );
+      requestOptions = { ...requestOptions, useOpenAiResponsesBackground: false };
+    }
+
     if (process.env.PS_DEBUG_PROMPT_MESSAGES) {
       this.logger.debug(
         `Messages:\n${this.prettyPrintPromptMessages(
@@ -588,11 +708,28 @@ export class OpenAiResponses extends BaseChatModel {
 
     await this.touchStoredResponseCleanupChain(requestOptions);
 
-    const storeResponses = requestOptions?.store ?? true;
+    // Stored-response cleanup cannot run against the Meta endpoint, so a
+    // retention request there defaults to not storing at all unless the
+    // caller explicitly opted into storage.
+    const retentionRequested =
+      typeof requestOptions?.deleteOpenAiResponsesAfterIdleMinutes ===
+        "number" && requestOptions.deleteOpenAiResponsesAfterIdleMinutes > 0;
+    const defaultStoreResponses = !(
+      this.usingMetaModelApi && retentionRequested
+    );
+    if (this.usingMetaModelApi && retentionRequested) {
+      this.logger.warn(
+        "Meta Model API responses cannot be cleaned up after idle; honoring the retention request by defaulting store to false."
+      );
+    }
+    const storeResponses = requestOptions?.store ?? defaultStoreResponses;
     if (requestOptions?.useOpenAiResponsesBackground && !storeResponses) {
       throw new Error(
         "OpenAI Responses background mode requires stored responses; do not combine useOpenAiResponsesBackground with store:false."
       );
+    }
+    if (!storeResponses) {
+      this.resetResponsesState();
     }
     let hasPreviousResponse = storeResponses && !!this.previousResponseId;
     const hasTruncatedHistory =
@@ -682,7 +819,7 @@ export class OpenAiResponses extends BaseChatModel {
       service_tier: !this.usingAzure
         ? this.getRequestedServiceTier()
         : undefined,
-      store: requestOptions?.store ?? true,
+      store: storeResponses,
     };
 
     if (responseIncludes.length > 0) {
@@ -1285,6 +1422,12 @@ export class OpenAiResponses extends BaseChatModel {
     });
   }
 
+  private getTransportName(): string {
+    if (this.usingAzure) return "azure-openai-compatible";
+    if (this.usingMetaModelApi) return "meta-model-api";
+    return "openai";
+  }
+
   private buildUsageItemData(
     response: {
       id?: string | null;
@@ -1324,9 +1467,13 @@ export class OpenAiResponses extends BaseChatModel {
     const builtInToolMetadata = this.extractBuiltInToolMetadata(response);
 
     return {
-      provider: this.usingAzure ? "azure" : "openaiResponses",
+      provider: this.usingAzure
+        ? "azure"
+        : this.usingMetaModelApi
+          ? "meta"
+          : "openaiResponses",
       apiFamily: "responses",
-      transport: this.usingAzure ? "azure-openai-compatible" : "openai",
+      transport: this.getTransportName(),
       modelName: this.cfg.modelName,
       request: {
         stream: Boolean(params.stream),
@@ -1359,7 +1506,7 @@ export class OpenAiResponses extends BaseChatModel {
         audioTokens: usage.audioTokens,
       },
       providerMetadata: this.compactRecord({
-        transport: this.usingAzure ? "azure-openai-compatible" : "openai",
+        transport: this.getTransportName(),
         responseId: response.id ?? null,
         responsePreviousId: response.previous_response_id ?? null,
         appliedServiceTier: response.service_tier ?? null,
@@ -1409,6 +1556,15 @@ export class OpenAiResponses extends BaseChatModel {
         provider: "openai",
         promptCache,
         appliedMode: "disabled",
+      });
+    }
+    if (this.usingMetaModelApi) {
+      return buildPromptCacheUsageData({
+        provider: "openai",
+        promptCache,
+        appliedMode: "unsupported",
+        unsupportedReason:
+          "Meta Model API prompt caching is implicit; OpenAI prompt_cache_key/prompt_cache_retention parameters are not forwarded.",
       });
     }
 

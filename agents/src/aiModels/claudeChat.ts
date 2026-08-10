@@ -50,7 +50,7 @@ import {
   type PsWebSearchBuiltInTool,
   wrapBuiltInToolProviderError,
 } from "./builtInToolSupport.js";
-import { resolveUsageAccountingVersion } from "../base/modelUsageAccounting.js";
+import { resolveEncodingUsageAccountingVersion } from "../base/modelUsageAccounting.js";
 
 const CLAUDE_1M_CONTEXT_BETA_FLAG: AnthropicBeta = "context-1m-2025-08-07";
 const CLAUDE_FAST_MODE_BETA_FLAG: AnthropicBeta = "fast-mode-2026-02-01";
@@ -789,7 +789,7 @@ export class ClaudeChat extends BaseChatModel {
   }
 
   private getAccountingVersion(): PsUsageAccountingVersion {
-    return resolveUsageAccountingVersion(this.config.accountingVersion);
+    return resolveEncodingUsageAccountingVersion(this.config.accountingVersion);
   }
 
   private aggregateClaudeServerToolUsage(

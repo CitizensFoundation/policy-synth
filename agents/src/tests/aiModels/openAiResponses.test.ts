@@ -397,6 +397,11 @@ const originalAzureApiVersion = process.env.AZURE_OPENAI_API_VERSION;
 const originalOpenAiKey = process.env.OPENAI_API_KEY;
 const originalPsAiModelName = process.env.PS_AI_MODEL_NAME;
 const originalDebugPromptMessages = process.env.PS_DEBUG_PROMPT_MESSAGES;
+const originalMetaModelApiKey = process.env.META_MODEL_API_KEY;
+const originalModelApiKey = process.env.MODEL_API_KEY;
+const originalMetaModelApiBaseUrl = process.env.META_MODEL_API_BASE_URL;
+const originalOpenAiOrgId = process.env.OPENAI_ORG_ID;
+const originalOpenAiProjectId = process.env.OPENAI_PROJECT_ID;
 
 afterEach(() => {
   OpenAiResponses.setStoredResponseCleanupRedisClientForTests(undefined);
@@ -453,6 +458,36 @@ afterEach(() => {
     delete process.env.PS_DEBUG_PROMPT_MESSAGES;
   } else {
     process.env.PS_DEBUG_PROMPT_MESSAGES = originalDebugPromptMessages;
+  }
+
+  if (originalMetaModelApiKey === undefined) {
+    delete process.env.META_MODEL_API_KEY;
+  } else {
+    process.env.META_MODEL_API_KEY = originalMetaModelApiKey;
+  }
+
+  if (originalModelApiKey === undefined) {
+    delete process.env.MODEL_API_KEY;
+  } else {
+    process.env.MODEL_API_KEY = originalModelApiKey;
+  }
+
+  if (originalMetaModelApiBaseUrl === undefined) {
+    delete process.env.META_MODEL_API_BASE_URL;
+  } else {
+    process.env.META_MODEL_API_BASE_URL = originalMetaModelApiBaseUrl;
+  }
+
+  if (originalOpenAiOrgId === undefined) {
+    delete process.env.OPENAI_ORG_ID;
+  } else {
+    process.env.OPENAI_ORG_ID = originalOpenAiOrgId;
+  }
+
+  if (originalOpenAiProjectId === undefined) {
+    delete process.env.OPENAI_PROJECT_ID;
+  } else {
+    process.env.OPENAI_PROJECT_ID = originalOpenAiProjectId;
   }
 });
 
@@ -1160,6 +1195,452 @@ describe("OpenAiResponses", () => {
     assert.equal(captured.service_tier, undefined);
     assert.equal(result.content, "azure override");
     assert.equal(result.usageItemData?.provider, "azure");
+  });
+
+  it("routes the meta provider through the Meta Model API Responses transport", async () => {
+    delete process.env.META_MODEL_API_KEY;
+    delete process.env.MODEL_API_KEY;
+    delete process.env.META_MODEL_API_BASE_URL;
+    // Meta provider must win even when Azure env hijacking is configured.
+    process.env.AZURE_OPENAI_KEY = "azure-key";
+    process.env.AZURE_ENDPOINT = "https://azure.example.com/v1";
+    process.env.AZURE_DEPLOYMENT_NAME = "azure-responses-deployment";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+        inferenceType: "priority",
+      })
+    );
+
+    const client = Reflect.get(model, "client") as {
+      baseURL?: string;
+      apiKey?: string;
+    };
+    assert.equal(client.baseURL, "https://api.meta.ai/v1");
+    assert.equal(client.apiKey, "meta-test-key");
+    assert.equal(model.getCloneConfig().inferenceType, undefined);
+    assert.deepEqual(model.getResponsesContinuationIdentity(), {
+      modelName: "muse-spark-1.2",
+      regionalProcessing: undefined,
+      transportBaseUrl: "https://api.meta.ai/v1",
+      usingAzure: false,
+    });
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-meta-1",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "Muse Spark reply" }],
+            },
+          ],
+          usage: {
+            input_tokens: 10,
+            output_tokens: 4,
+            input_tokens_details: { cached_tokens: 2 },
+            output_tokens_details: { reasoning_tokens: 1 },
+          },
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.model, "muse-spark-1.2");
+    assert.equal(captured.service_tier, undefined);
+    assert.equal(result.content, "Muse Spark reply");
+    assert.equal(result.tokensIn, 10);
+    assert.equal(result.tokensOut, 4);
+    assert.equal(result.cachedInTokens, 2);
+    assert.equal(result.reasoningTokens, 1);
+    assert.equal(result.usageItemData?.provider, "meta");
+    assert.equal(result.usageItemData?.transport, "meta-model-api");
+    assert.equal(
+      result.usageItemData?.providerMetadata?.transport,
+      "meta-model-api"
+    );
+  });
+
+  it("keeps Meta free of service tiers even when runtime overrides restore one", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+      })
+    );
+
+    model.applyRuntimeResponsesOverrides({ inferenceType: "priority" });
+    assert.equal(model.getCloneConfig().inferenceType, undefined);
+    model.applyRuntimeResponsesOverrides({ inferenceType: "fast" });
+    assert.equal(model.getCloneConfig().inferenceType, undefined);
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-meta-tier",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "no tier" }],
+            },
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      },
+    });
+
+    const result = await model.generate([{ role: "user", message: "hello" }]);
+
+    assert.ok(captured);
+    assert.equal(captured.service_tier, undefined);
+    assert.equal(result.usageItemData?.request?.requestedServiceTier, null);
+  });
+
+  it("suppresses OpenAI tenant headers on the Meta client", () => {
+    process.env.OPENAI_ORG_ID = "org-openai-tenant";
+    process.env.OPENAI_PROJECT_ID = "proj-openai-tenant";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+      })
+    );
+
+    const client = Reflect.get(model, "client") as {
+      organization?: string | null;
+      project?: string | null;
+    };
+    assert.equal(client.organization, null);
+    assert.equal(client.project, null);
+  });
+
+  it("defers Meta credential failures to request time and never leaks OpenAI keys", async () => {
+    delete process.env.META_MODEL_API_KEY;
+    delete process.env.MODEL_API_KEY;
+    // OpenAI credentials being present must not leak to the Meta endpoint.
+    process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY = "openai-override-key";
+    process.env.OPENAI_API_KEY = "openai-env-key";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: undefined,
+      })
+    );
+
+    const client = Reflect.get(model, "client") as { apiKey?: string };
+    assert.equal(client.apiKey, "missing-meta-model-api-key");
+
+    await assert.rejects(
+      () => model.generate([{ role: "user", message: "hello" }]),
+      (error: unknown) => {
+        assert.ok(error instanceof Error);
+        assert.equal(error.name, "MetaModelApiConfigurationError");
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: boolean })
+            .isPsNonRetryableModelError,
+          true
+        );
+        assert.match(error.message, /Meta Model API requires an API key/);
+        return true;
+      }
+    );
+
+    const clone = new OpenAiResponses(model.getCloneConfig());
+    const cloneClient = Reflect.get(clone, "client") as { apiKey?: string };
+    assert.equal(cloneClient.apiKey, "missing-meta-model-api-key");
+    await assert.rejects(
+      () => clone.generate([{ role: "user", message: "hello" }]),
+      (error: unknown) => {
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: boolean })
+            .isPsNonRetryableModelError,
+          true
+        );
+        assert.match(String(error), /Meta Model API requires an API key/);
+        return true;
+      }
+    );
+  });
+
+  it("rejects OpenAI model names routed at the Meta Model API", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "gpt-5.3",
+        apiKey: "meta-test-key",
+      })
+    );
+
+    await assert.rejects(
+      () => model.generate([{ role: "user", message: "hello" }]),
+      (error: unknown) => {
+        assert.equal(
+          (error as { isPsNonRetryableModelError?: boolean })
+            .isPsNonRetryableModelError,
+          true
+        );
+        assert.match(String(error), /cannot be served by the Meta Model API/);
+        return true;
+      }
+    );
+  });
+
+  it("keeps Meta model identity independent of PS_AI_MODEL_NAME env fallbacks", () => {
+    process.env.PS_AI_MODEL_NAME = "gpt-5.3";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: undefined,
+        apiKey: "meta-test-key",
+      })
+    );
+
+    assert.equal(model.getCloneConfig().modelName, "muse-spark-1.2");
+    assert.equal(asInternals(model).isPhaseAwareResponsesModel(), false);
+  });
+
+  it("clamps Meta reasoning effort and resets continuation state when retention disables storage", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+        modelType: PsAiModelType.TextReasoning,
+        reasoningEffort: "max",
+      })
+    );
+
+    const captured: RecordedResponsesRequest[] = [];
+    setMockClient(model, {
+      create: async (params) => {
+        captured.push(params as RecordedResponsesRequest);
+        return {
+          id: `resp-meta-store-${captured.length}`,
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "ok" }],
+            },
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      },
+    });
+
+    await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 1000 }
+    );
+    assert.equal(captured[0]?.reasoning?.effort, "high");
+    assert.equal(captured[0]?.store, true);
+    assert.equal(captured[0]?.previous_response_id, undefined);
+    assert.equal(
+      Reflect.get(model, "previousResponseId"),
+      "resp-meta-store-1"
+    );
+
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "follow up" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 1000, deleteOpenAiResponsesAfterIdleMinutes: 5 }
+    );
+    assert.equal(captured[1]?.store, false);
+    assert.equal(captured[1]?.previous_response_id, undefined);
+    assert.equal(captured[1]?.input?.length, 3);
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+    assert.equal(Reflect.get(model, "lastSubmittedMessageCount"), 0);
+
+    await model.generate(
+      [
+        { role: "user", message: "hello" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "follow up" },
+        { role: "assistant", message: "ok" },
+        { role: "user", message: "one more" },
+      ],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 1000 }
+    );
+    assert.equal(captured[2]?.store, true);
+    assert.equal(captured[2]?.previous_response_id, undefined);
+    assert.equal(captured[2]?.input?.length, 5);
+  });
+
+  it("marks OpenAI prompt cache parameters unsupported on the Meta transport", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-meta-cache",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "cached" }],
+            },
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 1000, promptCache: { key: "cache-key-1" } }
+    );
+
+    assert.ok(captured);
+    assert.equal(captured.prompt_cache_key, undefined);
+    const promptCacheData = result.usageItemData?.request?.promptCache as
+      | { appliedMode?: string }
+      | null
+      | undefined;
+    assert.equal(promptCacheData?.appliedMode, "unsupported");
+  });
+
+  it("ignores background mode on the Meta transport and runs synchronously", async () => {
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.2",
+        apiKey: "meta-test-key",
+      })
+    );
+
+    let captured: RecordedResponsesRequest | undefined;
+    setMockClient(model, {
+      create: async (params) => {
+        captured = params as RecordedResponsesRequest;
+        return {
+          id: "resp-meta-sync",
+          output: [
+            {
+              type: "message",
+              content: [{ type: "output_text", text: "sync ok" }],
+            },
+          ],
+          usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      },
+    });
+
+    const result = await model.generate(
+      [{ role: "user", message: "hello" }],
+      false,
+      undefined,
+      undefined,
+      [],
+      "auto",
+      [],
+      { timeoutMs: 1000, useOpenAiResponsesBackground: true }
+    );
+
+    assert.equal(result.content, "sync ok");
+    assert.notEqual(captured?.background, true);
+  });
+
+  it("skips stored-response cleanup scheduling for non-OpenAI Responses transports", () => {
+    const warnings: string[] = [];
+    const logger = {
+      debug: () => undefined,
+      error: () => undefined,
+      info: () => undefined,
+      warn: (message: unknown) => {
+        warnings.push(String(message));
+      },
+    };
+
+    const metaSettings = OpenAiResponsesCleanup.getSettings(
+      { timeoutMs: 1000, deleteOpenAiResponsesAfterIdleMinutes: 5 },
+      "Meta Model API",
+      logger
+    );
+    assert.equal(metaSettings, undefined);
+    assert.match(warnings[0], /Meta Model API Responses transport/);
+
+    const openAiSettings = OpenAiResponsesCleanup.getSettings(
+      { timeoutMs: 1000, deleteOpenAiResponsesAfterIdleMinutes: 5 },
+      undefined,
+      logger
+    );
+    assert.equal(openAiSettings?.idleMinutes, 5);
+    assert.equal(typeof openAiSettings?.responsesStateKey, "string");
+  });
+
+  it("falls back to Meta Model API env keys and base URL override when unconfigured", async () => {
+    delete process.env.MODEL_API_KEY;
+    process.env.META_MODEL_API_KEY = "env-meta-key";
+    process.env.META_MODEL_API_BASE_URL = "https://meta.example.test/v1";
+    process.env.PS_AGENT_OVERRIDE_OPENAI_API_KEY = "openai-override-key";
+
+    const model = new OpenAiResponses(
+      createConfig({
+        provider: "meta",
+        modelName: "muse-spark-1.1",
+        apiKey: undefined,
+      })
+    );
+
+    const client = Reflect.get(model, "client") as {
+      baseURL?: string;
+      apiKey?: string;
+    };
+    assert.equal(client.apiKey, "env-meta-key");
+    assert.equal(client.baseURL, "https://meta.example.test/v1");
+    assert.equal(
+      model.getCloneConfig().credentialRef,
+      "env:META_MODEL_API_KEY"
+    );
   });
 
   it("uses the logical model name for Azure phase detection while calling the deployment", async () => {
@@ -2872,7 +3353,7 @@ describe("OpenAiResponses", () => {
     assert.equal(Reflect.get(model, "previousResponseId"), undefined);
   });
 
-  it("does not mutate cached Responses state during stateless calls", async () => {
+  it("clears cached Responses state during stateless calls", async () => {
     const model = new OpenAiResponses(createConfig({ modelName: "gpt-5.5" }));
     Reflect.set(model, "previousResponseId", "resp-stateful");
     Reflect.set(model, "lastSubmittedMessageCount", 2);
@@ -2930,13 +3411,13 @@ describe("OpenAiResponses", () => {
       },
     ]);
     assert.equal(result.content, "stateless");
-    assert.equal(Reflect.get(model, "previousResponseId"), "resp-stateful");
-    assert.equal(Reflect.get(model, "lastSubmittedMessageCount"), 2);
+    assert.equal(Reflect.get(model, "previousResponseId"), undefined);
+    assert.equal(Reflect.get(model, "lastSubmittedMessageCount"), 0);
     assert.equal(
       Reflect.get(model, "lastNoInputContinuationSignature"),
-      "keep-signature"
+      undefined
     );
-    assert.deepEqual([...sentToolOutputIds], ["tool-old"]);
+    assert.deepEqual([...sentToolOutputIds], []);
   });
 
   it("rejects stateless background Responses because polling requires storage", async () => {

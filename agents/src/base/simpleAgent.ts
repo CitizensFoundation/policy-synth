@@ -114,6 +114,11 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
           : 0.5),
       modelType: process.env.AI_MODEL_TYPE as PsAiModelType,
       modelSize: process.env.AI_MODEL_SIZE as PsAiModelSize,
+      // updateMemoryStages prices tokensIn flat via PS_MODEL_IN_COST_USD,
+      // which assumes the legacy v1 blended encoding (cache reads/writes
+      // pre-multiplied into tokensIn). Pin v1 so the v2 raw-count default
+      // cannot overstate cached-prompt costs by up to ~10x.
+      accountingVersion: 1,
       prices: {} as any,
     };
 

@@ -7,6 +7,7 @@ import {
   getWebSearchCost,
   partitionModelInputUsage,
   roundModelInputUsageForPersistence,
+  resolveEncodingUsageAccountingVersion,
   resolveLongContextPriceRates,
   resolveUsageAccountingVersion,
 } from "../../base/modelUsageAccounting.js";
@@ -18,6 +19,15 @@ describe("model usage accounting", () => {
     assert.equal(resolveUsageAccountingVersion("invalid"), 1);
     assert.equal(resolveUsageAccountingVersion(2), 2);
     assert.equal(resolveUsageAccountingVersion("2"), 2);
+  });
+
+  it("defaults encoding of new usage to v2 unless a model explicitly opts into v1", () => {
+    assert.equal(resolveEncodingUsageAccountingVersion(undefined), 2);
+    assert.equal(resolveEncodingUsageAccountingVersion("invalid"), 2);
+    assert.equal(resolveEncodingUsageAccountingVersion(2), 2);
+    assert.equal(resolveEncodingUsageAccountingVersion("2"), 2);
+    assert.equal(resolveEncodingUsageAccountingVersion(1), 1);
+    assert.equal(resolveEncodingUsageAccountingVersion("1"), 1);
   });
 
   it("partitions ordinary, cache-read, and cache-write input without overlap", () => {
