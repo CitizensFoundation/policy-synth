@@ -106,7 +106,10 @@ export class PsGoogleDriveConnector extends PsBaseDriveConnector {
     });
 
     // Initialize the Drive API
-    this.drive = google.drive({ version: "v3", auth: this.client });
+    this.drive = google.drive({
+      version: "v3",
+      auth: this.client as unknown as drive_v3.Options["auth"],
+    });
   }
 
   /**

@@ -449,7 +449,7 @@ export class OpenAiChat extends BaseChatModel {
 
   private applyOpenAiPromptCacheOptions(
     params: {
-      prompt_cache_key?: string;
+      prompt_cache_key?: string | null;
       prompt_cache_retention?: PsOpenAiResponsesPromptCacheRetention | null;
     },
     requestOptions?: PsModelRequestOptions

@@ -105,7 +105,10 @@ export class PsGoogleSheetsConnector extends PsBaseSheetConnector {
 
     // Authorize and create a Google Sheets API instance
     try {
-      this.sheets = google.sheets({ version: "v4", auth: this.client });
+      this.sheets = google.sheets({
+        version: "v4",
+        auth: this.client as unknown as sheets_v4.Options["auth"],
+      });
     } catch (error) {
       this.logger.error("Error:", error);
       throw error;

@@ -140,7 +140,10 @@ export class PsGoogleDocsConnector extends PsBaseDocumentConnector {
 
     // Authorize and create a Google Docs API instance
     try {
-      this.docs = google.docs({ version: "v1", auth: this.client });
+      this.docs = google.docs({
+        version: "v1",
+        auth: this.client as unknown as docs_v1.Options["auth"],
+      });
     } catch (error) {
       this.logger.error("Error:", error);
       throw error;
