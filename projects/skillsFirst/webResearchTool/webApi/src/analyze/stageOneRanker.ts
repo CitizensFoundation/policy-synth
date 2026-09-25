@@ -77,7 +77,7 @@ export class StageOneRanker extends BasePairwiseRankingsProcessor {
     this.chat = new ChatOpenAI({
       temperature: 0.0,
       maxTokens: 4000,
-      modelName: "gpt-4-0125-preview",
+      modelName: "gpt-4.1",
       verbose: true
     });
 

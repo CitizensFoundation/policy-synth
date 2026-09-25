@@ -20,7 +20,7 @@ const gpt4_RPM = 10000;
 
 export class PsConstants {
   static createSubProblemsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -32,7 +32,7 @@ export class PsConstants {
   };
 
   static policiesSeedModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -44,7 +44,7 @@ export class PsConstants {
   };
 
   static analyseExternalSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 256,
     tokenLimit: gpt4TotalTokenLimit,
@@ -56,7 +56,7 @@ export class PsConstants {
   };
 
   static createEntitiesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -72,7 +72,7 @@ export class PsConstants {
   };
 
   static createSolutionImagesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 256,
     tokenLimit: gpt4TotalTokenLimit,
@@ -84,7 +84,7 @@ export class PsConstants {
   };
 
   static createSearchQueriesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -96,7 +96,7 @@ export class PsConstants {
   };
 
   static createEvidenceSearchQueriesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.5,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -108,7 +108,7 @@ export class PsConstants {
   };
 
   static createRootCauseSearchQueriesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -120,7 +120,7 @@ export class PsConstants {
   };
 
   static searchQueryRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -132,7 +132,7 @@ export class PsConstants {
   };
 
   static searchResultsRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -144,7 +144,7 @@ export class PsConstants {
   };
 
   static subProblemsRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -156,7 +156,7 @@ export class PsConstants {
   };
 
   static entitiesRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -168,7 +168,7 @@ export class PsConstants {
   };
 
   static solutionsRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -180,7 +180,7 @@ export class PsConstants {
   };
 
   static prosConsRankingsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2,
     tokenLimit: gpt4TotalTokenLimit,
@@ -204,7 +204,7 @@ export class PsConstants {
   };
 
   static getSolutionsPagesAnalysisModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 4000,
     tokenLimit: gpt4TotalTokenLimit,
@@ -216,7 +216,7 @@ export class PsConstants {
   };
 
   static rankWebSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -228,7 +228,7 @@ export class PsConstants {
   };
 
   static reduceSubProblemsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.1,
     maxOutputTokens: 4096,
     tokenLimit: gpt4TotalTokenLimit,
@@ -240,7 +240,7 @@ export class PsConstants {
   };
 
   static rateWebEvidenceModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: 4096,
@@ -252,7 +252,7 @@ export class PsConstants {
   };
 
   static rateWebRootCausesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -264,7 +264,7 @@ export class PsConstants {
   };
 
   static rankWebEvidenceModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -276,7 +276,7 @@ export class PsConstants {
   };
 
   static rankWebRootCausesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -288,7 +288,7 @@ export class PsConstants {
   };
 
   static getRefinedEvidenceModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -300,7 +300,7 @@ export class PsConstants {
   };
 
   static getRefinedRootCausesModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 3048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -312,7 +312,7 @@ export class PsConstants {
   };
 
   static reapSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 128,
     tokenLimit: gpt4TotalTokenLimit,
@@ -324,7 +324,7 @@ export class PsConstants {
   };
 
   static groupSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 4095,
     tokenLimit: gpt4TotalTokenLimit,
@@ -336,7 +336,7 @@ export class PsConstants {
   };
 
   static rateSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -348,7 +348,7 @@ export class PsConstants {
   };
 
   static createSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: gpt4TotalTokenLimit,
@@ -360,7 +360,7 @@ export class PsConstants {
   };
 
   static evolveSolutionsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.5,
     maxOutputTokens: 1200,
     tokenLimit: gpt4TotalTokenLimit,
@@ -372,7 +372,7 @@ export class PsConstants {
   };
 
   static createProsConsModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 2048,
     tokenLimit: gpt4TotalTokenLimit,
@@ -384,7 +384,7 @@ export class PsConstants {
   };
 
   static evolutionMutateModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -396,7 +396,7 @@ export class PsConstants {
   };
 
   static evolutionRecombineModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.7,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
@@ -408,7 +408,7 @@ export class PsConstants {
   };
 
   static validationModel: PsBaseAIModelConstants = {
-    name: "gpt-4-1106-preview",
+    name: "gpt-4.1",
     temperature: 0.0,
     maxOutputTokens: 1024,
     tokenLimit: gpt4TotalTokenLimit,
