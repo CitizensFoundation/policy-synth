@@ -8,6 +8,7 @@
   - [claudeChat](src/aiModels/claudeChat.md)
   - [googleGeminiChat](src/aiModels/googleGeminiChat.md)
   - [openAiChat](src/aiModels/openAiChat.md)
+  - [openAiDecisions](src/aiModels/openAiDecisions.md)
   - [openAiResponses](src/aiModels/openAiResponses.md)
 - base
   - [agent](src/base/agent.md)

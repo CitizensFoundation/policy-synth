@@ -1,5 +1,10 @@
 # PolicySynthAgent
 
+`callDecisions(request, options?)` returns `Promise<PsDecisionResult>` through
+the model manager. `configureDecisions(config)` sets its dedicated configuration.
+See the [Decisions guide](../aiModels/openAiDecisions.md) for usage, pricing,
+and the required database model registration.
+
 The `PolicySynthAgent` is an abstract base class for PolicySynth agents, providing core logic for agent execution, memory management, progress tracking, AI model management, and configuration. It is designed to be extended by specific agent implementations.
 
 ## Properties

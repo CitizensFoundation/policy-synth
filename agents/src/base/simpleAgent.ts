@@ -1,6 +1,12 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
+import {
+  OpenAiDecisions,
+  DEFAULT_OPENAI_DECISIONS_MODEL,
+  getDecisionUsageCounts,
+  getDecisionCosts,
+} from "../aiModels/openAiDecisions.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
 import { AzureOpenAiChat } from "../aiModels/azureOpenAiChat.js";
 import { PolicySynthAgentBase } from "./agentBase.js";
@@ -19,6 +25,7 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
   rateLimits: PsModelRateLimitTracking = {};
   models: Map<PsAiModelType, BaseChatModel> = new Map();
   private tokenizer: tiktoken.Tiktoken | null = null;
+  private decisionsConfig: PsOpenAiDecisionsConfig = {};
   needsAiModel = true;
 
   maxModelTokensOut = 4096;
@@ -87,6 +94,16 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
   }
 
   initializeModels() {
+    if (process.env.AI_MODEL_TYPE === PsAiModelType.Decision) {
+      if (process.env.AI_MODEL_PROVIDER?.toLowerCase() !== "openai") {
+        throw new Error("Decisions models require the OpenAI provider");
+      }
+      this.configureDecisions({
+        apiKey: process.env.AI_MODEL_API_KEY,
+        modelName: process.env.PS_OPENAI_DECISIONS_MODEL ?? process.env.AI_MODEL_NAME,
+      });
+      return;
+    }
     if (
       !process.env.AI_MODEL_API_KEY ||
       !process.env.AI_MODEL_NAME ||
@@ -147,6 +164,65 @@ export class PolicySynthSimpleAgentBase extends PolicySynthAgentBase {
           `Unsupported model provider: ${process.env.AI_MODEL_PROVIDER}`
         );
     }
+  }
+
+  configureDecisions(config: PsOpenAiDecisionsConfig): void {
+    this.decisionsConfig = {
+      ...config,
+      ...(config.prices ? { prices: { ...config.prices } } : {}),
+    };
+  }
+
+  async callDecisions(
+    request: PsDecisionRequest,
+    options: PsDecisionCallOptions = {}
+  ): Promise<PsDecisionResult> {
+    const defaultModelName = this.decisionsConfig.modelName ??
+      process.env.PS_OPENAI_DECISIONS_MODEL ?? DEFAULT_OPENAI_DECISIONS_MODEL;
+    const modelName = request.model ?? defaultModelName;
+    const useDedicatedModelConfig = modelName === defaultModelName;
+    const model = new OpenAiDecisions({
+      ...this.decisionsConfig,
+      modelName,
+      apiModelName: useDedicatedModelConfig
+        ? this.decisionsConfig.apiModelName
+        : undefined,
+      prices: useDedicatedModelConfig ? this.decisionsConfig.prices : undefined,
+      apiKey: this.decisionsConfig.apiKey || process.env.OPENAI_API_KEY ||
+        (process.env.AI_MODEL_PROVIDER?.toLowerCase() === "openai"
+          ? process.env.AI_MODEL_API_KEY
+          : undefined),
+    });
+    const decision = await model.create(request, options);
+    if (this.memory) {
+      const stage = options.stage ?? "decisions";
+      this.memory.stages ??= {};
+      const totals: {
+        tokensIn?: number;
+        tokensOut?: number;
+        tokensInCost?: number;
+        tokensOutCost?: number;
+      } = this.memory.stages[stage] ??= {
+        tokensIn: 0,
+        tokensOut: 0,
+        tokensInCost: 0,
+        tokensOutCost: 0,
+      };
+      const usage = getDecisionUsageCounts(decision);
+      const costs = getDecisionCosts(
+        decision,
+        model.config.prices,
+        model.config.regionalProcessing
+      );
+      totals.tokensIn = (totals.tokensIn ?? 0) + usage.tokensIn;
+      totals.tokensOut = (totals.tokensOut ?? 0) + usage.tokensOut;
+      totals.tokensInCost = (totals.tokensInCost ?? 0) + costs.tokensInCost;
+      totals.tokensOutCost = (totals.tokensOutCost ?? 0) + costs.tokensOutCost;
+      this.memory.totalCost = (this.memory.totalCost ?? 0) +
+        costs.tokensInCost + costs.tokensOutCost;
+      await this.saveMemory();
+    }
+    return decision;
   }
 
   async callLLM(

@@ -1,6 +1,12 @@
 import { BaseChatModel } from "../aiModels/baseChatModel.js";
 import { ClaudeChat } from "../aiModels/claudeChat.js";
 import { OpenAiChat } from "../aiModels/openAiChat.js";
+import {
+  OpenAiDecisions,
+  DEFAULT_OPENAI_DECISIONS_MODEL,
+  getDecisionUsageCounts,
+  getDefaultOpenAiDecisionsPrices,
+} from "../aiModels/openAiDecisions.js";
 import { OpenAiResponses } from "../aiModels/openAiResponses.js";
 import { OpenAiRealtime } from "../aiModels/openAiRealtime.js";
 import { GoogleGeminiChat } from "../aiModels/googleGeminiChat.js";
@@ -98,6 +104,15 @@ export class PsModelUsagePersistenceError extends Error {
 }
 
 export class PsAiModelManager extends PolicySynthAgentBase {
+  private decisionsConfig: PsOpenAiDecisionsConfig = {};
+  private decisionModels = new Map<
+    string,
+    {
+      config: PsOpenAiDecisionsConfig;
+      modelId: number;
+      modelSize: PsAiModelSize;
+    }
+  >();
   private modelUsageItemManager = new PsModelUsageItemManager();
   private statefulResponsesModelCache: Map<string, OpenAiResponses> = new Map();
   models: Map<string, BaseChatModel> = new Map();
@@ -157,6 +172,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     const modelSize = process.env.PS_AI_MODEL_SIZE as PsAiModelSize;
     const modelProvider = process.env.PS_AI_MODEL_PROVIDER as PsAiModelProvider;
     const modelName = process.env.PS_AI_MODEL_NAME;
+    if (modelType === PsAiModelType.Decision) {
+      if (modelProvider?.toLowerCase() !== PsAiModelProvider.OpenAI) {
+        throw new Error("Decisions models require the OpenAI provider");
+      }
+      this.configureDecisions({
+        modelName: process.env.PS_OPENAI_DECISIONS_MODEL ?? modelName,
+        apiKey: process.env.OPENAI_API_KEY,
+        timeoutMs: this.modelCallTimeoutMs,
+      });
+      return;
+    }
     let apiKey: string | undefined;
     let envCredentialRef: string | undefined;
     let createModel:
@@ -332,6 +358,27 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         continue;
       }
 
+      if (modelType === PsAiModelType.Decision) {
+        if (model.configuration.provider !== PsAiModelProvider.OpenAI) {
+          this.logger.warn("Decisions models require the OpenAI provider");
+          continue;
+        }
+        this.decisionModels.set(model.configuration.model, {
+          modelId: model.id,
+          modelSize,
+          config: {
+            modelName: model.configuration.model,
+            apiModelName: model.configuration.apiModel,
+            apiKey: apiKeyConfig.apiKey,
+            credentialRef: `aiModel:${model.id}`,
+            timeoutMs: model.configuration.timeoutMs ?? this.modelCallTimeoutMs,
+            regionalProcessing: model.configuration.regionalProcessing,
+            prices: model.configuration.prices,
+          },
+        });
+        continue;
+      }
+
       const baseConfig: PsAiModelConfig = {
         apiKey: apiKeyConfig.apiKey,
         modelName: model.configuration.model,
@@ -432,9 +479,110 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       );
     }
 
-    if (this.models.size === 0 && this.realtimeModels.size === 0) {
+    if (
+      this.models.size === 0 &&
+      this.realtimeModels.size === 0 &&
+      this.decisionModels.size === 0
+    ) {
       throw new Error("No supported AI models found");
     }
+  }
+
+  configureDecisions(config: PsOpenAiDecisionsConfig): void {
+    this.decisionsConfig = {
+      ...config,
+      ...(config.prices ? { prices: { ...config.prices } } : {}),
+    };
+  }
+
+  private resolveDecisionsModel(modelName?: string) {
+    const defaultModelName = this.decisionsConfig.modelName ??
+      process.env.PS_OPENAI_DECISIONS_MODEL ?? DEFAULT_OPENAI_DECISIONS_MODEL;
+    const selectedModelName = modelName ?? defaultModelName;
+    const findRegistered = (name: string) =>
+      this.decisionModels.get(name) ?? [...this.decisionModels.values()].find(
+        (model) => model.config.apiModelName === name
+      );
+    const registered = findRegistered(selectedModelName);
+    return {
+      modelName: selectedModelName,
+      registered,
+      isDefault: selectedModelName === defaultModelName ||
+        (registered !== undefined && registered === findRegistered(defaultModelName)),
+    };
+  }
+
+  private getDecisionsPrices(modelName?: string): PsBaseModelPriceConfiguration {
+    const { registered, isDefault } = this.resolveDecisionsModel(modelName);
+    return {
+      ...getDefaultOpenAiDecisionsPrices(),
+      ...registered?.config.prices,
+      ...(isDefault ? this.decisionsConfig.prices : {}),
+    };
+  }
+
+  private getAttachedDecisionsPrices(modelName?: string, provider?: string) {
+    if (
+      !modelName ||
+      (provider !== undefined && provider.toLowerCase() !== PsAiModelProvider.OpenAI)
+    ) {
+      return undefined;
+    }
+    return this.resolveDecisionsModel(modelName).registered
+      ? this.getDecisionsPrices(modelName)
+      : undefined;
+  }
+
+  async callDecisions(
+    request: PsDecisionRequest,
+    options: PsDecisionCallOptions = {}
+  ): Promise<PsDecisionResult> {
+    const { modelName, registered, isDefault } = this.resolveDecisionsModel(request.model);
+
+    if (
+      this.isDatabaseUsagePersistenceEnabled() &&
+      (!registered ||
+        !Number.isInteger(registered.modelId) ||
+        registered.modelId <= 0)
+    ) {
+      throw new PsModelUsagePersistenceError(
+        `Register and attach an OpenAI Decisions model with access credentials for ${modelName} before calling Decisions`
+      );
+    }
+
+    const configured = this.decisionsConfig;
+    const model = new OpenAiDecisions({
+      ...registered?.config,
+      modelName: registered?.config.modelName ?? modelName,
+      apiModelName: isDefault
+        ? configured.apiModelName ?? registered?.config.apiModelName
+        : registered?.config.apiModelName,
+      apiKey: configured.apiKey || registered?.config.apiKey,
+      projectId: configured.projectId,
+      regionalProcessing:
+        configured.regionalProcessing ?? registered?.config.regionalProcessing,
+      timeoutMs:
+        configured.timeoutMs ?? registered?.config.timeoutMs ?? this.modelCallTimeoutMs,
+      prices: this.getDecisionsPrices(modelName),
+    });
+    const decision = await model.create(
+      { ...request, model: model.config.modelName },
+      options
+    );
+    await this.saveModelUsage({
+      modelName: model.config.modelName,
+      modelProvider: PsAiModelProvider.OpenAI,
+      modelType: PsAiModelType.Decision,
+      modelSize: registered?.modelSize ?? PsAiModelSize.Small,
+      modelId: registered?.modelId,
+      accountingVersion: 2,
+      prices: model.config.prices,
+      regionalProcessing: model.config.regionalProcessing,
+      streaming: false,
+      ...getDecisionUsageCounts(decision),
+      usageItemData: model.buildUsageItemData(decision, request),
+    });
+    return decision;
   }
 
   /**
@@ -471,6 +619,17 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           PsAiModelSize.Small,
         ];
     }
+  }
+
+  private getCompatibleModelTypes(modelType: PsAiModelType): PsAiModelType[] {
+    // Chat overrides can use text, reasoning, and multimodal model records.
+    const chatModelTypes = [
+      PsAiModelType.Text,
+      PsAiModelType.TextReasoning,
+      PsAiModelType.MultiModal,
+      PsAiModelType.MultiModalReasoning,
+    ];
+    return chatModelTypes.includes(modelType) ? chatModelTypes : [modelType];
   }
 
   private selectConfiguredModelForSize(
@@ -606,6 +765,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         const escapedModelName = sequelizeInstance.escape(overrideModelName);
         dbModel = await PsAiModelModel.findOne({
           where: {
+            "configuration.type": {
+              [sequelizeModule.Op.in]: this.getCompatibleModelTypes(modelType),
+            },
             [sequelizeModule.Op.and]: [
               sequelizeInstance.literal(
                 `configuration->>'provider' = ${escapedProvider}`
@@ -2039,6 +2201,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
     modelSize: PsAiModelSize,
     options: PsCallModelOptions
   ): Promise<PsBaseModelPriceConfiguration | undefined> {
+    if (modelType === PsAiModelType.Decision) {
+      const attachedPrices = this.getAttachedDecisionsPrices(
+        options.modelName,
+        options.modelProvider
+      );
+      if (attachedPrices) {
+        return this.applyPriceOverride(attachedPrices, options.priceOverride);
+      }
+    }
+
     // 1) Ephemeral override - try to fetch config from DB
     if (
       options.modelProvider &&
@@ -2055,6 +2227,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         const escapedModelName = sequelizeInstance.escape(options.modelName);
         const dbModel = await PsAiModelModel.findOne({
           where: {
+            "configuration.type": {
+              [sequelizeModule.Op.in]: this.getCompatibleModelTypes(modelType),
+            },
             [sequelizeModule.Op.and]: [
               sequelizeInstance.literal(
                 `configuration->>'provider' = ${escapedProvider}`
@@ -2080,6 +2255,16 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       }
     }
 
+    if ((options.fallbackModelType ?? modelType) === PsAiModelType.Decision) {
+      const attachedPrices = this.getAttachedDecisionsPrices(
+        options.fallbackModelName,
+        options.fallbackModelProvider
+      );
+      if (attachedPrices) {
+        return this.applyPriceOverride(attachedPrices, options.priceOverride);
+      }
+    }
+
     // 2) Fallback model from options
     if (
       options.fallbackModelProvider &&
@@ -2100,6 +2285,11 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         );
         const dbFallback = await PsAiModelModel.findOne({
           where: {
+            "configuration.type": {
+              [sequelizeModule.Op.in]: this.getCompatibleModelTypes(
+                options.fallbackModelType ?? modelType
+              ),
+            },
             [sequelizeModule.Op.and]: [
               sequelizeInstance.literal(
                 `configuration->>'provider' = ${escapedProvider}`
@@ -2129,6 +2319,18 @@ export class PsAiModelManager extends PolicySynthAgentBase {
           `Error looking up fallback price configuration: ${err}`
         );
       }
+    }
+
+    if (modelType === PsAiModelType.Decision) {
+      const selection = this.resolveDecisionsModel();
+      const attachedModels = [...this.decisionModels.values()];
+      const registered = selection.registered ?? this.getModelSizeFallbackPriority(modelSize)
+        .map((size) => attachedModels.find((model) => model.modelSize === size))
+        .find((model) => model !== undefined);
+      return this.applyPriceOverride(
+        this.getDecisionsPrices(registered?.config.modelName ?? selection.modelName),
+        options.priceOverride
+      );
     }
 
     // 3) Use loaded models with fallback by size and type
@@ -2189,6 +2391,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
   }
 
   private async getModelIdByProviderAndName(
+    modelType: PsAiModelType,
     provider?: string,
     modelName?: string
   ): Promise<number | undefined> {
@@ -2206,6 +2409,9 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       const escapedModelName = sequelizeInstance.escape(modelName);
       const dbModel = await PsAiModelModel.findOne({
         where: {
+          "configuration.type": {
+            [sequelizeModule.Op.in]: this.getCompatibleModelTypes(modelType),
+          },
           [sequelizeModule.Op.and]: [
             sequelizeInstance.literal(
               `configuration->>'provider' = ${escapedProvider}`
@@ -2441,6 +2647,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
       callOptions
     ) {
       const overrideModelId = await this.getModelIdByProviderAndName(
+        modelType,
         callOptions.modelProvider,
         callOptions.modelName
       );
@@ -2448,6 +2655,7 @@ export class PsAiModelManager extends PolicySynthAgentBase {
         finalModelId = overrideModelId;
       } else {
         const fallbackModelId = await this.getModelIdByProviderAndName(
+          callOptions.fallbackModelType ?? modelType,
           callOptions.fallbackModelProvider,
           callOptions.fallbackModelName
         );

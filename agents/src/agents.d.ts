@@ -320,6 +320,32 @@ interface PsOpenAiModelConfig extends PsAiModelConfig {
   projectId?: string;
 }
 
+type PsDecisionRequest = Omit<
+  import("openai/resources/decisions").DecisionCreateParams,
+  "model"
+> & { model?: string };
+
+type PsDecisionResult = import("openai/resources/decisions").Decision;
+
+interface PsDecisionCallOptions {
+  timeoutMs?: number;
+  maxRetries?: number;
+  signal?: AbortSignal;
+  /** Memory stage for simple agents. Defaults to decisions. */
+  stage?: string;
+}
+
+interface PsOpenAiDecisionsConfig {
+  apiKey?: string;
+  modelName?: string;
+  apiModelName?: string;
+  projectId?: string;
+  timeoutMs?: number;
+  regionalProcessing?: PsOpenAiRegionalProcessing;
+  prices?: Partial<PsBaseModelPriceConfiguration>;
+  credentialRef?: string;
+}
+
 // Evaluation result for a single criterion
 interface PsAgentEvalCriterionResult {
   criterionUuid: string;

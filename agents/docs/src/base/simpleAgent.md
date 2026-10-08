@@ -2,6 +2,10 @@
 
 A base class for simple PolicySynth agents that interact with large language models (LLMs) and manage agent memory, tokenization, and cost tracking. This class extends `PolicySynthAgentBase` and provides utility methods for token counting, LLM calls with retry logic, memory management, and cost calculation.
 
+`callDecisions(request, options?)` returns typed OpenAI Decisions answers and
+tracks usage in memory with dedicated pricing. Use `configureDecisions(config)`
+to set its defaults. See the [Decisions guide](../aiModels/openAiDecisions.md).
+
 ## Properties
 
 | Name                | Type                                 | Description                                                                                 |

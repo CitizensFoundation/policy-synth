@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
+import { Op } from "sequelize";
 import type {
   ChatCompletionTool,
   ChatCompletionToolChoiceOption,
@@ -296,6 +297,27 @@ const createManager = (
     42,
     7
   );
+
+type ModelIdentityLookup = {
+  where: {
+    "configuration.type"?: { [Op.in]: PsAiModelType[] };
+    [Op.and]: Array<{ val: string }>;
+  };
+};
+
+const findMatchingModel = (
+  rows: PsAiModelAttributes[],
+  query: ModelIdentityLookup
+) => {
+  const allowedTypes = query.where["configuration.type"]?.[Op.in];
+  return rows.find((row) =>
+    (!allowedTypes || allowedTypes.includes(row.configuration.type)) &&
+    query.where[Op.and][0].val ===
+      `configuration->>'provider' = '${row.configuration.provider}'` &&
+    query.where[Op.and][1].val ===
+      `configuration->>'model' = '${row.configuration.model}'`
+  ) ?? null;
+};
 
 const createResponsesOptions = (
   overrides: Partial<PsCallModelOptions> = {}
@@ -3662,6 +3684,179 @@ describe("PsAiModelManager text model calls", () => {
 });
 
 describe("PsAiModelManager price and usage accounting", () => {
+  it("keeps chat overrides, prices, and usage identities separate from Decisions records with the same name", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    const { PsAiModel } = await import("../../dbModels/aiModel.js");
+    const originalFindOne = Reflect.get(PsAiModel, "findOne");
+    const decisions = createAiModel({
+      type: PsAiModelType.Decision,
+      provider: PsAiModelProvider.OpenAI,
+      model: "gpt-6-luna",
+      prices: { ...prices, costInTokensPerMillion: 0.1, costOutTokensPerMillion: 0 },
+    }, 800);
+    const saved: PsModelUsageItemSaveContext[] = [];
+    const events: PsTokenUsageEvent[] = [];
+    const listener = (event: PsTokenUsageEvent) => { events.push(event); };
+    policySynthEvents.on(TOKEN_USAGE_EVENT, listener);
+
+    try {
+      for (const chatType of [
+        PsAiModelType.Text, PsAiModelType.TextReasoning,
+        PsAiModelType.MultiModal, PsAiModelType.MultiModalReasoning,
+      ]) {
+        delete process.env.DISABLE_DB_USAGE_TRACKING;
+        const chat = createAiModel({
+          type: chatType,
+          provider: PsAiModelProvider.OpenAI,
+          model: "gpt-6-luna",
+          prices: { ...prices, costOutTokensPerMillion: 11 },
+        }, 801);
+        // Return the first eligible row, with Decisions inserted before chat.
+        Reflect.set(PsAiModel, "findOne", async (query: ModelIdentityLookup) =>
+          findMatchingModel([decisions, chat], query)
+        );
+        const manager = createNoopManager();
+        registerModel(manager, new ScriptedChatModel(createModelConfig()));
+        const usedModels: BaseChatModel[] = [];
+        Reflect.set(manager, "callWithTimeout", async (model: BaseChatModel) => {
+          usedModels.push(model);
+          return createModelResult("chat result");
+        });
+        Reflect.set(manager, "saveModelUsage", async (ctx: PsModelUsageItemSaveContext) => {
+          saved.push(ctx);
+        });
+        const options: PsCallModelOptions = {
+          modelProvider: PsAiModelProvider.OpenAI, modelName: "gpt-6-luna",
+        };
+        assert.equal(await manager.callModel(
+          PsAiModelType.Text, PsAiModelSize.Small,
+          [{ role: "user", message: "hello" }], options
+        ), "chat result");
+        assert.ok(usedModels[0] instanceof OpenAiChat);
+        assert.equal(usedModels[0].dbModelId, chat.id);
+        assert.equal(usedModels[0].config.modelType, chatType);
+        assert.equal(saved.at(-1)?.modelId, chat.id);
+        assert.equal(saved.at(-1)?.prices.costOutTokensPerMillion, 11);
+
+        assert.deepEqual(await manager.getModelPriceConfiguration(
+          PsAiModelType.Text, PsAiModelSize.Small, options
+        ), chat.configuration.prices);
+        assert.deepEqual(await manager.getModelPriceConfiguration(
+          PsAiModelType.Text, PsAiModelSize.Small, {
+            fallbackModelProvider: PsAiModelProvider.OpenAI,
+            fallbackModelName: "gpt-6-luna",
+          }
+        ), chat.configuration.prices);
+
+        process.env.DISABLE_DB_USAGE_TRACKING = "true";
+        process.env.PS_EMIT_TOKEN_USAGE_EVENTS = "true";
+        const usageManager = new PsAiModelManager([], [], 256, 0.4, "medium", 0, 42, 7);
+        for (const usageOptions of [options, {
+          fallbackModelProvider: PsAiModelProvider.OpenAI,
+          fallbackModelName: "gpt-6-luna",
+        }]) {
+          await usageManager.saveTokenUsage(
+            "gpt-6-luna", PsAiModelProvider.OpenAI, chat.configuration.prices,
+            PsAiModelType.Text, PsAiModelSize.Small, 10, 0, 5,
+            undefined, usageOptions
+          );
+          assert.equal(events.at(-1)?.modelId, chat.id);
+        }
+      }
+      assert.equal(saved.length, 4);
+    } finally {
+      policySynthEvents.off(TOKEN_USAGE_EVENT, listener);
+      Reflect.set(PsAiModel, "findOne", originalFindOne);
+    }
+  });
+
+  it("rejects a database chat override before generation when only a Decisions record matches", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    const { PsAiModel } = await import("../../dbModels/aiModel.js");
+    const originalFindOne = Reflect.get(PsAiModel, "findOne");
+    const decisions = createAiModel({
+      type: PsAiModelType.Decision,
+      provider: PsAiModelProvider.OpenAI,
+      model: "gpt-6-luna",
+      prices: { ...prices, costOutTokensPerMillion: 0 },
+    }, 800);
+    Reflect.set(PsAiModel, "findOne", async (query: ModelIdentityLookup) =>
+      findMatchingModel([decisions], query)
+    );
+    try {
+      const manager = createNoopManager();
+      registerModel(manager, new ScriptedChatModel(createModelConfig()));
+      let generateCalls = 0;
+      let usageSaves = 0;
+      Reflect.set(manager, "callWithTimeout", async () => {
+        generateCalls++;
+        return createModelResult("must not run");
+      });
+      Reflect.set(manager, "saveModelUsage", async () => { usageSaves++; });
+      const options: PsCallModelOptions = {
+        modelProvider: PsAiModelProvider.OpenAI, modelName: "gpt-6-luna",
+      };
+      await assert.rejects(manager.callModel(
+        PsAiModelType.Text, PsAiModelSize.Small,
+        [{ role: "user", message: "hello" }], options
+      ), /has no persisted model id/);
+      assert.equal(generateCalls, 0);
+      assert.equal(usageSaves, 0);
+      assert.deepEqual(await manager.getModelPriceConfiguration(
+        PsAiModelType.Text, PsAiModelSize.Small, options
+      ), prices);
+    } finally {
+      Reflect.set(PsAiModel, "findOne", originalFindOne);
+    }
+  });
+
+  it("keeps Decisions price and usage-ID lookups scoped to Decisions when a chat record comes first", async () => {
+    useStandardResponsesEnv();
+    delete process.env.DISABLE_DB_INIT;
+    process.env.DISABLE_DB_USAGE_TRACKING = "true";
+    process.env.PS_EMIT_TOKEN_USAGE_EVENTS = "true";
+    const { PsAiModel } = await import("../../dbModels/aiModel.js");
+    const originalFindOne = Reflect.get(PsAiModel, "findOne");
+    const chat = createAiModel({
+      type: PsAiModelType.Text,
+      provider: PsAiModelProvider.OpenAI,
+      model: "gpt-6-luna",
+    }, 801);
+    const decisions = createAiModel({
+      type: PsAiModelType.Decision,
+      provider: PsAiModelProvider.OpenAI,
+      model: "gpt-6-luna",
+      prices: { ...prices, costInTokensPerMillion: 0.1, costOutTokensPerMillion: 0 },
+    }, 800);
+    Reflect.set(PsAiModel, "findOne", async (query: ModelIdentityLookup) =>
+      findMatchingModel([chat, decisions], query)
+    );
+    const events: PsTokenUsageEvent[] = [];
+    const listener = (event: PsTokenUsageEvent) => { events.push(event); };
+    policySynthEvents.on(TOKEN_USAGE_EVENT, listener);
+    try {
+      const manager = new PsAiModelManager([], [], 256, 0.4, "medium", 0, 42, 7);
+      const options: PsCallModelOptions = {
+        modelProvider: PsAiModelProvider.OpenAI, modelName: "gpt-6-luna",
+      };
+      assert.deepEqual(await manager.getModelPriceConfiguration(
+        PsAiModelType.Decision, PsAiModelSize.Small, options
+      ), decisions.configuration.prices);
+      await manager.saveTokenUsage(
+        "gpt-6-luna", PsAiModelProvider.OpenAI, decisions.configuration.prices,
+        PsAiModelType.Decision, PsAiModelSize.Small, 10, 0, 5,
+        undefined, options
+      );
+      assert.equal(events.length, 1);
+      assert.equal(events[0].modelId, decisions.id);
+    } finally {
+      policySynthEvents.off(TOKEN_USAGE_EVENT, listener);
+      Reflect.set(PsAiModel, "findOne", originalFindOne);
+    }
+  });
+
   it("loads database model configuration for ephemeral models and price lookups", async () => {
     useStandardResponsesEnv();
     delete process.env.DISABLE_DB_INIT;

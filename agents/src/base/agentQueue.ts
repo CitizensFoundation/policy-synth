@@ -1,5 +1,11 @@
 import ioredis, { Redis, RedisOptions } from "ioredis";
-import { Job, QueueEvents, Worker } from "bullmq";
+import {
+  Job,
+  QueueEvents,
+  Worker,
+  type QueueEventsOptions,
+  type WorkerOptions,
+} from "bullmq";
 import { PolicySynthAgent } from "./agent.js";
 import { PsAgentConnector } from "../dbModels/agentConnector.js";
 import { PsAgentConnectorClass } from "../dbModels/agentConnectorClass.js";
@@ -23,11 +29,11 @@ export interface PolicySynthAgentQueueRuntime {
   createWorker(
     queueName: string,
     processor: (job: Job) => Promise<void>,
-    options: ConstructorParameters<typeof Worker>[2]
+    options: WorkerOptions
   ): Worker;
   createQueueEvents(
     queueName: string,
-    options: ConstructorParameters<typeof QueueEvents>[1]
+    options: QueueEventsOptions
   ): QueueEvents;
 }
 
@@ -36,11 +42,11 @@ export interface PolicySynthAgentQueueRuntimeConstructors {
   Worker: new (
     queueName: string,
     processor: (job: Job) => Promise<void>,
-    options: ConstructorParameters<typeof Worker>[2]
+    options: WorkerOptions
   ) => Worker;
   QueueEvents: new (
     queueName: string,
-    options: ConstructorParameters<typeof QueueEvents>[1]
+    options: QueueEventsOptions
   ) => QueueEvents;
 }
 
@@ -486,14 +492,14 @@ export abstract class PolicySynthAgentQueue extends PolicySynthAgentBase {
   protected createWorker(
     queueName: string,
     processor: (job: Job) => Promise<void>,
-    options: ConstructorParameters<typeof Worker>[2]
+    options: WorkerOptions
   ): Worker {
     return this.runtime.createWorker(queueName, processor, options);
   }
 
   protected createQueueEvents(
     queueName: string,
-    options: ConstructorParameters<typeof QueueEvents>[1]
+    options: QueueEventsOptions
   ): QueueEvents {
     return this.runtime.createQueueEvents(queueName, options);
   }

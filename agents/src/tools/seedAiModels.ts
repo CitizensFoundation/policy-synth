@@ -7,6 +7,7 @@ import { connectToDatabase } from "../dbModels/sequelize.js";
 import { PsAiModelSize, PsAiModelType } from "../aiModelTypes.js";
 import { PsAgentClassCategories } from "../agentCategories.js";
 import { isCliEntrypoint } from "./cliUtils.js";
+import { getDefaultOpenAiDecisionsPrices } from "../aiModels/openAiDecisions.js";
 
 type CreatedRecord = {
   id: number;
@@ -50,6 +51,17 @@ export const defaultSeedAiModelsDependencies: SeedAiModelsDependencies = {
 };
 
 export function buildSeedAiModelConfigurations() {
+  const openAiDecisionsConfig: PsAiModelConfiguration = {
+    type: PsAiModelType.Decision,
+    modelSize: PsAiModelSize.Small,
+    provider: "openai",
+    model: "gpt-6-luna",
+    accountingVersion: 2,
+    prices: getDefaultOpenAiDecisionsPrices(),
+    maxTokensOut: 0,
+    defaultTemperature: 0,
+    active: true,
+  };
   const anthropicSonnetConfig: PsAiModelConfiguration = {
     type: PsAiModelType.Text,
     modelSize: PsAiModelSize.Medium,
@@ -157,6 +169,7 @@ export function buildSeedAiModelConfigurations() {
   };
 
   return {
+    openAiDecisionsConfig,
     anthropicSonnetConfig,
     openAiGpt4oConfig,
     openAiGpt4oMiniConfig,
@@ -203,6 +216,7 @@ export async function seedAiModels(
     openAiGpt4oMiniConfig,
     openAiGpt54Config,
     openAiGpt54ProConfig,
+    openAiDecisionsConfig,
   } = buildSeedAiModelConfigurations();
 
   const anthropicSonnet = await dependencies.createAiModel({
@@ -240,6 +254,13 @@ export async function seedAiModels(
     configuration: openAiGpt54ProConfig,
   });
 
+  const openAiDecisions = await dependencies.createAiModel({
+    name: "GPT-6 Luna Decisions",
+    organization_id: 1,
+    user_id: user.id,
+    configuration: openAiDecisionsConfig,
+  });
+
   const group = await dependencies.createGroup({
     name: "Example Group",
     user_id: user.id,
@@ -267,6 +288,10 @@ export async function seedAiModels(
         aiModelId: openAiGpt54Pro.id,
         apiKey: dependencies.env.OPENAI_API_KEY || "",
       },
+      {
+        aiModelId: openAiDecisions.id,
+        apiKey: dependencies.env.OPENAI_API_KEY || "",
+      },
     ],
   });
 
@@ -289,6 +314,7 @@ export async function seedAiModels(
       openAiGpt4Mini,
       openAiGpt54,
       openAiGpt54Pro,
+      openAiDecisions,
     ],
   };
 }

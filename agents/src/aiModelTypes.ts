@@ -1,4 +1,5 @@
 export enum PsAiModelType {
+  Decision = "decision",
   Embedding = "embedding",
   Text = "text",
   MultiModal = "multiModal",

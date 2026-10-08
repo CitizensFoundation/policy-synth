@@ -1232,6 +1232,14 @@ describe("seedAiModels tool", () => {
   it("builds seed configurations and creates seed records through dependencies", async () => {
     const configs = buildSeedAiModelConfigurations();
     assert.equal(configs.openAiGpt54Config.model, "gpt-5.4");
+    assert.equal(configs.openAiDecisionsConfig.type, PsAiModelType.Decision);
+    assert.equal(configs.openAiDecisionsConfig.provider, "openai");
+    assert.equal(configs.openAiDecisionsConfig.model, "gpt-6-luna");
+    assert.equal(configs.openAiDecisionsConfig.accountingVersion, 2);
+    assert.equal(configs.openAiDecisionsConfig.prices.costInTokensPerMillion, 0.1);
+    assert.equal(configs.openAiDecisionsConfig.prices.costOutTokensPerMillion, 0);
+    assert.equal(configs.openAiDecisionsConfig.prices.cacheWriteInputCostMultiplier, 0);
+    assert.equal(configs.openAiDecisionsConfig.prices.longContextTokenThreshold, 272_001);
     assert.equal(buildTopLevelAgentClassConfig().queueName, "noqueue");
 
     const createdAiModels: Array<{ name: string; id: number }> = [];
@@ -1272,10 +1280,11 @@ describe("seedAiModels tool", () => {
         "GPT-4o Mini",
         "GPT-5.4",
         "GPT-5.4 Pro",
+        "GPT-6 Luna Decisions",
       ]
     );
-    assert.equal(groupPrivateAccessCount, 5);
-    assert.equal(result.aiModels.length, 5);
+    assert.equal(groupPrivateAccessCount, 6);
+    assert.equal(result.aiModels.length, 6);
   });
 
   it("seeds empty private access keys when API key env values are absent", async () => {
@@ -1297,6 +1306,6 @@ describe("seedAiModels tool", () => {
 
     await runSeedAiModels(dependencies);
 
-    assert.deepEqual(privateAccessKeys, ["", "", "", "", ""]);
+    assert.deepEqual(privateAccessKeys, ["", "", "", "", "", ""]);
   });
 });

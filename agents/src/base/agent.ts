@@ -143,6 +143,19 @@ export abstract class PolicySynthAgent extends PolicySynthAgentBase {
     return this.memory;
   }
 
+  configureDecisions(config: PsOpenAiDecisionsConfig): void {
+    if (!this.modelManager) throw new Error("Model manager is not initialized");
+    this.modelManager.configureDecisions(config);
+  }
+
+  async callDecisions(
+    request: PsDecisionRequest,
+    options: PsDecisionCallOptions = {}
+  ): Promise<PsDecisionResult> {
+    if (!this.modelManager) throw new Error("Model manager is not initialized");
+    return this.modelManager.callDecisions(request, options);
+  }
+
   async callModel(
     modelType: PsAiModelType,
     modelSize: PsAiModelSize,

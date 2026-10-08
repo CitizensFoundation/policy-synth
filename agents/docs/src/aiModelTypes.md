@@ -10,6 +10,7 @@ Describes the functional type of an AI model. This is used to indicate what kind
 
 | Name                 | Value                  | Description                                                                 |
 |----------------------|------------------------|-----------------------------------------------------------------------------|
+| Decision             | "decision"             | Ordered classification and scoring through the OpenAI Decisions API.        |
 | Embedding            | "embedding"            | Model for generating vector embeddings from text or other data.              |
 | Text                 | "text"                 | Model for generating or processing text.                                     |
 | MultiModal           | "multiModal"           | Model that can process/generate multiple data types (e.g., text + image).    |

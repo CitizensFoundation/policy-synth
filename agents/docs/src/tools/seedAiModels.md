@@ -1,5 +1,10 @@
 # seedAiModels.js
 
+The seed includes a `GPT-6 Luna Decisions` model with provider `openai`, type
+`decision`, accounting version 2, and dedicated Decisions prices. Its group access
+entry uses `OPENAI_API_KEY`. See the [Decisions guide](../aiModels/openAiDecisions.md)
+for configuration and agent examples.
+
 This script seeds the PolicySynth database with example AI models and a top-level agent class, and demonstrates how to associate API keys with a group for model access. It is intended for use in initializing a PolicySynth instance with default AI models and agent classes.
 
 ## Overview

@@ -220,7 +220,7 @@ class TestAgentQueue extends PolicySynthAgentQueue {
   protected override createWorker(
     _queueName: string,
     processor: (job: Job) => Promise<void>,
-    _options: ConstructorParameters<typeof Worker>[2]
+    _options: Parameters<PolicySynthAgentQueueRuntime["createWorker"]>[2]
   ): Worker {
     const worker = new FakeWorker(processor);
     this.createdWorkers.push(worker);
@@ -229,7 +229,7 @@ class TestAgentQueue extends PolicySynthAgentQueue {
 
   protected override createQueueEvents(
     _queueName: string,
-    _options: ConstructorParameters<typeof QueueEvents>[1]
+    _options: Parameters<PolicySynthAgentQueueRuntime["createQueueEvents"]>[1]
   ): QueueEvents {
     const queueEvents = new FakeQueueEvents();
     this.createdQueueEvents.push(queueEvents);

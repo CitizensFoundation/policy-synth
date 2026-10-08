@@ -1,5 +1,10 @@
 # PsAiModelManager
 
+`callDecisions(request, options?)` evaluates typed OpenAI Decisions questions
+and persists usage against an attached `PsAiModelType.Decision` model.
+`configureDecisions(config)` sets dedicated defaults. See the
+[Decisions guide](../aiModels/openAiDecisions.md) for configuration and examples.
+
 The `PsAiModelManager` class is a central manager for handling multiple AI chat models (LLMs) in the PolicySynth agent framework. It supports dynamic model initialization, ephemeral overrides, fallback logic, token usage tracking, and price configuration retrieval. It is designed to work with various providers (OpenAI, Anthropic, Google, Azure) and supports both persistent and ephemeral (one-off) model instances.
 
 **File:** `@policysynth/agents/base/agentModelManager.js`
