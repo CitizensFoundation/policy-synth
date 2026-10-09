@@ -1342,7 +1342,7 @@ export class PolicySynthWebApp extends YpBaseElement {
             } else {
               if (
                 modelConstants.name === 'gpt-4' ||
-                modelConstants.name === 'gpt-4-1106-preview'
+                modelConstants.name === 'gpt-4.1'
               ) {
                 gpt4Cost += stageCost;
               } else if (

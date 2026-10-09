@@ -124,7 +124,7 @@ async deduplicate(items: string[], passes: number = 1): Promise<string[]> {
       console.log("User prompt:", userPrompt);
 
       const response = await this.openaiClient.chat.completions.create({
-        model: "gpt-4-0125-preview",
+        model: "gpt-4.1",
         messages: [
           { role: "system", content: this.systemPrompt },
           {

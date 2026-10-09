@@ -226,7 +226,7 @@ export const identifyCauses = async (
     console.log("=====================");
   }
   const response = await openai.chat.completions.create({
-    model: "gpt-4-1106-preview",
+    model: "gpt-4.1",
     messages: [
       {
         role: "system",

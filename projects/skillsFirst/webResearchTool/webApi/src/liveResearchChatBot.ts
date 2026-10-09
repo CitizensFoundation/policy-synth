@@ -167,7 +167,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
     ];
 
     const stream = await this.openaiClient.chat.completions.create({
-      model: "gpt-4-0125-preview",
+      model: "gpt-4.1",
       messages,
       max_tokens: 4000,
       temperature: 0.45,
@@ -213,7 +213,7 @@ export class LiveResearchChatBot extends PsBaseChatBot {
 
       try {
         const stream = await this.openaiClient.chat.completions.create({
-          model: "gpt-4-0125-preview",
+          model: "gpt-4.1",
           messages,
           max_tokens: 4000,
           temperature: 0.7,
