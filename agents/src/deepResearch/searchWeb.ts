@@ -1,33 +1,33 @@
+import {
+  FirecrawlSearchApi,
+  selectSearchProvider,
+} from "./firecrawlSearchApi.js";
 import { BingSearchApi } from "./bingSearchApi.js";
 import { GoogleSearchApi } from "./googleSearchApi.js";
 import { PolicySynthAgentBase } from "../base/agentBase.js";
 
 export class BaseSearchWebAgent extends PolicySynthAgentBase {
+  readonly firecrawlSearchApi = new FirecrawlSearchApi();
   seenUrls: Map<string, Set<string>> = new Map();
 
   async callSearchApi(
     query: string,
     numberOfResults: number,
-    options: PsSearchOptions = {}
+    options: PsSearchOptions = {},
   ): Promise<PsSearchResultItem[]> {
-    if (process.env.GOOGLE_SEARCH_API_KEY &&
-        process.env.GOOGLE_SEARCH_API_CX_ID) {
-      const googleSearchApi = new GoogleSearchApi();
-      return await googleSearchApi.search(query, numberOfResults, options);
-    } else if (process.env.AZURE_BING_SEARCH_KEY) {
-      const bingSearchApi = new BingSearchApi();
-      return await bingSearchApi.search(query, numberOfResults, options);
-    } else {
-      this.logger.error("Missing search API key");
-      throw new Error("Missing search API key");
-    }
+    const provider = selectSearchProvider();
+    if (provider === "firecrawl")
+      return this.firecrawlSearchApi.search(query, numberOfResults, options);
+    if (provider === "google")
+      return new GoogleSearchApi().search(query, numberOfResults, options);
+    return new BingSearchApi().search(query, numberOfResults, options);
   }
 
   async getQueryResults(
     queriesToSearch: string[],
     id: string,
     numberOfResults: number = 10,
-    options: PsSearchOptions = {}
+    options: PsSearchOptions = {},
   ) {
     let searchResults: PsSearchResultItem[] = [];
 
@@ -35,7 +35,7 @@ export class BaseSearchWebAgent extends PolicySynthAgentBase {
       const generalSearchData = await this.callSearchApi(
         queriesToSearch[q],
         numberOfResults,
-        options
+        options,
       );
 
       if (generalSearchData) {

@@ -137,7 +137,7 @@ export class OpenAiDecisions extends PolicySynthAgentBase {
     }
     let imageCount = 0;
     for (const message of request.input) {
-      if (message.role !== "user") {
+      if (!("role" in message) || message.role !== "user") {
         throw new TypeError("Decisions only accepts user messages");
       }
       if (message.type !== undefined && message.type !== "message") {
